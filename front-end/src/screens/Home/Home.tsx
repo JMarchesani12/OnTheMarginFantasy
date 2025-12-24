@@ -14,11 +14,11 @@ const stageOptions = [
 
 type StageValue = (typeof stageOptions)[number]["value"];
 
-const DEBUG_DEFAULT_USER_ID = 1; // TODO: remove once backend supplies memberId in session metadata
-
 const Home = () => {
   const navigate = useNavigate();
   const [userId, setUserId] = useState<number | null>(null);
+  const [displayName, setDisplayName] = useState<string | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
   const [stage, setStage] = useState<StageValue>("active");
   const [leagues, setLeagues] = useState<League[]>([]);
 
@@ -27,42 +27,32 @@ const Home = () => {
 
     const fetchSession = async () => {
       try {
-        const { data, error } = await supabase.auth.getSession();
-        if (error) {
-          throw error;
-        }
-        if (!isMounted) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!isMounted) return;
+
+        const authUuid = session?.user?.id;
+        if (!authUuid) {
+          console.warn("Missing auth session");
           return;
         }
 
-        const metadataId =
-          data.session?.user?.id ??
-          null;
-        const resolvedUserId =
-          typeof metadataId === "number"
-            ? metadataId
-            : metadataId != null
-            ? Number(metadataId)
-            : null;
+        // Look up your internal numeric user id
+        const { data: userRow } = await supabase
+          .from("User")
+          .select('id, email, "displayName"')
+          .eq("uuid", authUuid)
+          .maybeSingle();
 
-        console.log(metadataId)
+        if (!userRow) return;
 
-        if (!resolvedUserId) {
-          console.warn(
-            "Missing memberId on session; falling back to debug user.",
-          );
-          setUserId(DEBUG_DEFAULT_USER_ID);
-          return;
-        }
-
-        setUserId(resolvedUserId);
-      } catch (sessionError) {
-        console.error("Failed to fetch auth session", sessionError);
-        if (isMounted) {
-          setUserId(DEBUG_DEFAULT_USER_ID);
-        }
+        setUserId(userRow.id);
+        setEmail(userRow.email);
+        setDisplayName(userRow.displayName);
+      } catch (e) {
+        console.error("Failed to fetch auth session", e);
       }
     };
+
 
     fetchSession();
 
@@ -109,12 +99,16 @@ const Home = () => {
       isMounted = false;
     };
   }, [userId, stage]);
+
+  const welcomeName =
+    (displayName ?? "").trim() ||
+    (email ?? "").trim()
   
   return (
     <main className="home">
       <header className="home__header">
         <div>
-          <p className="home__eyebrow">Welcome back, GM</p>
+          <p className="home__eyebrow">Welcome back {welcomeName}</p>
           <h1>Your Leagues</h1>
           <p className="home__subtitle">
             Manage current leagues or spin up a new competition for the season.

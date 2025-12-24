@@ -89,7 +89,7 @@ const SignIn = () => {
   return (
     <main className="sign-in">
       <section className="sign-in__card">
-        <h1>Sicko Fantasy</h1>
+        <h1>On the Margin Fantasy</h1>
         <p>{isSignUp ? "Create an account to start managing leagues." : "Sign in to manage your leagues and rosters."}</p>
         <form className="sign-in__form" onSubmit={handleSubmit}>
           {isSignUp && (
