@@ -1,0 +1,364 @@
+import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import type { League } from "../../types/league";
+import type { LeagueMember } from "../../types/leagueMember";
+import { getMembersOfLeague } from "../../api/leagues";
+import { formatLeagueDate } from "../../utils/date";
+import { LeagueScheduleTabs } from "../../components/League/LeagueScheduleTabs";
+import LeagueScoreboard, {
+  type ScoreboardRow as LeagueScoreboardRow,
+} from "../../components/League/LeagueScoreboard";
+import { getScoresForWeek } from "../../api/scoring";
+import type { ScoreWeek } from "../../types/scoring";
+import "./LeagueDetailPage.css";
+
+type LocationState = {
+  league?: League;
+};
+
+const LeagueDetailPage = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const state = location.state as LocationState | null;
+  const league = state?.league;
+  const currentUserId = 1; // TODO: replace with authenticated user id
+
+  const [members, setMembers] = useState<LeagueMember[]>([]);
+  const [loadingMembers, setLoadingMembers] = useState(false);
+  const [membersError, setMembersError] = useState<string | null>(null);
+  const [scoreboard, setScoreboard] = useState<Record<number, ScoreWeek[]>>({});
+  const [scoreboardLoading, setScoreboardLoading] = useState(false);
+  const [scoreboardError, setScoreboardError] = useState<string | null>(null);
+
+  // Fetch members on init
+  useEffect(() => {
+    if (!league) return;
+
+    const loadMembers = async () => {
+      setLoadingMembers(true);
+      setMembersError(null);
+
+      try {
+        const memberData = await getMembersOfLeague(league.leagueId);
+        setMembers(memberData);
+      } catch (error: any) {
+        setMembersError(error?.message ?? "Failed to load league members");
+      } finally {
+        setLoadingMembers(false);
+      }
+    };
+
+    loadMembers();
+  }, [league]);
+
+  useEffect(() => {
+    if (!league?.leagueId) {
+      return;
+    }
+
+    const currentWeek = league.currentWeekNumber ?? null;
+    if (!currentWeek || currentWeek < 1) {
+      return;
+    }
+
+    let isCancelled = false;
+
+    const loadScores = async () => {
+      setScoreboardLoading(true);
+      setScoreboardError(null);
+
+      try {
+        const scoresByWeek: Record<number, ScoreWeek[]> = {};
+
+        if (currentWeek <= 10) {
+          const { results } = await getScoresForWeek(
+            Array.from({ length: currentWeek }, (_, idx) => idx + 1),
+            league.leagueId
+          );
+
+          results.forEach((score) => {
+            const list = scoresByWeek[score.weekNumber] ?? [];
+            list.push(score);
+            scoresByWeek[score.weekNumber] = list;
+          });
+        } else {
+          for (let week = 1; week <= currentWeek; week += 10) {
+            const chunk = Array.from(
+              { length: Math.min(10, currentWeek - week + 1) },
+              (_, idx) => week + idx
+            );
+            const { results } = await getScoresForWeek(chunk, league.leagueId);
+
+            results.forEach((score) => {
+              const list = scoresByWeek[score.weekNumber] ?? [];
+              list.push(score);
+              scoresByWeek[score.weekNumber] = list;
+            });
+          }
+        }
+
+        if (!isCancelled) {
+          setScoreboard(scoresByWeek);
+        }
+      } catch (error: any) {
+        if (!isCancelled) {
+          setScoreboardError(error?.message ?? "Failed to load scoreboard");
+        }
+      } finally {
+        if (!isCancelled) {
+          setScoreboardLoading(false);
+        }
+      }
+    };
+
+    loadScores();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [league?.leagueId, league?.currentWeekNumber]);
+
+  const openRosterManagement = () => {
+    if (!league) return;
+    navigate(`/leagues/${league.leagueId}/roster`, { state: { league } });
+  };
+
+  const openDraftPage = () => {
+    if (!league) return;
+    navigate(`/leagues/${league.leagueId}/draft`, { state: { league } });
+  };
+
+  const openConferencePage = () => {
+    if (!league) return;
+    navigate(`/leagues/${league.leagueId}/conference`, { state: { league } });
+  };
+
+  // If you want, you can later add a fetch here if `league` is missing.
+  if (!league) {
+    return (
+      <div className="league-detail">
+        <button
+          className="league-detail__back"
+          type="button"
+          onClick={() => navigate(-1)}
+        >
+          ← Back
+        </button>
+        <p>League data is not available. Try opening this page from your leagues list.</p>
+      </div>
+    );
+  }
+
+  const statusClass = `league-detail__status league-detail__status--${league.status
+    .toLowerCase()
+    .replace(/\s+/g, "-")}`;
+  const tradeDeadlinePassed = useMemo(() => {
+    if (!league.tradeDeadline) {
+      return false;
+    }
+
+    const now = new Date();
+    const deadline = new Date(league.tradeDeadline);
+    if (Number.isNaN(deadline.getTime())) {
+      return false;
+    }
+
+    return deadline.getTime() < now.getTime();
+  }, [league.tradeDeadline]);
+
+  const canStartDraft =
+    league.status === "Pre-Draft" && league.commissionerId === currentUserId;
+
+  const scoreboardRows = useMemo<{
+    weekNumbers: number[];
+    rows: LeagueScoreboardRow[];
+  }>(() => {
+    const weekNumbers = Object.keys(scoreboard)
+      .map((key) => Number(key))
+      .sort((a, b) => a - b);
+
+    const membersById = new Map<number, LeagueMember>();
+    members.forEach((member) => {
+      membersById.set(member.id, member);
+    });
+
+    const rows = new Map<number, LeagueScoreboardRow>();
+
+    weekNumbers.forEach((week) => {
+      const scores = scoreboard[week] ?? [];
+      scores.forEach((score) => {
+        const row = rows.get(score.memberId) ?? {
+          memberId: score.memberId,
+          teamName:
+            score.teamName ??
+            membersById.get(score.memberId)?.teamName ??
+            `Member ${score.memberId}`,
+          weeklyPoints: {} as Record<number, number | null | undefined>,
+          totalPoints: 0,
+        };
+        row.weeklyPoints[week] = score.pointsAwarded;
+        row.totalPoints += score.pointsAwarded ?? 0;
+        rows.set(score.memberId, row);
+      });
+    });
+
+    return {
+      weekNumbers,
+      rows: Array.from(rows.values()).sort((a, b) => b.totalPoints - a.totalPoints),
+    };
+  }, [scoreboard, members]);
+
+  return (
+    <div className="league-detail">
+      <button
+        className="league-detail__back"
+        type="button"
+        onClick={() => navigate(-1)}
+      >
+        ← Back to Leagues
+      </button>
+
+      <header className="league-detail__header">
+        <div>
+          <h1 className="league-detail__title">{league.leagueName}</h1>
+          <p className="league-detail__commissioner">
+            Commissioner: <span>{league.commissionerDisplayName}</span>
+          </p>
+        </div>
+        <div className={statusClass}>{league.status}</div>
+      </header>
+
+      <section className="league-detail__overview">
+        <div className="league-detail__overview-row">
+          <div className="league-detail__overview-item">
+            <span className="label">Sport</span>
+            <span className="value">{league.sport}</span>
+          </div>
+          <div className="league-detail__overview-item">
+            <span className="label">Season</span>
+            <span className="value">{league.seasonYear}</span>
+          </div>
+          <div className="league-detail__overview-item">
+            <span className="label">Number of Teams</span>
+            <span className="value">{league.numPlayers}</span>
+          </div>
+          <div className="league-detail__overview-item">
+            <span className="label">Status: </span>
+            <span className="value">{league.status}</span>
+          </div>
+        </div>
+
+        <div className="league-detail__overview-row">
+          <div className="league-detail__overview-item">
+            <span className="label">Draft Date</span>
+            <span className="value">{formatLeagueDate(league.draftDate)}</span>
+          </div>
+          <div className="league-detail__overview-item">
+            <span className="label">Trade Deadline</span>
+            <span className="value">
+              {formatLeagueDate(league.tradeDeadline)}
+            </span>
+          </div>
+          <div className="league-detail__overview-item">
+            <span className="label">Free Agent Deadline</span>
+            <span className="value">
+              {formatLeagueDate(league.freeAgentDeadline)}
+            </span>
+          </div>
+        </div>
+
+        <div className="league-detail__overview-row">
+          <div className="league-detail__overview-item">
+            <span className="label">Created</span>
+            <span className="value">
+              {formatLeagueDate(league.leagueCreatedAt)}
+            </span>
+          </div>
+          <div className="league-detail__overview-item">
+            <span className="label">Last Updated</span>
+            <span className="value">
+              {formatLeagueDate(league.updatedAt)}
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <section className="league-detail__content">
+        <div className="league-detail__card">
+          <h2>Your Team</h2>
+          <p>
+            <span className="label">Team Name: </span>
+            <span className="value">{league.teamName ?? "TBD"}</span>
+          </p>
+          <p>
+            <span className="label">Season Points: </span>
+            <span className="value">{league.seasonPoints ?? 0}</span>
+          </p>
+          {league.draftOrder != null && (
+            <p>
+              <span className="label">Draft Order: </span>
+              <span className="value">#{league.draftOrder}</span>
+            </p>
+          )}
+          <div className="league-detail__add-drop">
+            <button
+              className="league-detail__add-drop-btn"
+              type="button"
+              onClick={openRosterManagement}
+              disabled={tradeDeadlinePassed}
+            >
+              Manage Roster
+            </button>
+            {tradeDeadlinePassed && (
+              <p className="league-detail__add-drop-note">
+                Trade deadline passed on {formatLeagueDate(league.tradeDeadline)}
+              </p>
+            )}
+            {canStartDraft && (
+              <button
+                className="league-detail__start-draft-btn"
+                type="button"
+                onClick={openDraftPage}
+              >
+                Start Draft
+              </button>
+            )}
+            <button
+              className="league-detail__conference-btn"
+              type="button"
+              onClick={openConferencePage}
+            >
+              View Conference Scores
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {loadingMembers && (
+        <p className="league-detail__loading">Loading league members…</p>
+      )}
+      {membersError && (
+        <p className="league-detail__error-text">{membersError}</p>
+      )}
+      {members.length > 0 && (
+        <LeagueScheduleTabs
+          leagueId={league.leagueId}
+          members={members}
+          currentMemberId={league.memberId}
+          initialWeekNumber={league.currentWeekNumber ?? 1}
+        />
+      )}
+
+      <LeagueScoreboard
+        weekNumbers={scoreboardRows.weekNumbers}
+        rows={scoreboardRows.rows}
+        currentWeekNumber={league.currentWeekNumber ?? null}
+        loading={scoreboardLoading}
+        error={scoreboardError}
+      />
+
+    </div>
+  );
+};
+
+export default LeagueDetailPage;

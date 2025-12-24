@@ -1,0 +1,41 @@
+# endpoints/draft/draftEndpoints.py
+from flask import request, jsonify
+from endpoints.draft.draftModel import DraftModel
+
+class DraftEndpoints:
+    def __init__(self, db_engine):
+        self.draftModel = DraftModel(db_engine)
+
+    # POST /api/draft/pick
+    # {
+    #   "leagueId": 1,
+    #   "memberId": 7,
+    #   "sportTeamId": 42
+    # }
+    def create_pick(self):
+        data = request.get_json() or {}
+
+        required = ["leagueId", "memberId", "sportTeamId"]
+        missing = [k for k in required if k not in data]
+        if missing:
+            return jsonify({"message": f"Missing fields: {', '.join(missing)}"}), 400
+
+        league_id = int(data["leagueId"])
+        member_id = int(data["memberId"])
+        sport_team_id = int(data["sportTeamId"])
+        week_number = int(data.get("weekNumber", 1))
+
+        try:
+            draft_pick = self.draftModel.create_draft_pick(
+                league_id=league_id,
+                member_id=member_id,
+                sport_team_id=sport_team_id,
+                acquired_week=week_number,
+            )
+        except ValueError as e:
+            return jsonify({"message": str(e)}), 400
+        except Exception as e:
+            # log e if you have logging
+            return jsonify({"message": "Failed to create draft pick"}), 500
+
+        return jsonify(draft_pick), 201

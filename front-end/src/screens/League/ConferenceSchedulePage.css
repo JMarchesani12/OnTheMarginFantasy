@@ -1,0 +1,226 @@
+.conference-schedule {
+  max-width: 95%;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 4rem;
+}
+
+.conference-schedule__back {
+  border: none;
+  background: none;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+  margin-bottom: 1rem;
+}
+
+.conference-schedule__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.conference-schedule__active {
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 0.85rem;
+}
+
+.conference-schedule__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+  margin-bottom: 1rem;
+}
+
+.conference-schedule__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.conference-schedule__form label {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.conference-schedule__select {
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+}
+
+.conference-schedule__week {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.conference-schedule__week button {
+  border: none;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 1.1rem;
+}
+
+.conference-schedule__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.conference-schedule__filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+}
+
+.conference-schedule__filters input {
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+}
+
+.conference-schedule__hint {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  margin: 0.5rem 0;
+}
+
+.conference-schedule__error {
+  color: #ff7a98;
+  margin: 0.5rem 0;
+}
+
+.conference-schedule__table-wrapper {
+  overflow-x: auto;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.conference-schedule__table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+}
+
+.conference-schedule__table thead {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.conference-schedule__table th,
+.conference-schedule__table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  vertical-align: top;
+  text-align: left;
+}
+
+.conference-schedule__team-col {
+  width: 200px;
+}
+
+.conference-schedule__team-link {
+  border: none;
+  background: none;
+  color: #8ac4ff;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+  text-decoration: underline;
+  transition: color 120ms ease;
+}
+
+.conference-schedule__team-link:hover {
+  color: #bfe0ff;
+}
+
+.conference-schedule__cell {
+  min-width: 140px;
+}
+
+.conference-schedule__cell--empty {
+  opacity: 0.6;
+  text-align: center;
+}
+
+.conference-schedule__cell-game + .conference-schedule__cell-game {
+  margin-top: 0.45rem;
+}
+
+.conference-schedule__cell-opponent {
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
+.conference-schedule__cell-score {
+  margin-top: 0.35rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.4rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.conference-schedule__score-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.conference-schedule__score-line--team .conference-schedule__score-name {
+  font-weight: 700;
+}
+
+.conference-schedule__score-line--opponent .conference-schedule__score-name {
+  opacity: 0.75;
+}
+
+.conference-schedule__score-name {
+  font-size: 0.85rem;
+}
+
+.conference-schedule__score-value {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.conference-schedule__score-status {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  opacity: 0.65;
+}
+}
+
+@media (max-width: 768px) {
+  .conference-schedule__controls {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .conference-schedule__form {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .conference-schedule__week {
+    align-self: flex-start;
+  }
+}

@@ -1,0 +1,326 @@
+.roster-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2.5rem clamp(1rem, 6vw, 4rem) 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.roster-page__back {
+  border: none;
+  background: none;
+  color: #8cb7ff;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  align-self: flex-start;
+}
+
+.roster-page__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.roster-page__eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #7c8db5;
+  margin: 0 0 0.4rem;
+  font-size: 0.8rem;
+}
+
+.roster-page__header h1 {
+  margin: 0;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+}
+
+.roster-page__subhead {
+  margin: 0.35rem 0 0;
+  color: #a6b4d4;
+  max-width: 560px;
+}
+
+.roster-page__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  color: #cfd8ff;
+}
+
+.roster-page__deadline {
+  color: #ff9fb8;
+}
+
+.roster-page__tabs {
+  display: inline-flex;
+  gap: 0.75rem;
+  border-radius: 999px;
+  background: rgba(11, 16, 30, 0.7);
+  padding: 0.25rem;
+  align-self: flex-start;
+}
+
+.roster-page__tab {
+  border: none;
+  background: transparent;
+  color: #8ca0cf;
+  padding: 0.45rem 1.1rem;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.roster-page__tab.is-active {
+  background: linear-gradient(120deg, #5ee7df, #b490ca);
+  color: #08101f;
+}
+
+.roster-page__controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1rem 1.25rem;
+  background: rgba(11, 16, 30, 0.8);
+}
+
+.roster-page__control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.roster-page__control label {
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #8ca0cf;
+}
+
+.roster-page__control input,
+.roster-page__control select {
+  border-radius: 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(5, 9, 20, 0.8);
+  color: #f4f7ff;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.95rem;
+}
+
+.roster-page__sections {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+.roster-page__sections > div {
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1.25rem;
+  background: rgba(12, 18, 34, 0.8);
+}
+
+.roster-page__sections h2 {
+  margin: 0;
+}
+
+.roster-page__helper {
+  margin: 0.35rem 0 1rem;
+  color: #9fb4e8;
+  font-size: 0.9rem;
+}
+
+.roster-page__group {
+  margin-bottom: 1rem;
+}
+
+.roster-page__group:last-child {
+  margin-bottom: 0;
+}
+
+.roster-page__group-label {
+  margin: 0 0 0.35rem;
+  font-size: 0.85rem;
+  color: #7c8db5;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.roster-page__list {
+  max-height: min(55vh, 420px);
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.roster-page__team-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.roster-page__team-btn {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  color: #f4f7ff;
+  padding: 0.45rem 1rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: border-color 150ms ease, background 150ms ease;
+}
+
+.roster-page__team-btn.is-selected {
+  border-color: #6affbe;
+  background: rgba(106, 255, 190, 0.1);
+}
+
+.roster-page__team-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.roster-page__trade-panel {
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1.1rem 1.25rem;
+  background: rgba(9, 13, 24, 0.85);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.roster-page__trade-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.roster-page__trade-members {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.roster-page__trade-member-btn {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+  color: #f4f7ff;
+  padding: 0.4rem 0.95rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.roster-page__trade-member-btn.is-active {
+  border-color: #6affbe;
+  background: rgba(106, 255, 190, 0.15);
+  color: #0a141f;
+}
+
+.roster-page__queue {
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1.25rem;
+  background: rgba(10, 15, 25, 0.9);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+.roster-page__queue-label {
+  margin: 0 0 0.35rem;
+  color: #7c8db5;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.85rem;
+}
+
+.roster-page__queue-empty {
+  margin: 0;
+  color: #9fb4e8;
+}
+
+.roster-page__queue ul {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: #f4f7ff;
+}
+
+.roster-page__queue-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 0.6rem;
+  padding: 0.45rem 0.75rem;
+  color: #f4f7ff;
+  gap: 0.75rem;
+}
+
+.roster-page__queue-remove {
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: #0b1324;
+  border-radius: 999px;
+  width: 1.4rem;
+  height: 1.4rem;
+  cursor: pointer;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.roster-page__footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.roster-page__submit {
+  align-self: flex-start;
+  border: none;
+  border-radius: 999px;
+  padding: 0.7rem 1.8rem;
+  background: linear-gradient(120deg, #5ee7df, #b490ca);
+  color: #08101f;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.roster-page__submit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.roster-page__error {
+  color: #ff9fb8;
+}
+
+.roster-page__loading {
+  color: #a1b4df;
+}
+
+.roster-page__empty {
+  color: #a6b4d4;
+}
+
+@media (max-width: 768px) {
+  .roster-page__sections,
+  .roster-page__queue {
+    grid-template-columns: 1fr;
+  }
+
+  .roster-page__submit {
+    width: 100%;
+    text-align: center;
+  }
+
+  .roster-page__tabs {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

@@ -1,0 +1,96 @@
+.league-card {
+  background: rgba(17, 25, 40, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.2rem;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 20px 30px rgba(15, 15, 15, 0.4);
+}
+
+.league-card__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.league-card__header h2 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.league-card__commissioner {
+  margin: 0.35rem 0 0;
+  color: #9fb3d9;
+  font-size: 0.9rem;
+}
+
+.league-card__status {
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  align-self: flex-start;
+}
+
+.league-card__status--active {
+  background: rgba(106, 255, 190, 0.15);
+  color: #6affbe;
+  border: 1px solid rgba(106, 255, 190, 0.4);
+}
+
+.league-card__status--drafting-soon {
+  background: rgba(255, 215, 141, 0.15);
+  color: #ffd78d;
+  border: 1px solid rgba(255, 215, 141, 0.4);
+}
+
+.league-card__status--offseason {
+  background: rgba(164, 179, 255, 0.15);
+  color: #a4b3ff;
+  border: 1px solid rgba(164, 179, 255, 0.4);
+}
+
+.league-card__meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+}
+
+.meta-label {
+  display: block;
+  color: #93a6c7;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.2rem;
+}
+
+.meta-value {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #f4f7ff;
+}
+
+.league-card__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.league-card__action-btn {
+  background: transparent;
+  color: #8cb7ff;
+  border: 1px solid rgba(140, 183, 255, 0.4);
+  border-radius: 999px;
+  padding: 0.55rem 1.4rem;
+  font-weight: 600;
+  transition: background 150ms ease, transform 150ms ease;
+}
+
+.league-card__action-btn:hover {
+  background: rgba(140, 183, 255, 0.1);
+  transform: translateY(-1px);
+}
+

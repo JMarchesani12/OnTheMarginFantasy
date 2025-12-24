@@ -1,0 +1,116 @@
+.home {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 3rem clamp(1rem, 6vw, 4rem);
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.home__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.home__actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.home__eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.8rem;
+  color: #7c8db5;
+  margin-bottom: 0.5rem;
+}
+
+.home__header h1 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  margin: 0 0 0.5rem;
+}
+
+.home__subtitle {
+  color: #b4c2da;
+  margin: 0;
+}
+
+.home__stage-filter {
+  margin-top: 0.75rem;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: #cdd7ff;
+}
+
+.home__stage-filter select {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+  border-radius: 999px;
+  padding: 0.3rem 0.9rem;
+  font-size: 0.9rem;
+}
+
+.home__create-btn {
+  align-self: flex-start;
+  background: linear-gradient(120deg, #c471f5, #fa71cd);
+  border: none;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0.9rem 1.6rem;
+  border-radius: 999px;
+  box-shadow: 0 10px 30px rgba(250, 113, 205, 0.3);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.home__create-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 35px rgba(250, 113, 205, 0.45);
+}
+
+.home__signout-btn {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: #f4f7ff;
+  font-weight: 600;
+  padding: 0.75rem 1.4rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.home__leagues {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+@media (max-width: 720px) {
+  .home {
+    padding: 2.5rem 1.25rem 3rem;
+  }
+
+  .home__header {
+    flex-direction: column;
+  }
+
+  .home__actions {
+    width: 100%;
+    flex-direction: column-reverse;
+  }
+
+  .home__create-btn,
+  .home__signout-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .home__leagues {
+    grid-template-columns: 1fr;
+  }
+}

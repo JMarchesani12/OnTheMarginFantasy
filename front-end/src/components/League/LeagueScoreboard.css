@@ -1,0 +1,69 @@
+.league-scoreboard {
+  margin-top: 2rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1.5rem;
+  background: rgba(12, 18, 34, 0.8);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.league-scoreboard__header h2 {
+  margin: 0.35rem 0 0;
+}
+
+.league-scoreboard__eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #7c8db5;
+  font-size: 0.75rem;
+}
+
+.league-scoreboard__subhead {
+  margin: 0.35rem 0 0;
+  color: #a6b4d4;
+}
+
+.league-scoreboard__table {
+  overflow-x: auto;
+}
+
+.league-scoreboard__row {
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) repeat(auto-fit, minmax(100px, 1fr)) 80px;
+  gap: 0.5rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.league-scoreboard__row:last-child {
+  border-bottom: none;
+}
+
+.league-scoreboard__row--header {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  color: #8ca0cf;
+}
+
+.league-scoreboard__team {
+  font-weight: 600;
+}
+
+.league-scoreboard__total {
+  font-weight: 700;
+}
+
+.league-scoreboard__loading {
+  color: #a1b4df;
+  margin: 0;
+}
+
+.league-scoreboard__error {
+  color: #ff7a98;
+  margin: 0;
+}

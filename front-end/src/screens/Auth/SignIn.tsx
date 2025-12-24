@@ -1,0 +1,171 @@
+import { useState, type FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "../../lib/supabaseClient";
+import "./SignIn.css";
+import { createUser } from "../../api/user";
+
+const SignIn = () => {
+  const navigate = useNavigate();
+  const [mode, setMode] = useState<"signIn" | "signUp">("signIn");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+
+  const isSignUp = mode === "signUp";
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError(null);
+    setMessage(null);
+    setLoading(true);
+
+    try {
+      if (isSignUp) {
+        if (!username.trim()) {
+          throw new Error("Username is required to create an account.");
+        }
+
+        const { data, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { username: username.trim() },
+            emailRedirectTo: `${window.location.origin}/leagues`,
+          },
+        });
+
+        console.log(data.user?.id)
+
+        if (signUpError) {
+          throw signUpError;
+        }
+
+        await createUser(data.user?.id, email, username);
+
+        setMessage("Check your email to confirm your account, then sign in.");
+        setMode("signIn");
+      } else {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (signInError) {
+          throw signInError;
+        }
+
+        navigate("/leagues", { replace: true });
+      }
+    } catch (authError: any) {
+      setError(authError?.message ?? "Authentication failed. Try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // const handleGoogleSignIn = async () => {
+  //   setError(null);
+  //   setMessage(null);
+
+  //   try {
+  //     const { error: oauthError } = await supabase.auth.signInWithOAuth({
+  //       provider: "google",
+  //       options: {
+  //         redirectTo: `${window.location.origin}/leagues`,
+  //       },
+  //     });
+
+  //     if (oauthError) {
+  //       throw oauthError;
+  //     }
+  //   } catch (oauthErr: any) {
+  //     setError(oauthErr?.message ?? "Google sign-in failed. Try again.");
+  //   }
+  // };
+
+  return (
+    <main className="sign-in">
+      <section className="sign-in__card">
+        <h1>Sicko Fantasy</h1>
+        <p>{isSignUp ? "Create an account to start managing leagues." : "Sign in to manage your leagues and rosters."}</p>
+        <form className="sign-in__form" onSubmit={handleSubmit}>
+          {isSignUp && (
+            <label className="sign-in__label" htmlFor="sign-in-username">
+              Username
+              <input
+                id="sign-in-username"
+                type="text"
+                className="sign-in__input"
+                placeholder="SickoFan12"
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
+                required
+              />
+            </label>
+          )}
+          <label className="sign-in__label" htmlFor="sign-in-email">
+            Email
+            <input
+              id="sign-in-email"
+              type="email"
+              className="sign-in__input"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              required
+            />
+          </label>
+          <label className="sign-in__label" htmlFor="sign-in-password">
+            Password
+            <input
+              id="sign-in-password"
+              type="password"
+              className="sign-in__input"
+              placeholder="••••••••"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              required
+            />
+          </label>
+          {error && <p className="sign-in__error">{error}</p>}
+          {message && <p className="sign-in__message">{message}</p>}
+          <button type="submit" className="sign-in__button" disabled={loading}>
+            {loading ? "Please wait…" : isSignUp ? "Create Account" : "Sign In"}
+          </button>
+        </form>
+        <p className="sign-in__switch">
+          <br/>
+          {isSignUp ? "Already have an account?" : "Need an account?"}{" "}
+          <button
+            type="button"
+            onClick={() => {
+              setMode(isSignUp ? "signIn" : "signUp");
+              setError(null);
+              setMessage(null);
+            }}
+          >
+            {isSignUp ? "Sign in" : "Sign up"}
+          </button>
+        </p>
+        {/* <div className="sign-in__divider">
+          <span />
+          <p>OR</p>
+          <span />
+        </div>
+        <button
+          type="button"
+          className="sign-in__google"
+          onClick={handleGoogleSignIn}
+          disabled={loading}
+        >
+          Continue with Google
+        </button> */}
+      </section>
+    </main>
+  );
+};
+
+export default SignIn;

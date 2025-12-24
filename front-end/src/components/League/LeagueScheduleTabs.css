@@ -1,0 +1,249 @@
+/* ===========================
+   Container / Layout
+   =========================== */
+
+.league-schedule {
+  margin-top: 2rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: #f5f5f5;
+  padding: 1rem 1.25rem 1.25rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* header: tabs on the left, week controls on the right  */
+.league-schedule__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* ===========================
+   Tabs
+   =========================== */
+
+.league-schedule__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.league-schedule__tab {
+  border: none;
+  border-radius: 999px;
+  padding: 0.25rem 0.9rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  background: #e0e0e0;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.league-schedule__tab--active {
+  background: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+
+/* ===========================
+   Week controls
+   =========================== */
+
+.league-schedule__week-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.league-schedule__week-controls button {
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: #ffffff;
+  padding: 0.15rem 0.55rem;
+  cursor: pointer;
+}
+
+.league-schedule__week-controls button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.league-schedule__week-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* Remove number input spin buttons (Chrome, Safari, Edge) */
+.league-schedule__week-input::-webkit-inner-spin-button,
+.league-schedule__week-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Remove number input spin buttons (Firefox) */
+.league-schedule__week-input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* Optional: make it look clean and centered */
+.league-schedule__week-input {
+  width: 3.2rem;
+  padding: 0.15rem 0.35rem;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  font-size: 0.9rem;
+  text-align: center;
+  background: #ffffff;
+}
+
+/* ===========================
+   Body / Table wrapper
+   =========================== */
+
+.league-schedule__body {
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* On desktop: let the table use all width with no forced scroll.
+   On small screens, we re-enable horizontal scroll (see media query). */
+.league-schedule__table-wrapper {
+  width: 100%;
+  overflow-x: visible;
+}
+
+/* ===========================
+   Table
+   =========================== */
+
+.league-schedule__table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.league-schedule__table thead,
+.league-schedule__table tbody {
+  display: contents;
+}
+
+.league-schedule__table tr {
+  display: grid;
+  grid-template-columns: 18% repeat(7, minmax(0, 1fr));
+}
+
+/* Head cells & body cells */
+.league-schedule__table th,
+.league-schedule__table td {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 0.4rem 0.55rem;
+  text-align: left;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Empty day cell */
+.league-schedule__cell--empty {
+  text-align: center;
+  color: rgba(0, 0, 0, 0.4);
+}
+
+/* When multiple games fall on same day */
+.league-schedule__cell-game + .league-schedule__cell-game {
+  margin-top: 0.3rem;
+  border-top: 1px dashed rgba(0, 0, 0, 0.08);
+  padding-top: 0.25rem;
+}
+
+/* Game detail typography */
+.league-schedule__cell-opponent {
+  font-weight: 500;
+  margin-bottom: 0.1rem;
+}
+
+.league-schedule__cell-score {
+  font-size: 0.85rem;
+}
+
+.league-schedule__cell-pd {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+/* ===========================
+   Error state
+   =========================== */
+
+.league-schedule__error {
+  color: #b00020;
+}
+
+/* ===========================
+   Responsive tweaks
+   =========================== */
+
+/* Medium screens: slightly smaller text/cells so all 7 days still fit nicely */
+@media (max-width: 1100px) {
+  .league-schedule__table th,
+  .league-schedule__table td {
+    padding: 0.35rem 0.45rem;
+    font-size: 0.85rem;
+  }
+
+  .league-schedule__team-col {
+    min-width: 130px;
+  }
+}
+
+/* Small screens: allow horizontal scroll instead of crushing columns */
+@media (max-width: 800px) {
+  .league-schedule__table-wrapper {
+    overflow-x: auto;
+  }
+
+  .league-schedule__table {
+    min-width: 720px; /* ensures columns stay readable while scrolling */
+  }
+
+  .league-schedule__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .league-schedule__week-controls {
+    align-self: flex-end;
+  }
+}
+
+.league-schedule__team-col-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  height: 100%;
+}
+
+.league-schedule__team-col {
+  padding-top: 0.5rem;
+}
+
+.league-schedule__team-conf {
+  font-size: 0.75rem;
+  font-weight: 500;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.league-schedule__team-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+}

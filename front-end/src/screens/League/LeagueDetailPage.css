@@ -1,0 +1,219 @@
+/* src/pages/leagues/LeagueDetailPage.css */
+
+.league-detail {
+  max-width: 90%;
+  margin: 0 auto;
+  padding: 1.5rem 2rem 3rem;
+}
+
+.league-detail__back {
+  border: none;
+  background: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.league-detail__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.league-detail__title {
+  margin: 0;
+  font-size: 1.75rem;
+}
+
+.league-detail__commissioner {
+  margin: 0.25rem 0 0;
+  font-size: 0.95rem;
+  opacity: 0.8;
+}
+
+.league-detail__commissioner span {
+  font-weight: 600;
+}
+
+.league-detail__status {
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* Tweak these to match your existing status colors */
+.league-detail__status--pre-draft {
+  background: #fff7e6;
+}
+.league-detail__status--drafting {
+  background: #e6f0ff;
+}
+.league-detail__status--completed {
+  background: #e6ffe9;
+}
+.league-detail__status--in-season {
+  background: #e6faff;
+}
+
+.league-detail__overview {
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  background: rgba(0, 0, 0, 0.1); /* adjust for your theme */
+}
+
+.league-detail__overview-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.league-detail__overview-row:last-child {
+  margin-bottom: 0;
+}
+
+.league-detail__overview-item .label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
+}
+
+.league-detail__overview-item .value {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.league-detail__content {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 1.25rem;
+}
+
+@media (max-width: 768px) {
+  .league-detail__content {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.league-detail__card {
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 1rem 1.25rem;
+  background: rgba(0, 0, 0, 0.1); /* adjust for your theme */
+}
+
+.league-detail__card h2 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  font-size: 1.1rem;
+}
+
+.league-detail__card .label {
+  font-size: 0.85rem;
+  opacity: 0.75;
+}
+
+.league-detail__card .value {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.league-detail__add-drop {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.league-detail__add-drop-btn {
+  align-self: flex-start;
+  border: none;
+  border-radius: 999px;
+  padding: 0.6rem 1.5rem;
+  font-weight: 600;
+  background: linear-gradient(120deg, #5ee7df, #b490ca);
+  color: #0c1222;
+  cursor: pointer;
+  transition: transform 150ms ease, opacity 150ms ease;
+}
+
+.league-detail__add-drop-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.league-detail__add-drop-btn:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+.league-detail__add-drop-note {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #9fb4e8;
+}
+
+.league-detail__start-draft-btn {
+  margin-top: 0.5rem;
+  align-self: flex-start;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  padding: 0.55rem 1.4rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: #f1f4ff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease, transform 150ms ease;
+}
+
+.league-detail__start-draft-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.league-detail__conference-btn {
+  margin-top: 0.25rem;
+  align-self: flex-start;
+  border-radius: 999px;
+  padding: 0.5rem 1.3rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+  cursor: pointer;
+  transition: background 150ms ease, transform 150ms ease;
+}
+
+.league-detail__conference-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
+}
+
+.league-detail__list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.league-detail__list li + li {
+  margin-top: 0.35rem;
+}
+
+.league-detail__loading {
+  margin-top: 1rem;
+  color: #a1b4df;
+  font-size: 0.9rem;
+}
+
+.league-detail__error-text {
+  margin-top: 1rem;
+  color: #ff7a98;
+  font-size: 0.9rem;
+}
