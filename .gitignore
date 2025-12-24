@@ -1,0 +1,98 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2867
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 ############################\
+# OS\
+############################\
+.DS_Store\
+.DS_Store?\
+._*\
+.Spotlight-V100\
+.Trashes\
+ehthumbs.db\
+Thumbs.db\
+\
+############################\
+# Environment variables\
+############################\
+.env\
+.env.*\
+!.env.example\
+\
+############################\
+# Node / React / TypeScript\
+############################\
+node_modules/\
+npm-debug.log*\
+yarn-debug.log*\
+yarn-error.log*\
+pnpm-debug.log*\
+\
+# Build outputs\
+dist/\
+build/\
+.out/\
+.next/\
+\
+# Vite\
+.vite/\
+\
+# TypeScript\
+*.tsbuildinfo\
+\
+############################\
+# Python / Flask\
+############################\
+__pycache__/\
+*.py[cod]\
+*$py.class\
+\
+# Virtual environments\
+venv/\
+.venv/\
+env/\
+ENV/\
+\
+# Flask\
+instance/\
+.webassets-cache\
+\
+# Python packaging\
+*.egg-info/\
+.eggs/\
+pip-wheel-metadata/\
+.pytest_cache/\
+.mypy_cache/\
+.pytype/\
+.coverage\
+htmlcov/\
+\
+############################\
+# IDEs / Editors\
+############################\
+.vscode/\
+.idea/\
+*.swp\
+*.swo\
+\
+############################\
+# Logs\
+############################\
+*.log\
+\
+############################\
+# Database / local files\
+############################\
+*.sqlite\
+*.sqlite3\
+\
+############################\
+# Misc\
+############################\
+.cache/\
+tmp/\
+temp/}
