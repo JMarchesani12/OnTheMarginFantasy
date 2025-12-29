@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy import Tuple, text
 from sqlalchemy.engine import Engine
 
-from endpoints.schedule.helpers.espnClient import ESPNClient
+from endpoints.schedule.helpers.espn.espnClient import ESPNClient
 from endpoints.schedule.helpers.weekHelper import compute_weeks_from_start
 
 logger = logging.getLogger(__name__)
@@ -50,36 +50,32 @@ class ScheduleModel:
             settings = json.loads(settings)
         return settings or {}
 
-    def _get_sport_season_for_league(self, league_id: int) -> Dict[str, Any]:
-        sql = text("""
-            SELECT
-            ss.id          AS "sportSeasonId",
-            ss."sportId",
-            ss."seasonYear",
-            ss."regularSeasonStart",
-            ss."regularSeasonEnd",
-            ss."playoffStart",
-            ss."playoffEnd",
-            ss."scheduleBootstrapped",
-            ss."scheduleBootstrappedAt"
-            FROM "League" l
-            JOIN "SportSeason" ss
-            ON ss."sportId"   = l."sport"
-            AND ss."seasonYear" = l."seasonYear"
-            WHERE l.id = :leagueId
-            LIMIT 1
-        """)
-        with self.db.begin() as conn:
-            row = conn.execute(sql, {"leagueId": league_id}).fetchone()
-
-        if not row:
-            raise ValueError(
-                "No SportSeason found for this league's sport + seasonYear. "
-                "Make sure SportSeason exists."
-            )
-
+    def _get_sport_season_for_league(self, league_id: int) -> Dict[str, Any]: 
+        sql = text(""" 
+                SELECT 
+                   ss.id AS "sportSeasonId", 
+                   ss."sportId", ss."seasonYear", 
+                   ss."regularSeasonStart", 
+                   ss."regularSeasonEnd", 
+                   ss."playoffStart", 
+                   ss."playoffEnd", 
+                   ss."scheduleBootstrapped", 
+                   ss."scheduleBootstrappedAt" 
+                FROM "League" l 
+                JOIN "SportSeason" ss 
+                ON ss."sportId" = l."sport" 
+                AND ss."seasonYear" = l."seasonYear" 
+                WHERE l.id = :leagueId LIMIT 1 
+            """
+        ) 
+        
+        with self.db.begin() as conn: 
+            row = conn.execute(sql, {"leagueId": league_id}).fetchone() 
+            
+        if not row: 
+            raise ValueError( "No SportSeason found for this league's sport + seasonYear. " "Make sure SportSeason exists." ) 
+        
         return dict(row._mapping)
-
 
     def _get_sport_api_config(self, sport_id: int) -> Tuple[str, List[int]]:
         """
@@ -89,7 +85,7 @@ class ScheduleModel:
         - "apiKeyword"  (text)
         - "apiGroupIds"
         """
-        sql = text('SELECT "api-keyword", "apiGroupIds" FROM "Sport" WHERE id = :sportId')
+        sql = text('SELECT "api-keyword", "apiGroupIds", "baseUrlName" FROM "Sport" WHERE id = :sportId')
         with self.db.begin() as conn:
             row = conn.execute(sql, {"sportId": sport_id}).fetchone()
 
@@ -98,6 +94,7 @@ class ScheduleModel:
 
         api_keyword = row[0]
         raw_groups = row[1]
+        base_url = row[2]
 
         # Normalize apiGroupIds into List[int]
         group_ids: List[int] = []
@@ -116,7 +113,7 @@ class ScheduleModel:
             # e.g. psycopg may return tuples for int[]
             group_ids = [int(x) for x in raw_groups]
 
-        return api_keyword, group_ids
+        return api_keyword, group_ids, base_url
 
     # -------------------------------------------------------------------------
     # Week generation (regular + optional postseason)
@@ -133,6 +130,19 @@ class ScheduleModel:
             rows = conn.execute(sql, {"leagueId": league_id}).fetchall()
         return [dict(r._mapping) for r in rows]
 
+    def _insert_week0(self, league_id: int, end_dt) -> Dict[str, Any]:
+        with self.db.begin() as conn:
+            row = conn.execute(
+                text("""
+                    insert into "Week" ("leagueId","weekNumber","startDate","endDate","isLocked","scoringComplete")
+                    values (:leagueId, 0, null, :endDate, true, false)
+                    returning id, "leagueId", "weekNumber", "startDate", "endDate", "isLocked", "scoringComplete"
+                """),
+                {"leagueId": league_id, "endDate": end_dt},
+            ).mappings().first()
+        return dict(row)
+
+    
     def _insert_weeks(
         self,
         league_id: int,
@@ -198,9 +208,12 @@ class ScheduleModel:
         reg_start_date = reg_start_dt.date()
         reg_end_date = reg_end_dt.date()
 
+        created_all: List[Dict[str, Any]] = []
+        created_all.append(self._insert_week0(league_id, reg_start_dt - dt.timedelta(days=1)))
+
         regular_week_ranges = compute_weeks_from_start(reg_start_date, reg_end_date)
         created_regular = self._insert_weeks(league_id, regular_week_ranges, starting_week_number=1)
-        created_all = list(created_regular)
+        created_all.extend(created_regular)
 
         # Postseason weeks
         if season.get("playoffStart") and season.get("playoffEnd"):

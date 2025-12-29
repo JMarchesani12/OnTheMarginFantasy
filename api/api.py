@@ -8,6 +8,7 @@ from endpoints.schedule.routes import setup_routes as ScheduleRoutes
 from endpoints.transaction.routes import setup_routes as TransactionRoutes
 from endpoints.scoring.routes import setup_routes as ScoringRoutes
 from endpoints.user.routes import setup_routes as UserRoutes
+from endpoints.sport.routes import setup_routes as SportRoutes
 
 def create_app():
 
@@ -21,6 +22,7 @@ def create_app():
     TransactionRoutes(app, engine)
     ScoringRoutes(app, engine)
     UserRoutes(app, engine)
+    SportRoutes(app, engine)
 
     return app
 

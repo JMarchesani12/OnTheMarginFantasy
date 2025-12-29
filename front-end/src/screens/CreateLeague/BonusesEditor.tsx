@@ -13,6 +13,7 @@ export interface BonusWithLocalId {
   id: string;                // local ID for React
   bonusKey: string;          // e.g. "conferenceChampion"
   label: string;             // "Conference Champs"
+  hint: string;
   placements: BonusPlacementRow[];
 }
 
@@ -21,22 +22,24 @@ interface BonusesEditorProps {
   onChange: (next: BonusWithLocalId[]) => void;
 }
 
-interface BonusTemplatePlacement {
+export interface BonusTemplatePlacement {
   key: string;
   label: string;
   defaultPoints: number;
 }
 
-interface BonusTemplate {
+export interface BonusTemplate {
   bonusKey: string;
   label: string;
+  hint: string;
   placements: BonusTemplatePlacement[];
 }
 
-const BONUS_TEMPLATES: BonusTemplate[] = [
+export const BONUS_TEMPLATES: BonusTemplate[] = [
   {
     bonusKey: "conferenceChampion",
     label: "Conference Champs",
+    hint: "Bonus points for every team you draft that is in the top 3 in their conference at the end of the season",
     placements: [
       { key: "first", label: "First", defaultPoints: 1.5 },
       { key: "second", label: "Second", defaultPoints: 1 },
@@ -46,6 +49,7 @@ const BONUS_TEMPLATES: BonusTemplate[] = [
   {
     bonusKey: "conferenceBottom",
     label: "Conference Losers",
+    hint: "Points lost for every team you draft that is in the bottom 3 in their conference at the end of the season",
     placements: [
       { key: "last", label: "Last", defaultPoints: -1.5 },
       { key: "secondLast", label: "Second last", defaultPoints: -1 },
@@ -55,6 +59,7 @@ const BONUS_TEMPLATES: BonusTemplate[] = [
   {
     bonusKey: "farthestInPlayoffs",
     label: "Team that went farthest in playoffs",
+    hint: "Bonus points awarded if a team you drafted gets the farthers in the playoffs",
     placements: [
       { key: "farthest", label: "Farthest", defaultPoints: 3 },
     ],
@@ -75,6 +80,7 @@ export const BonusesEditor: React.FC<BonusesEditorProps> = ({
       id: makeId(),
       bonusKey: template.bonusKey,
       label: template.label,
+      hint: template.hint,
       placements: template.placements.map((p) => ({
         id: makeId(),
         key: p.key,
@@ -120,7 +126,7 @@ export const BonusesEditor: React.FC<BonusesEditorProps> = ({
   return (
     <div className="cl-field-group">
       <label className="cl-field-label">
-        Bonuses / Penalties (optional)
+        Bonuses / Penalties
       </label>
 
       {availableTemplates.length > 0 && (
@@ -141,7 +147,18 @@ export const BonusesEditor: React.FC<BonusesEditorProps> = ({
       {value.map((bonus) => (
         <div key={bonus.id} className="cl-bonus-card">
           <div className="cl-bonus-header">
-            <div className="cl-bonus-title">{bonus.label}</div>
+            <div className="cl-bonus-title">
+              {bonus.label}
+
+              {bonus.hint && (
+                <span className="cl-tooltip">
+                  ?
+                  <span className="cl-tooltip-content">
+                    {bonus.hint}
+                  </span>
+                </span>
+              )}
+            </div>
             <button
               type="button"
               className="cl-bonus-remove"

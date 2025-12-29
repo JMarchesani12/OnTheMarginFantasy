@@ -161,6 +161,56 @@
   color: #9fb4e8;
 }
 
+.league-detail__team-edit {
+  margin-top: 0.4rem;
+  align-self: flex-start;
+  border-radius: 999px;
+  padding: 0.4rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+  cursor: pointer;
+}
+
+.league-detail__team-name-editor {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.league-detail__team-name-editor input {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+  padding: 0.5rem 0.7rem;
+}
+
+.league-detail__team-name-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.league-detail__team-save,
+.league-detail__team-cancel {
+  border-radius: 999px;
+  border: none;
+  padding: 0.4rem 1rem;
+  cursor: pointer;
+}
+
+.league-detail__team-save {
+  background: #10b981;
+  color: #022c22;
+  font-weight: 600;
+}
+
+.league-detail__team-cancel {
+  background: #374151;
+  color: #e5e7eb;
+}
+
 .league-detail__start-draft-btn {
   margin-top: 0.5rem;
   align-self: flex-start;
@@ -179,6 +229,24 @@
   transform: translateY(-1px);
 }
 
+.league-detail__manage-btn {
+  margin-top: 0.25rem;
+  align-self: flex-start;
+  border-radius: 999px;
+  padding: 0.55rem 1.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(16, 185, 129, 0.15);
+  color: #e5e7eb;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease, transform 150ms ease;
+}
+
+.league-detail__manage-btn:hover {
+  background: rgba(16, 185, 129, 0.25);
+  transform: translateY(-1px);
+}
+
 .league-detail__conference-btn {
   margin-top: 0.25rem;
   align-self: flex-start;
@@ -193,6 +261,28 @@
 
 .league-detail__conference-btn:hover {
   background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
+}
+
+.league-detail__leave-btn {
+  margin-top: 0.25rem;
+  align-self: flex-start;
+  border-radius: 999px;
+  padding: 0.5rem 1.3rem;
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  background: rgba(248, 113, 113, 0.1);
+  color: #fecaca;
+  cursor: pointer;
+  transition: background 150ms ease, transform 150ms ease;
+}
+
+.league-detail__leave-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.league-detail__leave-btn:hover {
+  background: rgba(248, 113, 113, 0.2);
   transform: translateY(-1px);
 }
 
@@ -215,5 +305,11 @@
 .league-detail__error-text {
   margin-top: 1rem;
   color: #ff7a98;
+  font-size: 0.9rem;
+}
+
+.league-detail__success-text {
+  margin-top: 0.5rem;
+  color: #34d399;
   font-size: 0.9rem;
 }

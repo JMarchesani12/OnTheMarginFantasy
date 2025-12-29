@@ -251,3 +251,13 @@ class DraftModel:
 
         logging.debug("Created draft pick: %s", draft_pick)
         return draft_pick
+
+
+    def get_rounds(self, sportId):
+        with self.db.begin() as conn:
+            rounds = conn.execute(
+                text('SELECT "maxDraftRounds" FROM "Sport" WHERE id = :sportId'),
+                {"sportId": sportId},
+            ).scalar_one_or_none()
+
+        return rounds

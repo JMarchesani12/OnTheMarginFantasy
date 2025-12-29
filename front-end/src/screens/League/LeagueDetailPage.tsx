@@ -2,7 +2,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import type { League } from "../../types/league";
 import type { LeagueMember } from "../../types/leagueMember";
-import { getMembersOfLeague } from "../../api/leagues";
+import { getMembersOfLeague, removeLeagueMember, updateLeagueMember } from "../../api/leagues";
 import { formatLeagueDate } from "../../utils/date";
 import { LeagueScheduleTabs } from "../../components/League/LeagueScheduleTabs";
 import LeagueScoreboard, {
@@ -10,6 +10,7 @@ import LeagueScoreboard, {
 } from "../../components/League/LeagueScoreboard";
 import { getScoresForWeek } from "../../api/scoring";
 import type { ScoreWeek } from "../../types/scoring";
+import { useCurrentUser } from "../../context/currentUserContext";
 import "./LeagueDetailPage.css";
 
 type LocationState = {
@@ -21,7 +22,7 @@ const LeagueDetailPage = () => {
   const location = useLocation();
   const state = location.state as LocationState | null;
   const league = state?.league;
-  const currentUserId = 1; // TODO: replace with authenticated user id
+  const { userId: currentUserId, error: userError } = useCurrentUser();
 
   const [members, setMembers] = useState<LeagueMember[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
@@ -29,6 +30,23 @@ const LeagueDetailPage = () => {
   const [scoreboard, setScoreboard] = useState<Record<number, ScoreWeek[]>>({});
   const [scoreboardLoading, setScoreboardLoading] = useState(false);
   const [scoreboardError, setScoreboardError] = useState<string | null>(null);
+  const [teamNameValue, setTeamNameValue] = useState<string>(
+    league?.teamName ?? ""
+  );
+  const [teamNameInput, setTeamNameInput] = useState<string>(
+    league?.teamName ?? ""
+  );
+  const [editingTeamName, setEditingTeamName] = useState(false);
+  const [teamNameSaving, setTeamNameSaving] = useState(false);
+  const [teamNameError, setTeamNameError] = useState<string | null>(null);
+  const [teamNameSuccess, setTeamNameSuccess] = useState<string | null>(null);
+
+  useEffect(() => {
+    setTeamNameValue(league?.teamName ?? "");
+    setTeamNameInput(league?.teamName ?? "");
+  }, [league?.teamName]);
+  const [leaveError, setLeaveError] = useState<string | null>(null);
+  const [leaveLoading, setLeaveLoading] = useState(false);
 
   // Fetch members on init
   useEffect(() => {
@@ -133,6 +151,54 @@ const LeagueDetailPage = () => {
     navigate(`/leagues/${league.leagueId}/conference`, { state: { league } });
   };
 
+  const openManageLeague = () => {
+    if (!league) return;
+    navigate(`/leagues/${league.leagueId}/manage`, { state: { league } });
+  };
+
+  const handleTeamNameSave = async () => {
+    if (!league?.memberId) return;
+    setTeamNameError(null);
+    setTeamNameSuccess(null);
+
+    const nextName = teamNameInput.trim();
+    if (!nextName) {
+      setTeamNameError("Team name is required.");
+      return;
+    }
+
+    try {
+      setTeamNameSaving(true);
+      await updateLeagueMember(league.memberId, nextName);
+
+      setTeamNameValue(nextName);
+      setEditingTeamName(false);
+      setTeamNameSuccess("Team name updated.");
+    } catch (err: any) {
+      setTeamNameError(err?.message ?? "Failed to update team name.");
+    } finally {
+      setTeamNameSaving(false);
+    }
+  };
+
+  const handleLeaveLeague = async () => {
+    if (!league || !currentUserId) return;
+    const confirmed = window.confirm("Leave this league?");
+    if (!confirmed) return;
+
+    setLeaveError(null);
+    setLeaveLoading(true);
+
+    try {
+      await removeLeagueMember(league.leagueId, league.memberId, currentUserId);
+      navigate("/leagues");
+    } catch (err: any) {
+      setLeaveError(err?.message ?? "Failed to leave league.");
+    } finally {
+      setLeaveLoading(false);
+    }
+  };
+
   // If you want, you can later add a fetch here if `league` is missing.
   if (!league) {
     return (
@@ -168,6 +234,10 @@ const LeagueDetailPage = () => {
 
   const canStartDraft =
     league.status === "Pre-Draft" && league.commissionerId === currentUserId;
+  const canManageLeague = league.commissionerId === currentUserId;
+  const canEditTeamName = league.memberId != null;
+  const canLeaveLeague =
+    league.status === "Pre-Draft" && league.commissionerId !== currentUserId;
 
   const scoreboardRows = useMemo<{
     weekNumbers: number[];
@@ -288,8 +358,57 @@ const LeagueDetailPage = () => {
           <h2>Your Team</h2>
           <p>
             <span className="label">Team Name: </span>
-            <span className="value">{league.teamName ?? "TBD"}</span>
+            <span className="value">{teamNameValue || "TBD"}</span>
           </p>
+          {canEditTeamName && editingTeamName ? (
+            <div className="league-detail__team-name-editor">
+              <input
+                type="text"
+                value={teamNameInput}
+                onChange={(event) => setTeamNameInput(event.target.value)}
+                disabled={teamNameSaving}
+              />
+              <div className="league-detail__team-name-actions">
+                <button
+                  className="league-detail__team-save"
+                  type="button"
+                  onClick={handleTeamNameSave}
+                  disabled={teamNameSaving}
+                >
+                  {teamNameSaving ? "Saving…" : "Save"}
+                </button>
+                <button
+                  className="league-detail__team-cancel"
+                  type="button"
+                  onClick={() => {
+                    setTeamNameInput(teamNameValue);
+                    setEditingTeamName(false);
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+              {teamNameError && (
+                <p className="league-detail__error-text">{teamNameError}</p>
+              )}
+              {teamNameSuccess && (
+                <p className="league-detail__success-text">
+                  {teamNameSuccess}
+                </p>
+              )}
+            </div>
+          ) : canEditTeamName ? (
+            <button
+              className="league-detail__team-edit"
+              type="button"
+              onClick={() => {
+                setTeamNameInput(teamNameValue);
+                setEditingTeamName(true);
+              }}
+            >
+              Edit Team Name
+            </button>
+          ) : null}
           <p>
             <span className="label">Season Points: </span>
             <span className="value">{league.seasonPoints ?? 0}</span>
@@ -323,6 +442,25 @@ const LeagueDetailPage = () => {
                 Start Draft
               </button>
             )}
+            {canManageLeague && (
+              <button
+                className="league-detail__manage-btn"
+                type="button"
+                onClick={openManageLeague}
+              >
+                Manage League
+              </button>
+            )}
+            {canLeaveLeague && (
+              <button
+                className="league-detail__leave-btn"
+                type="button"
+                onClick={handleLeaveLeague}
+                disabled={leaveLoading}
+              >
+                {leaveLoading ? "Leaving…" : "Leave League"}
+              </button>
+            )}
             <button
               className="league-detail__conference-btn"
               type="button"
@@ -330,6 +468,9 @@ const LeagueDetailPage = () => {
             >
               View Conference Scores
             </button>
+            {leaveError && (
+              <p className="league-detail__error-text">{leaveError}</p>
+            )}
           </div>
         </div>
       </section>
@@ -339,6 +480,9 @@ const LeagueDetailPage = () => {
       )}
       {membersError && (
         <p className="league-detail__error-text">{membersError}</p>
+      )}
+      {userError && (
+        <p className="league-detail__error-text">{userError}</p>
       )}
       {members.length > 0 && (
         <LeagueScheduleTabs

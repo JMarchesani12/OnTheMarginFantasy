@@ -73,8 +73,4 @@ export default defineConfig([
 ```
 
 
-
-Get all scores for a day: /scoreboard?dates=YYYYMMDD
-Get schedule for a team: /teams/{teamId}/schedule
-
 Run with: `npm run dev`

@@ -38,6 +38,32 @@
   margin: 0;
 }
 
+
+.home__tabs {
+  display: inline-flex;
+  gap: 0.5rem;
+  padding: 0.25rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  align-self: flex-start;
+}
+
+.home__tab {
+  border: none;
+  background: transparent;
+  color: #cdd7ff;
+  padding: 0.55rem 1.4rem;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.home__tab--active {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
 .home__stage-filter {
   margin-top: 0.75rem;
   display: inline-flex;
@@ -84,10 +110,120 @@
   cursor: pointer;
 }
 
+.home__settings-btn {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: #f4f7ff;
+  font-weight: 600;
+  padding: 0.75rem 1.4rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
 .home__leagues {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1.5rem;
+}
+
+.home__search {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.home__search-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.home__search-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  color: black;
+  font-size: 0.9rem;
+}
+
+.home__search-field input,
+.home__search-field select {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: black;
+  border-radius: 16px;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.95rem;
+}
+
+.home__search-status {
+  color: #b4c2da;
+  margin: 0;
+}
+
+.home__search-error {
+  color: #ffadb0;
+  margin: 0;
+}
+
+.home__search-results {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+.home__search-card {
+  border-radius: 20px;
+  padding: 1.25rem;
+  background: rgba(22, 27, 51, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.home__search-card h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1.25rem;
+}
+
+.home__search-meta {
+  margin: 0;
+  color: #b4c2da;
+  font-size: 0.9rem;
+}
+
+.home__search-action {
+  align-self: flex-start;
+  border: none;
+  border-radius: 999px;
+  padding: 0.55rem 1.2rem;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.home__pagination {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #cdd7ff;
+}
+
+.home__pagination button {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+  border-radius: 999px;
+  padding: 0.45rem 1rem;
+  cursor: pointer;
+}
+
+.home__pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 @media (max-width: 720px) {
@@ -111,6 +247,19 @@
   }
 
   .home__leagues {
+    grid-template-columns: 1fr;
+  }
+
+  .home__tabs {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .home__search-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .home__search-results {
     grid-template-columns: 1fr;
   }
 }

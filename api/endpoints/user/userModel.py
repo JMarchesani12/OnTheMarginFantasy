@@ -5,6 +5,9 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
+ALLOWED_USER_FIELDS = {
+    "displayName": '"displayName"'
+}
 
 class UserModel:
     def __init__(self, db: Engine):
@@ -62,3 +65,32 @@ class UserModel:
             # Could be: unique(email) violation OR FK(uuid->auth.users) violation
             msg = str(getattr(e, "orig", e))
             raise ValueError(f"User creation failed: {msg}")
+        
+    def update_user(self, user_id: int, updates: Dict[str, Any]) -> Dict[str, Any]:
+        payload = {k: updates[k] for k in updates.keys() if k in ALLOWED_USER_FIELDS}
+
+        if not payload:
+            raise ValueError("No valid fields provided to update")
+
+        set_clauses = []
+        params: Dict[str, Any] = {"userId": user_id}
+
+        for i, (key, val) in enumerate(payload.items()):
+            param_name = f"v{i}"
+            set_clauses.append(f'{ALLOWED_USER_FIELDS[key]} = :{param_name}')
+            params[param_name] = val
+
+        sql = text(f"""
+            UPDATE "User"
+            SET {", ".join(set_clauses)}
+            WHERE id = :userId
+            RETURNING id, uuid, email, "displayName", "createdAt"
+        """)
+
+        with self.db.begin() as conn:
+            row = conn.execute(sql, params).mappings().first()
+
+        if not row:
+            raise ValueError("User not found")
+
+        return dict(row)

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./CreateLeague.css";
 import { useNavigate } from "react-router-dom";
 import type { CreateLeaguePayload } from "../../types/league";
@@ -7,9 +7,10 @@ import {
   BonusesEditor,
   type BonusWithLocalId,
 } from "./BonusesEditor";
-
-// TODO: replace this with the current user's id from your AuthContext
-const CURRENT_USER_ID = 1;
+import { getSportRounds } from "../../api/draft";
+import { getSports } from "../../api/sport";
+import type { Sport } from "../../types/sport";
+import { useCurrentUser } from "../../context/currentUserContext";
 
 interface CreateLeagueFormState {
   leagueName: string;
@@ -24,6 +25,8 @@ interface CreateLeagueFormState {
   freeAgentDeadline: string;
   tradeDeadline: string;
 
+  isDiscoverable: boolean;
+
   // settings.transactions
   tradeVetoEnabled: boolean;
   tradeVetoRequiredCount: string;
@@ -32,27 +35,17 @@ interface CreateLeagueFormState {
   bonuses: BonusWithLocalId[];
 }
 
-// sport IDs: update values if your Sport table uses different ids
-const SPORT_OPTIONS: { value: string; label: string }[] = [
-  {
-    value: "1",
-    label: "NCAA Men’s College Basketball",
-  },
-  {
-    value: "2",
-    label: "College Football",
-  }
-];
-
 const initialSeasonYear = new Date().getFullYear().toString();
 
 const makeInitialState = (): CreateLeagueFormState => ({
   leagueName: "",
-  sportId: "1",
+  sportId: "",
   numPlayers: "1",
 
   status: "Pre-Draft",
   seasonYear: initialSeasonYear,
+
+  isDiscoverable: true,
 
   draftDate: "",
   freeAgentDeadline: "",
@@ -65,13 +58,54 @@ const makeInitialState = (): CreateLeagueFormState => ({
 });
 
 const CreateLeague: React.FC = () => {
+  const { userId, displayName, email } = useCurrentUser();
+
   const [form, setForm] = useState<CreateLeagueFormState>(makeInitialState);
+  const [sports, setSports] = useState<Sport[]>([]);
+  const [sportsLoading, setSportsLoading] = useState(false);
+  const [sportsError, setSportsError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const update = (patch: Partial<CreateLeagueFormState>) =>
     setForm((prev) => ({ ...prev, ...patch }));
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadSports = async () => {
+      setSportsLoading(true);
+      setSportsError(null);
+
+      try {
+        const data = await getSports();
+        if (!isMounted) {
+          return;
+        }
+        setSports(data);
+        if (data.length > 0) {
+          setForm((prev) =>
+            prev.sportId ? prev : { ...prev, sportId: String(data[0].id) }
+          );
+        }
+      } catch (err: any) {
+        if (isMounted) {
+          setSportsError(err?.message ?? "Failed to load sports");
+        }
+      } finally {
+        if (isMounted) {
+          setSportsLoading(false);
+        }
+      }
+    };
+
+    loadSports();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const toIsoOrNull = (dateStr: string): string | null => {
     if (!dateStr) return null;
@@ -87,10 +121,16 @@ const CreateLeague: React.FC = () => {
       setError("League name is required.");
       return;
     }
+    if (!form.sportId) {
+      setError("Sport is required.");
+      return;
+    }
     if (!form.numPlayers) {
       setError("Number of players is required.");
       return;
     }
+
+    const rounds = await getSportRounds(Number(form.sportId))
 
     // build bonuses object: { [bonusKey]: { [placementKey]: points } }
     const bonuses: Record<string, Record<string, number>> = {};
@@ -113,25 +153,30 @@ const CreateLeague: React.FC = () => {
       settings: {
         bonuses,
         transactions: {
-          transactionsApplyOn: "nextMonday",
           tradeVeto: {
             enabled: form.tradeVetoEnabled,
             requiredVetoCount: Number(form.tradeVetoRequiredCount || 0),
           },
         },
+        draft: {
+          draftType: "SNAKE",
+          selectionTime: 60,
+          numberOfRounds: rounds
+        }
       },
       draftDate: toIsoOrNull(form.draftDate),
       freeAgentDeadline: toIsoOrNull(form.freeAgentDeadline),
       tradeDeadline: toIsoOrNull(form.tradeDeadline),
-      commissioner: CURRENT_USER_ID, // replace with value from auth when you wire that up
+      commissioner: userId, // replace with value from auth when you wire that up
       seasonYear: Number(initialSeasonYear),
+      isDiscoverable: true
     };
 
     try {
       setSubmitting(true);
       await createLeague(payload);
       setForm(makeInitialState());
-      navigate("/");
+      navigate("/leagues");
     } catch (err) {
       console.error(err);
       setError("Failed to create league. Check console/backend logs.");
@@ -166,18 +211,25 @@ const CreateLeague: React.FC = () => {
           <div className="cl-form-grid">
             <div className="cl-field-group">
               <label className="cl-field-label">
-                Sport
+                Sport <span className="cl-required">*</span>
               </label>
               <select
                 value={form.sportId}
                 onChange={(e) => update({ sportId: e.target.value })}
+                disabled={sportsLoading}
               >
-                {SPORT_OPTIONS.map((s) => (
-                  <option key={s.value} value={s.value}>
-                    {s.label}
+                <option value="" disabled>
+                  Select a sport
+                </option>
+                {sports.map((sport) => (
+                  <option key={sport.id} value={String(sport.id)}>
+                    {sport.name}
                   </option>
                 ))}
               </select>
+              {sportsError && (
+                <p className="cl-form-error">{sportsError}</p>
+              )}
             </div>
           </div>
 
@@ -185,7 +237,7 @@ const CreateLeague: React.FC = () => {
           <div className="cl-form-grid">
             <div className="cl-field-group">
               <label className="cl-field-label">
-                Draft Date (You can set this later)
+                Draft Date
               </label>
               <input
                 type="date"
@@ -196,7 +248,7 @@ const CreateLeague: React.FC = () => {
 
             <div className="cl-field-group">
               <label className="cl-field-label">
-                Free Agent Deadline (optional)
+                Free Agent Deadline
               </label>
               <input
                 type="date"
@@ -209,7 +261,7 @@ const CreateLeague: React.FC = () => {
 
             <div className="cl-field-group">
               <label className="cl-field-label">
-                Trade Deadline (optional)
+                Trade Deadline
               </label>
               <input
                 type="date"
@@ -234,7 +286,7 @@ const CreateLeague: React.FC = () => {
             </label>
             {form.tradeVetoEnabled && (
               <div className="cl-inline-number">
-                <span>Required veto count:</span>
+                <span>Required veto count: <span className="cl-required">*</span></span>
                 <input
                   type="number"
                   min={1}

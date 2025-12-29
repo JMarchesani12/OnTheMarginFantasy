@@ -1,0 +1,212 @@
+.ml-page {
+  min-height: 100vh;
+}
+
+.ml-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.ml-subtitle {
+  color: #9ca3af;
+  margin: 0.25rem 0 0;
+}
+
+.ml-back {
+  background: none;
+  border: none;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.ml-section {
+  margin-bottom: 1.5rem;
+}
+
+.ml-section-header h2 {
+  margin: 0 0 0.25rem;
+}
+
+.ml-section-header p {
+  margin: 0 0 0.75rem;
+  color: #9ca3af;
+}
+
+.ml-section-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.ml-inline-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.ml-error {
+  color: #f97373;
+  font-size: 0.9rem;
+}
+
+.ml-success {
+  color: #34d399;
+  font-size: 0.9rem;
+}
+
+.ml-muted {
+  color: #9ca3af;
+  font-size: 0.9rem;
+}
+
+.ml-draft-order {
+  border-top: 1px solid #1f2933;
+  padding-top: 1rem;
+}
+
+.ml-draft-order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.ml-draft-order-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ml-draft-order-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid #1f2937;
+}
+
+.ml-draft-order-row.is-dragging {
+  opacity: 0.6;
+  border-style: dashed;
+}
+
+.ml-draft-order-main {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ml-draft-rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: rgba(148, 163, 184, 0.2);
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.ml-draft-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ml-draft-order-row input {
+  max-width: 80px;
+}
+
+.ml-remove-btn {
+  border-radius: 999px;
+  border: 1px solid rgba(248, 113, 113, 0.5);
+  background: rgba(248, 113, 113, 0.1);
+  color: #fecaca;
+  padding: 0.35rem 0.9rem;
+  cursor: pointer;
+}
+
+.ml-remove-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ml-remove-btn:hover {
+  background: rgba(248, 113, 113, 0.2);
+}
+
+.ml-drag-hint {
+  color: #94a3b8;
+  font-size: 1.1rem;
+}
+
+.ml-draft-member {
+  margin: 0;
+  font-weight: 600;
+}
+
+.ml-draft-sub {
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+.ml-requests-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.ml-request-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid #1f2937;
+}
+
+.ml-request-name {
+  margin: 0;
+  font-weight: 600;
+}
+
+.ml-request-sub {
+  margin: 0.15rem 0 0;
+  color: #9ca3af;
+  font-size: 0.85rem;
+}
+
+.ml-request-message {
+  margin: 0.4rem 0 0;
+  font-size: 0.9rem;
+}
+
+.ml-request-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.ml-delete-btn {
+  border-radius: 999px;
+  border: 1px solid rgba(248, 113, 113, 0.5);
+  background: rgba(248, 113, 113, 0.15);
+  color: #fee2e2;
+  padding: 0.5rem 1.25rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ml-delete-btn:hover {
+  background: rgba(248, 113, 113, 0.25);
+}

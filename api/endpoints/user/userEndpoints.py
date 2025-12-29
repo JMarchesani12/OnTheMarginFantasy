@@ -33,3 +33,14 @@ class UserEndpoints:
             return jsonify({"message": "Failed to create user"}), 500
 
         return jsonify(user), 201
+    
+    # PATCH /api/user/<user_id>
+    def update_user(self, user_id: int):
+        try:
+            body = request.get_json(force=True) or {}
+            updated = self.userModel.update_user(user_id, body)
+            return jsonify(updated), 200
+        except ValueError as e:
+            return jsonify({"message": str(e)}), 400
+        except Exception:
+            return jsonify({"message": "Failed to update user"}), 500

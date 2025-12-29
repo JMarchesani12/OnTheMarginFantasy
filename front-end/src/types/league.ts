@@ -1,6 +1,4 @@
-export type LeagueStatus = 'Pre-Draft' | 'Drafting' | 'In-Season' | 'Completed';
-
-export type SportCode = "NCAA_MENS_BASKETBALL" | "FBC_FOOTBALL" | "FCS_FOOTBALL";
+export type LeagueStatus = 'Pre-Draft' | 'Drafting' | 'Post-Draft' | 'In-Season' | 'Completed';
 
 export type ScoringSystem =
   | "POINT_DIFFERENTIAL"
@@ -24,16 +22,24 @@ export interface BonusDTO {
 export type LeagueBonuses = Record<string, Record<string, number>>;
 
 export interface LeagueSettingsTransactions {
-  transactionsApplyOn: string; // e.g. "nextMonday"
   tradeVeto: {
     enabled: boolean;
     requiredVetoCount: number;
   };
 }
 
+export type DraftType = "SNAKE" | "STRAIGHT"
+
+export interface DraftMeta {
+  draftType: DraftType,
+  selectionTime: number,
+  numberOfRounds: number
+}
+
 export interface LeagueSettings {
   bonuses: LeagueBonuses;
   transactions: LeagueSettingsTransactions;
+  draft: DraftMeta;
 }
 
 export interface CreateLeaguePayload {
@@ -45,8 +51,9 @@ export interface CreateLeaguePayload {
   draftDate: string | null;
   freeAgentDeadline: string | null;
   tradeDeadline: string | null;
-  commissioner: number;
+  commissioner: number | null;
   seasonYear: number;
+  isDiscoverable: boolean;
 }
 
 export type League = {
@@ -54,8 +61,10 @@ export type League = {
   leagueCreatedAt: string;
   leagueName: string;
   sport: string;
+  maxPlayersToHaveMaxRounds: number;
   numPlayers: number;
   status: LeagueStatus;
+  settings: LeagueSettings;
   updatedAt: string;
   draftDate: string | null;
   tradeDeadline: string | null;
@@ -87,4 +96,82 @@ export type GetConferences = {
   leagueId: number;
   seasonYear: string;
   sportId: number;
+}
+
+export type UpdateLeague = {
+  name?: string;
+  numPlayers?: number;
+  status?: string;
+  settings?: LeagueSettings;
+  draftDate?: string | null;
+  tradeDeadline?: string | null;
+  freeAgentDeadline?: string | null;
+}
+
+export interface LeagueSearchResult {
+  id: number;
+  name: string;
+  sport: number;
+  numPlayers: number;
+  status: string;
+  draftDate: string | null;
+  isDiscoverable: boolean;
+  commissioner: number;
+  commissionerEmail: string;
+  commissionerDisplayName: string | null;
+}
+
+export interface RequestResponse {
+  id: number;
+  createdAt: string;
+  leagueId: number;
+  userId: number;
+  status: string;
+  message?: string;
+  resolvedAt: string;
+  resolvedByUserId: number;
+}
+
+export type NewMember = {
+  id: number;
+  leagueId: number;
+  userId: number;
+  teamName: string;
+  seasonPoints: number;
+  createdAt: string;
+}
+
+export interface ApproveRequestResponse {
+  request: RequestResponse;
+  member?: NewMember;
+}
+
+export interface GetRequestResponse {
+  id: number;
+  createdAt: string;
+  leagueId: number;
+  userId: number;
+  status: string;
+  message?: string;
+  resolvedAt: string | null;
+  resolvedByUserId: number | null;
+  userEmail: string;
+  userDisplayName: string;
+}
+
+export type SingleLeague = {
+  commissioner: number;
+  createdAt: string;
+  draftDate: string | null;
+  freeAgentDeadline: string | null;
+  id: number;
+  isDiscoverable: boolean;
+  name: string;
+  numPlayers: number;
+  seasonYear: number;
+  settings: LeagueSettings;
+  sport: number;
+  status: LeagueStatus;
+  tradeDeadline: string | null;
+  updatedAt: string | null;
 }

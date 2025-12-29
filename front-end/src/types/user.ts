@@ -5,3 +5,7 @@ export type User = {
     id: number;
     uuid: string | null;
 }
+
+export type UpdateUser = {
+    displayName: string;
+}

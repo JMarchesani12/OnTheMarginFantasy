@@ -1,0 +1,87 @@
+.settings {
+  min-height: 100vh;
+  padding: 3rem clamp(1rem, 6vw, 4rem);
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.settings__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.settings__subtitle {
+  color: #b4c2da;
+  margin: 0.4rem 0 0;
+}
+
+.settings__back {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: inherit;
+  border-radius: 999px;
+  padding: 0.5rem 1.2rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.settings__card {
+  background: rgba(22, 27, 51, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 1.75rem;
+}
+
+.settings__card h2 {
+  margin: 0 0 1rem;
+}
+
+.settings__form {
+  display: grid;
+  gap: 1rem;
+}
+
+.settings__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.95rem;
+  color: #cdd7ff;
+}
+
+.settings__field input {
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  padding: 0.7rem 0.9rem;
+  font-size: 1rem;
+}
+
+.settings__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.settings__save {
+  border: none;
+  border-radius: 999px;
+  padding: 0.75rem 1.6rem;
+  background: linear-gradient(120deg, #5ee7df, #b490ca);
+  color: #0c1222;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.settings__error {
+  color: #ffadb0;
+  margin: 0;
+}
+
+.settings__success {
+  color: #34d399;
+  margin: 0;
+}

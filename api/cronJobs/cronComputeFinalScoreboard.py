@@ -65,7 +65,7 @@ def main():
                     """
                     SELECT l.id AS "leagueId"
                     FROM "League" l
-                    WHERE l."sportId" = :sport_id
+                    WHERE l."sport" = :sport_id
                       AND l."seasonYear" = :season_year
                     """
                 ),

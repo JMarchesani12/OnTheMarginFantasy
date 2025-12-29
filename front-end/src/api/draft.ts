@@ -32,3 +32,13 @@ export async function createDraftPick(
   const data = (await res.json()) as DraftPickResponse;
   return data;
 }
+
+export async function getSportRounds(sportId: number) {
+  const res = await fetch(`${API_BASE_URL}/api/draft/rounds/${sportId}`)
+  if (!res.ok) {
+    throw new Error(`Failed to submit draft pick: ${res.status}`);
+  }
+
+  const data = (await res.json());
+  return data['rounds'];
+}

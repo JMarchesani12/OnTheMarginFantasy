@@ -39,3 +39,20 @@ class DraftEndpoints:
             return jsonify({"message": "Failed to create draft pick"}), 500
 
         return jsonify(draft_pick), 201
+
+    # GET /api/draft/rounds/<int:sportId>
+    def get_rounds(self, sportId):
+        try:
+            rounds = self.draftModel.get_rounds(sportId=sportId)
+
+            if rounds is None:
+                return jsonify({"message": "Sport not found"}), 404
+
+        except ValueError as e:
+            return jsonify({"message": str(e)}), 400
+        except Exception as e:
+            # log e
+            return jsonify({"message": "Failed to get rounds"}), 500
+
+        return jsonify({"rounds": rounds}), 200
+
