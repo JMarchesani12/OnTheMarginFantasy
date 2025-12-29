@@ -37,6 +37,7 @@ const Home = () => {
   const [searchError, setSearchError] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(false);
+  const [overviewOpen, setOverviewOpen] = useState(true);
 
   const { userId, displayName, email } = useCurrentUser();
 
@@ -188,6 +189,57 @@ const Home = () => {
       <header className="home__header">
         <div>
           <p className="home__eyebrow">Welcome back {welcomeName}</p>
+          {tab === "leagues" && (
+            <section className="home__overview" aria-label="League overview">
+              <div className="home__overview-header">
+                <div>
+                  <h2>How it works</h2>
+                  <p>
+                    Quick rules snapshot. League settings and deadlines are
+                    customized by each commissioner.
+                  </p>
+                </div>
+                <button
+                  className="home__overview-toggle"
+                  type="button"
+                  aria-expanded={overviewOpen}
+                  aria-controls="home-overview-content"
+                  onClick={() => setOverviewOpen((prev) => !prev)}
+                >
+                  {overviewOpen ? "Hide" : "Show"} overview
+                </button>
+              </div>
+              {overviewOpen && (
+                <div id="home-overview-content" className="home__overview-grid">
+                  <article className="home__overview-card">
+                    <h3>Draft format</h3>
+                    <p>
+                      Draft one team from every conference. Power 5 conferences
+                      get two teams.
+                    </p>
+                  </article>
+                  <article className="home__overview-card">
+                    <h3>Every team counts</h3>
+                    <p>No bench. Every team contributes to your weekly total.</p>
+                  </article>
+                  <article className="home__overview-card">
+                    <h3>Weekly scoring</h3>
+                    <p>
+                      Weeks run Mon-Sun. Score equals total point differential:
+                      wins add points, losses subtract.
+                    </p>
+                  </article>
+                  <article className="home__overview-card">
+                    <h3>Trades and free agents</h3>
+                    <p>
+                      Swap within a conference up to 3 times per season. Moves
+                      lock for the week and take effect the following Monday.
+                    </p>
+                  </article>
+                </div>
+              )}
+            </section>
+          )}
           <h1>{tab === "leagues" ? "Your Leagues" : "Discover Leagues"}</h1>
           <p className="home__subtitle">
             {tab === "leagues"

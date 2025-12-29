@@ -42,3 +42,20 @@ export async function getSportRounds(sportId: number) {
   const data = (await res.json());
   return data['rounds'];
 }
+
+export async function setDraftOrder(leagueId: number, memberIdsInOrder: number[]) {
+  const payload = {
+    "memberIdsInOrder": memberIdsInOrder
+  }
+  const res = await fetch(`${API_BASE_URL}/api/league/${leagueId}/draft/order`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) {
+    throw new Error(`Failed to set draft order: ${res.status}`);
+  }
+
+  const data = (await res.json());
+  return data;
+}

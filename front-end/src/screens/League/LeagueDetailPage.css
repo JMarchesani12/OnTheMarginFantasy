@@ -127,6 +127,17 @@
   font-weight: 500;
 }
 
+.league-detail__actions {
+  margin-top: 1.25rem;
+}
+
+.league-detail__action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
+
 .league-detail__add-drop {
   margin-top: 1rem;
   display: flex;

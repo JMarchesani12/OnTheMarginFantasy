@@ -19,6 +19,7 @@ import {
   deleteLeague,
   updateLeague,
 } from "../../api/leagues";
+import { setDraftOrder as setDraftOrderApi } from "../../api/draft";
 import {
   BonusesEditor,
   BONUS_TEMPLATES,
@@ -157,7 +158,7 @@ const ManageLeaguePage = () => {
   const [members, setMembers] = useState<LeagueMember[]>([]);
   const [membersLoading, setMembersLoading] = useState(false);
   const [membersError, setMembersError] = useState<string | null>(null);
-  const [draftOrder, setDraftOrder] = useState<Record<number, string>>({});
+  const [draftOrder, setDraftOrderState] = useState<Record<number, string>>({});
   const [orderedMemberIds, setOrderedMemberIds] = useState<number[]>([]);
   const [draggingMemberId, setDraggingMemberId] = useState<number | null>(null);
   const [memberActionError, setMemberActionError] = useState<string | null>(null);
@@ -313,7 +314,7 @@ const ManageLeaguePage = () => {
       setOrderedMemberIds([]);
       return;
     }
-    setDraftOrder((current) => {
+    setDraftOrderState((current) => {
       const hasOrder = Object.keys(current).length > 0;
       const next: Record<number, string> = { ...current };
       members.forEach((member, index) => {
@@ -402,6 +403,49 @@ const ManageLeaguePage = () => {
     }
   };
 
+  const handleDraftSave = async (startDraft: boolean) => {
+    if (!leagueId) return;
+    setSaveError(null);
+    setSaveMessage(null);
+
+    try {
+      setSaving(true);
+      const payload: UpdateLeague = {
+        settings: {
+          bonuses: leagueState?.settings?.bonuses ?? {},
+          transactions: leagueState?.settings?.transactions ?? {
+            tradeVeto: { enabled: true, requiredVetoCount: 0 },
+          },
+          draft: {
+            draftType: form.draftType,
+            selectionTime: Number(form.selectionTime || 0),
+            numberOfRounds: form.numberOfRounds,
+          },
+        },
+        draftDate: toIsoOrNull(form.draftDate),
+      };
+
+      await updateLeague(payload, leagueId);
+      if (orderedMemberIds.length > 0) {
+        await setDraftOrderApi(leagueId, orderedMemberIds);
+      }
+
+      const refreshed = await getLeague(leagueId);
+      const nextLeague = mapLeagueFromResponse(refreshed);
+      setLeagueState(nextLeague);
+      setForm(makeInitialForm(nextLeague));
+      setSaveMessage(
+        startDraft
+          ? "Draft settings saved. Draft start will be enabled soon."
+          : "Draft settings saved."
+      );
+    } catch (err: any) {
+      setSaveError(err?.message ?? "Failed to save draft settings.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleRandomizeDraftOrder = () => {
     const shuffled = shuffleMembers(members);
     const nextIds = shuffled.map((member) => member.id);
@@ -410,7 +454,7 @@ const ManageLeaguePage = () => {
     nextIds.forEach((memberId, index) => {
       next[memberId] = String(index + 1);
     });
-    setDraftOrder(next);
+    setDraftOrderState(next);
   };
 
   const loadRequests = async () => {
@@ -473,7 +517,7 @@ const ManageLeaguePage = () => {
 
     try {
       await removeLeagueMember(leagueId, member.id, currentUserId);
-      setDraftOrder((current) => {
+      setDraftOrderState((current) => {
         const next = { ...current };
         delete next[member.id];
         return next;
@@ -528,7 +572,7 @@ const ManageLeaguePage = () => {
       next.forEach((id, index) => {
         nextOrder[id] = String(index + 1);
       });
-      setDraftOrder(nextOrder);
+      setDraftOrderState(nextOrder);
       return next;
     });
   };
@@ -829,7 +873,7 @@ const ManageLeaguePage = () => {
               <button
                 className="cl-btn-primary"
                 type="button"
-                onClick={handleSave}
+                onClick={() => handleDraftSave(false)}
                 disabled={saving}
               >
                 {saving ? "Saving…" : "Save"}
@@ -837,7 +881,7 @@ const ManageLeaguePage = () => {
               <button
                 className="cl-btn-secondary"
                 type="button"
-                onClick={handleSave}
+                onClick={() => handleDraftSave(true)}
                 disabled={saving}
               >
                 Save and Start Draft

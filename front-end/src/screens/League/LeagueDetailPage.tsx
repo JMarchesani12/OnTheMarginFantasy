@@ -336,21 +336,6 @@ const LeagueDetailPage = () => {
             </span>
           </div>
         </div>
-
-        <div className="league-detail__overview-row">
-          <div className="league-detail__overview-item">
-            <span className="label">Created</span>
-            <span className="value">
-              {formatLeagueDate(league.leagueCreatedAt)}
-            </span>
-          </div>
-          <div className="league-detail__overview-item">
-            <span className="label">Last Updated</span>
-            <span className="value">
-              {formatLeagueDate(league.updatedAt)}
-            </span>
-          </div>
-        </div>
       </section>
 
       <section className="league-detail__content">
@@ -433,6 +418,27 @@ const LeagueDetailPage = () => {
                 Trade deadline passed on {formatLeagueDate(league.tradeDeadline)}
               </p>
             )}
+            {canLeaveLeague && (
+              <button
+                className="league-detail__leave-btn"
+                type="button"
+                onClick={handleLeaveLeague}
+                disabled={leaveLoading}
+              >
+                {leaveLoading ? "Leaving…" : "Leave League"}
+              </button>
+            )}
+            {leaveError && (
+              <p className="league-detail__error-text">{leaveError}</p>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className="league-detail__actions">
+        <div className="league-detail__card">
+          <h2>League Actions</h2>
+          <div className="league-detail__action-buttons">
             {canStartDraft && (
               <button
                 className="league-detail__start-draft-btn"
@@ -451,16 +457,6 @@ const LeagueDetailPage = () => {
                 Manage League
               </button>
             )}
-            {canLeaveLeague && (
-              <button
-                className="league-detail__leave-btn"
-                type="button"
-                onClick={handleLeaveLeague}
-                disabled={leaveLoading}
-              >
-                {leaveLoading ? "Leaving…" : "Leave League"}
-              </button>
-            )}
             <button
               className="league-detail__conference-btn"
               type="button"
@@ -468,9 +464,6 @@ const LeagueDetailPage = () => {
             >
               View Conference Scores
             </button>
-            {leaveError && (
-              <p className="league-detail__error-text">{leaveError}</p>
-            )}
           </div>
         </div>
       </section>

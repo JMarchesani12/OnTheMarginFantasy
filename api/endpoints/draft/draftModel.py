@@ -261,3 +261,47 @@ class DraftModel:
             ).scalar_one_or_none()
 
         return rounds
+    
+    def set_draft_order(self, league_id: int, member_ids_in_order: List[int]) -> Dict[str, Any]:
+        if not member_ids_in_order:
+            raise ValueError("memberIdsInOrder is required")
+
+        with self.db.begin() as conn:
+            # 1) bump everything out of the way
+            conn.execute(
+                text("""
+                    UPDATE "LeagueMember"
+                    SET "draftOrder" = "draftOrder" + 100000
+                    WHERE "leagueId" = :leagueId
+                """),
+                {"leagueId": league_id},
+            )
+
+            # 2) set final order
+            conn.execute(
+                text("""
+                    WITH input AS (
+                        SELECT
+                            unnest(CAST(:ids AS bigint[])) AS member_id,
+                            generate_series(1, array_length(CAST(:ids AS bigint[]), 1)) AS new_order
+                    )
+                    UPDATE "LeagueMember" lm
+                    SET "draftOrder" = i.new_order
+                    FROM input i
+                    WHERE lm.id = i.member_id
+                    AND lm."leagueId" = :leagueId
+                """),
+                {"leagueId": league_id, "ids": member_ids_in_order},
+            )
+
+            updated_members = conn.execute(
+                text("""
+                    SELECT id AS "memberId", "userId", "teamName", "draftOrder"
+                    FROM "LeagueMember"
+                    WHERE "leagueId" = :leagueId
+                    ORDER BY "draftOrder", id
+                """),
+                {"leagueId": league_id},
+            ).mappings().all()
+
+        return {"members": [dict(m) for m in updated_members]}

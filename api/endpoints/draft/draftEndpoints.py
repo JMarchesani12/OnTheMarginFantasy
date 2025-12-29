@@ -56,3 +56,23 @@ class DraftEndpoints:
 
         return jsonify({"rounds": rounds}), 200
 
+    # PUT /api/league/<league_id>/draft/order
+    def set_draft_order(self, league_id: int):
+        try:
+            body = request.get_json(force=True) or {}
+            ids = body.get("memberIdsInOrder")
+
+            if not isinstance(ids, list) or not ids:
+                return jsonify({"message": "memberIdsInOrder must be a non-empty array"}), 400
+
+            result = self.draftModel.set_draft_order(
+                league_id=league_id,
+                member_ids_in_order=[int(x) for x in ids],
+            )
+            return jsonify(result), 200
+
+        except ValueError as e:
+            return jsonify({"message": str(e)}), 400
+        except Exception as e:
+            return jsonify({"message": e}), 500
+            return jsonify({"message": "Failed to set draft order"}), 500

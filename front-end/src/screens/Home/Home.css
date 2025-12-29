@@ -38,6 +38,68 @@
   margin: 0;
 }
 
+.home__overview {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  border-radius: 24px;
+  background: rgba(20, 26, 48, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.home__overview-header h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.6rem;
+}
+
+.home__overview-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.home__overview-header p {
+  margin: 0;
+  color: #b4c2da;
+}
+
+.home__overview-toggle {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: #f4f7ff;
+  font-weight: 600;
+  padding: 0.55rem 1.1rem;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.home__overview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.home__overview-card {
+  border-radius: 18px;
+  padding: 1rem 1.1rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.home__overview-card h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+}
+
+.home__overview-card p {
+  margin: 0;
+  color: #cbd5f0;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
 
 .home__tabs {
   display: inline-flex;
@@ -253,6 +315,24 @@
   .home__tabs {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .home__overview {
+    padding: 1.25rem;
+  }
+
+  .home__overview-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .home__overview-toggle {
+    width: 100%;
+    text-align: center;
+  }
+
+  .home__overview-grid {
+    grid-template-columns: 1fr;
   }
 
   .home__search-controls {
