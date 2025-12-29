@@ -35,6 +35,7 @@ type ConferenceGame = {
   awayInConference: boolean;
 
   broadcast: string | null;
+  time: string | null;
 }
 
 export type ConferenceSchedule = {
@@ -65,6 +66,7 @@ type TeamGameView = {
   opponentTeamName: string;
 
   broadcast: string | null;
+  time: string | null;
 };
 
 export type TeamSeasonSchedule = {

@@ -26,6 +26,7 @@ type ScheduleCell = {
   teamScore: number;
   opponentScore: number;
   broadcast: string | null;
+  time: string | null;
 };
 
 type TeamRow = {
@@ -223,7 +224,8 @@ const ConferenceSchedulePage = () => {
       isHome: boolean,
       teamScore: number,
       opponentScore: number,
-      broadcast: string | null
+      broadcast: string | null,
+      time: string | null,
     ) => {
       const entry = teamMap.get(teamId) ?? {
         teamName,
@@ -239,7 +241,8 @@ const ConferenceSchedulePage = () => {
         isHome,
         teamScore,
         opponentScore,
-        broadcast
+        broadcast,
+        time,
       });
 
       teamMap.set(teamId, entry);
@@ -257,7 +260,8 @@ const ConferenceSchedulePage = () => {
           true,
           game.homeScore,
           game.awayScore,
-          game.broadcast
+          game.broadcast,
+          game.time,
         );
       }
 
@@ -270,7 +274,8 @@ const ConferenceSchedulePage = () => {
           false,
           game.awayScore,
           game.homeScore,
-          game.broadcast
+          game.broadcast,
+          game.time,
         );
       }
     });
@@ -508,6 +513,7 @@ const ConferenceSchedulePage = () => {
                                   </span>
                                 )}
                                 {cell.broadcast != null ? cell.broadcast : ""}
+                                {cell.time != null ? cell.time : ""}
                               </div>
                             </div>
                           );

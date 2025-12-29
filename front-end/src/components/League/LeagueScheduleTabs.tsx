@@ -25,6 +25,7 @@ type ScheduleCell = {
   opponentScore: number;
   memberPointDiff: number;
   broadcast: string | null;
+  time: string | null;
 };
 
 type TeamRow = {
@@ -113,6 +114,7 @@ export const LeagueScheduleTabs = ({
       opponentScore: number,
       memberPointDiff: number,
       broadcast: string | null,
+      time: string | null,
     ) => {
       let row = teamMap.get(teamId);
       if (!row) {
@@ -136,7 +138,8 @@ export const LeagueScheduleTabs = ({
         teamScore,
         opponentScore,
         memberPointDiff,
-        broadcast
+        broadcast,
+        time,
       });
     };
 
@@ -154,7 +157,8 @@ export const LeagueScheduleTabs = ({
           g.homeScore,
           g.awayScore,
           g.memberPointDiff,
-          g.broadcast
+          g.broadcast,
+          g.time
         );
       }
 
@@ -168,7 +172,8 @@ export const LeagueScheduleTabs = ({
           g.awayScore,
           g.homeScore,
           g.memberPointDiff,
-          g.broadcast
+          g.broadcast,
+          g.time
         );
       }
     }
@@ -367,6 +372,7 @@ export const LeagueScheduleTabs = ({
                                   </>
                                 )}
                                 {c.broadcast != null ? c.broadcast : ""}
+                                {c.time != null ? c.time : ""}
                               </div>
                             );
                           })}

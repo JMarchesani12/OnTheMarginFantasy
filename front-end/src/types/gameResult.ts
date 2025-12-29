@@ -12,4 +12,5 @@ export type GameResult = {
   ownsAway: boolean;
   ownsHome: boolean;
   broadcast: string | null;
+  time: string | null;
 };

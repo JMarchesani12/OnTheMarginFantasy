@@ -177,6 +177,7 @@ class ESPNClient:
                 return None
             comp = competitions[0]
             broadcast = comp.get("broadcast")
+            startDate = comp.get("startDate")
 
             competitors = comp.get("competitors") or []
             home = next((c for c in competitors if c.get("homeAway") == "home"), None)
@@ -203,7 +204,8 @@ class ESPNClient:
                 "awayName": away_name,
                 "homeScore": home_score,
                 "awayScore": away_score,
-                "broadcast": broadcast
+                "broadcast": broadcast,
+                "startDate": startDate
             }
         except Exception:
             # If ESPN changes shape on us for some odd event, just skip it.

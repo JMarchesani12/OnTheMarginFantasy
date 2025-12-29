@@ -289,7 +289,8 @@ class ScheduleModel:
                 "awayTeamExternalId",
                 "homeTeamName",
                 "awayTeamName",
-                "broadcast"
+                "broadcast",
+                "startDate"
             )
             VALUES (
                 :sport,
@@ -306,6 +307,7 @@ class ScheduleModel:
                 :homeTeamName,
                 :awayTeamName,
                 :broadcast
+                :startDate
             )
             ON CONFLICT (sport, "sportSeasonId", "externalGameId")
             DO UPDATE SET
@@ -319,7 +321,8 @@ class ScheduleModel:
                 "awayTeamExternalId" = EXCLUDED."awayTeamExternalId",
                 "homeTeamName" = EXCLUDED."homeTeamName",
                 "awayTeamName" = EXCLUDED."awayTeamName",
-                "broadcast" = EXCLUDED."broadcast"
+                "broadcast" = EXCLUDED."broadcast",
+                "startDate" = EXCLUDED."startDate"
             RETURNING id;
         """)
 
@@ -338,6 +341,7 @@ class ScheduleModel:
             "homeTeamName": game["homeName"],
             "awayTeamName": game["awayName"],
             "broadcast": game["broadcast"],
+            "startDate": game['startDate']
         }
 
         with self.db.begin() as conn:
@@ -514,6 +518,7 @@ class ScheduleModel:
             gr."externalGameId",
             gr.date,
             gr.broadcast,
+            gr.startDate,
             gr."homeTeamId",
             gr."awayTeamId",
             gr."homeTeamName",
@@ -817,6 +822,7 @@ class ScheduleModel:
                 gr."homeTeamId",
                 gr."awayTeamId",
                 gr."broadcast",
+                gr."startDate",
                 gr."homeTeamName",
                 gr."awayTeamName",
                 gr."homeScore",
@@ -872,6 +878,7 @@ class ScheduleModel:
                 gr.date,
                 gr.sport,
                 gr."broadcast",
+                gr."startDate",
                 gr."sportSeasonId",
                 gr."seasonPhaseId",
                 gr."roundOrder",
