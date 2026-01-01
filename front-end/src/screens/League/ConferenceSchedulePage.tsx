@@ -10,8 +10,8 @@ import {
 import { getConferences } from "../../api/leagues";
 import {
   buildDateHeadersFromWeek,
+  formatLocalTime,
   getLocalDateKeyForGame,
-  LEAGUE_TIME_ZONE,
   type DateHeader,
 } from "../../utils/scheduleTable";
 import "./ConferenceSchedulePage.css";
@@ -37,7 +37,6 @@ type TeamRow = {
 
 const buildFallbackHeaders = (games: ConferenceSchedule["games"]): DateHeader[] => {
   const formatter = new Intl.DateTimeFormat(undefined, {
-    timeZone: LEAGUE_TIME_ZONE,
     weekday: "short",
     month: "short",
     day: "numeric",
@@ -250,6 +249,7 @@ const ConferenceSchedulePage = () => {
 
     schedule.games.forEach((game) => {
       const dateKey = getLocalDateKeyForGame(game.date);
+      const time = formatLocalTime(game.date);
 
       if (game.homeInConference) {
         addGame(
@@ -261,7 +261,7 @@ const ConferenceSchedulePage = () => {
           game.homeScore,
           game.awayScore,
           game.broadcast,
-          game.time,
+          time,
         );
       }
 
@@ -275,7 +275,7 @@ const ConferenceSchedulePage = () => {
           game.awayScore,
           game.homeScore,
           game.broadcast,
-          game.time,
+          time,
         );
       }
     });

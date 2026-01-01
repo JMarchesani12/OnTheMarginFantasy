@@ -11,38 +11,6 @@ class ScheduleEndpoints:
     def __init__(self, db_engine: Engine, espn_base_url: str):
         self.model = ScheduleModel(db_engine, espn_base_url)
 
-        # POST /api/league/<league_id>/bootstrapSchedule
-    #
-    # Body:
-    # {
-    #   "maxTeams": 5                      // OPTIONAL, for testing
-    # }
-    def bootstrap_league_schedule(self, league_id: int):
-        data = request.get_json(silent=True) or {}
-
-        max_teams = None
-        if "maxTeams" in data and data["maxTeams"] is not None:
-            try:
-                max_teams = int(data["maxTeams"])
-            except (TypeError, ValueError):
-                return jsonify({"message": "maxTeams must be an integer"}), 400
-
-        force = bool(data.get("force", False))
-
-        try:
-            summary = self.model.bootstrap_league_schedule(
-                league_id,
-                max_teams=max_teams,
-                force=force,
-            )
-            return jsonify(summary), 200
-        except ValueError as e:
-            return jsonify({"message": str(e)}), 400
-        except Exception:
-            import traceback
-            traceback.print_exc()
-            return jsonify({"message": "Failed to bootstrap league schedule"}), 500
-
     # ------------------------------------------------------------------
     # POST /api/schedule/all
     #

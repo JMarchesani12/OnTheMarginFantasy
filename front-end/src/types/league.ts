@@ -29,11 +29,14 @@ export interface LeagueSettingsTransactions {
 }
 
 export type DraftType = "SNAKE" | "STRAIGHT"
+export type TimeoutAction = "AUTO-SKIP" | "AUTO-PICK"
 
 export interface DraftMeta {
-  draftType: DraftType,
-  selectionTime: number,
-  numberOfRounds: number
+  draftType: DraftType;
+  selectionTime: number;
+  numberOfRounds: number;
+  timeoutAction: TimeoutAction;
+  graceSeconds: number;
 }
 
 export interface LeagueSettings {

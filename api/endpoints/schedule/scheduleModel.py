@@ -289,8 +289,7 @@ class ScheduleModel:
                 "awayTeamExternalId",
                 "homeTeamName",
                 "awayTeamName",
-                "broadcast",
-                "startDate"
+                "broadcast"
             )
             VALUES (
                 :sport,
@@ -307,7 +306,6 @@ class ScheduleModel:
                 :homeTeamName,
                 :awayTeamName,
                 :broadcast
-                :startDate
             )
             ON CONFLICT (sport, "sportSeasonId", "externalGameId")
             DO UPDATE SET
@@ -321,8 +319,7 @@ class ScheduleModel:
                 "awayTeamExternalId" = EXCLUDED."awayTeamExternalId",
                 "homeTeamName" = EXCLUDED."homeTeamName",
                 "awayTeamName" = EXCLUDED."awayTeamName",
-                "broadcast" = EXCLUDED."broadcast",
-                "startDate" = EXCLUDED."startDate"
+                "broadcast" = EXCLUDED."broadcast"
             RETURNING id;
         """)
 
@@ -334,14 +331,13 @@ class ScheduleModel:
             "date": event_dt,
             "homeTeamId": home_team_id,
             "awayTeamId": away_team_id,
-            "homeScore": int(game["homeScore"]),
-            "awayScore": int(game["awayScore"]),
+            "homeScore": game["homeScore"],
+            "awayScore": game["awayScore"],
             "homeTeamExternalId": str(game["homeEspnId"]),
             "awayTeamExternalId": str(game["awayEspnId"]),
             "homeTeamName": game["homeName"],
             "awayTeamName": game["awayName"],
-            "broadcast": game["broadcast"],
-            "startDate": game['startDate']
+            "broadcast": game["broadcast"]
         }
 
         with self.db.begin() as conn:
@@ -389,7 +385,7 @@ class ScheduleModel:
         Otherwise:
             * Skips the heavy ESPN work and just returns a summary.
         """
-        api_keyword, api_group_ids = self._get_sport_api_config(sport_id)
+        api_keyword, api_group_ids, base_url = self._get_sport_api_config(sport_id)
 
         teams = self._get_all_sport_teams(sport_id, max_teams=max_teams)
         client = ESPNClient(self.espn_base_url, api_keyword)
@@ -443,7 +439,7 @@ class ScheduleModel:
         """
         league = self._get_league(league_id)
         sport_id = int(league["sport"])
-        api_keyword, api_group_ids = self._get_sport_api_config(sport_id)
+        api_keyword, api_group_ids, base_url = self._get_sport_api_config(sport_id)
 
         season = self._get_sport_season_for_league(league_id)
         sport_season_id = int(season["sportSeasonId"])
@@ -518,7 +514,6 @@ class ScheduleModel:
             gr."externalGameId",
             gr.date,
             gr.broadcast,
-            gr.startDate,
             gr."homeTeamId",
             gr."awayTeamId",
             gr."homeTeamName",
@@ -822,7 +817,6 @@ class ScheduleModel:
                 gr."homeTeamId",
                 gr."awayTeamId",
                 gr."broadcast",
-                gr."startDate",
                 gr."homeTeamName",
                 gr."awayTeamName",
                 gr."homeScore",
@@ -878,7 +872,6 @@ class ScheduleModel:
                 gr.date,
                 gr.sport,
                 gr."broadcast",
-                gr."startDate",
                 gr."sportSeasonId",
                 gr."seasonPhaseId",
                 gr."roundOrder",
@@ -911,7 +904,8 @@ class ScheduleModel:
 
         return [dict(r._mapping) for r in rows]
     
-    def insert_sport_season(
+    def upsert_sport_season(
+        self,
         conn,
         sport_id: int,
         season_year: int,
@@ -926,6 +920,12 @@ class ScheduleModel:
                     ("sportId","seasonYear","regularSeasonStart","regularSeasonEnd","playoffStart","playoffEnd")
                 VALUES
                     (:sportId,:year,:rs,:re,:ps,:pe)
+                ON CONFLICT ("sportId","seasonYear")
+                DO UPDATE SET
+                    "regularSeasonStart" = EXCLUDED."regularSeasonStart",
+                    "regularSeasonEnd"   = EXCLUDED."regularSeasonEnd",
+                    "playoffStart"       = EXCLUDED."playoffStart",
+                    "playoffEnd"         = EXCLUDED."playoffEnd"
                 RETURNING id
             """),
             {

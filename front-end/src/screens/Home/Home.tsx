@@ -37,7 +37,7 @@ const Home = () => {
   const [searchError, setSearchError] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(false);
-  const [overviewOpen, setOverviewOpen] = useState(true);
+  const [overviewOpen, setOverviewOpen] = useState(false);
 
   const { userId, displayName, email } = useCurrentUser();
 

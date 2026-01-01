@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./CreateLeague.css";
 import { useNavigate } from "react-router-dom";
-import type { CreateLeaguePayload } from "../../types/league";
+import type { CreateLeaguePayload, TimeoutAction } from "../../types/league";
 import { createLeague } from "../../api/leagues";
 import {
   BonusesEditor,
@@ -33,6 +33,10 @@ interface CreateLeagueFormState {
 
   // bonuses (local-only shape)
   bonuses: BonusWithLocalId[];
+
+  // draft settings
+  timeoutAction: TimeoutAction;
+  graceSeconds: string;
 }
 
 const initialSeasonYear = new Date().getFullYear().toString();
@@ -55,6 +59,9 @@ const makeInitialState = (): CreateLeagueFormState => ({
   tradeVetoRequiredCount: "3",
 
   bonuses: [],
+
+  timeoutAction: "AUTO-SKIP",
+  graceSeconds: "0",
 });
 
 const CreateLeague: React.FC = () => {
@@ -161,8 +168,10 @@ const CreateLeague: React.FC = () => {
         draft: {
           draftType: "SNAKE",
           selectionTime: 60,
-          numberOfRounds: rounds
-        }
+          numberOfRounds: rounds,
+          timeoutAction: form.timeoutAction,
+          graceSeconds: Number(form.graceSeconds || 0),
+        },
       },
       draftDate: toIsoOrNull(form.draftDate),
       freeAgentDeadline: toIsoOrNull(form.freeAgentDeadline),
@@ -267,6 +276,30 @@ const CreateLeague: React.FC = () => {
                 type="date"
                 value={form.tradeDeadline}
                 onChange={(e) => update({ tradeDeadline: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="cl-form-grid">
+            <div className="cl-field-group">
+              <label className="cl-field-label">Draft Timeout Action</label>
+              <select
+                value={form.timeoutAction}
+                onChange={(e) =>
+                  update({ timeoutAction: e.target.value as TimeoutAction })
+                }
+              >
+                <option value="AUTO-SKIP">Auto-skip</option>
+                <option value="AUTO-PICK">Auto-pick</option>
+              </select>
+            </div>
+            <div className="cl-field-group">
+              <label className="cl-field-label">Grace Period (seconds)</label>
+              <input
+                type="number"
+                min={0}
+                value={form.graceSeconds}
+                onChange={(e) => update({ graceSeconds: e.target.value })}
               />
             </div>
           </div>

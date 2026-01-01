@@ -1,5 +1,5 @@
 import argparse
-import datetime
+from datetime import datetime, timezone
 import os
 
 from dotenv import load_dotenv
@@ -10,7 +10,8 @@ from db import engine
 
 INSERT_REGULAR = text("""
     INSERT INTO "SeasonPhase" ("sportSeasonId","tournamentId","type","name","startDate","endDate","priority")
-    VALUES (:sportSeasonId, NULL, 'REGULAR_SEASON', 'Regular Season', NULL, NULL, 1);
+    VALUES (:sportSeasonId, NULL, 'RegularSeason', 'Regular Season', NULL, NULL, 1)
+    ON CONFLICT DO NOTHING;
 """)
 
 INSERT_MARCH_MADNESS = text("""
@@ -18,7 +19,7 @@ INSERT_MARCH_MADNESS = text("""
     SELECT
     :sportSeasonId,
     td.id,
-    'NATIONAL_TOURNAMENT',
+    'NationalTournament',
     td.name,
     NULL,
     NULL,
@@ -26,7 +27,8 @@ INSERT_MARCH_MADNESS = text("""
     FROM "TournamentDefinition" td
     WHERE td."sportId" = :sportId
     AND td.code = 'NCAA_TOURNEY'
-    LIMIT 1;
+    LIMIT 1
+    ON CONFLICT DO NOTHING;
 """)
 
 INSERT_CONF_TOURNEYS = text("""
@@ -34,7 +36,7 @@ INSERT_CONF_TOURNEYS = text("""
     SELECT
     :sportSeasonId,
     td.id AS "tournamentId",
-    'CONFERENCE_TOURNAMENT' AS "type",
+    'ConferenceTournament' AS "type",
     td.name AS "name",
     NULL,
     NULL,
@@ -43,7 +45,8 @@ INSERT_CONF_TOURNEYS = text("""
     JOIN "TournamentDefinition" td
     ON td."sportConferenceId" = sc.id
     WHERE sc."sportId" = :sportId
-    AND td.scope = 'Conference';
+    AND td.scope = 'Conference'
+    ON CONFLICT DO NOTHING;
 """)
 
 FIND_UNMATCHED_SPORT_CONFERENCES = text("""
@@ -60,10 +63,12 @@ def parse_dt(s: str) -> datetime:
     s = s.strip()
     if s.endswith("Z"):
         s = s[:-1] + "+00:00"
-    # allow YYYY-MM-DD
+
     if len(s) == 10:
-        return datetime.fromisoformat(s).replace(tzinfo=datetime.timezone.utc)
+        return datetime.fromisoformat(s).replace(tzinfo=timezone.utc)
+
     return datetime.fromisoformat(s)
+
 
 def main():
     load_dotenv()
@@ -88,7 +93,7 @@ def main():
 
     with engine.begin() as conn:
 
-        sport_season_id = schedule_model.insert_sport_season(
+        sport_season_id = schedule_model.upsert_sport_season(
             conn,
             sport_id=1,
             season_year=args.seasonYear,
@@ -107,15 +112,15 @@ def main():
         conn.execute(INSERT_CONF_TOURNEYS, {"sportSeasonId": sport_season_id, "sportId": 1})
         conn.execute(INSERT_MARCH_MADNESS, {"sportSeasonId": sport_season_id, "sportId": 1})
 
-    schedule_model.bootstrap_league_schedule(1, sport_season_id, 7)
+    schedule_model.bootstrap_league_schedule(1, sport_season_id, 5)
 
 
 if __name__ == "__main__":
     main()
 
 
-#     python startSeasonJobs/ncaaMensBasketball.py \
-#   --seasonYear 2026 \
+#     PYTHONPATH=./api python3 ./api/startSeasonJobs/ncaaMensBasketball.py \
+#   --seasonYear 2025 \
 #   --regularStart "2025-11-03" \
 #   --regularEnd   "2026-03-08" \
 #   --playoffStart "2026-03-09" \

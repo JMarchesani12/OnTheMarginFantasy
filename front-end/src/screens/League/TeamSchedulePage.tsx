@@ -178,7 +178,7 @@ const TeamSchedulePage = () => {
                   <span>{dateFormatter.format(new Date(game.date))}</span>
                   <span>{game.isHome ? "vs " : "@ "}{game.opponentTeamName}</span>
                   <span>{game.broadcast != null ? game.broadcast : ""}</span>
-                  <span>{game.time != null ? game.time : ""}</span>
+                  <span>{game.date != null ? game.date : ""}</span>
                 </div>
                 <div className={`team-schedule__score team-schedule__score--${result}`}>
                   {hasScore ? (

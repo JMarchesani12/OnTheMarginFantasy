@@ -6,6 +6,7 @@ import { getScheduleForMemberForWeek } from "../../api/schedule";
 import {
   buildDateHeadersFromWeek,
   getLocalDateKeyForGame,
+  formatLocalTime,
   type DateHeader,
 } from "../../utils/scheduleTable";
 import "./LeagueScheduleTabs.css";
@@ -146,6 +147,7 @@ export const LeagueScheduleTabs = ({
     // 2) Group games into rows by league-local calendar date
     for (const g of games) {
       const dateKey = getLocalDateKeyForGame(g.date);
+      const time = formatLocalTime(g.date);
 
       if (g.ownsHome) {
         addOwnedGame(
@@ -158,7 +160,7 @@ export const LeagueScheduleTabs = ({
           g.awayScore,
           g.memberPointDiff,
           g.broadcast,
-          g.time
+          time,
         );
       }
 
@@ -173,7 +175,7 @@ export const LeagueScheduleTabs = ({
           g.homeScore,
           g.memberPointDiff,
           g.broadcast,
-          g.time
+          time,
         );
       }
     }

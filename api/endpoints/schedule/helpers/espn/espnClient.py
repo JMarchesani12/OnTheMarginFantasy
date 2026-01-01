@@ -1,4 +1,5 @@
 import datetime as dt
+import traceback
 from typing import Any, Dict, List, Optional, Tuple
 
 import requests
@@ -168,6 +169,30 @@ class ESPNClient:
 
         Score will usually be 0 for future games.
         """
+
+        def _parse_score(raw) -> int:
+            if raw is None or raw == "":
+                return 0
+
+            if isinstance(raw, (int, float)):
+                return int(raw)
+
+            if isinstance(raw, str):
+                raw = raw.strip()
+                # ESPN uses strings like "90"
+                return int(raw) if raw.isdigit() else 0
+
+            # some events return an object instead of a string
+            if isinstance(raw, dict):
+                # print once so you can see the schema you’re actually getting
+
+                for k in ("value", "displayValue", "score"):
+                    if k in raw and raw[k] is not None:
+                        return _parse_score(raw[k])
+                return 0
+
+            return 0
+
         try:
             external_game_id = event["id"]
             event_dt = self._parse_iso(event["date"])
@@ -177,7 +202,10 @@ class ESPNClient:
                 return None
             comp = competitions[0]
             broadcast = comp.get("broadcast")
-            startDate = comp.get("startDate")
+            if not broadcast:
+                broadcasts = comp.get("broadcasts") or []
+                if broadcasts and broadcasts[0].get("names"):
+                    broadcast = broadcasts[0]["names"][0]
 
             competitors = comp.get("competitors") or []
             home = next((c for c in competitors if c.get("homeAway") == "home"), None)
@@ -189,7 +217,7 @@ class ESPNClient:
                 team = c.get("team") or {}
                 espn_id = str(team.get("id"))
                 name = team.get("displayName") or team.get("shortDisplayName") or ""
-                score = c.get("score")
+                score = _parse_score(c.get("score"))
                 return espn_id, name, score
 
             home_id, home_name, home_score = team_info(home)
@@ -205,8 +233,8 @@ class ESPNClient:
                 "homeScore": home_score,
                 "awayScore": away_score,
                 "broadcast": broadcast,
-                "startDate": startDate
             }
         except Exception:
-            # If ESPN changes shape on us for some odd event, just skip it.
+            print("extract_game_from_event FAILED for event.id =", event.get("id"))
+            traceback.print_exc()
             return None

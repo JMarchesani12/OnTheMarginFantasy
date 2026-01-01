@@ -6,6 +6,7 @@ import type {
   League,
   LeagueBonuses,
   SingleLeague,
+  TimeoutAction,
   UpdateLeague,
 } from "../../types/league";
 import type { LeagueMember } from "../../types/leagueMember";
@@ -43,6 +44,8 @@ type ManageLeagueFormState = {
   draftType: DraftType;
   selectionTime: string;
   numberOfRounds: number;
+  timeoutAction: TimeoutAction;
+  graceSeconds: string;
 };
 
 const makeId = () => Math.random().toString(36).slice(2);
@@ -134,6 +137,8 @@ const makeInitialForm = (league: League | null): ManageLeagueFormState => ({
   draftType: league?.settings?.draft?.draftType ?? "SNAKE",
   selectionTime: String(league?.settings?.draft?.selectionTime ?? 60),
   numberOfRounds: league?.settings?.draft?.numberOfRounds ?? 0,
+  timeoutAction: league?.settings?.draft?.timeoutAction ?? "AUTO-SKIP",
+  graceSeconds: String(league?.settings?.draft?.graceSeconds ?? 0),
 });
 
 const ManageLeaguePage = () => {
@@ -219,7 +224,13 @@ const ManageLeaguePage = () => {
       settings: normalizeLeagueSettings(single.settings) ?? {
         bonuses: {},
         transactions: { tradeVeto: { enabled: false, requiredVetoCount: 0 } },
-        draft: { draftType: "SNAKE", selectionTime: 60, numberOfRounds: 0 },
+        draft: {
+          draftType: "SNAKE",
+          selectionTime: 60,
+          numberOfRounds: 0,
+          timeoutAction: "AUTO-SKIP",
+          graceSeconds: 0,
+        },
       },
       updatedAt: single.updatedAt ?? single.createdAt,
       draftDate: single.draftDate,
@@ -383,6 +394,8 @@ const ManageLeaguePage = () => {
             draftType: form.draftType,
             selectionTime: Number(form.selectionTime || 0),
             numberOfRounds: form.numberOfRounds,
+            timeoutAction: form.timeoutAction,
+            graceSeconds: Number(form.graceSeconds || 0),
           },
         },
         draftDate: toIsoOrNull(form.draftDate),
@@ -420,6 +433,8 @@ const ManageLeaguePage = () => {
             draftType: form.draftType,
             selectionTime: Number(form.selectionTime || 0),
             numberOfRounds: form.numberOfRounds,
+            timeoutAction: form.timeoutAction,
+            graceSeconds: Number(form.graceSeconds || 0),
           },
         },
         draftDate: toIsoOrNull(form.draftDate),
@@ -789,6 +804,31 @@ const ManageLeaguePage = () => {
               <div className="cl-field-group">
                 <label className="cl-field-label">Number of Rounds</label>
                 <input type="number" value={form.numberOfRounds} readOnly />
+              </div>
+              <div className="cl-field-group">
+                <label className="cl-field-label">Draft Timeout Action</label>
+                <select
+                  value={form.timeoutAction}
+                  onChange={(event) =>
+                    updateForm({
+                      timeoutAction: event.target.value as TimeoutAction,
+                    })
+                  }
+                >
+                  <option value="AUTO-SKIP">Auto-skip</option>
+                  <option value="AUTO-PICK">Auto-pick</option>
+                </select>
+              </div>
+              <div className="cl-field-group">
+                <label className="cl-field-label">Grace Period (seconds)</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={form.graceSeconds}
+                  onChange={(event) =>
+                    updateForm({ graceSeconds: event.target.value })
+                  }
+                />
               </div>
             </div>
 
