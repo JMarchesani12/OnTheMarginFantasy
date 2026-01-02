@@ -1,9 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { io, type Socket } from "socket.io-client";
 import type { League } from "../../types/league";
 import type { OwnedTeam } from "../../types/schedule";
 import { getAvailableTeams } from "../../api/roster";
-import { createDraftPick } from "../../api/draft";
+import { createDraftPick, getDraftState, pauseDraft, resumeDraft, startDraft } from "../../api/draft";
+import { useAuth } from "../../context/AuthContext";
+import { useCurrentUser } from "../../context/currentUserContext";
 import { normalizeOwnedTeams, type RawOwnedTeam } from "../../utils/teams";
 import "./LeagueDraftPage.css";
 
@@ -19,6 +22,8 @@ const LeagueDraftPage = () => {
   const location = useLocation();
   const state = location.state as LocationState | null;
   const league = state?.league;
+  const { session } = useAuth();
+  const { userId: currentUserId } = useCurrentUser();
 
   const leagueId = league?.leagueId ?? (league_id ? Number(league_id) : null);
 
@@ -29,10 +34,40 @@ const LeagueDraftPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [conferenceFilter, setConferenceFilter] = useState("all");
   const [draftSelections, setDraftSelections] = useState<OwnedTeam[]>([]);
+  const [draftState, setDraftState] = useState<Record<string, unknown> | null>(
+    null
+  );
+  type DraftMember = {
+    memberId?: number;
+    teamName?: string | null;
+  };
+
+  type DraftSummaryPick = {
+    id: number;
+    overallPickNumber: number;
+    roundNumber: number;
+    pickInRound: number;
+    memberId: number;
+    memberTeamName?: string | null;
+    sportTeamId: number;
+    sportTeamName?: string | null;
+  };
+
+  const [draftMembers, setDraftMembers] = useState<DraftMember[]>([]);
+  const [draftActionLoading, setDraftActionLoading] = useState(false);
+  const [draftSummaryPicks, setDraftSummaryPicks] = useState<DraftSummaryPick[]>([]);
+  const [draftSummaryLoading, setDraftSummaryLoading] = useState(false);
+  const [showDraftComplete, setShowDraftComplete] = useState(false);
   const draftWeekNumber = 1;
+  const socketRef = useRef<Socket | null>(null);
+  const previousDraftStatusRef = useRef<string | null>(null);
 
   const isBrowser = typeof window !== "undefined";
   const storageKey = leagueId ? `draftSelections:${leagueId}` : null;
+  const socketUrl =
+    import.meta.env.VITE_SOCKET_URL ??
+    import.meta.env.API_BASE_URL ??
+    "http://127.0.0.1:5050";
 
   const loadTeams = useCallback(async () => {
     if (!leagueId) {
@@ -57,7 +92,7 @@ const LeagueDraftPage = () => {
     let cancelled = false;
     loadTeams();
 
-    if (!leagueId) {
+    if (!leagueId || session?.access_token) {
       return () => {
         cancelled = true;
       };
@@ -73,7 +108,7 @@ const LeagueDraftPage = () => {
       cancelled = true;
       window.clearInterval(interval);
     };
-  }, [loadTeams, leagueId]);
+  }, [loadTeams, leagueId, session?.access_token]);
 
   useEffect(() => {
     if (!storageKey || !isBrowser) {
@@ -91,17 +126,127 @@ const LeagueDraftPage = () => {
     }
   }, [storageKey]);
 
-  const persistSelections = (teams: OwnedTeam[]) => {
-    if (!storageKey || !isBrowser) {
+  const persistSelections = useCallback(
+    (teams: OwnedTeam[]) => {
+      if (!storageKey || !isBrowser) {
+        return;
+      }
+
+      try {
+        window.localStorage.setItem(storageKey, JSON.stringify(teams));
+      } catch (err) {
+        console.warn("Failed to persist draft selections", err);
+      }
+    },
+    [isBrowser, storageKey]
+  );
+
+  const applyDraftSnapshot = useCallback(
+    (payload: unknown) => {
+      const snapshot =
+        payload && typeof payload === "object" && "snapshot" in payload
+          ? (payload as { snapshot?: unknown }).snapshot
+          : payload;
+
+      if (!snapshot || typeof snapshot !== "object") {
+        void loadTeams();
+        return;
+      }
+
+      const data = snapshot as Record<string, unknown>;
+      const available = data.availableTeams;
+      const recent =
+        data.recentPicks ??
+        data.draftSelections ??
+        data.picks;
+      const state = data.state;
+      const members = data.members;
+      const picks = data.picks;
+
+      if (Array.isArray(available)) {
+        setAvailableTeams(normalizeOwnedTeams(available as RawOwnedTeam[]));
+      } else {
+        void loadTeams();
+      }
+
+      if (Array.isArray(recent)) {
+        const normalized = normalizeOwnedTeams(
+          (recent as RawOwnedTeam[]).map((team) => ({
+            ...team,
+            teamId:
+              typeof team.teamId === "number"
+                ? team.teamId
+                : typeof (team as Record<string, unknown>).sportTeamId === "number"
+                ? ((team as Record<string, unknown>).sportTeamId as number)
+                : team.teamId,
+            teamName:
+              typeof team.teamName === "string"
+                ? team.teamName
+                : typeof (team as Record<string, unknown>).sportTeamName === "string"
+                ? ((team as Record<string, unknown>).sportTeamName as string)
+                : team.teamName,
+          }))
+        );
+        setDraftSelections(normalized);
+        persistSelections(normalized);
+      }
+
+      if (state && typeof state === "object") {
+        setDraftState(state as Record<string, unknown>);
+      }
+
+      if (Array.isArray(members)) {
+        setDraftMembers(members as DraftMember[]);
+      }
+
+      if (Array.isArray(picks)) {
+        setDraftSummaryPicks(picks as DraftSummaryPick[]);
+      }
+    },
+    [loadTeams, persistSelections]
+  );
+
+  useEffect(() => {
+    if (!leagueId || !session?.access_token) {
       return;
     }
 
-    try {
-      window.localStorage.setItem(storageKey, JSON.stringify(teams));
-    } catch (err) {
-      console.warn("Failed to persist draft selections", err);
-    }
-  };
+    const socket = io(socketUrl, {
+      auth: { token: session.access_token },
+    });
+
+    socketRef.current = socket;
+
+    socket.on("connect", () => {
+      socket.emit("draft:join", { leagueId });
+    });
+
+    socket.on("draft:snapshot", (payload) => {
+      applyDraftSnapshot(payload);
+    });
+
+    socket.on("draft:updated", (payload) => {
+      applyDraftSnapshot(payload);
+    });
+
+    socket.on("draft:error", (payload) => {
+      const message =
+        typeof payload === "string"
+          ? payload
+          : (payload as { message?: string } | null)?.message;
+      setError(message ?? "Draft socket error");
+    });
+
+    socket.on("connect_error", (err) => {
+      setError(err?.message ?? "Failed to connect to draft socket");
+    });
+
+    return () => {
+      socket.emit("draft:leave", { leagueId });
+      socket.disconnect();
+      socketRef.current = null;
+    };
+  }, [applyDraftSnapshot, leagueId, session?.access_token, socketUrl]);
 
   const groupTeams = (teams: OwnedTeam[]): GroupedTeams => {
     const map = new Map<string, OwnedTeam[]>();
@@ -138,6 +283,40 @@ const LeagueDraftPage = () => {
     () => groupTeams(applyFilters(availableTeams)),
     [availableTeams, searchTerm, conferenceFilter]
   );
+  const isCommissioner =
+    currentUserId != null && league?.commissionerId === currentUserId;
+
+  const loadDraftSummary = useCallback(async () => {
+    if (!leagueId) {
+      return;
+    }
+
+    try {
+      setDraftSummaryLoading(true);
+      const data = await getDraftState(leagueId);
+      if (data && typeof data === "object") {
+        const picks = (data as Record<string, unknown>).picks;
+        const members = (data as Record<string, unknown>).members;
+        const state = (data as Record<string, unknown>).state;
+
+        if (Array.isArray(picks)) {
+          setDraftSummaryPicks(picks as DraftSummaryPick[]);
+        }
+
+        if (Array.isArray(members)) {
+          setDraftMembers(members as DraftMember[]);
+        }
+
+        if (state && typeof state === "object") {
+          setDraftState(state as Record<string, unknown>);
+        }
+      }
+    } catch (err: any) {
+      setError(err?.message ?? "Failed to load draft summary");
+    } finally {
+      setDraftSummaryLoading(false);
+    }
+  }, [leagueId]);
 
   if (!league || !leagueId) {
     return (
@@ -168,7 +347,11 @@ const LeagueDraftPage = () => {
     }
 
     try {
-      await createDraftPick(league.memberId, league.leagueId, selectedTeam.teamId);
+      const response = await createDraftPick(
+        league.memberId,
+        league.leagueId,
+        selectedTeam.teamId
+      );
 
       const updatedSelections = [selectedTeam, ...draftSelections];
       setDraftSelections(updatedSelections);
@@ -177,12 +360,128 @@ const LeagueDraftPage = () => {
       setAvailableTeams((current) =>
         current.filter((team) => team.teamId !== selectedTeam.teamId)
       );
+
+      if (response?.draftComplete) {
+        setShowDraftComplete(true);
+        void loadDraftSummary();
+      }
     } catch (err: any) {
       setError(err?.message ?? "Failed to submit draft pick");
     }
   };
 
-  const submitDisabled = loading || !selectedTeam;
+  const currentMemberId =
+    typeof draftState?.currentMemberId === "number"
+      ? (draftState.currentMemberId as number)
+      : null;
+  const isUsersTurn =
+    currentMemberId !== null && currentMemberId === league.memberId;
+  const currentMemberName =
+    draftMembers.find((member) => member.memberId === currentMemberId)?.teamName ??
+    "Unknown";
+  const draftStatus =
+    typeof draftState?.status === "string" ? (draftState.status as string) : null;
+  const isDraftLive = draftStatus === "live";
+  const isDraftComplete = draftStatus === "complete";
+  const submitDisabled =
+    loading || !selectedTeam || !isUsersTurn || !isDraftLive || isDraftComplete;
+
+  const draftStatusLabel = draftStatus
+    ? draftStatus[0].toUpperCase() + draftStatus.slice(1)
+    : "Not started";
+
+  const canStartDraft = isCommissioner && !draftStatus;
+  const canPauseDraft = isCommissioner && draftStatus === "live";
+  const canResumeDraft = isCommissioner && draftStatus === "paused";
+
+  useEffect(() => {
+    if (!draftStatus) {
+      return;
+    }
+
+    if (draftStatus === "complete" && previousDraftStatusRef.current !== "complete") {
+      setShowDraftComplete(true);
+      void loadDraftSummary();
+    }
+
+    previousDraftStatusRef.current = draftStatus;
+  }, [draftStatus, loadDraftSummary]);
+
+  const groupedSummary = useMemo(() => {
+    const map = new Map<
+      number,
+      { memberId: number; memberName: string; picks: DraftSummaryPick[] }
+    >();
+
+    draftSummaryPicks.forEach((pick) => {
+      const fallbackName =
+        draftMembers.find((member) => member.memberId === pick.memberId)?.teamName ??
+        `Member ${pick.memberId}`;
+      const existing = map.get(pick.memberId);
+      if (existing) {
+        existing.picks.push(pick);
+      } else {
+        map.set(pick.memberId, {
+          memberId: pick.memberId,
+          memberName: pick.memberTeamName ?? fallbackName,
+          picks: [pick],
+        });
+      }
+    });
+
+    return Array.from(map.values())
+      .map((entry) => ({
+        ...entry,
+        picks: entry.picks.sort(
+          (a, b) => a.overallPickNumber - b.overallPickNumber
+        ),
+      }))
+      .sort((a, b) => a.memberName.localeCompare(b.memberName));
+  }, [draftMembers, draftSummaryPicks]);
+
+  const handleCloseDraftSummary = () => {
+    if (!leagueId || !league) {
+      return;
+    }
+
+    const updatedLeague = {
+      ...league,
+      status: "Post-Draft",
+    };
+
+    navigate(`/leagues/${leagueId}`, { state: { league: updatedLeague } });
+  };
+
+  const handleDraftAction = async (action: "start" | "pause" | "resume") => {
+    if (!leagueId) {
+      return;
+    }
+
+    try {
+      setDraftActionLoading(true);
+      setError(null);
+
+      const response =
+        action === "start"
+          ? await startDraft(leagueId)
+          : action === "pause"
+          ? await pauseDraft(leagueId)
+          : await resumeDraft(leagueId);
+
+      applyDraftSnapshot(response);
+    } catch (err: any) {
+      const message =
+        err?.message ??
+        (action === "start"
+          ? "Failed to start draft"
+          : action === "pause"
+          ? "Failed to pause draft"
+          : "Failed to resume draft");
+      setError(message);
+    } finally {
+      setDraftActionLoading(false);
+    }
+  };
 
   return (
     <div className="draft-page">
@@ -201,6 +500,47 @@ const LeagueDraftPage = () => {
           <p className="draft-page__subhead">
             Browse all available teams for week {draftWeekNumber} and lock in your pick.
           </p>
+          <p className="draft-page__status">Draft status: {draftStatusLabel}</p>
+          {currentMemberId && (
+            <p className="draft-page__turn">
+              On the clock: {currentMemberName}
+              {isUsersTurn ? " (your turn)" : ""}
+            </p>
+          )}
+          {isCommissioner && (
+            <div className="draft-page__actions">
+              {canStartDraft && (
+                <button
+                  type="button"
+                  className="draft-page__action-btn"
+                  onClick={() => handleDraftAction("start")}
+                  disabled={draftActionLoading}
+                >
+                  Start Draft
+                </button>
+              )}
+              {canPauseDraft && (
+                <button
+                  type="button"
+                  className="draft-page__action-btn"
+                  onClick={() => handleDraftAction("pause")}
+                  disabled={draftActionLoading}
+                >
+                  Pause Draft
+                </button>
+              )}
+              {canResumeDraft && (
+                <button
+                  type="button"
+                  className="draft-page__action-btn"
+                  onClick={() => handleDraftAction("resume")}
+                  disabled={draftActionLoading}
+                >
+                  Resume Draft
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </header>
 
@@ -307,6 +647,56 @@ const LeagueDraftPage = () => {
           Draft Selected Team
         </button>
       </footer>
+
+      {showDraftComplete && (
+        <div className="draft-page__modal" role="presentation">
+          <div
+            className="draft-page__modal-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="draft-complete-title"
+          >
+            <p className="draft-page__modal-eyebrow">Draft Complete</p>
+            <h2 id="draft-complete-title">Draft Summary</h2>
+            <p className="draft-page__modal-subhead">
+              All picks are locked in. Review your league results below.
+            </p>
+            {draftSummaryLoading ? (
+              <p className="draft-page__modal-loading">Loading summary…</p>
+            ) : groupedSummary.length === 0 ? (
+              <p className="draft-page__modal-empty">No picks available.</p>
+            ) : (
+              <div className="draft-page__modal-grid">
+                {groupedSummary.map((member) => (
+                  <div className="draft-page__modal-section" key={member.memberId}>
+                    <h3>{member.memberName}</h3>
+                    <ol>
+                      {member.picks.map((pick) => (
+                        <li key={pick.id}>
+                          <span className="draft-page__modal-pick">
+                            #{pick.overallPickNumber} · Round {pick.roundNumber}, Pick{" "}
+                            {pick.pickInRound}
+                          </span>
+                          <span className="draft-page__modal-team">
+                            {pick.sportTeamName ?? `Team ${pick.sportTeamId}`}
+                          </span>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button
+              type="button"
+              className="draft-page__modal-close"
+              onClick={handleCloseDraftSummary}
+            >
+              Close and return to league
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

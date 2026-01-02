@@ -1,4 +1,3 @@
-import json
 import logging
 import math
 from sqlalchemy.exc import IntegrityError
@@ -12,6 +11,22 @@ from sqlalchemy.engine import Engine
 class DraftModel:
     def __init__(self, db: Engine):
         self.db = db
+
+    def is_supabase_user_in_league(self, league_id: int, supabase_uuid: str) -> bool:
+        """
+        supabase_uuid should be the JWT 'sub' claim (a UUID string).
+        """
+        sql = text("""
+            SELECT 1
+            FROM "LeagueMember" lm
+            JOIN "User" u ON u.id = lm."userId"
+            WHERE lm."leagueId" = :leagueId
+              AND u.uuid = :uuid::uuid
+            LIMIT 1
+        """)
+        with self.db.connect() as conn:
+            row = conn.execute(sql, {"leagueId": league_id, "uuid": supabase_uuid}).fetchone()
+            return row is not None
 
     def _get_draft_settings(self, conn, league_id: int) -> Dict[str, Any]:
         row = conn.execute(
@@ -263,6 +278,17 @@ class DraftModel:
                     """),
                     {"leagueId": league_id, "nextOverall": next_overall},
                 )
+
+                conn.execute(
+                    text("""
+                        UPDATE "League"
+                        SET status = 'POST-DRAFT',
+                            "updatedAt" = now()
+                        WHERE id = :leagueId
+                    """),
+                    {"leagueId": league_id},
+                )
+                
                 draft_pick["draftComplete"] = True
                 return draft_pick
 
@@ -725,6 +751,16 @@ class DraftModel:
                     "currentMemberId": first_member_id,
                     "selectionTime": selection_time,
                 },
+            )
+
+            conn.execute(
+                text("""
+                    UPDATE "League"
+                    SET status = 'Drafting',
+                        "updatedAt" = now()
+                    WHERE id = :leagueId
+                """),
+                {"leagueId": league_id},
             )
 
             return self.get_draft_state_snapshot(league_id, conn=conn)

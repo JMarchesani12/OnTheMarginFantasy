@@ -1,10 +1,9 @@
 import type { Sport } from "../types/sport";
-
-const API_BASE_URL = import.meta.env.API_BASE_URL ?? "http://127.0.0.1:5050";
+import { apiFetch, API_BASE_URL } from "./client";
 
 export async function getSports(): Promise<Sport[]> {
 
-  const res = await fetch(`${API_BASE_URL}/api/sports`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/sports`, {
     method: "GET"
   });
 

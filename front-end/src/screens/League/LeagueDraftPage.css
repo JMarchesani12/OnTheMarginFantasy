@@ -34,6 +34,35 @@
   color: #a6b4d4;
 }
 
+.draft-page__status,
+.draft-page__turn {
+  margin: 0.4rem 0 0;
+  color: #c4d2f2;
+}
+
+.draft-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 0.75rem;
+}
+
+.draft-page__action-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 0.55rem 1.4rem;
+  background: rgba(255, 255, 255, 0.15);
+  color: #f4f7ff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 150ms ease, background 150ms ease;
+}
+
+.draft-page__action-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .draft-page__controls {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -190,6 +219,95 @@
 
 .draft-page__empty {
   color: #a6b4d4;
+}
+
+.draft-page__modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 10, 18, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  z-index: 10;
+}
+
+.draft-page__modal-card {
+  width: min(900px, 100%);
+  max-height: 85vh;
+  overflow-y: auto;
+  background: #0b1224;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 2rem;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.45);
+}
+
+.draft-page__modal-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #7c8db5;
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+}
+
+.draft-page__modal-subhead {
+  margin: 0.5rem 0 1.5rem;
+  color: #c4d2f2;
+}
+
+.draft-page__modal-grid {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.draft-page__modal-section {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 1rem;
+  padding: 1rem;
+}
+
+.draft-page__modal-section h3 {
+  margin: 0 0 0.75rem;
+  color: #f4f7ff;
+}
+
+.draft-page__modal-section ol {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  color: #d9e2fb;
+}
+
+.draft-page__modal-pick {
+  display: block;
+  font-size: 0.85rem;
+  color: #9fb2da;
+}
+
+.draft-page__modal-team {
+  display: block;
+  font-size: 1rem;
+  color: #f4f7ff;
+}
+
+.draft-page__modal-close {
+  margin-top: 1.75rem;
+  border: none;
+  border-radius: 999px;
+  padding: 0.75rem 1.8rem;
+  background: #6affbe;
+  color: #08101f;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.draft-page__modal-loading,
+.draft-page__modal-empty {
+  color: #c4d2f2;
 }
 
 @media (max-width: 768px) {

@@ -7,7 +7,10 @@ export type DraftPickResponse = {
     overallPickNumber: number;
     pickInRound: number;
     roundNumber: number;
-    sportTeamId: number
+    sportTeamId: number;
+    draftComplete: boolean;
+    nextMemberId?: number;
+    nextOverallPickNumber?: number;
 }
 
 export type FreeAgencyResponse = {

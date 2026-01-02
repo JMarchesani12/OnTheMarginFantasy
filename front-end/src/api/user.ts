@@ -1,6 +1,5 @@
 import type { UpdateUser, User } from "../types/user";
-
-const API_BASE_URL = import.meta.env.API_BASE_URL ?? "http://127.0.0.1:5050";
+import { apiFetch, API_BASE_URL } from "./client";
 
 export async function createUser(
   uuid: string | undefined,
@@ -14,7 +13,7 @@ const payload = {
     "displayName": displayName
 };
 
-  const res = await fetch(`${API_BASE_URL}/api/user`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/user`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
@@ -37,7 +36,7 @@ export async function updateUser(
       displayName: displayName
   };
 
-  const res = await fetch(`${API_BASE_URL}/api/user/${userId}`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/user/${userId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)

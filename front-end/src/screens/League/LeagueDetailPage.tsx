@@ -9,6 +9,7 @@ import LeagueScoreboard, {
   type ScoreboardRow as LeagueScoreboardRow,
 } from "../../components/League/LeagueScoreboard";
 import { getScoresForWeek } from "../../api/scoring";
+import { startDraft } from "../../api/draft";
 import type { ScoreWeek } from "../../types/scoring";
 import { useCurrentUser } from "../../context/currentUserContext";
 import "./LeagueDetailPage.css";
@@ -40,6 +41,8 @@ const LeagueDetailPage = () => {
   const [teamNameSaving, setTeamNameSaving] = useState(false);
   const [teamNameError, setTeamNameError] = useState<string | null>(null);
   const [teamNameSuccess, setTeamNameSuccess] = useState<string | null>(null);
+  const [startDraftLoading, setStartDraftLoading] = useState(false);
+  const [startDraftError, setStartDraftError] = useState<string | null>(null);
 
   useEffect(() => {
     setTeamNameValue(league?.teamName ?? "");
@@ -238,6 +241,23 @@ const LeagueDetailPage = () => {
   const canEditTeamName = league.memberId != null;
   const canLeaveLeague =
     league.status === "Pre-Draft" && league.commissionerId !== currentUserId;
+
+  const handleStartDraft = async () => {
+    if (!league) {
+      return;
+    }
+
+    try {
+      setStartDraftLoading(true);
+      setStartDraftError(null);
+      await startDraft(league.leagueId);
+      openDraftPage();
+    } catch (error: any) {
+      setStartDraftError(error?.message ?? "Failed to start draft");
+    } finally {
+      setStartDraftLoading(false);
+    }
+  };
 
   const scoreboardRows = useMemo<{
     weekNumbers: number[];
@@ -443,10 +463,14 @@ const LeagueDetailPage = () => {
               <button
                 className="league-detail__start-draft-btn"
                 type="button"
-                onClick={openDraftPage}
+                onClick={handleStartDraft}
+                disabled={startDraftLoading}
               >
-                Start Draft
+                {startDraftLoading ? "Starting…" : "Start Draft"}
               </button>
+            )}
+            {startDraftError && (
+              <p className="league-detail__error-text">{startDraftError}</p>
             )}
             {canManageLeague && (
               <button

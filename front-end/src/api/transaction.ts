@@ -1,6 +1,5 @@
 import type { FreeAgencyResponse, OpenTradesResponse, TradeResponse, TradeResponseAction, VetoResponse } from "../types/roster";
-
-const API_BASE_URL = import.meta.env.API_BASE_URL ?? "http://127.0.0.1:5050";
+import { apiFetch, API_BASE_URL } from "./client";
 
 type FreeAgencyPayload = {
   weekId: number;
@@ -35,7 +34,7 @@ export async function submitFreeAgencyRequest(
     dropTeamId,
   };
 
-  const res = await fetch(`${API_BASE_URL}/api/league/${leagueId}/freeAgency/addDrop`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/freeAgency/addDrop`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -67,7 +66,7 @@ export async function tradeRequestProposal(
     fromTeamIds
   };
 
-  const res = await fetch(`${API_BASE_URL}/api/league/${leagueId}/week/${weekId}/trade/propose`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/week/${weekId}/trade/propose`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -90,7 +89,7 @@ export async function cancelTradeRequest(
     "requesterMemberId": requesterMemberId
   };
 
-  const res = await fetch(`${API_BASE_URL}/api/league/${leagueId}/transaction/${transactionId}/trade/cancel`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/transaction/${transactionId}/trade/cancel`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -115,7 +114,7 @@ export async function responseToTradeRequest(
     "responderMemberId": responderMemberId
   };
 
-  const res = await fetch(`${API_BASE_URL}/api/league/${leagueId}/transaction/${transactionId}/trade/respond`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/transaction/${transactionId}/trade/respond`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -137,7 +136,7 @@ export async function getOpenTradeRequests(
     "memberId": memberId,
   };
 
-  const res = await fetch(`${API_BASE_URL}/api/league/${leagueId}/transactions/trades/open`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/transactions/trades/open`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -160,7 +159,7 @@ export async function vetoTrade(
     "memberId": memberId,
   };
 
-  const res = await fetch(`${API_BASE_URL}/api/league/${leagueId}/transaction/${transactionId}/trade/veto`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/transaction/${transactionId}/trade/veto`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),

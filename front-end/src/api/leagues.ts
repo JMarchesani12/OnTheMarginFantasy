@@ -1,11 +1,9 @@
 import type { ApproveRequestResponse, CreateLeaguePayload, GetConferences, GetRequestResponse, League, LeagueSearchResult, RequestResponse, SingleLeague, UpdateLeague } from "../types/league";
 import type { LeagueMember, UpdateLeagueMember } from "../types/leagueMember";
-
-const API_BASE_URL =
-  import.meta.env.API_BASE_URL ?? "http://127.0.0.1:5050";
+import { apiFetch, API_BASE_URL } from "./client";
 
 export async function getLeague(leagueId: number): Promise<SingleLeague> {
-  const res = await fetch(`${API_BASE_URL}/api/league/${leagueId}`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}`, {
     method: "GET"
   });
 
@@ -19,7 +17,7 @@ export async function getLeague(leagueId: number): Promise<SingleLeague> {
 export async function createLeague(
   payload: CreateLeaguePayload
 ): Promise<unknown> {
-  const res = await fetch(`${API_BASE_URL}/api/league/create`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/create`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -36,7 +34,7 @@ export async function updateLeague(
   payload: UpdateLeague,
   leagueId: number
 ): Promise<UpdateLeague> {
-  const res = await fetch(`${API_BASE_URL}/api/league/${leagueId}`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -56,7 +54,7 @@ export async function getLeaguesForUser(
         "userId": userId,
         "type": type
     }
-  const res = await fetch(`${API_BASE_URL}/api/league/byUser`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/byUser`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -72,7 +70,7 @@ export async function getLeaguesForUser(
 export async function getMembersOfLeague(
   leagueId: number
 ): Promise<LeagueMember[]> {
-  const res = await fetch(`${API_BASE_URL}/api/league/${leagueId}/members`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/members`, {
     method: "GET",
   });
 
@@ -86,7 +84,7 @@ export async function getMembersOfLeague(
 export async function getConferences(
   leagueId: number
 ): Promise<GetConferences> {
-  const res = await fetch(`${API_BASE_URL}/api/league/${leagueId}/conferences`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/conferences`, {
     method: "GET",
   });
 
@@ -106,7 +104,7 @@ export async function requestToJoinLeague(
         "userId": userId,
         "message": message
     }
-  const res = await fetch(`${API_BASE_URL}/api/league/${leagueId}/joinRequest`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/joinRequest`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -127,7 +125,7 @@ export async function approveRequestToJoinLeague(
   const body = {
         "actingUserId": userId
     }
-  const res = await fetch(`${API_BASE_URL}/api/league/${leagueId}/joinRequests/${requestId}/approve`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/joinRequests/${requestId}/approve`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -148,7 +146,7 @@ export async function denyRequestToJoinLeague(
   const body = {
         "actingUserId": userId
     }
-  const res = await fetch(`${API_BASE_URL}/api/league/${leagueId}/joinRequests/${requestId}/deny`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/joinRequests/${requestId}/deny`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -169,7 +167,7 @@ export async function cancelRequestToJoinLeague(
   const body = {
         "userId": userId
     }
-  const res = await fetch(`${API_BASE_URL}/api/league/${leagueId}/joinRequests/${requestId}/cancel`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/joinRequests/${requestId}/cancel`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -191,7 +189,7 @@ export async function getRequestsToJoinLeague(
         "actingUserId": userId,
         "status": status
     }
-  const res = await fetch(`${API_BASE_URL}/api/league/${leagueId}/joinRequests`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/joinRequests`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -209,7 +207,7 @@ export async function removeLeagueMember(
   memberId: number,
   actingUserId: number
 ) {
-  const res = await fetch(`${API_BASE_URL}/api/league/${leagueId}/members/${memberId}`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/members/${memberId}`, {
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ actingUserId, shiftDraftOrder: true }),
@@ -240,7 +238,7 @@ export async function searchLeagues(params: {
     url.searchParams.set("sportId", String(sportId));
   }
 
-  const res = await fetch(url.toString());
+  const res = await apiFetch(url.toString());
 
   if (!res.ok) {
     throw new Error(`Failed to get leagues: ${res.status}`);
@@ -253,7 +251,7 @@ export async function deleteLeague(
   leagueId: number,
   actingUserId: number
 ) {
-  const res = await fetch(`${API_BASE_URL}/api/league/${leagueId}`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}`, {
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ actingUserId }),
@@ -279,7 +277,7 @@ export async function updateLeagueMember(
     draftOrder: draftOrder,
     seasonPoints: seasonPoints
   }
-  const res = await fetch(`${API_BASE_URL}/api/league/leagueMember/${memberId}`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/leagueMember/${memberId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),

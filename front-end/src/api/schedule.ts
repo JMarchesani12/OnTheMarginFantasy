@@ -1,7 +1,6 @@
 // src/api/schedule.ts
 import type { ConferenceSchedule, MemberWeekSchedule, TeamSeasonSchedule } from "../types/schedule";
-
-const API_BASE_URL = import.meta.env.API_BASE_URL ?? "http://127.0.0.1:5050";
+import { apiFetch, API_BASE_URL } from "./client";
 
 export async function getScheduleForMemberForWeek(
   memberId: number,
@@ -16,7 +15,7 @@ export async function getScheduleForMemberForWeek(
 
   console.log(API_BASE_URL)
 
-  const res = await fetch(`${API_BASE_URL}/api/schedule/all`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/schedule/all`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -43,7 +42,7 @@ export async function getScheduleForConferenceForWeek(
     "sportConferenceId": sportConferenceId
   };
 
-  const res = await fetch(`${API_BASE_URL}/api/schedule/conferenceGamesByWeek`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/schedule/conferenceGamesByWeek`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -69,7 +68,7 @@ export async function getScheduleForTeam(
 
   console.log(API_BASE_URL);
 
-  const res = await fetch(`${API_BASE_URL}/api/schedule/teamGamesBySeason`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/schedule/teamGamesBySeason`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),

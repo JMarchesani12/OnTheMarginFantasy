@@ -1,7 +1,6 @@
 // src/api/schedule.ts
 import type { WeekStandings } from "../types/scoring";
-
-const API_BASE_URL = import.meta.env.API_BASE_URL ?? "http://127.0.0.1:5050";
+import { apiFetch, API_BASE_URL } from "./client";
 
 export async function getScoresForWeek(
   weekNumbers: number[],
@@ -12,7 +11,7 @@ const payload = {
     "weekNumbers": weekNumbers
 };
 
-  const res = await fetch(`${API_BASE_URL}/api/league/${leagueId}/pointsAwarded`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/pointsAwarded`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)

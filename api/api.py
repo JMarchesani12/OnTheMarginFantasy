@@ -13,10 +13,23 @@ from endpoints.user.routes import setup_routes as UserRoutes
 from endpoints.sport.routes import setup_routes as SportRoutes
 from endpoints.draft.draftSocket import register_draft_socket_handlers
 
+from authMiddleware import install_auth_middleware
+
 def create_app():
 
     app = Flask(__name__)
     CORS(app)
+
+    install_auth_middleware(
+        app,
+        public_paths={
+            # "/api/sports",
+            # "/api/health",          # if you have one
+        },
+        public_prefixes=[
+            "/socket.io",           # allow socket.io handshake route through (see note below)
+        ],
+    )
 
     LeagueRoutes(app, engine)
     DraftRoutes(app, engine)

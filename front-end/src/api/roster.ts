@@ -1,7 +1,6 @@
 // src/api/schedule.ts
 import type { OwnedTeam } from "../types/schedule";
-
-const API_BASE_URL = import.meta.env.API_BASE_URL ?? "http://127.0.0.1:5050";
+import { apiFetch, API_BASE_URL } from "./client";
 
 export async function getMemberTeams(
   memberId: number,
@@ -16,7 +15,7 @@ export async function getMemberTeams(
 
   console.log(API_BASE_URL)
 
-  const res = await fetch(`${API_BASE_URL}/api/roster/memberTeams`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/roster/memberTeams`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -41,7 +40,7 @@ export async function getAvailableTeams(
 
   console.log(API_BASE_URL)
 
-  const res = await fetch(`${API_BASE_URL}/api/roster/availableTeams`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/roster/availableTeams`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
