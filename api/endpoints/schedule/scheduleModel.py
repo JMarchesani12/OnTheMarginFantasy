@@ -3,7 +3,7 @@ import json
 import logging
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import Tuple, text
+from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
 from endpoints.schedule.helpers.espn.espnClient import ESPNClient
@@ -77,7 +77,7 @@ class ScheduleModel:
         
         return dict(row._mapping)
 
-    def _get_sport_api_config(self, sport_id: int) -> Tuple[str, List[int]]:
+    def _get_sport_api_config(self, sport_id: int) -> tuple[str, List[int]]:
         """
         Returns (api_keyword, api_group_ids)
 
@@ -757,7 +757,7 @@ class ScheduleModel:
 
         return [dict(r._mapping) for r in rows]
 
-    def _get_week_window(self, league_id: int, week_number: int) -> Tuple[str, str]:
+    def _get_week_window(self, league_id: int, week_number: int) -> tuple[str, str]:
         """
         Returns (startDate, endDate) for the league week.
         """
