@@ -1,4 +1,3 @@
-from bootstrap import *
 from flask import Flask
 from flask_cors import CORS
 from db import engine
@@ -23,8 +22,10 @@ def create_app():
     install_auth_middleware(
         app,
         public_paths={
-            # "/api/sports",
-            # "/api/health",          # if you have one
+            "/api/sports",
+            "/api/leagues/search",
+            "/api/schedule/conferenceGamesByWeek",
+            "/api/schedule/teamGamesBySeason"
         },
         public_prefixes=[
             "/socket.io",           # allow socket.io handshake route through (see note below)
