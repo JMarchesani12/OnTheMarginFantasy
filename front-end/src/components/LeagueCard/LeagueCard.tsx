@@ -9,6 +9,7 @@ type LeagueCardProps = {
 
 const statusClassMap: Record<League["status"], string> = {
   "Pre-Draft": "league-card__status--pre-draft",
+  "Post-Draft": "league-card__status--post-draft",
   Drafting: "league-card__status--drafting",
   Completed: "league-card__status--completed",
   "In-Season": "league-card__status--in-season",

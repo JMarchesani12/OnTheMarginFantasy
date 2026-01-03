@@ -65,7 +65,7 @@ const makeInitialState = (): CreateLeagueFormState => ({
 });
 
 const CreateLeague: React.FC = () => {
-  const { userId, displayName, email } = useCurrentUser();
+  const { userId } = useCurrentUser();
 
   const [form, setForm] = useState<CreateLeagueFormState>(makeInitialState);
   const [sports, setSports] = useState<Sport[]>([]);

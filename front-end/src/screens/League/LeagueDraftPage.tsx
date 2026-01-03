@@ -66,7 +66,7 @@ const LeagueDraftPage = () => {
   const storageKey = leagueId ? `draftSelections:${leagueId}` : null;
   const socketUrl =
     import.meta.env.VITE_SOCKET_URL ??
-    import.meta.env.API_BASE_URL ??
+    import.meta.env.VITE_API_BASE_URL ??
     "http://127.0.0.1:5050";
 
   const loadTeams = useCallback(async () => {

@@ -151,7 +151,7 @@ const ManageLeaguePage = () => {
   const leagueId =
     leagueState?.leagueId ?? (league_id ? Number(league_id) : null);
 
-  const { userId: currentUserId, loading: authLoading, error: authError } = useCurrentUser();
+  const { userId: currentUserId, error: authError } = useCurrentUser();
 
   const [form, setForm] = useState<ManageLeagueFormState>(
     makeInitialForm(leagueState)
@@ -163,7 +163,7 @@ const ManageLeaguePage = () => {
   const [members, setMembers] = useState<LeagueMember[]>([]);
   const [membersLoading, setMembersLoading] = useState(false);
   const [membersError, setMembersError] = useState<string | null>(null);
-  const [draftOrder, setDraftOrderState] = useState<Record<number, string>>({});
+  const [, setDraftOrderState] = useState<Record<number, string>>({});
   const [orderedMemberIds, setOrderedMemberIds] = useState<number[]>([]);
   const [draggingMemberId, setDraggingMemberId] = useState<number | null>(null);
   const [memberActionError, setMemberActionError] = useState<string | null>(null);
@@ -326,7 +326,6 @@ const ManageLeaguePage = () => {
       return;
     }
     setDraftOrderState((current) => {
-      const hasOrder = Object.keys(current).length > 0;
       const next: Record<number, string> = { ...current };
       members.forEach((member, index) => {
         if (next[member.id]) {
