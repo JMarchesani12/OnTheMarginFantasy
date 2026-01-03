@@ -1,3 +1,4 @@
+import os
 from flask import Flask
 from flask_cors import CORS
 from db import engine
@@ -17,11 +18,26 @@ from authMiddleware import install_auth_middleware
 def create_app():
 
     app = Flask(__name__)
-    CORS(app)
+
+    @app.get("/health")
+    def health():
+        return {"ok": True}, 200
+
+    cors_origins = os.environ.get("CORS_ORIGINS", "http://localhost:5173").split(",")
+
+    CORS(
+        app,
+        resources={
+            r"/api/*": {"origins": cors_origins},
+            r"/socket.io/*": {"origins": cors_origins},
+            r"/health": {"origins": cors_origins},
+        },
+    )
 
     install_auth_middleware(
         app,
         public_paths={
+            "/health",
             "/api/sports",
             "/api/leagues/search",
             "/api/schedule/conferenceGamesByWeek",

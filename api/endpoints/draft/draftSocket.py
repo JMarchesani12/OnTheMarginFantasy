@@ -10,15 +10,18 @@ def register_draft_socket_handlers(engine):
 
     @socketio.on("connect")
     def on_connect(auth):
-        token = auth.get("token") if auth else None
+        token = None
+        if isinstance(auth, dict):
+            token = auth.get("token") or auth.get("access_token")
+        if token and token.startswith("Bearer "):
+            token = token.split(" ", 1)[1]
+
         if not token:
-            disconnect()
-            return
+            return False  # tells Socket.IO to reject the connection
 
         claims = verify_supabase_token(token)
         if not claims:
-            disconnect()
-            return
+            return False
 
         socketio.server.save_session(request.sid, {"user": claims})
 
@@ -31,7 +34,11 @@ def register_draft_socket_handlers(engine):
             return
 
         try:
-            league_id = int(payload.get("leagueId"))
+            league_id_raw = payload.get("leagueId") if isinstance(payload, dict) else None
+            if league_id_raw is None:
+                emit("draft:error", {"message": "leagueId is required"})
+                return
+            league_id = int(league_id_raw)
 
             # ✅ Authorization: user must be a league member
             supabase_sub = user["sub"]
@@ -51,6 +58,21 @@ def register_draft_socket_handlers(engine):
 
     @socketio.on("draft:leave")
     def on_leave(payload):
-        league_id = int(payload.get("leagueId"))
+        sess = socketio.server.get_session(request.sid)
+        user = sess.get("user")
+        if not user:
+            emit("draft:error", {"message": "Unauthorized"})
+            return
+
+        league_id_raw = payload.get("leagueId") if isinstance(payload, dict) else None
+        if league_id_raw is None:
+            emit("draft:error", {"message": "leagueId is required"})
+            return
+        league_id = int(league_id_raw)
+        supabase_sub = user["sub"]
+        if not model.is_supabase_user_in_league(league_id, supabase_sub):
+            emit("draft:error", {"message": "Forbidden"})
+            return
+
         room = f"draft:{league_id}"
         leave_room(room)

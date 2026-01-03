@@ -1,14 +1,11 @@
-# wsgi.py
-import eventlet
-eventlet.monkey_patch()
-
-import os
+# dev.py
 from dotenv import load_dotenv
-
-# load a single local .env (simple)
 load_dotenv(".env")
 
 from api import create_app
 from socketioInstance import socketio
 
 app = create_app()
+
+if __name__ == "__main__":
+    socketio.run(app, host="0.0.0.0", port=5050, debug=True)

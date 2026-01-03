@@ -1,3 +1,11 @@
+import os
 from flask_socketio import SocketIO
 
-socketio = SocketIO(cors_allowed_origins="*")  # dev only
+cors_origins = os.environ.get(
+    "CORS_ORIGINS",
+    "http://localhost:5173"
+).split(",")
+
+socketio = SocketIO(
+    cors_allowed_origins=cors_origins,
+)
