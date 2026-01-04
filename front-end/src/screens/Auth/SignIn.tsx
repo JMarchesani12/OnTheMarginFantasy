@@ -34,7 +34,7 @@ const SignIn = () => {
           throw new Error("Passwords do not match.");
         }
 
-        const { data, error: signUpError } = await supabase.auth.signUp({
+        const { error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
