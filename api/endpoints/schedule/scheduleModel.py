@@ -1,6 +1,5 @@
 import datetime as dt
 import json
-import logging
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy import text
@@ -8,9 +7,6 @@ from sqlalchemy.engine import Engine
 
 from endpoints.schedule.helpers.espn.espnClient import ESPNClient
 from endpoints.schedule.helpers.weekHelper import compute_weeks_from_start
-
-logger = logging.getLogger(__name__)
-
 
 class ScheduleModel:
     """
@@ -178,10 +174,7 @@ class ScheduleModel:
                 ).fetchone()
                 created.append(dict(row._mapping))
 
-        logger.debug(
-            "Inserted %d weeks for league %s (starting_week_number=%s)",
-            len(created), league_id, starting_week_number
-        )
+        print(f"Inserted ${len(created)} weeks for league ${league_id} (starting_week_number=${starting_week_number})")
         return created
 
     def ensure_weeks_for_league(self, league_id: int) -> List[Dict[str, Any]]:
@@ -232,10 +225,7 @@ class ScheduleModel:
             )
             created_all.extend(created_playoff)
 
-        logger.info(
-            "ensure_weeks_for_league created %d weeks for league %s",
-            len(created_all), league_id,
-        )
+        print(f"ensure_weeks_for_league created ${len(created_all)} weeks for league ${league_id}")
         return created_all
 
     def get_weeks_for_league(self, league_id: int) -> List[Dict[str, Any]]:
@@ -398,7 +388,7 @@ class ScheduleModel:
             try:
                 schedule_json = client.fetch_team_schedule(str(external_id))
             except Exception as e:
-                logger.warning("Failed to fetch schedule for team %s: %s", external_id, e)
+                print(f"Failed to fetch schedule for team ${external_id}: ${e}")
                 continue
 
             for event in client.iter_team_events(schedule_json):
@@ -447,10 +437,7 @@ class ScheduleModel:
         client = ESPNClient(self.espn_base_url, api_keyword)
         datestr = target_date.strftime("%Y%m%d")
 
-        logger.info(
-            "Ingesting scoreboard for league %s (sport=%s, sportSeasonId=%s) date=%s",
-            league_id, sport_id, sport_season_id, datestr
-        )
+        print(f"Ingesting scoreboard for league ${league_id} (sport=${sport_id}, sportSeasonId=${sport_season_id}) date=${datestr}")
 
         events_seen = 0
 
