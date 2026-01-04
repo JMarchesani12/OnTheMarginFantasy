@@ -37,8 +37,6 @@ const SignIn = () => {
           },
         });
 
-        console.log(data.user?.id)
-
         if (signUpError) {
           throw signUpError;
         }
