@@ -1,3 +1,4 @@
+from zoneinfo import ZoneInfo
 from bootstrap import *
 import datetime as dt
 from sqlalchemy import text
@@ -33,17 +34,18 @@ def get_active_leagues_for_date(engine, target_date: dt.date):
 
 
 def main():
-    today = dt.date.today()
+    central = ZoneInfo("America/Chicago")
+    sports_date = dt.now(central).strftime("%Y%m%d")
     load_dotenv()
 
     schedule_model = ScheduleModel(engine, os.getenv("ESPN_BASE_URL"))
 
-    league_ids = get_active_leagues_for_date(engine, today)
-    print(f"[cron] {today} - Found {len(league_ids)} active leagues")
+    league_ids = get_active_leagues_for_date(engine, sports_date)
+    print(f"[cron] {sports_date} - Found {len(league_ids)} active leagues")
 
     for league_id in league_ids:
         try:
-            summary = schedule_model.ingest_scoreboard_for_date_for_league(league_id, today)
+            summary = schedule_model.ingest_scoreboard_for_date_for_league(league_id, sports_date)
             print(f"[cron] League {league_id}: eventsSeen={summary['eventsSeen']}")
         except Exception as e:
             # You can log this somewhere better in a real setup

@@ -174,7 +174,7 @@ class ScheduleModel:
                 ).fetchone()
                 created.append(dict(row._mapping))
 
-        print(f"Inserted ${len(created)} weeks for league ${league_id} (starting_week_number=${starting_week_number})")
+        print(f"Inserted {len(created)} weeks for league {league_id} (starting_week_number={starting_week_number})")
         return created
 
     def ensure_weeks_for_league(self, league_id: int) -> List[Dict[str, Any]]:
@@ -225,7 +225,7 @@ class ScheduleModel:
             )
             created_all.extend(created_playoff)
 
-        print(f"ensure_weeks_for_league created ${len(created_all)} weeks for league ${league_id}")
+        print(f"ensure_weeks_for_league created {len(created_all)} weeks for league {league_id}")
         return created_all
 
     def get_weeks_for_league(self, league_id: int) -> List[Dict[str, Any]]:
@@ -388,7 +388,7 @@ class ScheduleModel:
             try:
                 schedule_json = client.fetch_team_schedule(str(external_id))
             except Exception as e:
-                print(f"Failed to fetch schedule for team ${external_id}: ${e}")
+                print(f"Failed to fetch schedule for team {external_id}: {e}")
                 continue
 
             for event in client.iter_team_events(schedule_json):
@@ -437,7 +437,7 @@ class ScheduleModel:
         client = ESPNClient(self.espn_base_url, api_keyword)
         datestr = target_date.strftime("%Y%m%d")
 
-        print(f"Ingesting scoreboard for league ${league_id} (sport=${sport_id}, sportSeasonId=${sport_season_id}) date=${datestr}")
+        print(f"Ingesting scoreboard for league {league_id} (sport={sport_id}, sportSeasonId={sport_season_id}) date={datestr}")
 
         events_seen = 0
 
