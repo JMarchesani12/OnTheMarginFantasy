@@ -7,6 +7,9 @@ import {
 } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
+import { createUser } from '../api/user';
+
+const PENDING_USER_CREATE_KEY = 'otm:pending-user-create';
 
 type AuthContextValue = {
   user: User | null;
@@ -24,11 +27,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const maybeCreateUser = async (currentSession: Session | null) => {
+      if (!currentSession?.user) return;
+
+      const pendingRaw = localStorage.getItem(PENDING_USER_CREATE_KEY);
+      if (!pendingRaw) return;
+
+      let pending: { email?: string; displayName?: string } | null = null;
+      try {
+        pending = JSON.parse(pendingRaw);
+      } catch (error) {
+        console.warn('Failed to parse pending user payload.', error);
+        localStorage.removeItem(PENDING_USER_CREATE_KEY);
+        return;
+      }
+
+      const displayName =
+        pending?.displayName ?? currentSession.user.user_metadata?.username;
+      const email = pending?.email ?? currentSession.user.email;
+
+      if (
+        pending?.email &&
+        currentSession.user.email &&
+        pending.email !== currentSession.user.email
+      ) {
+        return;
+      }
+
+      if (!displayName || !email) return;
+
+      try {
+        await createUser(currentSession.user.id, email, displayName);
+        localStorage.removeItem(PENDING_USER_CREATE_KEY);
+      } catch (error) {
+        console.warn('User record creation failed.', error);
+      }
+    };
+
     // Initial session load
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session ?? null);
       setUser(data.session?.user ?? null);
       setLoading(false);
+      void maybeCreateUser(data.session);
     });
 
     // Listen for auth changes
@@ -38,6 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(newSession);
       setUser(newSession?.user ?? null);
       setLoading(false);
+      void maybeCreateUser(newSession);
     });
 
     return () => subscription.unsubscribe();

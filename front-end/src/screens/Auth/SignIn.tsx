@@ -2,7 +2,8 @@ import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient";
 import "./SignIn.css";
-import { createUser } from "../../api/user";
+
+const PENDING_USER_CREATE_KEY = "otm:pending-user-create";
 
 const SignIn = () => {
   const navigate = useNavigate();
@@ -38,7 +39,7 @@ const SignIn = () => {
           password,
           options: {
             data: { username: username.trim() },
-            emailRedirectTo: `${window.location.origin}/leagues`,
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
           },
         });
 
@@ -46,7 +47,10 @@ const SignIn = () => {
           throw signUpError;
         }
 
-        await createUser(data.user?.id, email, username);
+        localStorage.setItem(
+          PENDING_USER_CREATE_KEY,
+          JSON.stringify({ email, displayName: username.trim() })
+        );
 
         setMessage("Check your email to confirm your account, then sign in.");
         setMode("signIn");
