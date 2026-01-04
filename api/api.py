@@ -23,7 +23,11 @@ def create_app():
     def health():
         return {"ok": True}, 200
 
-    cors_origins = os.environ.get("CORS_ORIGINS", "http://localhost:5173").split(",")
+    cors_origins = [
+        o.strip()
+        for o in os.environ.get("CORS_ORIGINS", "http://localhost:5173").split(",")
+        if o.strip()
+    ]
 
     CORS(
         app,
@@ -32,6 +36,9 @@ def create_app():
             r"/socket.io/*": {"origins": cors_origins},
             r"/health": {"origins": cors_origins},
         },
+        supports_credentials=True,
+        allow_headers=["Content-Type", "Authorization"],
+        methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     )
 
     install_auth_middleware(

@@ -9,7 +9,9 @@ const SignIn = () => {
   const [mode, setMode] = useState<"signIn" | "signUp">("signIn");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -26,6 +28,9 @@ const SignIn = () => {
       if (isSignUp) {
         if (!username.trim()) {
           throw new Error("Username is required to create an account.");
+        }
+        if (password !== confirmPassword) {
+          throw new Error("Passwords do not match.");
         }
 
         const { data, error: signUpError } = await supabase.auth.signUp({
@@ -118,16 +123,50 @@ const SignIn = () => {
           </label>
           <label className="sign-in__label" htmlFor="sign-in-password">
             Password
-            <input
-              id="sign-in-password"
-              type="password"
-              className="sign-in__input"
-              placeholder="••••••••"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-            />
+            <div className="sign-in__password-field">
+              <input
+                id="sign-in-password"
+                type={showPassword ? "text" : "password"}
+                className="sign-in__input"
+                placeholder="••••••••"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                required
+              />
+              <button
+                type="button"
+                className="sign-in__toggle"
+                onClick={() => setShowPassword((current) => !current)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
           </label>
+          {isSignUp && (
+            <label className="sign-in__label" htmlFor="sign-in-confirm-password">
+              Confirm Password
+              <div className="sign-in__password-field">
+                <input
+                  id="sign-in-confirm-password"
+                  type={showPassword ? "text" : "password"}
+                  className="sign-in__input"
+                  placeholder="••••••••"
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  className="sign-in__toggle"
+                  onClick={() => setShowPassword((current) => !current)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+              </div>
+            </label>
+          )}
           {error && <p className="sign-in__error">{error}</p>}
           {message && <p className="sign-in__message">{message}</p>}
           <button type="submit" className="sign-in__button" disabled={loading}>
@@ -143,6 +182,8 @@ const SignIn = () => {
               setMode(isSignUp ? "signIn" : "signUp");
               setError(null);
               setMessage(null);
+              setConfirmPassword("");
+              setShowPassword(false);
             }}
           >
             {isSignUp ? "Sign in" : "Sign up"}
