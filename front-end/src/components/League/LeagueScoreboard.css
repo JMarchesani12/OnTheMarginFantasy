@@ -1,69 +1,115 @@
+/* =========================
+   LEAGUE SCOREBOARD (SICKO THEME)
+   Matches League Card + Trade Requests
+   All colors HEX
+   ========================= */
+
 .league-scoreboard {
   margin-top: 2rem;
-  border-radius: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.1rem;
+  border: 1px solid #243055;
   padding: 1.5rem;
-  background: rgba(12, 18, 34, 0.8);
+  background: linear-gradient(180deg, #0B0E1A 0%, #0E1230 100%);
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  box-shadow:
+    0 24px 70px #00000066,
+    0 2px 0 #FFFFFF14 inset;
+  position: relative;
+  overflow: hidden;
+  color: #F4F7FF;
 }
 
+/* neon edge glow */
+.league-scoreboard::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 1.25rem;
+  background: linear-gradient(120deg, #FF4FD820, #22D3EE18, #A855F71A);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.league-scoreboard > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Header text */
 .league-scoreboard__header h2 {
   margin: 0.35rem 0 0;
+  font-size: 1.35rem;
+  color: #F4F7FF;
 }
 
 .league-scoreboard__eyebrow {
   margin: 0;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #7c8db5;
+  letter-spacing: 0.10em;
+  color: #8EA0D6;
   font-size: 0.75rem;
 }
 
 .league-scoreboard__subhead {
   margin: 0.35rem 0 0;
-  color: #a6b4d4;
+  color: #B7C2E6;
+  font-size: 0.9rem;
 }
 
+/* Table wrapper */
 .league-scoreboard__table {
   overflow-x: auto;
+  border-radius: 0.75rem;
 }
 
+/* Rows */
 .league-scoreboard__row {
   display: grid;
   grid-template-columns: minmax(160px, 1fr) repeat(auto-fit, minmax(100px, 1fr)) 80px;
-  gap: 0.5rem;
-  padding: 0.65rem 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  gap: 0.6rem;
+  padding: 0.7rem 0.75rem;
+  border-bottom: 1px solid #243055;
+  background: #0A0D18;
+}
+
+.league-scoreboard__row:nth-child(even) {
+  background: #0F1638;
 }
 
 .league-scoreboard__row:last-child {
   border-bottom: none;
 }
 
+/* Header row */
 .league-scoreboard__row--header {
-  font-weight: 600;
+  font-weight: 800;
   text-transform: uppercase;
   font-size: 0.8rem;
-  letter-spacing: 0.04em;
-  color: #8ca0cf;
+  letter-spacing: 0.06em;
+  color: #8EA0D6;
+  background: #0B0E1A;
 }
 
+/* Cells */
 .league-scoreboard__team {
-  font-weight: 600;
+  font-weight: 700;
+  color: #F4F7FF;
 }
 
 .league-scoreboard__total {
-  font-weight: 700;
+  font-weight: 900;
+  color: #FFD166;
 }
 
+/* States */
 .league-scoreboard__loading {
-  color: #a1b4df;
+  color: #B7C2E6;
   margin: 0;
 }
 
 .league-scoreboard__error {
-  color: #ff7a98;
+  color: #FF4D6D;
   margin: 0;
 }

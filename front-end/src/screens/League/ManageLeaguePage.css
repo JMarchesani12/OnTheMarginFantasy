@@ -1,7 +1,15 @@
+/* ===========================
+   ML PAGE — SICKO THEME
+   Full restyle, HEX only
+   Keeps your class names the same
+   =========================== */
+
 .ml-page {
   min-height: 100vh;
+  color: #F4F7FF;
 }
 
+/* Header */
 .ml-header {
   display: flex;
   justify-content: space-between;
@@ -11,32 +19,67 @@
 }
 
 .ml-subtitle {
-  color: #9ca3af;
+  color: #B7C2E6;
   margin: 0.25rem 0 0;
 }
 
+/* Back */
 .ml-back {
   background: none;
   border: none;
-  color: inherit;
+  color: #22D3EE;
   text-decoration: underline;
   cursor: pointer;
   font-size: 0.9rem;
+  font-weight: 900;
+  transition: color 120ms ease, transform 120ms ease;
 }
 
+.ml-back:hover {
+  color: #FF4FD8;
+  transform: translateY(-1px);
+}
+
+/* Sections */
 .ml-section {
   margin-bottom: 1.5rem;
+  border-radius: 1rem;
+  border: 1px solid #243055;
+  background: linear-gradient(180deg, #0B0E1A 0%, #0E1230 100%);
+  padding: 1.1rem 1.25rem;
+  box-shadow:
+    0 24px 70px #00000055,
+    0 2px 0 #FFFFFF14 inset;
+  position: relative;
+  overflow: hidden;
+}
+
+.ml-section::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 1.15rem;
+  background: linear-gradient(120deg, #FF4FD818, #22D3EE14, #A855F712);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.ml-section > * {
+  position: relative;
+  z-index: 1;
 }
 
 .ml-section-header h2 {
   margin: 0 0 0.25rem;
+  color: #F4F7FF;
 }
 
 .ml-section-header p {
   margin: 0 0 0.75rem;
-  color: #9ca3af;
+  color: #B7C2E6;
 }
 
+/* Actions */
 .ml-section-actions {
   display: flex;
   justify-content: flex-end;
@@ -49,23 +92,27 @@
   justify-content: flex-end;
 }
 
+/* Messages */
 .ml-error {
-  color: #f97373;
+  color: #FF4D6D;
   font-size: 0.9rem;
+  font-weight: 800;
 }
 
 .ml-success {
-  color: #34d399;
+  color: #A3FF12;
   font-size: 0.9rem;
+  font-weight: 900;
 }
 
 .ml-muted {
-  color: #9ca3af;
+  color: #B7C2E6;
   font-size: 0.9rem;
 }
 
+/* Draft order divider */
 .ml-draft-order {
-  border-top: 1px solid #1f2933;
+  border-top: 1px solid #243055;
   padding-top: 1rem;
 }
 
@@ -77,27 +124,36 @@
   margin-bottom: 0.75rem;
 }
 
+/* Draft order list */
 .ml-draft-order-list {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.6rem;
 }
 
+/* Draft order row */
 .ml-draft-order-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.5rem;
-  border: 1px solid #1f2937;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.95rem;
+  border: 1px solid #243055;
+  background: linear-gradient(180deg, #0A0D18 0%, #0F1638 100%);
+  box-shadow: 0 18px 50px #00000046;
 }
 
 .ml-draft-order-row.is-dragging {
-  opacity: 0.6;
+  opacity: 0.7;
   border-style: dashed;
+  border-color: #22D3EE;
+  box-shadow:
+    0 0 0 4px #22D3EE14,
+    0 18px 50px #00000046;
 }
 
+/* Left side */
 .ml-draft-order-main {
   display: flex;
   align-items: center;
@@ -110,12 +166,15 @@
   justify-content: center;
   width: 2rem;
   height: 2rem;
-  border-radius: 50%;
-  background: rgba(148, 163, 184, 0.2);
-  color: #e2e8f0;
-  font-weight: 600;
+  border-radius: 999px;
+  background: linear-gradient(120deg, #22D3EE26, #FF4FD820);
+  border: 1px solid #334277;
+  color: #F4F7FF;
+  font-weight: 900;
+  box-shadow: 0 12px 35px #00000033;
 }
 
+/* Right actions */
 .ml-draft-actions {
   display: inline-flex;
   align-items: center;
@@ -123,42 +182,71 @@
 }
 
 .ml-draft-order-row input {
-  max-width: 80px;
+  max-width: 90px;
+  border-radius: 0.75rem;
+  border: 1px solid #2F3B6A;
+  background: #0B0E1A;
+  color: #F4F7FF;
+  padding: 0.45rem 0.6rem;
+  outline: none;
+  box-shadow: 0 12px 35px #00000033;
 }
 
+.ml-draft-order-row input:focus {
+  border-color: #22D3EE;
+  box-shadow:
+    0 0 0 4px #22D3EE1A,
+    0 0 24px #22D3EE14,
+    0 12px 35px #00000044;
+}
+
+/* Remove button (danger) */
 .ml-remove-btn {
   border-radius: 999px;
-  border: 1px solid rgba(248, 113, 113, 0.5);
-  background: rgba(248, 113, 113, 0.1);
-  color: #fecaca;
-  padding: 0.35rem 0.9rem;
+  border: 1px solid #FF4D6D;
+  background: #FF4D6D1A;
+  color: #FFD1DA;
+  padding: 0.4rem 1rem;
   cursor: pointer;
+  font-weight: 900;
+  box-shadow: 0 12px 35px #00000033;
+  transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
 }
 
 .ml-remove-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.55;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 12px 35px #00000022;
 }
 
-.ml-remove-btn:hover {
-  background: rgba(248, 113, 113, 0.2);
+.ml-remove-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: #FF4D6D2A;
+  box-shadow:
+    0 0 0 4px #FF4D6D1A,
+    0 16px 45px #00000044;
 }
 
+/* Drag hint icon */
 .ml-drag-hint {
-  color: #94a3b8;
+  color: #8EA0D6;
   font-size: 1.1rem;
 }
 
+/* Draft member text */
 .ml-draft-member {
   margin: 0;
-  font-weight: 600;
+  font-weight: 900;
+  color: #F4F7FF;
 }
 
 .ml-draft-sub {
   font-size: 0.8rem;
-  color: #9ca3af;
+  color: #B7C2E6;
 }
 
+/* Requests */
 .ml-requests-list {
   display: flex;
   flex-direction: column;
@@ -170,43 +258,55 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
-  padding: 0.75rem;
-  border-radius: 0.5rem;
-  border: 1px solid #1f2937;
+  padding: 0.85rem;
+  border-radius: 0.95rem;
+  border: 1px solid #243055;
+  background: linear-gradient(180deg, #0A0D18 0%, #0F1638 100%);
+  box-shadow: 0 18px 50px #00000046;
 }
 
 .ml-request-name {
   margin: 0;
-  font-weight: 600;
+  font-weight: 900;
+  color: #F4F7FF;
 }
 
 .ml-request-sub {
   margin: 0.15rem 0 0;
-  color: #9ca3af;
+  color: #B7C2E6;
   font-size: 0.85rem;
 }
 
 .ml-request-message {
   margin: 0.4rem 0 0;
   font-size: 0.9rem;
+  color: #F4F7FF;
 }
 
+/* Request actions */
 .ml-request-actions {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
 }
 
+/* Delete button (danger) */
 .ml-delete-btn {
   border-radius: 999px;
-  border: 1px solid rgba(248, 113, 113, 0.5);
-  background: rgba(248, 113, 113, 0.15);
-  color: #fee2e2;
-  padding: 0.5rem 1.25rem;
-  font-weight: 600;
+  border: 1px solid #FF4D6D;
+  background: #FF4D6D1A;
+  color: #FFD1DA;
+  padding: 0.55rem 1.35rem;
+  font-weight: 900;
   cursor: pointer;
+  box-shadow: 0 12px 35px #00000033;
+  transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
 }
 
 .ml-delete-btn:hover {
-  background: rgba(248, 113, 113, 0.25);
+  transform: translateY(-1px);
+  background: #FF4D6D2A;
+  box-shadow:
+    0 0 0 4px #FF4D6D1A,
+    0 16px 45px #00000044;
 }

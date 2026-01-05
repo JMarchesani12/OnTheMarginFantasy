@@ -224,7 +224,7 @@ const ConferenceSchedulePage = () => {
       teamScore: number,
       opponentScore: number,
       broadcast: string | null,
-      time: string | null,
+      time: string | null
     ) => {
       const entry = teamMap.get(teamId) ?? {
         teamName,
@@ -261,7 +261,7 @@ const ConferenceSchedulePage = () => {
           game.homeScore,
           game.awayScore,
           game.broadcast,
-          time,
+          time
         );
       }
 
@@ -275,7 +275,7 @@ const ConferenceSchedulePage = () => {
           game.awayScore,
           game.homeScore,
           game.broadcast,
-          time,
+          time
         );
       }
     });
@@ -302,9 +302,7 @@ const ConferenceSchedulePage = () => {
 
   const activeConference = useMemo(
     () =>
-      conferences.find(
-        (conf) => conf.sportConferenceId === activeConferenceId
-      ) ?? null,
+      conferences.find((conf) => conf.sportConferenceId === activeConferenceId) ?? null,
     [conferences, activeConferenceId]
   );
 
@@ -368,6 +366,7 @@ const ConferenceSchedulePage = () => {
       >
         ← Back to League
       </button>
+
       <header className="conference-schedule__header">
         <div>
           <h1>Conference Scoreboard</h1>
@@ -384,7 +383,7 @@ const ConferenceSchedulePage = () => {
 
       <section className="conference-schedule__controls">
         <div className="conference-schedule__form">
-          <label htmlFor="conference-select">Conference (default A10)</label>
+          <label htmlFor="conference-select">Conference</label>
           <select
             id="conference-select"
             className="conference-schedule__select"
@@ -392,9 +391,7 @@ const ConferenceSchedulePage = () => {
             onChange={handleConferenceChange}
             disabled={conferencesLoading || conferences.length === 0}
           >
-            {conferences.length === 0 && (
-              <option value="">No conferences available</option>
-            )}
+            {conferences.length === 0 && <option value="">No conferences available</option>}
             {conferences.length > 0 && <option value="">Select conference…</option>}
             {conferences.map((conf) => (
               <option key={conf.sportConferenceId} value={conf.sportConferenceId}>
@@ -428,9 +425,7 @@ const ConferenceSchedulePage = () => {
         {weekInfoLoading && <span className="conference-schedule__hint">Syncing week…</span>}
       </div>
 
-      {conferencesError && (
-        <p className="conference-schedule__error">{conferencesError}</p>
-      )}
+      {conferencesError && <p className="conference-schedule__error">{conferencesError}</p>}
       {error && <p className="conference-schedule__error">{error}</p>}
       {!activeConferenceId && (
         <p className="conference-schedule__hint">
@@ -471,47 +466,84 @@ const ConferenceSchedulePage = () => {
                       {row.teamName}
                     </button>
                   </td>
+
                   {dateHeaders.map((header) => {
                     const cells = row.cellsByDate[header.key];
                     if (!cells || cells.length === 0) {
                       return (
-                        <td key={header.key} className="conference-schedule__cell conference-schedule__cell--empty">
+                        <td
+                          key={header.key}
+                          className="conference-schedule__cell conference-schedule__cell--empty"
+                        >
                           —
                         </td>
                       );
                     }
+
                     return (
                       <td key={header.key} className="conference-schedule__cell">
                         {cells.map((cell, idx) => {
+                          // ESPN often uses 0-0 as "scheduled" in your API shape
                           const hasScore = !(cell.teamScore === 0 && cell.opponentScore === 0);
+
+                          // Build HOME-on-top, AWAY-on-bottom display (regardless of which row we're on)
+                          const homeName = cell.isHome ? row.teamName : cell.opponentName;
+                          const awayName = cell.isHome ? cell.opponentName : row.teamName;
+
+                          const homeScore = cell.isHome ? cell.teamScore : cell.opponentScore;
+                          const awayScore = cell.isHome ? cell.opponentScore : cell.teamScore;
+
+                          // Winner flags (bold ONLY the winning row)
+                          const homeWon = hasScore && homeScore > awayScore;
+                          const awayWon = hasScore && awayScore > homeScore;
+
                           return (
-                            <div key={`${row.teamId}-${header.key}-${idx}`} className="conference-schedule__cell-game">
-                              <div className="conference-schedule__cell-opponent">
-                                {cell.isHome ? "vs " : "@ "}
-                                {cell.opponentName}
-                              </div>
+                            <div
+                              key={`${row.teamId}-${header.key}-${idx}`}
+                              className="conference-schedule__cell-game"
+                            >
+                              {/* Removed the old "vs/@ opponent" line above the score box */}
+
                               <div className="conference-schedule__cell-score">
-                                <div className="conference-schedule__score-line conference-schedule__score-line--team">
+                                {/* HOME (top) */}
+                                <div
+                                  className={`conference-schedule__score-line ${
+                                    homeWon ? "is-winner" : ""
+                                  }`}
+                                >
                                   <span className="conference-schedule__score-name">
-                                    {row.teamName}
+                                    {homeName}
                                   </span>
                                   <span className="conference-schedule__score-value">
-                                    {hasScore ? cell.teamScore : "—"}
+                                    {hasScore ? homeScore : "—"}
                                   </span>
                                 </div>
-                                <div className="conference-schedule__score-line conference-schedule__score-line--opponent">
+
+                                {/* @ row */}
+                                <div className="conference-schedule__at-row">
+                                  <span className="conference-schedule__at">@</span>
+                                </div>
+
+                                {/* AWAY (bottom) */}
+                                <div
+                                  className={`conference-schedule__score-line ${
+                                    awayWon ? "is-winner" : ""
+                                  }`}
+                                >
                                   <span className="conference-schedule__score-name">
-                                    {cell.opponentName}
+                                    {awayName}
                                   </span>
                                   <span className="conference-schedule__score-value">
-                                    {hasScore ? cell.opponentScore : "—"}
+                                    {hasScore ? awayScore : "—"}
                                   </span>
                                 </div>
+
                                 {!hasScore && (
                                   <span className="conference-schedule__score-status">
                                     Scheduled
                                   </span>
                                 )}
+
                                 {(cell.time || cell.broadcast) && (
                                   <div className="conference-schedule__cell-meta">
                                     {cell.time && (

@@ -1,8 +1,15 @@
+/* ===========================
+   CREATE LEAGUE — SICKO THEME
+   Full restyle, HEX only
+   Keeps your class names intact
+   =========================== */
+
 .cl-page {
   min-height: 100vh;
-  background: #020617;
-  color: #e5e7eb;
-  padding: 2rem 1rem;
+  color: #F4F7FF;
+  padding: 2.5rem 1.25rem 4rem;
+  background:
+    radial-gradient(1200px 600px at 50% -200px, #0F1638 0%, #070A14 60%);
 }
 
 .cl-page-inner {
@@ -10,80 +17,142 @@
   margin: 0 auto;
 }
 
+/* Header */
 .cl-header h1 {
-  font-size: 1.75rem;
+  font-size: 1.9rem;
   margin-bottom: 0.25rem;
+  font-weight: 900;
+  background: linear-gradient(90deg, #F4F7FF, #D7DEFF, #FFFFFF);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .cl-subtitle {
-  color: #9ca3af;
+  color: #B7C2E6;
   margin-bottom: 1.5rem;
 }
 
+/* Form card */
 .cl-form {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  background: #020617;
-  border-radius: 0.75rem;
-  border: 1px solid #1f2933;
+  border-radius: 1.25rem;
+  border: 1px solid #243055;
   padding: 1.5rem;
+  background: linear-gradient(180deg, #0B0E1A 0%, #0E1230 100%);
+  box-shadow:
+    0 28px 70px #00000055,
+    0 2px 0 #FFFFFF12 inset;
+  position: relative;
+  overflow: hidden;
 }
 
+.cl-form::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 1.35rem;
+  background: linear-gradient(120deg, #FF4FD818, #22D3EE14, #A855F712);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.cl-form > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Field groups */
 .cl-field-group {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.35rem;
 }
 
 .cl-field-label {
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: 0.85rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8EA0D6;
 }
 
 .cl-required {
-  color: #f97373;
+  color: #FF4D6D;
+  font-weight: 900;
 }
 
 .cl-field-help {
-  font-size: 0.8rem;
-  color: #9ca3af;
+  font-size: 0.85rem;
+  color: #B7C2E6;
 }
 
+/* Grid */
 .cl-form-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1rem;
 }
 
-.cl-field-inline {
-  gap: 0.5rem;
+/* Inputs baseline (scoped to this page only) */
+.cl-form input,
+.cl-form select,
+.cl-form textarea {
+  border-radius: 0.85rem;
+  border: 1px solid #2F3B6A;
+  background: #0B0E1A;
+  color: #F4F7FF;
+  padding: 0.65rem 0.8rem;
+  font-size: 0.95rem;
+  outline: none;
+  box-shadow: 0 12px 35px #00000033;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 
-.cl-inline-checkbox {
+.cl-form input::placeholder,
+.cl-form textarea::placeholder {
+  color: #8EA0D6;
+}
+
+.cl-form input:focus,
+.cl-form select:focus,
+.cl-form textarea:focus {
+  border-color: #22D3EE;
+  box-shadow:
+    0 0 0 4px #22D3EE1A,
+    0 0 24px #22D3EE14,
+    0 12px 35px #00000044;
+}
+
+/* Inline group helpers */
+.cl-field-inline {
+  gap: 0.6rem;
+}
+
+.cl-inline-checkbox,
+.cl-inline-number {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.5rem;
   margin-top: 0.25rem;
 }
 
 .cl-inline-number {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-top: 0.25rem;
   margin-left: 0.5rem;
 }
 
+/* Radios */
 .cl-radio-row {
   display: flex;
-  gap: 0.4rem;
+  gap: 0.5rem;
   align-items: flex-start;
   margin-bottom: 0.25rem;
+  color: #F4F7FF;
 }
 
-/* Tiebreaker styles */
-
+/* Tiebreakers */
 .cl-tiebreaker-add-row select {
   width: 100%;
 }
@@ -91,40 +160,42 @@
 .cl-tiebreaker-list {
   list-style: none;
   padding: 0;
-  margin: 0.5rem 0 0;
+  margin: 0.6rem 0 0;
 }
 
 .cl-tiebreaker-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.25rem 0;
+  gap: 0.6rem;
+  padding: 0.35rem 0;
 }
 
 .cl-tiebreaker-index {
   width: 1.5rem;
   text-align: right;
-  color: #9ca3af;
+  color: #8EA0D6;
+  font-weight: 900;
 }
 
 .cl-tiebreaker-actions button {
   margin-left: 0.25rem;
 }
 
-/* Bonuses */
-
+/* Bonus cards */
 .cl-bonus-card {
-  border: 1px solid #1f2937;
-  border-radius: 0.5rem;
-  padding: 0.75rem;
+  border: 1px solid #243055;
+  border-radius: 1rem;
+  padding: 0.9rem;
   margin-bottom: 0.75rem;
+  background: linear-gradient(180deg, #0A0D18 0%, #0F1638 100%);
+  box-shadow: 0 18px 50px #00000046;
 }
 
 .cl-bonus-header {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.6rem;
   align-items: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.6rem;
 }
 
 .cl-bonus-header input {
@@ -132,57 +203,84 @@
 }
 
 .cl-bonus-remove {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
 }
 
+/* Bonus placements */
 .cl-bonus-placements {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.35rem;
 }
 
 .cl-placement-row {
   display: grid;
   grid-template-columns: 2fr 1fr auto;
-  gap: 0.4rem;
+  gap: 0.5rem;
 }
 
 .cl-placement-add {
-  margin-top: 0.5rem;
-  font-size: 0.85rem;
+  margin-top: 0.6rem;
+  font-size: 0.9rem;
 }
 
+/* Form error */
 .cl-form-error {
-  color: #f97373;
-  font-size: 0.85rem;
+  color: #FF4D6D;
+  font-size: 0.9rem;
+  font-weight: 800;
 }
 
+/* Action row */
 .cl-form-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
 }
 
+/* Buttons */
 .cl-btn-primary,
 .cl-btn-secondary {
-  border-radius: 0.375rem;
-  border: none;
-  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid #243055;
+  padding: 0.6rem 1.25rem;
   cursor: pointer;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  box-shadow: 0 12px 35px #00000033;
+  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
 }
 
 .cl-btn-primary {
-  background: #10b981;
-  color: #022c22;
-  font-weight: 600;
+  border: 1px solid #00000000;
+  background: linear-gradient(120deg, #22D3EE, #FF4FD8);
+  color: #0A0D18;
 }
 
 .cl-btn-secondary {
-  background: #374151;
-  color: #e5e7eb;
+  background: #0B0E1A;
+  color: #F4F7FF;
 }
 
+.cl-btn-primary:hover,
+.cl-btn-secondary:hover {
+  transform: translateY(-1px);
+  border-color: #22D3EE;
+  box-shadow:
+    0 0 0 4px #22D3EE1A,
+    0 16px 45px #00000044;
+}
+
+.cl-btn-primary:disabled,
+.cl-btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 10px 30px #00000022;
+}
+
+/* Tooltip */
 .cl-tooltip {
   position: relative;
   display: inline-flex;
@@ -192,30 +290,37 @@
   width: 16px;
   height: 16px;
   font-size: 11px;
-  font-weight: 600;
-  border-radius: 50%;
-  border: 1px solid #888;
-  color: #555;
+  font-weight: 900;
+  border-radius: 999px;
+  border: 1px solid #334277;
+  background: #0B0E1A;
+  color: #F4F7FF;
   cursor: help;
+  box-shadow: 0 10px 25px #00000033;
 }
 
 .cl-tooltip-content {
   position: absolute;
-  bottom: 125%;
+  bottom: 130%;
   left: 50%;
   transform: translateX(-50%);
-  background: #222;
-  color: #fff;
-  padding: 6px 8px;
-  border-radius: 4px;
+  background: #0B0E1A;
+  border: 1px solid #243055;
+  color: #F4F7FF;
+  padding: 0.45rem 0.6rem;
+  border-radius: 0.75rem;
   font-size: 12px;
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.15s ease;
+  transition: opacity 0.15s ease, transform 0.15s ease;
   z-index: 10;
+  box-shadow:
+    0 0 0 4px #22D3EE0F,
+    0 18px 45px #00000055;
 }
 
 .cl-tooltip:hover .cl-tooltip-content {
   opacity: 1;
+  transform: translateX(-50%) translateY(-2px);
 }
