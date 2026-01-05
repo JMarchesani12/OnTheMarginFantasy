@@ -1,68 +1,172 @@
+/* ===========================
+   GLOBAL ROOT — SICKO THEME
+   Arcade / Neon / Dark
+   GLOBAL BASELINE ONLY
+   =========================== */
+
 :root {
-  font-family:'Times New Roman', Times, serif;
-  line-height: 1.5;
+  /* Typography */
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  line-height: 1.55;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: #ffffff ; 
-  background-color: #242424;
+  /* Color system */
+  color-scheme: dark;
+  color: #F4F7FF;
+  background-color: #070A14;
 
+  /* Rendering */
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* Theme tokens */
+  --bg-main: #070A14;
+  --bg-panel: #0B0E1A;
+  --bg-panel-alt: #0F1638;
+
+  --border-main: #243055;
+  --border-soft: #2F3B6A;
+
+  --text-main: #F4F7FF;
+  --text-muted: #B7C2E6;
+  --text-soft: #8EA0D6;
+
+  --accent-cyan: #22D3EE;
+  --accent-pink: #FF4FD8;
+  --accent-green: #6AFFBE;
+  --accent-red: #FF4D6D;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+/* ===========================
+   Document layout
+   =========================== */
+
+html,
+body,
+#root {
+  min-height: 100vh;
+  width: 100%;
 }
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  display: block;
+  background:
+    radial-gradient(
+      1200px 600px at 50% -200px,
+      #0F1638 0%,
+      #070A14 60%
+    );
+  color: #F4F7FF;
+}
+
+/* ===========================
+   Typography
+   =========================== */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  font-weight: 900;
+  color: #F4F7FF;
 }
 
 h1 {
-  font-size: 3.2em;
+  font-size: clamp(2.2rem, 4vw, 3.2rem);
   line-height: 1.1;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+h2 {
+  font-size: 1.6rem;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+/* ===========================
+   Links
+   =========================== */
+
+a {
+  font-weight: 600;
+  color: #22D3EE;
+  text-decoration: none;
+  transition: color 120ms ease, text-shadow 120ms ease;
+}
+
+a:hover {
+  color: #FF4FD8;
+  text-shadow: 0 0 12px #FF4FD844;
+}
+
+/* ===========================
+   Buttons (baseline only)
+   Components may override
+   =========================== */
+
+button {
+  border-radius: 999px;
+  border: 1px solid #243055;
+  padding: 0.6em 1.4em;
+  font-size: 0.95rem;
+  font-weight: 800;
+  font-family: inherit;
+  background: #0B0E1A;
+  color: #F4F7FF;
+  cursor: pointer;
+  box-shadow: 0 12px 35px #00000033;
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease,
+    border-color 150ms ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  border-color: #22D3EE;
+  box-shadow:
+    0 0 0 4px #22D3EE1A,
+    0 16px 45px #00000044;
+}
+
+button:focus,
+button:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 4px #22D3EE33,
+    0 0 24px #22D3EE22,
+    0 16px 45px #00000055;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 10px 30px #00000022;
+}
+
+/* ===========================
+   Utilities
+   =========================== */
+
+::selection {
+  background: #22D3EE33;
+  color: #F4F7FF;
+}
+
+/* Scrollbar (WebKit only) */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #070A14;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #22D3EE, #FF4FD8);
+  border-radius: 999px;
 }

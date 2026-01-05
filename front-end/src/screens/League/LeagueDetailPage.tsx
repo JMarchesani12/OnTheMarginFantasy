@@ -241,6 +241,7 @@ const LeagueDetailPage = () => {
   const canEditTeamName = league.memberId != null;
   const canLeaveLeague =
     league.status === "Pre-Draft" && league.commissionerId !== currentUserId;
+  const showAdminActions = canManageLeague;
 
   const handleStartDraft = async () => {
     if (!league) {
@@ -263,9 +264,14 @@ const LeagueDetailPage = () => {
     weekNumbers: number[];
     rows: LeagueScoreboardRow[];
   }>(() => {
-    const weekNumbers = Object.keys(scoreboard)
+    const weekNumbersFromScores = Object.keys(scoreboard)
       .map((key) => Number(key))
       .sort((a, b) => a - b);
+    const fallbackWeekNumber = league.currentWeekNumber ?? 1;
+    const weekNumbers =
+      weekNumbersFromScores.length > 0
+        ? weekNumbersFromScores
+        : [fallbackWeekNumber];
 
     const membersById = new Map<number, LeagueMember>();
     members.forEach((member) => {
@@ -274,7 +280,7 @@ const LeagueDetailPage = () => {
 
     const rows = new Map<number, LeagueScoreboardRow>();
 
-    weekNumbers.forEach((week) => {
+    weekNumbersFromScores.forEach((week) => {
       const scores = scoreboard[week] ?? [];
       scores.forEach((score) => {
         const row = rows.get(score.memberId) ?? {
@@ -292,11 +298,35 @@ const LeagueDetailPage = () => {
       });
     });
 
+    members.forEach((member) => {
+      if (!rows.has(member.id)) {
+        rows.set(member.id, {
+          memberId: member.id,
+          teamName: member.teamName ?? `Member ${member.id}`,
+          weeklyPoints: {} as Record<number, number | null | undefined>,
+          totalPoints: 0,
+        });
+      }
+    });
+
+    rows.forEach((row) => {
+      let totalPoints = 0;
+      weekNumbers.forEach((week) => {
+        const points =
+          typeof row.weeklyPoints[week] === "number"
+            ? (row.weeklyPoints[week] as number)
+            : 0;
+        row.weeklyPoints[week] = points;
+        totalPoints += points;
+      });
+      row.totalPoints = totalPoints;
+    });
+
     return {
       weekNumbers,
       rows: Array.from(rows.values()).sort((a, b) => b.totalPoints - a.totalPoints),
     };
-  }, [scoreboard, members]);
+  }, [scoreboard, members, league.currentWeekNumber]);
 
   return (
     <div className="league-detail">
@@ -358,13 +388,66 @@ const LeagueDetailPage = () => {
         </div>
       </section>
 
-      <section className="league-detail__content">
+      <section
+        className={`league-detail__content ${
+          showAdminActions ? "league-detail__content--admin" : ""
+        }`}
+      >
         <div className="league-detail__card">
           <h2>Your Team</h2>
-          <p>
-            <span className="label">Team Name: </span>
-            <span className="value">{teamNameValue || "TBD"}</span>
-          </p>
+          <div className="league-detail__team-row">
+            <div className="league-detail__team-name">
+              <span className="label">Team Name</span>
+              <div className="league-detail__team-name-value">
+                <span className="value">{teamNameValue || "TBD"}</span>
+                {canEditTeamName && !editingTeamName && (
+                  <button
+                    className="league-detail__team-edit-icon"
+                    type="button"
+                    aria-label="Edit team name"
+                    onClick={() => {
+                      setTeamNameInput(teamNameValue);
+                      setEditingTeamName(true);
+                    }}
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                      focusable="false"
+                    >
+                      <path
+                        d="M4 20.25L5.5 16l9.75-9.75a1.5 1.5 0 012.12 0l1.38 1.38a1.5 1.5 0 010 2.12L9 19.5 4 20.25z"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M13.5 6.5l4 4"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="league-detail__team-stats">
+              <div className="league-detail__team-stat">
+                <span className="label">Season Points</span>
+                <span className="value">{league.seasonPoints ?? 0}</span>
+              </div>
+              {league.draftOrder != null && (
+                <div className="league-detail__team-stat">
+                  <span className="label">Draft Order</span>
+                  <span className="value">#{league.draftOrder}</span>
+                </div>
+              )}
+            </div>
+          </div>
           {canEditTeamName && editingTeamName ? (
             <div className="league-detail__team-name-editor">
               <input
@@ -402,37 +485,25 @@ const LeagueDetailPage = () => {
                 </p>
               )}
             </div>
-          ) : canEditTeamName ? (
-            <button
-              className="league-detail__team-edit"
-              type="button"
-              onClick={() => {
-                setTeamNameInput(teamNameValue);
-                setEditingTeamName(true);
-              }}
-            >
-              Edit Team Name
-            </button>
           ) : null}
-          <p>
-            <span className="label">Season Points: </span>
-            <span className="value">{league.seasonPoints ?? 0}</span>
-          </p>
-          {league.draftOrder != null && (
-            <p>
-              <span className="label">Draft Order: </span>
-              <span className="value">#{league.draftOrder}</span>
-            </p>
-          )}
           <div className="league-detail__add-drop">
-            <button
-              className="league-detail__add-drop-btn"
-              type="button"
-              onClick={openRosterManagement}
-              disabled={tradeDeadlinePassed}
-            >
-              Manage Roster
-            </button>
+            <div className="league-detail__primary-actions">
+              <button
+                className="league-detail__add-drop-btn"
+                type="button"
+                onClick={openRosterManagement}
+                disabled={tradeDeadlinePassed}
+              >
+                Manage Roster
+              </button>
+              <button
+                className="league-detail__conference-btn"
+                type="button"
+                onClick={openConferencePage}
+              >
+                View Conference Scores
+              </button>
+            </div>
             {tradeDeadlinePassed && (
               <p className="league-detail__add-drop-note">
                 Trade deadline passed on {formatLeagueDate(league.tradeDeadline)}
@@ -453,26 +524,25 @@ const LeagueDetailPage = () => {
             )}
           </div>
         </div>
-      </section>
-
-      <section className="league-detail__actions">
-        <div className="league-detail__card">
-          <h2>League Actions</h2>
-          <div className="league-detail__action-buttons">
-            {canStartDraft && (
-              <button
-                className="league-detail__start-draft-btn"
-                type="button"
-                onClick={handleStartDraft}
-                disabled={startDraftLoading}
-              >
-                {startDraftLoading ? "Starting…" : "Start Draft"}
-              </button>
-            )}
-            {startDraftError && (
-              <p className="league-detail__error-text">{startDraftError}</p>
-            )}
-            {canManageLeague && (
+        {showAdminActions && (
+          <div className="league-detail__card league-detail__card--compact">
+            <h2 className="league-detail__card-title--compact">
+              League Functions
+            </h2>
+            <div className="league-detail__action-buttons league-detail__action-buttons--compact">
+              {canStartDraft && (
+                <button
+                  className="league-detail__start-draft-btn"
+                  type="button"
+                  onClick={handleStartDraft}
+                  disabled={startDraftLoading}
+                >
+                  {startDraftLoading ? "Starting…" : "Start Draft"}
+                </button>
+              )}
+              {startDraftError && (
+                <p className="league-detail__error-text">{startDraftError}</p>
+              )}
               <button
                 className="league-detail__manage-btn"
                 type="button"
@@ -480,16 +550,9 @@ const LeagueDetailPage = () => {
               >
                 Manage League
               </button>
-            )}
-            <button
-              className="league-detail__conference-btn"
-              type="button"
-              onClick={openConferencePage}
-            >
-              View Conference Scores
-            </button>
+            </div>
           </div>
-        </div>
+        )}
       </section>
 
       {loadingMembers && (

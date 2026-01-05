@@ -373,8 +373,20 @@ export const LeagueScheduleTabs = ({
                                     </div>
                                   </>
                                 )}
-                                {c.broadcast != null ? c.broadcast : ""}
-                                {c.time != null ? c.time : ""}
+                                {(c.time != null || c.broadcast != null) && (
+                                  <div className="league-schedule__cell-meta">
+                                    {c.time != null && (
+                                      <div className="league-schedule__cell-time">
+                                        {c.time}
+                                      </div>
+                                    )}
+                                    {c.broadcast != null && (
+                                      <div className="league-schedule__cell-broadcast">
+                                        {c.broadcast}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                             );
                           })}

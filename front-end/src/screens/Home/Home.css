@@ -1,334 +1,485 @@
-.home {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-  padding: 3rem clamp(1rem, 6vw, 4rem);
-  max-width: 1100px;
-  margin: 0 auto;
+/* =========================
+   SICKO THEME — HOME (TIGHTER + CLEANER)
+   Updates:
+   - Actions stay in one row
+   - More space between "My Leagues" and the league grid
+   - League cards roomier + button separated from text
+   HEX ONLY • Full replacement
+   ========================= */
+
+:root {
+  --bg: #05060B;
+  --bg2: #070A14;
+
+  --panel: #0B0E1A;
+  --panel2: #0E1230;
+
+  --card: #0A0D18;
+  --card2: #0F1638;
+
+  --text: #F4F7FF;
+  --muted: #B7C2E6;
+  --muted2: #8EA0D6;
+
+  --border: #243055;
+  --border2: #2F3B6A;
+
+  --pink: #FF4FD8;
+  --purple: #A855F7;
+  --cyan: #22D3EE;
+  --red: #FF4D6D;
+
+  --shadow1: #00000033;
+  --shadow2: #00000055;
 }
 
+/* Page */
+.home {
+  position: relative;
+  width:95%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem; /* was ~1.35–2rem */
+  padding: 1.75rem clamp(1rem, 3.5vw, 2.75rem);
+  margin: 0;
+  max-width: none;
+  color: var(--text);
+}
+
+
+.home::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(780px 440px at 12% 6%, #A855F714 0%, #00000000 62%),
+    radial-gradient(720px 420px at 86% 14%, #FF4FD810 0%, #00000000 62%),
+    radial-gradient(820px 520px at 50% 98%, #22D3EE0C 0%, #00000000 64%),
+    linear-gradient(180deg, var(--bg), var(--bg2));
+}
+
+/* Header */
 .home__header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 2rem;
+  gap: 1rem;
 }
 
+/* FORCE one-row action buttons */
 .home__actions {
   display: flex;
-  gap: 0.75rem;
+  flex-wrap: nowrap;       /* <-- key */
+  gap: 0.5rem;
   align-items: center;
+  justify-content: flex-end;
+  white-space: nowrap;     /* <-- key */
+}
+
+/* Optional: prevents long button text from pushing layout */
+.home__actions button {
+  flex: 0 0 auto;          /* <-- key */
 }
 
 .home__eyebrow {
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 0.8rem;
-  color: #7c8db5;
-  margin-bottom: 0.5rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.09em;
+  margin-bottom: 0.35rem;
 }
 
 .home__header h1 {
-  font-size: clamp(2rem, 4vw, 3rem);
-  margin: 0 0 0.5rem;
+  font-size: clamp(1.85rem, 3.2vw, 2.6rem);
+  margin: 0.9rem 0 0.35rem;
 }
 
 .home__subtitle {
-  color: #b4c2da;
+  font-size: 0.95rem;
   margin: 0;
 }
 
+
+/* Buttons (smaller) */
+.home__create-btn,
+.home__signout-btn,
+.home__settings-btn,
+.home__overview-toggle,
+.home__search-action,
+.home__pagination button {
+  border-radius: 999px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease, background 140ms ease, opacity 140ms ease;
+  font-size: 0.9rem;
+}
+
+.home__create-btn {
+  align-self: flex-start;
+  border: 1px solid #00000000;
+  color: #0A0D18;
+  padding: 0.65rem 1.15rem;
+  background: linear-gradient(120deg, var(--cyan), var(--pink));
+  box-shadow:
+    0 14px 36px #22D3EE18,
+    0 14px 36px #FF4FD818;
+}
+
+.home__create-btn:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 16px 42px #22D3EE20,
+    0 16px 42px #FF4FD820;
+}
+
+.home__signout-btn,
+.home__settings-btn {
+  border: 1px solid var(--border2);
+  background: #0B0E1A;
+  color: var(--text);
+  padding: 0.58rem 1.0rem;
+  box-shadow: 0 10px 26px var(--shadow1);
+}
+
+.home__settings-btn {
+  background: #0F1638;
+}
+
+.home__signout-btn:hover,
+.home__settings-btn:hover {
+  transform: translateY(-1px);
+  border-color: #3B4A86;
+  box-shadow: 0 14px 34px var(--shadow2);
+}
+
+/* Overview */
 .home__overview {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  padding: 1.5rem;
-  border-radius: 24px;
-  background: rgba(20, 26, 48, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.home__overview-header h2 {
-  margin: 0 0 0.5rem;
-  font-size: 1.6rem;
+  gap: 0.85rem;
+  margin-top: 0.65rem;
+  padding: 1.05rem;
+  border-radius: 16px;
+  background: linear-gradient(180deg, var(--panel), var(--panel2));
+  border: 1px solid var(--border);
+  box-shadow: 0 18px 48px var(--shadow2);
+  position: relative;
+  overflow: hidden;
 }
 
 .home__overview-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 1.5rem;
+  gap: 1rem;
+}
+
+.home__overview-header h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.15rem;
 }
 
 .home__overview-header p {
   margin: 0;
-  color: #b4c2da;
-}
-
-.home__overview-toggle {
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.08);
-  color: #f4f7ff;
-  font-weight: 600;
-  padding: 0.55rem 1.1rem;
-  border-radius: 999px;
-  cursor: pointer;
-  white-space: nowrap;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.4;
 }
 
 .home__overview-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .home__overview-card {
-  border-radius: 18px;
-  padding: 1rem 1.1rem;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 0.85rem 0.9rem;
+  background: linear-gradient(180deg, var(--card), var(--card2));
+  border: 1px solid var(--border);
+  box-shadow: 0 12px 30px var(--shadow1);
 }
 
 .home__overview-card h3 {
-  margin: 0 0 0.5rem;
-  font-size: 1.05rem;
+  margin: 0 0 0.35rem;
+  font-size: 0.98rem;
 }
 
 .home__overview-card p {
   margin: 0;
-  color: #cbd5f0;
-  font-size: 0.95rem;
+  color: var(--muted2);
+  font-size: 0.88rem;
   line-height: 1.4;
 }
 
+/* Tabs */
 .home__tabs {
   display: inline-flex;
-  gap: 0.5rem;
-  padding: 0.25rem;
+  gap: 0.35rem;
+  padding: 0.2rem;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.06);
+  background: #0B0E1A;
+  border: 1px solid var(--border);
   align-self: flex-start;
+  box-shadow: 0 10px 26px var(--shadow1);
 }
 
 .home__tab {
-  border: none;
-  background: transparent;
-  color: #cdd7ff;
-  padding: 0.55rem 1.4rem;
+  border: 1px solid #00000000;
+  background: #00000000;
+  color: var(--muted);
+  padding: 0.42rem 0.95rem;
   border-radius: 999px;
-  font-weight: 600;
+  font-weight: 900;
   cursor: pointer;
-  transition: background 150ms ease, color 150ms ease;
+  font-size: 0.85rem;
 }
 
 .home__tab--active {
-  background: rgba(255, 255, 255, 0.16);
-  color: #fff;
+  background: linear-gradient(120deg, #22D3EE1A, #FF4FD812);
+  color: var(--text);
+  border: 1px solid #334277;
 }
 
 .home__stage-filter {
-  margin-top: 0.75rem;
   display: inline-flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  font-size: 0.85rem;
-  color: #cdd7ff;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+  padding: 0.35rem 0.55rem 0.35rem 0.75rem;
+  border-radius: 999px;
+  background: #0B0E1A;
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 26px var(--shadow1);
+  position: relative;
+}
+
+.home__stage-filter label {
+  color: var(--muted2);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .home__stage-filter select {
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.05);
-  color: inherit;
+  appearance: none;
+  border: 1px solid #00000000;
+  background: #0F1638;
+  color: var(--text);
   border-radius: 999px;
-  padding: 0.3rem 0.9rem;
-  font-size: 0.9rem;
-}
-
-.home__create-btn {
-  align-self: flex-start;
-  background: linear-gradient(120deg, #c471f5, #fa71cd);
-  border: none;
-  color: #fff;
-  font-size: 1rem;
-  font-weight: 600;
-  padding: 0.9rem 1.6rem;
-  border-radius: 999px;
-  box-shadow: 0 10px 30px rgba(250, 113, 205, 0.3);
-  transition: transform 150ms ease, box-shadow 150ms ease;
-}
-
-.home__create-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 15px 35px rgba(250, 113, 205, 0.45);
-}
-
-.home__signout-btn {
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: transparent;
-  color: #f4f7ff;
-  font-weight: 600;
-  padding: 0.75rem 1.4rem;
-  border-radius: 999px;
+  padding: 0.35rem 2rem 0.35rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px #2F3B6A;
   cursor: pointer;
 }
 
-.home__settings-btn {
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.08);
-  color: #f4f7ff;
-  font-weight: 600;
-  padding: 0.75rem 1.4rem;
-  border-radius: 999px;
-  cursor: pointer;
+.home__stage-filter::after {
+  content: "";
+  position: absolute;
+  right: 0.85rem;
+  width: 0.55rem;
+  height: 0.55rem;
+  background: center / contain no-repeat
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'><path d='M3.5 6.25L8 10.75L12.5 6.25' stroke='%23B7C2E6' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  pointer-events: none;
 }
 
+/* MORE SPACE between "My Leagues" and grid */
 .home__leagues {
+  margin-top: 0.75rem; /* <-- key spacing */
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
+/* Search */
 .home__search {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .home__search-controls {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .home__search-field {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  color: black;
-  font-size: 0.9rem;
+  gap: 0.3rem;
+  color: var(--muted);
+  font-size: 0.85rem;
 }
 
 .home__search-field input,
 .home__search-field select {
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.05);
-  color: black;
-  border-radius: 16px;
-  padding: 0.6rem 0.9rem;
-  font-size: 0.95rem;
+  border: 1px solid var(--border2);
+  background: #0B0E1A;
+  color: var(--text);
+  border-radius: 12px;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.9rem;
+  outline: none;
+  box-shadow: 0 10px 26px var(--shadow1);
 }
 
 .home__search-status {
-  color: #b4c2da;
+  color: var(--muted2);
   margin: 0;
+  font-size: 0.88rem;
 }
 
 .home__search-error {
-  color: #ffadb0;
+  color: var(--red);
   margin: 0;
+  font-size: 0.88rem;
 }
 
 .home__search-results {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.25rem;
+  gap: 0.95rem;
 }
 
 .home__search-card {
-  border-radius: 20px;
-  padding: 1.25rem;
-  background: rgba(22, 27, 51, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 0.95rem;
+  background: linear-gradient(180deg, var(--card), var(--card2));
+  border: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.7rem;
+  box-shadow: 0 12px 30px var(--shadow1);
 }
 
 .home__search-card h2 {
-  margin: 0 0 0.35rem;
-  font-size: 1.25rem;
+  margin: 0 0 0.2rem;
+  font-size: 1.05rem;
 }
 
 .home__search-meta {
   margin: 0;
-  color: #b4c2da;
-  font-size: 0.9rem;
+  color: var(--muted2);
+  font-size: 0.85rem;
 }
 
-.home__search-action {
-  align-self: flex-start;
-  border: none;
+/* =========================
+   League card spacing (your "popup")
+   Uses the class names you shared earlier
+   ========================= */
+
+.league-card {
+  border-radius: 16px;
+  padding: 1.15rem;              /* roomier */
+  background: linear-gradient(180deg, var(--card), var(--card2));
+  border: 1px solid var(--border);
+  box-shadow: 0 14px 36px var(--shadow1);
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.league-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.league-card__header h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.2;
+}
+
+.league-card__commissioner {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.league-card__meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.8rem;
+}
+
+.meta-label {
+  display: block;
+  color: var(--muted2);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.15rem;
+}
+
+.meta-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* PUSH button away from text */
+.league-card__actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.35rem;           /* <-- separation */
+  padding-top: 0.75rem;          /* <-- separation */
+  border-top: 1px solid #243055; /* <-- visual separation */
+}
+
+.league-card__sport {
+  color: var(--muted2);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.league-card__action-btn {
+  background: linear-gradient(120deg, #22D3EE1A, #FF4FD812);
+  color: var(--text);
+  border: 1px solid #334277;
   border-radius: 999px;
   padding: 0.55rem 1.2rem;
-  background: rgba(255, 255, 255, 0.15);
-  color: #fff;
-  font-weight: 600;
+  font-weight: 900;
   cursor: pointer;
+  transition: transform 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
 }
 
-.home__pagination {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  color: #cdd7ff;
+.league-card__action-btn:hover {
+  transform: translateY(-1px);
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 4px #22D3EE10;
 }
 
-.home__pagination button {
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.05);
-  color: inherit;
-  border-radius: 999px;
-  padding: 0.45rem 1rem;
-  cursor: pointer;
-}
-
-.home__pagination button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+/* =========================
+   Mobile
+   ========================= */
 
 @media (max-width: 720px) {
   .home {
-    padding: 2.5rem 1.25rem 3rem;
+    padding: 2.0rem 1.15rem 2.75rem;
   }
 
   .home__header {
     flex-direction: column;
   }
 
+  /* On small screens, allow wrap (otherwise it will overflow) */
   .home__actions {
     width: 100%;
-    flex-direction: column-reverse;
-  }
-
-  .home__create-btn,
-  .home__signout-btn {
-    width: 100%;
-    text-align: center;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    white-space: normal;
   }
 
   .home__leagues {
     grid-template-columns: 1fr;
-  }
-
-  .home__tabs {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .home__overview {
-    padding: 1.25rem;
-  }
-
-  .home__overview-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .home__overview-toggle {
-    width: 100%;
-    text-align: center;
   }
 
   .home__overview-grid {
