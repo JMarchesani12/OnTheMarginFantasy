@@ -1,6 +1,6 @@
 import logging
 from sqlite3 import IntegrityError
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
@@ -12,6 +12,47 @@ ALLOWED_USER_FIELDS = {
 class UserModel:
     def __init__(self, db: Engine):
         self.db = db
+
+    def get_user_by_id(self, user_id: int) -> Dict[str, Any]:
+        sql = text("""
+            SELECT
+                id,
+                uuid,
+                email,
+                "displayName",
+                "createdAt"
+            FROM "User"
+            WHERE id = :userId
+        """)
+
+        with self.db.begin() as conn:
+            row = conn.execute(sql, {"userId": user_id}).mappings().first()
+
+        if not row:
+            raise ValueError("User not found")
+
+        return dict(row)
+    
+    def get_user_by_uuid(self, uuid: str) -> Dict[str, Any]:
+        sql = text("""
+            SELECT
+                id,
+                uuid,
+                email,
+                "displayName",
+                "createdAt"
+            FROM "User"
+            WHERE uuid = :uuid
+        """)
+
+        with self.db.begin() as conn:
+            row = conn.execute(sql, {"uuid": uuid}).mappings().first()
+
+        if not row:
+            raise ValueError("User not found")
+
+        return dict(row)
+
 
     def create_user(
         self,

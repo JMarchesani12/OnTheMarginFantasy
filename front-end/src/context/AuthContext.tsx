@@ -7,7 +7,7 @@ import {
 } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
-import { createUser } from '../api/user';
+import { createUser, getUserByUuid } from '../api/user';
 
 const PENDING_USER_CREATE_KEY = 'otm:pending-user-create';
 const USER_CREATED_KEY_PREFIX = 'otm:user-created:';
@@ -31,7 +31,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const maybeCreateUser = async (currentSession: Session | null) => {
       if (!currentSession?.user) return;
 
-      const createdKey = `${USER_CREATED_KEY_PREFIX}${currentSession.user.id}`;
+      const userId = currentSession.user.id;
+      const createdKey = `${USER_CREATED_KEY_PREFIX}${userId}`;
       const alreadyCreated = localStorage.getItem(createdKey);
       const pendingRaw = localStorage.getItem(PENDING_USER_CREATE_KEY);
 
@@ -45,33 +46,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      const displayName =
-        pending?.displayName ?? currentSession.user.user_metadata?.username;
-      const email = pending?.email ?? currentSession.user.email;
+      const email = currentSession.user.email ?? pending?.email;
+      if (!email) return;
 
-      if (
-        pending?.email &&
-        currentSession.user.email &&
-        pending.email !== currentSession.user.email
-      ) {
+      if (pending?.email && pending.email !== email) {
+        localStorage.removeItem(PENDING_USER_CREATE_KEY);
+      }
+
+      if (alreadyCreated && !pendingRaw) {
         return;
       }
 
-      if (!email) return;
-      if (!pendingRaw && alreadyCreated) return;
+      try {
+        const existingUser = await getUserByUuid(userId);
+        if (existingUser) {
+          localStorage.setItem(createdKey, 'true');
+          if (pendingRaw) {
+            localStorage.removeItem(PENDING_USER_CREATE_KEY);
+          }
+          return;
+        }
+      } catch (error) {
+        console.warn('Failed to look up user record.', error);
+      }
+
+      const displayName =
+        pending?.displayName ?? currentSession.user.user_metadata?.username;
 
       try {
         const resolvedDisplayName =
           displayName?.trim() || email.split("@")[0] || email;
-        await createUser(currentSession.user.id, email, resolvedDisplayName);
+        await createUser(userId, email, resolvedDisplayName);
         localStorage.removeItem(PENDING_USER_CREATE_KEY);
         localStorage.setItem(createdKey, 'true');
       } catch (error) {
-        if (String((error as Error)?.message ?? '').includes('409')) {
-          localStorage.removeItem(PENDING_USER_CREATE_KEY);
-          localStorage.setItem(createdKey, 'true');
-          return;
-        }
         console.warn('User record creation failed.', error);
       }
     };

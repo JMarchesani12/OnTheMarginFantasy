@@ -5,6 +5,28 @@ class UserEndpoints:
     def __init__(self, db_engine):
         self.userModel = UserModel(db_engine)
 
+    # GET /api/user/<user_id>
+    def get_user(self, user_id: int):
+        try:
+            user = self.userModel.get_user_by_id(user_id)
+            return jsonify(user), 200
+        except ValueError as e:
+            return jsonify({"message": str(e)}), 404
+        except Exception:
+            return jsonify({"message": "Failed to fetch user"}), 500
+        
+    # GET /api/user/by-uuid/<uuid>
+    def get_user_by_uuid(self, uuid: str):
+        try:
+            user = self.userModel.get_user_by_uuid(uuid)
+            return jsonify(user), 200
+        except ValueError as e:
+            return jsonify({"message": str(e)}), 404
+        except Exception:
+            return jsonify({"message": "Failed to fetch user"}), 500
+
+
+
     # POST /api/user
     # {
     #   "email": "user@example.com",
