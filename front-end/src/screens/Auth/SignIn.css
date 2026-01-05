@@ -101,6 +101,18 @@
   transform: none;
 }
 
+.sign-in__button--ghost {
+  background: transparent;
+  color: #cdd7ff;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: none;
+}
+
+.sign-in__button--ghost:hover {
+  transform: translateY(-1px);
+  color: #ffffff;
+}
+
 .sign-in__divider {
   display: flex;
   align-items: center;

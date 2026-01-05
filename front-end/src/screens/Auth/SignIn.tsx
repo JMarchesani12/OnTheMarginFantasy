@@ -14,6 +14,7 @@ const SignIn = () => {
   const [username, setUsername] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -73,6 +74,37 @@ const SignIn = () => {
       setError(authError?.message ?? "Authentication failed. Try again.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!email.trim()) {
+      setError("Enter your email to resend the verification.");
+      return;
+    }
+
+    setError(null);
+    setMessage(null);
+    setResending(true);
+
+    try {
+      const { error: resendError } = await supabase.auth.resend({
+        type: "signup",
+        email: email.trim(),
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (resendError) {
+        throw resendError;
+      }
+
+      setMessage("Verification email sent. Check your inbox.");
+    } catch (resendErr: any) {
+      setError(resendErr?.message ?? "Failed to resend verification email.");
+    } finally {
+      setResending(false);
     }
   };
 
@@ -179,6 +211,16 @@ const SignIn = () => {
           <button type="submit" className="sign-in__button" disabled={loading}>
             {loading ? "Please wait…" : isSignUp ? "Create Account" : "Sign In"}
           </button>
+          {!isSignUp && (
+            <button
+              type="button"
+              className="sign-in__button sign-in__button--ghost"
+              onClick={handleResendVerification}
+              disabled={resending}
+            >
+              {resending ? "Sending…" : "Resend verification email"}
+            </button>
+          )}
         </form>
         <p className="sign-in__switch">
           <br/>
