@@ -15,6 +15,7 @@ const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
+  const [showResend, setShowResend] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -54,6 +55,7 @@ const SignIn = () => {
         );
 
         setMessage("Check your email to confirm your account, then sign in.");
+        setShowResend(true);
         setMode("signIn");
         setPassword("");
         setConfirmPassword("");
@@ -68,6 +70,7 @@ const SignIn = () => {
           throw signInError;
         }
 
+        setShowResend(false);
         navigate("/leagues", { replace: true });
       }
     } catch (authError: any) {
@@ -211,7 +214,7 @@ const SignIn = () => {
           <button type="submit" className="sign-in__button" disabled={loading}>
             {loading ? "Please wait…" : isSignUp ? "Create Account" : "Sign In"}
           </button>
-          {!isSignUp && (
+          {!isSignUp && showResend && (
             <button
               type="button"
               className="sign-in__button sign-in__button--ghost"
@@ -233,6 +236,7 @@ const SignIn = () => {
               setMessage(null);
               setConfirmPassword("");
               setShowPassword(false);
+              setShowResend(false);
             }}
           >
             {isSignUp ? "Sign in" : "Sign up"}
