@@ -145,7 +145,7 @@ def main():
     summary = schedule_model.bootstrap_sport_season_schedule_by_scoreboard(
         sport_season_id,
         force=True,
-        max_days=3
+        # max_days=3
     )
     print(summary)
 
