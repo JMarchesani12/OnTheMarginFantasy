@@ -41,7 +41,7 @@ const SignIn = () => {
           password,
           options: {
             data: { username: username.trim() },
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
+            emailRedirectTo: `${window.location.origin}/`,
           },
         });
 
@@ -95,7 +95,7 @@ const SignIn = () => {
         type: "signup",
         email: email.trim(),
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: `${window.location.origin}/`,
         },
       });
 
@@ -119,7 +119,7 @@ const SignIn = () => {
   //     const { error: oauthError } = await supabase.auth.signInWithOAuth({
   //       provider: "google",
   //       options: {
-  //         redirectTo: `${window.location.origin}/leagues`,
+  //         redirectTo: `${window.location.origin}`,
   //       },
   //     });
 
