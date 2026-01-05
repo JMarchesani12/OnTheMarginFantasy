@@ -59,27 +59,6 @@ class ESPNClient:
     # Scoreboard / calendar
     # -------------------------------------------------------------------------
 
-    def fetch_scoreboard_calendar(self, any_season_date: dt.date) -> Dict[str, Any]:
-        """
-        Call scoreboard for some date in the season and return the first league
-        object, which holds calendar data.
-
-        We assume there is at least one league for the sport and that the first
-        one is the one we care about (true for NCAAM).
-        """
-        ymd = any_season_date.strftime("%Y%m%d")
-        url = self._build_scoreboard_url(ymd)
-
-        resp = requests.get(url, timeout=self.timeout)
-        resp.raise_for_status()
-        data = resp.json()
-
-        leagues = data.get("leagues") or []
-        if not leagues:
-            raise RuntimeError("ESPN scoreboard: no leagues found in response")
-
-        return leagues[0]
-
     def extract_calendar_dates(self, league_obj: Dict[str, Any]) -> List[dt.date]:
         """
         Convert league['calendar'] list of ISO strings into a sorted list of dates.
@@ -134,7 +113,7 @@ class ESPNClient:
         resp.raise_for_status()
         return resp.json()
 
-    def iter_team_events(self, schedule_json: Dict[str, Any]):
+    def iter_scoreboard_events(self, schedule_json: Dict[str, Any]):
         """
         Yield the "events" items from a schedule payload.
         """

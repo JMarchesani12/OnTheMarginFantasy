@@ -28,6 +28,19 @@ const weekRangeFormatter = new Intl.DateTimeFormat(undefined, {
   day: "numeric",
 });
 
+const timeFormatter = new Intl.DateTimeFormat(undefined, {
+  hour: "numeric",
+  minute: "2-digit",
+  hour12: true,
+});
+
+const formatLocalTime = (dateStr: string | null | undefined) => {
+  if (!dateStr) return null;
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return null;
+  return timeFormatter.format(date);
+};
+
 const TeamSchedulePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -162,6 +175,7 @@ const TeamSchedulePage = () => {
             const teamScore = game.isHome ? game.homeScore : game.awayScore;
             const opponentScore = game.isHome ? game.awayScore : game.homeScore;
             const hasScore = !(teamScore === 0 && opponentScore === 0);
+            const localTime = formatLocalTime(game.date);
 
             let result: "win" | "loss" | "pending" = "pending";
             if (hasScore) {
@@ -177,8 +191,8 @@ const TeamSchedulePage = () => {
                 <div className="team-schedule__game-header">
                   <span>{dateFormatter.format(new Date(game.date))}</span>
                   <span>{game.isHome ? "vs " : "@ "}{game.opponentTeamName}</span>
-                  <span>{game.broadcast != null ? game.broadcast : ""}</span>
-                  <span>{game.date != null ? game.date : ""}</span>
+                  {localTime && <span>{localTime}</span>}
+                  {game.broadcast && <span>{game.broadcast}</span>}
                 </div>
                 <div className={`team-schedule__score team-schedule__score--${result}`}>
                   {hasScore ? (

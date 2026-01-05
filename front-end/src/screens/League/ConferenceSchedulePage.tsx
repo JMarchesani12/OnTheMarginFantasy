@@ -512,8 +512,20 @@ const ConferenceSchedulePage = () => {
                                     Scheduled
                                   </span>
                                 )}
-                                {cell.broadcast != null ? cell.broadcast : ""}
-                                {cell.time != null ? cell.time : ""}
+                                {(cell.time || cell.broadcast) && (
+                                  <div className="conference-schedule__cell-meta">
+                                    {cell.time && (
+                                      <span className="conference-schedule__cell-time">
+                                        {cell.time}
+                                      </span>
+                                    )}
+                                    {cell.broadcast && (
+                                      <span className="conference-schedule__cell-broadcast">
+                                        {cell.broadcast}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                             </div>
                           );

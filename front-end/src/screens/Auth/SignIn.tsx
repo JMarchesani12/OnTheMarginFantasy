@@ -54,6 +54,9 @@ const SignIn = () => {
 
         setMessage("Check your email to confirm your account, then sign in.");
         setMode("signIn");
+        setPassword("");
+        setConfirmPassword("");
+        setShowPassword(false);
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email,

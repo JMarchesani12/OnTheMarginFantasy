@@ -391,7 +391,7 @@ class ScheduleModel:
                 print(f"Failed to fetch schedule for team {external_id}: {e}")
                 continue
 
-            for event in client.iter_team_events(schedule_json):
+            for event in client.iter_scoreboard_events(schedule_json):
                 game = client.extract_game_from_event(event)
                 if not game:
                     continue
@@ -412,6 +412,170 @@ class ScheduleModel:
             "sportId": sport_id,
             "sportSeasonId": sport_season_id,
             "teamsProcessed": len(teams),
+        }
+    
+    def ingest_scoreboard_for_date_for_sport_season(
+        self,
+        sport_season_id: int,
+        target_date: dt.date,
+    ) -> Dict[str, Any]:
+        """
+        Ingest ESPN scoreboard for one date and upsert into GameResult.
+        No leagues involved.
+        """
+        with self.db.begin() as conn:
+            ss = conn.execute(
+                text("""
+                    SELECT id, "sportId"
+                    FROM "SportSeason"
+                    WHERE id = :id
+                """),
+                {"id": sport_season_id},
+            ).mappings().first()
+
+        if not ss:
+            raise ValueError(f"SportSeason {sport_season_id} not found")
+
+        sport_id = int(ss["sportId"])
+        api_keyword, api_group_ids, base_url = self._get_sport_api_config(sport_id)
+
+        client = ESPNClient(self.espn_base_url, api_keyword)
+        datestr = target_date.strftime("%Y%m%d")
+
+        events_seen = 0
+        games_upserted = 0
+        seen_external_game_ids = set()
+
+        for group_id in api_group_ids:
+            try:
+                scoreboard_json = client.fetch_scoreboard_for_date(
+                    datestr=datestr,
+                    group_id=group_id,
+                )
+            except Exception as e:
+                print(f"[scoreboard] ERROR sportId={sport_id} date={datestr} group={group_id}: {e}")
+                continue
+
+            for event in client.iter_scoreboard_events(scoreboard_json):
+                game = client.extract_game_from_event(event)
+                if not game:
+                    continue
+
+                external_game_id = game.get("externalGameId")
+                if not external_game_id:
+                    continue
+
+                # Prevent duplicate upserts across groups
+                if external_game_id in seen_external_game_ids:
+                    continue
+
+                seen_external_game_ids.add(external_game_id)
+                events_seen += 1
+
+                self._insert_or_update_game(
+                    sport_id,
+                    sport_season_id,
+                    game,
+                )
+                games_upserted += 1
+
+        return {
+            "sportId": sport_id,
+            "sportSeasonId": sport_season_id,
+            "date": str(target_date),
+            "eventsSeen": events_seen,
+            "gamesUpserted": games_upserted,
+        }
+    
+    def bootstrap_sport_season_schedule_by_scoreboard(
+        self,
+        sport_season_id: int,
+        *,
+        force: bool = False,
+        max_days: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        """
+        Bootstraps ALL regular-season games for a SportSeason by iterating
+        from regularSeasonStart to regularSeasonEnd and ingesting the ESPN scoreboard each day.
+        """
+
+        with self.db.begin() as conn:
+            ss = conn.execute(
+                text("""
+                    SELECT
+                        id,
+                        "sportId",
+                        COALESCE("scheduleBootstrapped", false) AS "scheduleBootstrapped",
+                        "regularSeasonStart"::date AS "regularSeasonStart",
+                        "regularSeasonEnd"::date AS "regularSeasonEnd"
+                    FROM "SportSeason"
+                    WHERE id = :id
+                """),
+                {"id": sport_season_id},
+            ).mappings().first()
+
+        if not ss:
+            raise ValueError(f"SportSeason {sport_season_id} not found")
+
+        if ss["scheduleBootstrapped"] and not force:
+            return {
+                "sportId": int(ss["sportId"]),
+                "sportSeasonId": sport_season_id,
+                "skipped": True,
+                "reason": "already scheduleBootstrapped (use force=True to re-run)",
+            }
+
+        start_date = ss["regularSeasonStart"]
+        end_date = ss["regularSeasonEnd"]
+
+        if not start_date or not end_date:
+            raise ValueError("SportSeason missing regularSeasonStart/regularSeasonEnd")
+
+        if end_date < start_date:
+            raise ValueError(f"Invalid regular season window: {start_date} -> {end_date}")
+
+        days_total = (end_date - start_date).days + 1
+        if max_days is not None:
+            days_total = min(days_total, max_days)
+
+        days_processed = 0
+        failed_days = 0
+        events_seen_total = 0
+        games_upserted_total = 0
+
+        d = start_date
+        for _ in range(days_total):
+            try:
+                summary = self.ingest_scoreboard_for_date_for_sport_season(sport_season_id, d)
+                events_seen_total += int(summary.get("eventsSeen", 0))
+                games_upserted_total += int(summary.get("gamesUpserted", 0))
+            except Exception as e:
+                failed_days += 1
+                print(f"[bootstrap-by-date] ERROR sportSeasonId={sport_season_id} date={d}: {e}")
+            finally:
+                days_processed += 1
+                d = d + dt.timedelta(days=1)
+
+        with self.db.begin() as conn:
+            conn.execute(
+                text("""
+                    UPDATE "SportSeason"
+                    SET "scheduleBootstrapped" = true,
+                        "scheduleBootstrappedAt" = now()
+                    WHERE id = :id
+                """),
+                {"id": sport_season_id},
+            )
+
+        return {
+            "sportId": int(ss["sportId"]),
+            "sportSeasonId": sport_season_id,
+            "startDate": str(start_date),
+            "endDate": str(end_date),
+            "daysProcessed": days_processed,
+            "failedDays": failed_days,
+            "eventsSeenTotal": events_seen_total,
+            "gamesUpsertedTotal": games_upserted_total,
         }
 
     # -------------------------------------------------------------------------
@@ -444,7 +608,7 @@ class ScheduleModel:
         for group_id in api_group_ids:
             scoreboard_json = client.fetch_scoreboard_for_date(datestr, group_id)
 
-            for event in client.iter_team_events(scoreboard_json):
+            for event in client.iter_scoreboard_events(scoreboard_json):
                 events_seen += 1
                 game = client.extract_game_from_event(event)
                 if not game:

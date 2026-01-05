@@ -70,6 +70,21 @@ def parse_dt(s: str) -> datetime:
 
     return datetime.fromisoformat(s)
 
+def arg_or_env(args, arg_name: str, env_name: str, *, required: bool = True):
+    val = getattr(args, arg_name)
+    if val is not None:
+        return val
+
+    env_val = os.getenv(env_name)
+    if env_val is not None:
+        return env_val
+
+    if required:
+        print(f"Missing required value: --{arg_name.upper()} or env {env_name}")
+        sys.exit(1)
+
+    return None
+
 def require_env(name: str) -> str:
     val = os.getenv(name)
     if not val:
@@ -80,13 +95,24 @@ def require_env(name: str) -> str:
 
 def main():
     load_dotenv()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--SEASON_YEAR", type=int)
+    parser.add_argument("--REGULAR_START")
+    parser.add_argument("--REGULAR_END")
+    parser.add_argument("--PLAYOFF_START")
+    parser.add_argument("--PLAYOFF_END")
+    args = parser.parse_args()
+
+    # Secrets / config: env-only
     espn_base_url = require_env("ESPN_BASE_URL")
 
-    season_year = int(require_env("SEASON_YEAR"))
-    regular_start_s = require_env("REGULAR_START")
-    regular_end_s = require_env("REGULAR_END")
-    playoff_start_s = os.getenv("PLAYOFF_START")
-    playoff_end_s = os.getenv("PLAYOFF_END")
+    # Values: CLI wins, env fallback
+    season_year = int(arg_or_env(args, "SEASON_YEAR", "SEASON_YEAR"))
+    regular_start_s = arg_or_env(args, "REGULAR_START", "REGULAR_START")
+    regular_end_s = arg_or_env(args, "REGULAR_END", "REGULAR_END")
+    playoff_start_s = arg_or_env(args, "PLAYOFF_START", "PLAYOFF_START", required=False)
+    playoff_end_s = arg_or_env(args, "PLAYOFF_END", "PLAYOFF_END", required=False)
 
     regular_start = parse_dt(regular_start_s)
     regular_end = parse_dt(regular_end_s)
@@ -116,12 +142,16 @@ def main():
         conn.execute(INSERT_CONF_TOURNEYS, {"sportSeasonId": sport_season_id, "sportId": 1})
         conn.execute(INSERT_MARCH_MADNESS, {"sportSeasonId": sport_season_id, "sportId": 1})
 
-    schedule_model.bootstrap_league_schedule(1, sport_season_id)
+    summary = schedule_model.bootstrap_sport_season_schedule_by_scoreboard(
+        sport_season_id,
+        force=True,
+        max_days=3
+    )
+    print(summary)
 
 
 if __name__ == "__main__":
     main()
 
 
-# From OnTheMarginFantasy folder
-# PYTHONPATH=./api python3 ./api/startSeasonJobs/ncaaMensBasketball.py --seasonYear 2025 --regularStart "2025-11-03" --regularEnd   "2026-03-08" --playoffStart "2026-03-09" --playoffEnd "2026-04-08"
+# PYTHONPATH=. python3 startSeasonJobs/ncaaMensBasketball.py --SEASON_YEAR 2025 --REGULAR_START "2025-11-03" --REGULAR_END "2026-03-08" --PLAYOFF_START "2026-03-09" --PLAYOFF_END "2026-04-08"
