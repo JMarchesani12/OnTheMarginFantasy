@@ -61,7 +61,7 @@ const makeInitialState = (): CreateLeagueFormState => ({
   bonuses: [],
 
   timeoutAction: "AUTO-SKIP",
-  graceSeconds: "0",
+  graceSeconds: "3",
 });
 
 const CreateLeague: React.FC = () => {
@@ -177,7 +177,9 @@ const CreateLeague: React.FC = () => {
       freeAgentDeadline: toIsoOrNull(form.freeAgentDeadline),
       tradeDeadline: toIsoOrNull(form.tradeDeadline),
       commissioner: userId, // replace with value from auth when you wire that up
-      seasonYear: Number(initialSeasonYear),
+      // REPLACE
+      // seasonYear: Number(initialSeasonYear),
+      seasonYear: Number(2025),
       isDiscoverable: true
     };
 
