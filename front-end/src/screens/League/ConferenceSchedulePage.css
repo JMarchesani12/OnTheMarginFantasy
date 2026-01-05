@@ -290,22 +290,25 @@ body,
 .conference-schedule__score-line {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: 0.6rem;
 }
 
 .conference-schedule__score-name {
   font-size: 0.85rem;
   font-weight: 500;
   color: #B7C2E6;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .conference-schedule__score-value {
   font-size: 1.05rem;
   font-weight: 600;
   color: #FFD166;
+  margin-left: auto;
+  padding-left: 0.4rem;
 }
 
 /* Winner */

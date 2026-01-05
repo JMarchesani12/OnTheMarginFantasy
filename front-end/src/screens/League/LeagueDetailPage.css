@@ -167,8 +167,13 @@
 /* Content grid */
 .league-detail__content {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.25rem;
+}
+
+.league-detail__content--admin {
+  grid-template-columns: minmax(0, 1.65fr) minmax(0, 0.6fr);
+  align-items: start;
 }
 
 @media (max-width: 768px) {
@@ -178,6 +183,11 @@
 
   .league-detail__content {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .league-detail__team-row {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 
@@ -197,6 +207,19 @@
   color: #F4F7FF;
 }
 
+.league-detail__card--compact {
+  padding: 0.85rem 1rem;
+}
+
+.league-detail__card-title--compact {
+  margin-top: 0;
+  margin-bottom: 0.6rem;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #8EA0D6;
+}
+
 .league-detail__card .label {
   font-size: 0.85rem;
   color: #B7C2E6;
@@ -209,15 +232,18 @@
 }
 
 /* Actions block */
-.league-detail__actions {
-  margin-top: 1.25rem;
-}
-
 .league-detail__action-buttons {
   display: flex;
   flex-wrap: wrap;
   gap: 0.6rem;
   margin-top: 0.75rem;
+}
+
+.league-detail__action-buttons--compact {
+  margin-top: 0.4rem;
+  gap: 0.5rem;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 /* Common pill button base */
@@ -242,6 +268,13 @@
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
+}
+
+.league-detail__primary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .league-detail__add-drop-btn {
@@ -275,6 +308,69 @@
   margin: 0;
   font-size: 0.85rem;
   color: #8EA0D6;
+}
+
+.league-detail__team-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.league-detail__team-name {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.league-detail__team-name-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.league-detail__team-edit-icon {
+  border-radius: 999px;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid #334277;
+  background: #0B0E1A;
+  color: #F4F7FF;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+  box-shadow: 0 12px 35px #00000033;
+}
+
+.league-detail__team-edit-icon:hover {
+  transform: translateY(-1px);
+  border-color: #22D3EE;
+  box-shadow:
+    0 0 0 4px #22D3EE1A,
+    0 16px 45px #00000044;
+}
+
+.league-detail__team-edit-icon svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.league-detail__team-stats {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.league-detail__team-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 120px;
 }
 
 /* Team name editor */

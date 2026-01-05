@@ -260,6 +260,24 @@
   color: #FFD166;
 }
 
+.league-schedule__cell-meta {
+  margin-top: 0.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  font-size: 0.75rem;
+  color: #8EA0D6;
+}
+
+.league-schedule__cell-time {
+  font-weight: 600;
+  color: #B7C2E6;
+}
+
+.league-schedule__cell-broadcast {
+  opacity: 0.85;
+}
+
 /* ===========================
    Team column
    =========================== */
