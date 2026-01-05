@@ -11,8 +11,8 @@ import { useAuth } from "../../context/AuthContext";
 
 const stageOptions = [
   { value: "active", label: "Active" },
-  { value: "all", label: "All" },
   { value: "completed", label: "Completed" },
+  { value: "all", label: "All" },
 ] as const;
 
 type StageValue = (typeof stageOptions)[number]["value"];
@@ -20,6 +20,18 @@ type StageValue = (typeof stageOptions)[number]["value"];
 type HomeTab = "leagues" | "search";
 
 const SEARCH_LIMIT = 6;
+
+const applyStageFilter = (items: League[], stage: StageValue) => {
+  if (stage === "completed") {
+    return items.filter((league) => league.status === "Completed");
+  }
+
+  if (stage === "active") {
+    return items.filter((league) => league.status !== "Completed");
+  }
+
+  return items;
+};
 
 const Home = () => {
   const navigate = useNavigate();
@@ -63,13 +75,15 @@ const Home = () => {
         console.log(response)
 
         if (Array.isArray(response)) {
-          setLeagues(response as League[]);
+          setLeagues(applyStageFilter(response as League[], stage));
         } else if (
           response &&
           typeof response === "object" &&
           Array.isArray((response as { leagues?: League[] }).leagues)
         ) {
-          setLeagues((response as { leagues: League[] }).leagues);
+          setLeagues(
+            applyStageFilter((response as { leagues: League[] }).leagues, stage)
+          );
         } else {
           console.warn("Unexpected leagues payload", response);
           setLeagues([]);

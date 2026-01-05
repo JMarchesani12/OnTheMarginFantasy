@@ -5,7 +5,6 @@ export const API_BASE_URL =
 
 async function getAuthHeader() {
   const { data } = await supabase.auth.getSession();
-  console.log("token exists?", !!data.session?.access_token);
   const token = data.session?.access_token;
 
   return token ? { Authorization: `Bearer ${token}` } : {};

@@ -10,6 +10,7 @@ import { supabase } from '../lib/supabaseClient';
 import { createUser } from '../api/user';
 
 const PENDING_USER_CREATE_KEY = 'otm:pending-user-create';
+const USER_CREATED_KEY_PREFIX = 'otm:user-created:';
 
 type AuthContextValue = {
   user: User | null;
@@ -30,16 +31,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const maybeCreateUser = async (currentSession: Session | null) => {
       if (!currentSession?.user) return;
 
+      const createdKey = `${USER_CREATED_KEY_PREFIX}${currentSession.user.id}`;
+      const alreadyCreated = localStorage.getItem(createdKey);
       const pendingRaw = localStorage.getItem(PENDING_USER_CREATE_KEY);
-      if (!pendingRaw) return;
 
       let pending: { email?: string; displayName?: string } | null = null;
-      try {
-        pending = JSON.parse(pendingRaw);
-      } catch (error) {
-        console.warn('Failed to parse pending user payload.', error);
-        localStorage.removeItem(PENDING_USER_CREATE_KEY);
-        return;
+      if (pendingRaw) {
+        try {
+          pending = JSON.parse(pendingRaw);
+        } catch (error) {
+          console.warn('Failed to parse pending user payload.', error);
+          localStorage.removeItem(PENDING_USER_CREATE_KEY);
+        }
       }
 
       const displayName =
@@ -54,12 +57,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      if (!displayName || !email) return;
+      if (!email) return;
+      if (!pendingRaw && alreadyCreated) return;
 
       try {
-        await createUser(currentSession.user.id, email, displayName);
+        const resolvedDisplayName =
+          displayName?.trim() || email.split("@")[0] || email;
+        await createUser(currentSession.user.id, email, resolvedDisplayName);
         localStorage.removeItem(PENDING_USER_CREATE_KEY);
+        localStorage.setItem(createdKey, 'true');
       } catch (error) {
+        if (String((error as Error)?.message ?? '').includes('409')) {
+          localStorage.removeItem(PENDING_USER_CREATE_KEY);
+          localStorage.setItem(createdKey, 'true');
+          return;
+        }
         console.warn('User record creation failed.', error);
       }
     };
