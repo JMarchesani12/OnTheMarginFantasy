@@ -10,15 +10,21 @@ async function getAuthHeader() {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+type ApiFetchOptions = RequestInit & {
+  skipAuth?: boolean;
+};
+
 export async function apiFetch(
   input: RequestInfo | URL,
-  init: RequestInit = {}
+  init: ApiFetchOptions = {}
 ) {
-  const authHeader = await getAuthHeader();
   const headers = new Headers(init.headers ?? {});
 
-  if (!headers.has("Authorization") && authHeader.Authorization) {
-    headers.set("Authorization", authHeader.Authorization);
+  if (!init.skipAuth) {
+    const authHeader = await getAuthHeader();
+    if (!headers.has("Authorization") && authHeader.Authorization) {
+      headers.set("Authorization", authHeader.Authorization);
+    }
   }
 
   return fetch(input, { ...init, headers });

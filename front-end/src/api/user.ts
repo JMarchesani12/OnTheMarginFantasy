@@ -18,7 +18,9 @@ export async function getUser(
 export async function getUserByUuid(
   uuid: string
 ): Promise<User | null> {
-  const res = await apiFetch(`${API_BASE_URL}/api/byUuid/uuid/${uuid}`);
+  const res = await apiFetch(`${API_BASE_URL}/api/byUuid/uuid/${uuid}`, {
+    skipAuth: true,
+  });
 
   if (res.status === 404) {
     return null;
