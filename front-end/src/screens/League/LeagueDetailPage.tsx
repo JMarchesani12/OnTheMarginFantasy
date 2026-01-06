@@ -9,7 +9,6 @@ import LeagueScoreboard, {
   type ScoreboardRow as LeagueScoreboardRow,
 } from "../../components/League/LeagueScoreboard";
 import { getScoresForWeek } from "../../api/scoring";
-import { startDraft } from "../../api/draft";
 import type { ScoreWeek } from "../../types/scoring";
 import { useCurrentUser } from "../../context/currentUserContext";
 import "./LeagueDetailPage.css";
@@ -41,7 +40,7 @@ const LeagueDetailPage = () => {
   const [teamNameSaving, setTeamNameSaving] = useState(false);
   const [teamNameError, setTeamNameError] = useState<string | null>(null);
   const [teamNameSuccess, setTeamNameSuccess] = useState<string | null>(null);
-  const [startDraftLoading, setStartDraftLoading] = useState(false);
+  const startDraftLoading = false;
   const [startDraftError, setStartDraftError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -243,21 +242,13 @@ const LeagueDetailPage = () => {
     league.status === "Pre-Draft" && league.commissionerId !== currentUserId;
   const showAdminActions = canManageLeague;
 
-  const handleStartDraft = async () => {
+  const handleStartDraft = () => {
     if (!league) {
       return;
     }
 
-    try {
-      setStartDraftLoading(true);
-      setStartDraftError(null);
-      await startDraft(league.leagueId);
-      openDraftPage();
-    } catch (error: any) {
-      setStartDraftError(error?.message ?? "Failed to start draft");
-    } finally {
-      setStartDraftLoading(false);
-    }
+    setStartDraftError(null);
+    openDraftPage();
   };
 
   const scoreboardRows = useMemo<{
@@ -537,7 +528,7 @@ const LeagueDetailPage = () => {
                   onClick={handleStartDraft}
                   disabled={startDraftLoading}
                 >
-                  {startDraftLoading ? "Starting…" : "Start Draft"}
+                  Open Draft Lobby
                 </button>
               )}
               {startDraftError && (

@@ -61,6 +61,12 @@
   color: #B7C2E6;
 }
 
+.draft-page__waiting {
+  margin: 0.35rem 0 0;
+  color: #8EA0D6;
+  font-size: 0.85rem;
+}
+
 /* Actions */
 .draft-page__actions {
   display: flex;

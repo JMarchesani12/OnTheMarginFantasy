@@ -58,6 +58,7 @@ const LeagueDraftPage = () => {
   const [draftSummaryPicks, setDraftSummaryPicks] = useState<DraftSummaryPick[]>([]);
   const [draftSummaryLoading, setDraftSummaryLoading] = useState(false);
   const [showDraftComplete, setShowDraftComplete] = useState(false);
+  const [hasJoinedDraft, setHasJoinedDraft] = useState(false);
   const draftWeekNumber = 1;
   const socketRef = useRef<Socket | null>(null);
   const previousDraftStatusRef = useRef<string | null>(null);
@@ -218,7 +219,7 @@ const LeagueDraftPage = () => {
     socketRef.current = socket;
 
     socket.on("connect", () => {
-      socket.emit("draft:join", { leagueId });
+      setError(null);
     });
 
     socket.on("draft:snapshot", (payload) => {
@@ -242,11 +243,13 @@ const LeagueDraftPage = () => {
     });
 
     return () => {
-      socket.emit("draft:leave", { leagueId });
+      if (hasJoinedDraft) {
+        socket.emit("draft:leave", { leagueId });
+      }
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [applyDraftSnapshot, leagueId, session?.access_token, socketUrl]);
+  }, [applyDraftSnapshot, hasJoinedDraft, leagueId, session?.access_token, socketUrl]);
 
   const groupTeams = (teams: OwnedTeam[]): GroupedTeams => {
     const map = new Map<string, OwnedTeam[]>();
@@ -383,6 +386,11 @@ const LeagueDraftPage = () => {
     typeof draftState?.status === "string" ? (draftState.status as string) : null;
   const isDraftLive = draftStatus === "live";
   const isDraftComplete = draftStatus === "complete";
+  const joinable = !draftStatus && !isDraftComplete;
+  const allMembersJoined =
+    league.numPlayers > 0 && draftMembers.length >= league.numPlayers;
+  const showJoinButton = joinable && !hasJoinedDraft && !isDraftComplete;
+  const showCommissionerActions = isCommissioner && !isDraftComplete;
   const submitDisabled =
     loading || !selectedTeam || !isUsersTurn || !isDraftLive || isDraftComplete;
 
@@ -390,7 +398,8 @@ const LeagueDraftPage = () => {
     ? draftStatus[0].toUpperCase() + draftStatus.slice(1)
     : "Not started";
 
-  const canStartDraft = isCommissioner && !draftStatus;
+  const canStartDraft =
+    isCommissioner && !draftStatus && hasJoinedDraft && allMembersJoined;
   const canPauseDraft = isCommissioner && draftStatus === "live";
   const canResumeDraft = isCommissioner && draftStatus === "paused";
 
@@ -406,6 +415,16 @@ const LeagueDraftPage = () => {
 
     previousDraftStatusRef.current = draftStatus;
   }, [draftStatus, loadDraftSummary]);
+
+  useEffect(() => {
+    if (hasJoinedDraft || !league?.memberId) {
+      return;
+    }
+
+    if (draftMembers.some((member) => member.memberId === league.memberId)) {
+      setHasJoinedDraft(true);
+    }
+  }, [draftMembers, hasJoinedDraft, league?.memberId]);
 
   const groupedSummary = useMemo(() => {
     const map = new Map<
@@ -483,6 +502,16 @@ const LeagueDraftPage = () => {
     }
   };
 
+  const handleJoinDraft = () => {
+    if (!leagueId || !socketRef.current) {
+      setError("Draft connection not ready. Try again in a moment.");
+      return;
+    }
+
+    socketRef.current.emit("draft:join", { leagueId });
+    setHasJoinedDraft(true);
+  };
+
   return (
     <div className="draft-page">
       <button
@@ -501,15 +530,27 @@ const LeagueDraftPage = () => {
             Browse all available teams for week {draftWeekNumber} and lock in your pick.
           </p>
           <p className="draft-page__status">Draft status: {draftStatusLabel}</p>
+          {hasJoinedDraft && joinable && !allMembersJoined && (
+            <p className="draft-page__waiting">Waiting for everyone to join…</p>
+          )}
           {currentMemberId && (
             <p className="draft-page__turn">
               On the clock: {currentMemberName}
               {isUsersTurn ? " (your turn)" : ""}
             </p>
           )}
-          {isCommissioner && (
+          {(showJoinButton || showCommissionerActions) && (
             <div className="draft-page__actions">
-              {canStartDraft && (
+              {showJoinButton && (
+                <button
+                  type="button"
+                  className="draft-page__action-btn"
+                  onClick={handleJoinDraft}
+                >
+                  Join Draft
+                </button>
+              )}
+              {showCommissionerActions && canStartDraft && (
                 <button
                   type="button"
                   className="draft-page__action-btn"
@@ -519,7 +560,7 @@ const LeagueDraftPage = () => {
                   Start Draft
                 </button>
               )}
-              {canPauseDraft && (
+              {showCommissionerActions && canPauseDraft && (
                 <button
                   type="button"
                   className="draft-page__action-btn"
@@ -529,7 +570,7 @@ const LeagueDraftPage = () => {
                   Pause Draft
                 </button>
               )}
-              {canResumeDraft && (
+              {showCommissionerActions && canResumeDraft && (
                 <button
                   type="button"
                   className="draft-page__action-btn"

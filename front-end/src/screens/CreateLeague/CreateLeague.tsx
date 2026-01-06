@@ -177,9 +177,7 @@ const CreateLeague: React.FC = () => {
       freeAgentDeadline: toIsoOrNull(form.freeAgentDeadline),
       tradeDeadline: toIsoOrNull(form.tradeDeadline),
       commissioner: userId, // replace with value from auth when you wire that up
-      // REPLACE
-      // seasonYear: Number(initialSeasonYear),
-      seasonYear: Number(2025),
+      seasonYear: Number(initialSeasonYear),
       isDiscoverable: true
     };
 
