@@ -143,9 +143,11 @@ const LeagueDetailPage = () => {
     navigate(`/leagues/${league.leagueId}/roster`, { state: { league } });
   };
 
-  const openDraftPage = () => {
+  const openDraftPage = (autoJoin = false) => {
     if (!league) return;
-    navigate(`/leagues/${league.leagueId}/draft`, { state: { league } });
+    navigate(`/leagues/${league.leagueId}/draft`, {
+      state: { league, autoJoin },
+    });
   };
 
   const openConferencePage = () => {
@@ -241,6 +243,8 @@ const LeagueDetailPage = () => {
   const canLeaveLeague =
     league.status === "Pre-Draft" && league.commissionerId !== currentUserId;
   const showAdminActions = canManageLeague;
+  const canJoinDraft =
+    league.status === "Pre-Draft" && league.commissionerId !== currentUserId;
 
   const handleStartDraft = () => {
     if (!league) {
@@ -248,7 +252,16 @@ const LeagueDetailPage = () => {
     }
 
     setStartDraftError(null);
-    openDraftPage();
+    openDraftPage(true);
+  };
+
+  const handleJoinDraft = () => {
+    if (!league) {
+      return;
+    }
+
+    setStartDraftError(null);
+    openDraftPage(true);
   };
 
   const scoreboardRows = useMemo<{
@@ -494,6 +507,15 @@ const LeagueDetailPage = () => {
               >
                 View Conference Scores
               </button>
+              {canJoinDraft && (
+                <button
+                  className="league-detail__conference-btn"
+                  type="button"
+                  onClick={handleJoinDraft}
+                >
+                  Join Draft
+                </button>
+              )}
             </div>
             {tradeDeadlinePassed && (
               <p className="league-detail__add-drop-note">

@@ -12,6 +12,7 @@ import "./LeagueDraftPage.css";
 
 type LocationState = {
   league?: League;
+  autoJoin?: boolean;
 };
 
 type GroupedTeams = [string, OwnedTeam[]][];
@@ -22,6 +23,7 @@ const LeagueDraftPage = () => {
   const location = useLocation();
   const state = location.state as LocationState | null;
   const league = state?.league;
+  const autoJoinRequested = Boolean(state?.autoJoin);
   const { session } = useAuth();
   const { userId: currentUserId } = useCurrentUser();
 
@@ -59,6 +61,7 @@ const LeagueDraftPage = () => {
   const [draftSummaryLoading, setDraftSummaryLoading] = useState(false);
   const [showDraftComplete, setShowDraftComplete] = useState(false);
   const [hasJoinedDraft, setHasJoinedDraft] = useState(false);
+  const [socketReady, setSocketReady] = useState(false);
   const draftWeekNumber = 1;
   const socketRef = useRef<Socket | null>(null);
   const previousDraftStatusRef = useRef<string | null>(null);
@@ -220,6 +223,7 @@ const LeagueDraftPage = () => {
 
     socket.on("connect", () => {
       setError(null);
+      setSocketReady(true);
     });
 
     socket.on("draft:snapshot", (payload) => {
@@ -243,6 +247,7 @@ const LeagueDraftPage = () => {
     });
 
     return () => {
+      setSocketReady(false);
       if (hasJoinedDraft) {
         socket.emit("draft:leave", { leagueId });
       }
@@ -389,7 +394,7 @@ const LeagueDraftPage = () => {
   const joinable = !draftStatus && !isDraftComplete;
   const allMembersJoined =
     league.numPlayers > 0 && draftMembers.length >= league.numPlayers;
-  const showJoinButton = joinable && !hasJoinedDraft && !isDraftComplete;
+  const showJoinButton = false;
   const showCommissionerActions = isCommissioner && !isDraftComplete;
   const submitDisabled =
     loading || !selectedTeam || !isUsersTurn || !isDraftLive || isDraftComplete;
@@ -425,6 +430,17 @@ const LeagueDraftPage = () => {
       setHasJoinedDraft(true);
     }
   }, [draftMembers, hasJoinedDraft, league?.memberId]);
+
+  useEffect(() => {
+    if (!autoJoinRequested || hasJoinedDraft || !leagueId || !socketReady) {
+      return;
+    }
+
+    if (socketRef.current) {
+      socketRef.current.emit("draft:join", { leagueId });
+      setHasJoinedDraft(true);
+    }
+  }, [autoJoinRequested, hasJoinedDraft, leagueId, socketReady]);
 
   const groupedSummary = useMemo(() => {
     const map = new Map<

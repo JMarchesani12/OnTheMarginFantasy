@@ -380,6 +380,7 @@ export const LeagueScheduleTabs = ({
                                         {c.time}
                                       </div>
                                     )}
+                                    <br/>
                                     {c.broadcast != null && (
                                       <div className="league-schedule__cell-broadcast">
                                         {c.broadcast}
