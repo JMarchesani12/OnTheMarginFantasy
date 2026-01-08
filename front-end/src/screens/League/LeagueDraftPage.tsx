@@ -475,7 +475,10 @@ const LeagueDraftPage = () => {
   }, [draftMembers, hasJoinedDraft, league?.memberId]);
 
   useEffect(() => {
-    if (!autoJoinRequested || hasJoinedDraft || !leagueId || !socketReady) {
+    const shouldAutoJoin =
+      autoJoinRequested || (isCommissioner && joinable);
+
+    if (!shouldAutoJoin || hasJoinedDraft || !leagueId || !socketReady) {
       return;
     }
 
@@ -483,7 +486,14 @@ const LeagueDraftPage = () => {
       socketRef.current.emit("draft:join", { leagueId });
       setHasJoinedDraft(true);
     }
-  }, [autoJoinRequested, hasJoinedDraft, leagueId, socketReady]);
+  }, [
+    autoJoinRequested,
+    hasJoinedDraft,
+    isCommissioner,
+    joinable,
+    leagueId,
+    socketReady,
+  ]);
 
   useEffect(() => {
     if (!isDraftLive) {
