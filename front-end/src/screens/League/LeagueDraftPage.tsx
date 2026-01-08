@@ -12,6 +12,7 @@ import type {
 } from "../../types/draft";
 import { getAvailableTeams } from "../../api/roster";
 import { createDraftPick, getDraftState, pauseDraft, resumeDraft, startDraft } from "../../api/draft";
+import { getConferences } from "../../api/leagues";
 import { useAuth } from "../../context/AuthContext";
 import { useCurrentUser } from "../../context/currentUserContext";
 import { normalizeOwnedTeams, type RawOwnedTeam } from "../../utils/teams";
@@ -55,6 +56,9 @@ const LeagueDraftPage = () => {
   const [clockOffsetMs, setClockOffsetMs] = useState(0);
   const [onDeckSlot, setOnDeckSlot] = useState<DraftTurnSlot | null>(null);
   const [inTheHoleSlot, setInTheHoleSlot] = useState<DraftTurnSlot | null>(null);
+  const [conferenceLimits, setConferenceLimits] = useState<Map<string, number>>(
+    new Map()
+  );
   const draftWeekNumber = 1;
   const socketRef = useRef<Socket | null>(null);
   const previousDraftStatusRef = useRef<string | null>(null);
@@ -106,6 +110,36 @@ const LeagueDraftPage = () => {
       window.clearInterval(interval);
     };
   }, [loadTeams, leagueId, session?.access_token]);
+
+  useEffect(() => {
+    if (!leagueId) {
+      return;
+    }
+
+    let isCancelled = false;
+
+    const loadConferences = async () => {
+      try {
+        const data = await getConferences(leagueId);
+        if (isCancelled || !data?.conferences) {
+          return;
+        }
+        const next = new Map<string, number>();
+        data.conferences.forEach((conf) => {
+          next.set(conf.displayName, conf.maxTeamsPerOwner);
+        });
+        setConferenceLimits(next);
+      } catch (err) {
+        console.warn("Failed to load conferences for draft table.", err);
+      }
+    };
+
+    loadConferences();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [leagueId]);
 
   useEffect(() => {
     if (!storageKey || !isBrowser) {
@@ -536,6 +570,50 @@ const LeagueDraftPage = () => {
       .sort((a, b) => a.memberName.localeCompare(b.memberName));
   }, [draftMembers, draftSummaryPicks]);
 
+  const groupedPickedTeams = useMemo(() => {
+    const map = new Map<string, OwnedTeam[]>();
+
+    draftSelections.forEach((team) => {
+      const key = team.conferenceName ?? "Independent";
+      const current = map.get(key) ?? [];
+      current.push(team);
+      map.set(key, current);
+    });
+
+    return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
+  }, [draftSelections]);
+
+  const conferenceRows = useMemo(() => {
+    const rows = new Map<string, OwnedTeam[]>();
+
+    groupedPickedTeams.forEach(([conference, teams]) => {
+      rows.set(conference, teams);
+    });
+
+    conferenceLimits.forEach((_limit, conference) => {
+      if (!rows.has(conference)) {
+        rows.set(conference, []);
+      }
+    });
+
+    return Array.from(rows.entries()).sort(([a], [b]) => a.localeCompare(b));
+  }, [conferenceLimits, groupedPickedTeams]);
+
+  const teamColumns = useMemo(() => {
+    let max = 1;
+    conferenceLimits.forEach((limit) => {
+      if (limit > max) {
+        max = limit;
+      }
+    });
+    groupedPickedTeams.forEach(([, teams]) => {
+      if (teams.length > max) {
+        max = teams.length;
+      }
+    });
+    return Math.max(1, max);
+  }, [conferenceLimits, groupedPickedTeams]);
+
   const handleCloseDraftSummary = () => {
     if (!leagueId || !league) {
       return;
@@ -751,15 +829,38 @@ const LeagueDraftPage = () => {
       </section>
 
       <section className="draft-page__history">
-        <p className="draft-page__queue-label">Recent Picks</p>
-        {draftSelections.length === 0 ? (
-          <p className="draft-page__queue-empty">No selections recorded yet.</p>
+        <p className="draft-page__queue-label">Picked Teams</p>
+        {draftSelections.length === 0 && conferenceRows.length === 0 ? (
+          <p className="draft-page__queue-empty">No teams picked yet.</p>
         ) : (
-          <ol className="draft-page__history-list">
-            {draftSelections.map((team, index) => (
-              <li key={`${team.teamId}-${index}`}>{team.teamName}</li>
+          <div
+            className="draft-page__picked-table"
+            style={
+              {
+                "--picked-columns": teamColumns,
+              } as React.CSSProperties
+            }
+          >
+            <div className="draft-page__picked-row draft-page__picked-row--header">
+              <span>Conference</span>
+              {Array.from({ length: teamColumns }, (_, idx) => (
+                <span key={`picked-header-${idx + 1}`}>Team {idx + 1}</span>
+              ))}
+            </div>
+            {conferenceRows.map(([conference, teams]) => (
+              <div className="draft-page__picked-row" key={conference}>
+                <span className="draft-page__picked-conf">{conference}</span>
+                {Array.from({ length: teamColumns }, (_, idx) => {
+                  const team = teams[idx];
+                  return (
+                    <span className="draft-page__picked-teams" key={`${conference}-${idx}`}>
+                      {team ? team.teamName : "—"}
+                    </span>
+                  );
+                })}
+              </div>
             ))}
-          </ol>
+          </div>
         )}
       </section>
 

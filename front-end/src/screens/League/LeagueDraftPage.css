@@ -313,6 +313,43 @@
   gap: 0.35rem;
 }
 
+.draft-page__picked-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.draft-page__picked-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 0.7fr) repeat(var(--picked-columns), minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid #243055;
+  border-radius: 12px;
+  background: #0B0E1A;
+  color: #B7C2E6;
+  font-size: 0.85rem;
+}
+
+.draft-page__picked-row--header {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #8EA0D6;
+  background: #0A0D18;
+}
+
+.draft-page__picked-conf {
+  font-weight: 700;
+  color: #F4F7FF;
+}
+
+.draft-page__picked-teams {
+  color: #B7C2E6;
+  word-break: break-word;
+}
+
 /* Submit */
 .draft-page__submit {
   border: 1px solid #00000000;
