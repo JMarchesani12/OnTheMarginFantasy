@@ -3,6 +3,13 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { io, type Socket } from "socket.io-client";
 import type { League } from "../../types/league";
 import type { OwnedTeam } from "../../types/schedule";
+import type {
+  DraftMember,
+  DraftSnapshot,
+  DraftSummaryPick,
+  DraftState,
+  DraftTurnSlot,
+} from "../../types/draft";
 import { getAvailableTeams } from "../../api/roster";
 import { createDraftPick, getDraftState, pauseDraft, resumeDraft, startDraft } from "../../api/draft";
 import { useAuth } from "../../context/AuthContext";
@@ -36,25 +43,7 @@ const LeagueDraftPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [conferenceFilter, setConferenceFilter] = useState("all");
   const [draftSelections, setDraftSelections] = useState<OwnedTeam[]>([]);
-  const [draftState, setDraftState] = useState<Record<string, unknown> | null>(
-    null
-  );
-  type DraftMember = {
-    memberId?: number;
-    teamName?: string | null;
-  };
-
-  type DraftSummaryPick = {
-    id: number;
-    overallPickNumber: number;
-    roundNumber: number;
-    pickInRound: number;
-    memberId: number;
-    memberTeamName?: string | null;
-    sportTeamId: number;
-    sportTeamName?: string | null;
-  };
-
+  const [draftState, setDraftState] = useState<DraftState | null>(null);
   const [draftMembers, setDraftMembers] = useState<DraftMember[]>([]);
   const [draftActionLoading, setDraftActionLoading] = useState(false);
   const [draftSummaryPicks, setDraftSummaryPicks] = useState<DraftSummaryPick[]>([]);
@@ -62,6 +51,10 @@ const LeagueDraftPage = () => {
   const [showDraftComplete, setShowDraftComplete] = useState(false);
   const [hasJoinedDraft, setHasJoinedDraft] = useState(false);
   const [socketReady, setSocketReady] = useState(false);
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  const [clockOffsetMs, setClockOffsetMs] = useState(0);
+  const [onDeckSlot, setOnDeckSlot] = useState<DraftTurnSlot | null>(null);
+  const [inTheHoleSlot, setInTheHoleSlot] = useState<DraftTurnSlot | null>(null);
   const draftWeekNumber = 1;
   const socketRef = useRef<Socket | null>(null);
   const previousDraftStatusRef = useRef<string | null>(null);
@@ -157,15 +150,15 @@ const LeagueDraftPage = () => {
         return;
       }
 
-      const data = snapshot as Record<string, unknown>;
+      const data = snapshot as DraftSnapshot;
       const available = data.availableTeams;
-      const recent =
-        data.recentPicks ??
-        data.draftSelections ??
-        data.picks;
+      const recent = data.recentPicks ?? data.draftSelections ?? data.picks;
       const state = data.state;
       const members = data.members;
       const picks = data.picks;
+      const serverNow = data.serverNow;
+      const onDeck = data.onDeck ?? data.state?.onDeck ?? null;
+      const inTheHole = data.inTheHole ?? data.state?.inTheHole ?? null;
 
       if (Array.isArray(available)) {
         setAvailableTeams(normalizeOwnedTeams(available as RawOwnedTeam[]));
@@ -196,7 +189,7 @@ const LeagueDraftPage = () => {
       }
 
       if (state && typeof state === "object") {
-        setDraftState(state as Record<string, unknown>);
+        setDraftState(state as DraftState);
       }
 
       if (Array.isArray(members)) {
@@ -205,6 +198,16 @@ const LeagueDraftPage = () => {
 
       if (Array.isArray(picks)) {
         setDraftSummaryPicks(picks as DraftSummaryPick[]);
+      }
+
+      setOnDeckSlot(onDeck ?? null);
+      setInTheHoleSlot(inTheHole ?? null);
+
+      if (serverNow) {
+        const serverMs = Date.parse(serverNow);
+        if (!Number.isNaN(serverMs)) {
+          setClockOffsetMs(serverMs - Date.now());
+        }
       }
     },
     [loadTeams, persistSelections]
@@ -303,20 +306,26 @@ const LeagueDraftPage = () => {
       setDraftSummaryLoading(true);
       const data = await getDraftState(leagueId);
       if (data && typeof data === "object") {
-        const picks = (data as Record<string, unknown>).picks;
-        const members = (data as Record<string, unknown>).members;
-        const state = (data as Record<string, unknown>).state;
-
-        if (Array.isArray(picks)) {
-          setDraftSummaryPicks(picks as DraftSummaryPick[]);
+        if (Array.isArray(data.picks)) {
+          setDraftSummaryPicks(data.picks);
         }
 
-        if (Array.isArray(members)) {
-          setDraftMembers(members as DraftMember[]);
+        if (Array.isArray(data.members)) {
+          setDraftMembers(data.members);
         }
 
-        if (state && typeof state === "object") {
-          setDraftState(state as Record<string, unknown>);
+        if (data.state && typeof data.state === "object") {
+          setDraftState(data.state as DraftState);
+        }
+
+        setOnDeckSlot(data.onDeck ?? data.state?.onDeck ?? null);
+        setInTheHoleSlot(data.inTheHole ?? data.state?.inTheHole ?? null);
+
+        if (data.serverNow) {
+          const serverMs = Date.parse(data.serverNow);
+          if (!Number.isNaN(serverMs)) {
+            setClockOffsetMs(serverMs - Date.now());
+          }
         }
       }
     } catch (err: any) {
@@ -387,6 +396,14 @@ const LeagueDraftPage = () => {
   const currentMemberName =
     draftMembers.find((member) => member.memberId === currentMemberId)?.teamName ??
     "Unknown";
+  const onDeckName =
+    onDeckSlot?.memberTeamName ??
+    draftMembers.find((member) => member.memberId === onDeckSlot?.memberId)?.teamName ??
+    null;
+  const inTheHoleName =
+    inTheHoleSlot?.memberTeamName ??
+    draftMembers.find((member) => member.memberId === inTheHoleSlot?.memberId)?.teamName ??
+    null;
   const draftStatus =
     typeof draftState?.status === "string" ? (draftState.status as string) : null;
   const isDraftLive = draftStatus === "live";
@@ -394,6 +411,33 @@ const LeagueDraftPage = () => {
   const joinable = !draftStatus && !isDraftComplete;
   const allMembersJoined =
     league.numPlayers > 0 && draftMembers.length >= league.numPlayers;
+  const joinedCountLabel =
+    league.numPlayers > 0 ? `${draftMembers.length}/${league.numPlayers}` : null;
+  const turnEndsAtRaw =
+    typeof draftState?.expiresAt === "string"
+      ? (draftState.expiresAt as string)
+      : null;
+  const remainingSeconds = useMemo(() => {
+    if (!turnEndsAtRaw) {
+      return null;
+    }
+
+    const target = Date.parse(turnEndsAtRaw);
+    if (Number.isNaN(target)) {
+      return null;
+    }
+
+    const nowWithOffset = nowMs + clockOffsetMs;
+    return Math.max(0, Math.floor((target - nowWithOffset) / 1000));
+  }, [clockOffsetMs, nowMs, turnEndsAtRaw]);
+  const timeLeftLabel = useMemo(() => {
+    if (remainingSeconds == null) {
+      return null;
+    }
+    const minutes = Math.floor(remainingSeconds / 60);
+    const seconds = remainingSeconds % 60;
+    return `${minutes}:${String(seconds).padStart(2, "0")}`;
+  }, [remainingSeconds]);
   const showJoinButton = false;
   const showCommissionerActions = isCommissioner && !isDraftComplete;
   const submitDisabled =
@@ -403,8 +447,7 @@ const LeagueDraftPage = () => {
     ? draftStatus[0].toUpperCase() + draftStatus.slice(1)
     : "Not started";
 
-  const canStartDraft =
-    isCommissioner && !draftStatus && hasJoinedDraft && allMembersJoined;
+  const canStartDraft = isCommissioner && joinable && hasJoinedDraft;
   const canPauseDraft = isCommissioner && draftStatus === "live";
   const canResumeDraft = isCommissioner && draftStatus === "paused";
 
@@ -441,6 +484,18 @@ const LeagueDraftPage = () => {
       setHasJoinedDraft(true);
     }
   }, [autoJoinRequested, hasJoinedDraft, leagueId, socketReady]);
+
+  useEffect(() => {
+    if (!isDraftLive) {
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      setNowMs(Date.now());
+    }, 1000);
+
+    return () => window.clearInterval(interval);
+  }, [isDraftLive]);
 
   const groupedSummary = useMemo(() => {
     const map = new Map<
@@ -546,6 +601,9 @@ const LeagueDraftPage = () => {
             Browse all available teams for week {draftWeekNumber} and lock in your pick.
           </p>
           <p className="draft-page__status">Draft status: {draftStatusLabel}</p>
+          {joinedCountLabel && (
+            <p className="draft-page__status">Joined: {joinedCountLabel}</p>
+          )}
           {hasJoinedDraft && joinable && !allMembersJoined && (
             <p className="draft-page__waiting">Waiting for everyone to join…</p>
           )}
@@ -553,7 +611,14 @@ const LeagueDraftPage = () => {
             <p className="draft-page__turn">
               On the clock: {currentMemberName}
               {isUsersTurn ? " (your turn)" : ""}
+              {timeLeftLabel ? ` · ${timeLeftLabel}` : ""}
             </p>
+          )}
+          {onDeckName && (
+            <p className="draft-page__turn">On deck: {onDeckName}</p>
+          )}
+          {inTheHoleName && (
+            <p className="draft-page__turn">In the hole: {inTheHoleName}</p>
           )}
           {(showJoinButton || showCommissionerActions) && (
             <div className="draft-page__actions">
@@ -571,7 +636,7 @@ const LeagueDraftPage = () => {
                   type="button"
                   className="draft-page__action-btn"
                   onClick={() => handleDraftAction("start")}
-                  disabled={draftActionLoading}
+                  disabled={draftActionLoading || !allMembersJoined}
                 >
                   Start Draft
                 </button>

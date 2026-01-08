@@ -1,4 +1,5 @@
 import type { DraftPickResponse } from "../types/roster";
+import type { DraftSnapshot } from "../types/draft";
 import { apiFetch, API_BASE_URL } from "./client";
 
 type CreateDraftPickBody = {
@@ -59,7 +60,7 @@ export async function setDraftOrder(leagueId: number, memberIdsInOrder: number[]
   return data;
 }
 
-export async function startDraft(leagueId: number) {
+export async function startDraft(leagueId: number): Promise<DraftSnapshot> {
   const payload = {
     "leagueId": leagueId
   }
@@ -72,11 +73,11 @@ export async function startDraft(leagueId: number) {
     throw new Error(`Failed to start draft: ${res.status}`);
   }
 
-  const data = (await res.json());
+  const data = (await res.json()) as DraftSnapshot;
   return data;
 }
 
-export async function pauseDraft(leagueId: number) {
+export async function pauseDraft(leagueId: number): Promise<DraftSnapshot> {
   const payload = {
     "leagueId": leagueId
   }
@@ -89,11 +90,11 @@ export async function pauseDraft(leagueId: number) {
     throw new Error(`Failed to start draft: ${res.status}`);
   }
 
-  const data = (await res.json());
+  const data = (await res.json()) as DraftSnapshot;
   return data;
 }
 
-export async function resumeDraft(leagueId: number) {
+export async function resumeDraft(leagueId: number): Promise<DraftSnapshot> {
   const payload = {
     "leagueId": leagueId
   }
@@ -106,16 +107,16 @@ export async function resumeDraft(leagueId: number) {
     throw new Error(`Failed to start draft: ${res.status}`);
   }
 
-  const data = (await res.json());
+  const data = (await res.json()) as DraftSnapshot;
   return data;
 }
 
-export async function getDraftState(leagueId: number) {
+export async function getDraftState(leagueId: number): Promise<DraftSnapshot> {
   const res = await apiFetch(`${API_BASE_URL}/api/draft/state/${leagueId}`)
   if (!res.ok) {
     throw new Error(`Failed to start draft: ${res.status}`);
   }
 
-  const data = (await res.json());
+  const data = (await res.json()) as DraftSnapshot;
   return data;
 }
