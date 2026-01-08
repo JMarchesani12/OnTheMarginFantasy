@@ -409,10 +409,7 @@ const LeagueDraftPage = () => {
   const isDraftLive = draftStatus === "live";
   const isDraftComplete = draftStatus === "complete";
   const joinable = !draftStatus && !isDraftComplete;
-  const allMembersJoined =
-    league.numPlayers > 0 && draftMembers.length >= league.numPlayers;
-  const joinedCountLabel =
-    league.numPlayers > 0 ? `${draftMembers.length}/${league.numPlayers}` : null;
+  const joinedCountLabel = null;
   const turnEndsAtRaw =
     typeof draftState?.expiresAt === "string"
       ? (draftState.expiresAt as string)
@@ -447,7 +444,7 @@ const LeagueDraftPage = () => {
     ? draftStatus[0].toUpperCase() + draftStatus.slice(1)
     : "Not started";
 
-  const canStartDraft = isCommissioner && joinable && hasJoinedDraft;
+  const canStartDraft = isCommissioner && joinable;
   const canPauseDraft = isCommissioner && draftStatus === "live";
   const canResumeDraft = isCommissioner && draftStatus === "paused";
 
@@ -614,9 +611,6 @@ const LeagueDraftPage = () => {
           {joinedCountLabel && (
             <p className="draft-page__status">Joined: {joinedCountLabel}</p>
           )}
-          {hasJoinedDraft && joinable && !allMembersJoined && (
-            <p className="draft-page__waiting">Waiting for everyone to join…</p>
-          )}
           {currentMemberId && (
             <p className="draft-page__turn">
               On the clock: {currentMemberName}
@@ -646,7 +640,7 @@ const LeagueDraftPage = () => {
                   type="button"
                   className="draft-page__action-btn"
                   onClick={() => handleDraftAction("start")}
-                  disabled={draftActionLoading || !allMembersJoined}
+                  disabled={draftActionLoading}
                 >
                   Start Draft
                 </button>
