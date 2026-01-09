@@ -256,9 +256,11 @@ const LeagueDraftPage = () => {
       if (Array.isArray(picks)) {
         const normalizedPicks = picks as DraftSummaryPick[];
         setDraftSummaryPicks(normalizedPicks);
-        const userPicks = normalizedPicks.filter(
-          (pick) => pick.memberId === league.memberId
-        );
+        const memberId = league?.memberId ?? null;
+        if (memberId == null) {
+          return;
+        }
+        const userPicks = normalizedPicks.filter((pick) => pick.memberId === memberId);
         setDraftSelections((current) => {
           const currentById = new Map(current.map((team) => [team.teamId, team]));
           const pickedTeams = userPicks.map((pick) => {
@@ -398,9 +400,11 @@ const LeagueDraftPage = () => {
         if (Array.isArray(data.picks)) {
           const normalizedPicks = data.picks as DraftSummaryPick[];
           setDraftSummaryPicks(normalizedPicks);
-          const userPicks = normalizedPicks.filter(
-            (pick) => pick.memberId === league.memberId
-          );
+          const memberId = league?.memberId ?? null;
+          if (memberId == null) {
+            return;
+          }
+          const userPicks = normalizedPicks.filter((pick) => pick.memberId === memberId);
           setDraftSelections((current) => {
             const currentById = new Map(current.map((team) => [team.teamId, team]));
             const pickedTeams = userPicks.map((pick) => {
