@@ -13,8 +13,6 @@ export async function getScheduleForMemberForWeek(
     "memberId": memberId,
   };
 
-  console.log(API_BASE_URL)
-
   const res = await apiFetch(`${API_BASE_URL}/api/schedule/all`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -53,7 +51,6 @@ export async function getScheduleForConferenceForWeek(
   }
 
   const data = (await res.json()) as ConferenceSchedule;
-  console.log(data)
   return data;
 }
 
@@ -65,8 +62,6 @@ export async function getScheduleForTeam(
     seasonYear,
     sportTeamId,
   };
-
-  console.log(API_BASE_URL);
 
   const res = await apiFetch(`${API_BASE_URL}/api/schedule/teamGamesBySeason`, {
     method: "POST",

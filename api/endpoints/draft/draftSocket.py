@@ -1,5 +1,5 @@
 from flask_socketio import disconnect, join_room, emit, leave_room
-from requests import request, session
+from flask import request
 from socketioInstance import socketio
 from endpoints.draft.draftModel import DraftModel
 from supabaseAuth import verify_supabase_token

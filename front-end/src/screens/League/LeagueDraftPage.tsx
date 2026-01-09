@@ -31,7 +31,6 @@ const LeagueDraftPage = () => {
   const location = useLocation();
   const state = location.state as LocationState | null;
   const league = state?.league;
-  const autoJoinRequested = Boolean(state?.autoJoin);
   const { session } = useAuth();
   const { userId: currentUserId } = useCurrentUser();
 
@@ -51,7 +50,6 @@ const LeagueDraftPage = () => {
   const [draftSummaryLoading, setDraftSummaryLoading] = useState(false);
   const [showDraftComplete, setShowDraftComplete] = useState(false);
   const [hasJoinedDraft, setHasJoinedDraft] = useState(false);
-  const [socketReady, setSocketReady] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [clockOffsetMs, setClockOffsetMs] = useState(0);
   const [onDeckSlot, setOnDeckSlot] = useState<DraftTurnSlot | null>(null);
@@ -59,9 +57,23 @@ const LeagueDraftPage = () => {
   const [conferenceLimits, setConferenceLimits] = useState<Map<string, number>>(
     new Map()
   );
+  const teamMetaRef = useRef<Map<number, OwnedTeam>>(new Map());
   const draftWeekNumber = 1;
   const socketRef = useRef<Socket | null>(null);
   const previousDraftStatusRef = useRef<string | null>(null);
+  const joinQueuedRef = useRef(false);
+  const resolveConferenceName = useCallback(
+    (conferenceName: string | null) => {
+      if (conferenceName) {
+        return conferenceName;
+      }
+      if (conferenceLimits.has("Independent")) {
+        return "Independent";
+      }
+      return "Unassigned";
+    },
+    [conferenceLimits]
+  );
 
   const isBrowser = typeof window !== "undefined";
   const storageKey = leagueId ? `draftSelections:${leagueId}` : null;
@@ -195,7 +207,11 @@ const LeagueDraftPage = () => {
       const inTheHole = data.inTheHole ?? data.state?.inTheHole ?? null;
 
       if (Array.isArray(available)) {
-        setAvailableTeams(normalizeOwnedTeams(available as RawOwnedTeam[]));
+        const normalizedAvailable = normalizeOwnedTeams(available as RawOwnedTeam[]);
+        setAvailableTeams(normalizedAvailable);
+        normalizedAvailable.forEach((team) => {
+          teamMetaRef.current.set(team.teamId, team);
+        });
       } else {
         void loadTeams();
       }
@@ -231,7 +247,25 @@ const LeagueDraftPage = () => {
       }
 
       if (Array.isArray(picks)) {
-        setDraftSummaryPicks(picks as DraftSummaryPick[]);
+        const normalizedPicks = picks as DraftSummaryPick[];
+        setDraftSummaryPicks(normalizedPicks);
+        const pickedTeams = normalizedPicks.map((pick) => {
+          const known = teamMetaRef.current.get(pick.sportTeamId);
+          if (known) {
+            return known;
+          }
+          return {
+            teamId: pick.sportTeamId,
+            teamName: pick.sportTeamName ?? `Team ${pick.sportTeamId}`,
+            conferenceName: null,
+          };
+        });
+        setDraftSelections(pickedTeams);
+        persistSelections(pickedTeams);
+        const pickedIds = new Set(normalizedPicks.map((pick) => pick.sportTeamId));
+        setAvailableTeams((current) =>
+          current.filter((team) => !pickedIds.has(team.teamId))
+        );
       }
 
       setOnDeckSlot(onDeck ?? null);
@@ -251,7 +285,6 @@ const LeagueDraftPage = () => {
     if (!leagueId || !session?.access_token) {
       return;
     }
-
     const socket = io(socketUrl, {
       auth: { token: session.access_token },
     });
@@ -260,7 +293,6 @@ const LeagueDraftPage = () => {
 
     socket.on("connect", () => {
       setError(null);
-      setSocketReady(true);
     });
 
     socket.on("draft:snapshot", (payload) => {
@@ -283,13 +315,19 @@ const LeagueDraftPage = () => {
       setError(err?.message ?? "Failed to connect to draft socket");
     });
 
+    if (!joinQueuedRef.current) {
+      socket.emit("draft:join", { leagueId });
+      joinQueuedRef.current = true;
+      setHasJoinedDraft(true);
+    }
+
     return () => {
-      setSocketReady(false);
       if (hasJoinedDraft) {
         socket.emit("draft:leave", { leagueId });
       }
       socket.disconnect();
       socketRef.current = null;
+      joinQueuedRef.current = false;
     };
   }, [applyDraftSnapshot, hasJoinedDraft, leagueId, session?.access_token, socketUrl]);
 
@@ -297,7 +335,7 @@ const LeagueDraftPage = () => {
     const map = new Map<string, OwnedTeam[]>();
 
     teams.forEach((team) => {
-      const key = team.conferenceName ?? "Independent";
+      const key = resolveConferenceName(team.conferenceName);
       const current = map.get(key) ?? [];
       current.push(team);
       map.set(key, current);
@@ -308,10 +346,10 @@ const LeagueDraftPage = () => {
 
   const uniqueConferences = useMemo(() => {
     const all = availableTeams
-      .map((team) => team.conferenceName ?? "Independent")
+      .map((team) => resolveConferenceName(team.conferenceName))
       .filter(Boolean);
     return Array.from(new Set(all)).sort((a, b) => a.localeCompare(b));
-  }, [availableTeams]);
+  }, [availableTeams, resolveConferenceName]);
 
   const applyFilters = (teams: OwnedTeam[]) =>
     teams.filter((team) => {
@@ -320,7 +358,7 @@ const LeagueDraftPage = () => {
         .includes(searchTerm.toLowerCase());
       const matchesConference =
         conferenceFilter === "all" ||
-        (team.conferenceName ?? "Independent") === conferenceFilter;
+        resolveConferenceName(team.conferenceName) === conferenceFilter;
       return matchesSearch && matchesConference;
     });
 
@@ -411,6 +449,7 @@ const LeagueDraftPage = () => {
       setAvailableTeams((current) =>
         current.filter((team) => team.teamId !== selectedTeam.teamId)
       );
+      teamMetaRef.current.set(selectedTeam.teamId, selectedTeam);
 
       if (response?.draftComplete) {
         setShowDraftComplete(true);
@@ -505,26 +544,6 @@ const LeagueDraftPage = () => {
     }
   }, [draftMembers, hasJoinedDraft, league?.memberId]);
 
-  useEffect(() => {
-    const shouldAutoJoin =
-      autoJoinRequested || (isCommissioner && joinable);
-
-    if (!shouldAutoJoin || hasJoinedDraft || !leagueId || !socketReady) {
-      return;
-    }
-
-    if (socketRef.current) {
-      socketRef.current.emit("draft:join", { leagueId });
-      setHasJoinedDraft(true);
-    }
-  }, [
-    autoJoinRequested,
-    hasJoinedDraft,
-    isCommissioner,
-    joinable,
-    leagueId,
-    socketReady,
-  ]);
 
   useEffect(() => {
     if (!isDraftLive) {
@@ -574,14 +593,14 @@ const LeagueDraftPage = () => {
     const map = new Map<string, OwnedTeam[]>();
 
     draftSelections.forEach((team) => {
-      const key = team.conferenceName ?? "Independent";
+      const key = resolveConferenceName(team.conferenceName);
       const current = map.get(key) ?? [];
       current.push(team);
       map.set(key, current);
     });
 
     return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
-  }, [draftSelections]);
+  }, [draftSelections, resolveConferenceName]);
 
   const conferenceRows = useMemo(() => {
     const rows = new Map<string, OwnedTeam[]>();
@@ -664,6 +683,7 @@ const LeagueDraftPage = () => {
       return;
     }
 
+    console.log("Draft socket join (manual)", { leagueId });
     socketRef.current.emit("draft:join", { leagueId });
     setHasJoinedDraft(true);
   };
@@ -828,6 +848,17 @@ const LeagueDraftPage = () => {
         )}
       </section>
 
+      <footer className="draft-page__footer">
+        <button
+          type="button"
+          className="draft-page__submit"
+          onClick={handleSubmit}
+          disabled={submitDisabled}
+        >
+          Draft Selected Team
+        </button>
+      </footer>
+
       <section className="draft-page__history">
         <p className="draft-page__queue-label">Picked Teams</p>
         {draftSelections.length === 0 && conferenceRows.length === 0 ? (
@@ -863,17 +894,6 @@ const LeagueDraftPage = () => {
           </div>
         )}
       </section>
-
-      <footer className="draft-page__footer">
-        <button
-          type="button"
-          className="draft-page__submit"
-          onClick={handleSubmit}
-          disabled={submitDisabled}
-        >
-          Draft Selected Team
-        </button>
-      </footer>
 
       {showDraftComplete && (
         <div className="draft-page__modal" role="presentation">

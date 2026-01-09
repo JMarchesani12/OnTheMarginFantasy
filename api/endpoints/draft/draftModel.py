@@ -8,6 +8,8 @@ from datetime import datetime, timezone, timedelta
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
+from endpoints.draft.notifyChannel import notify_draft_updated
+
 
 class DraftModel:
     def __init__(self, db: Engine):
@@ -22,7 +24,7 @@ class DraftModel:
             FROM "LeagueMember" lm
             JOIN "User" u ON u.id = lm."userId"
             WHERE lm."leagueId" = :leagueId
-              AND u.uuid = :uuid::uuid
+              AND u.uuid = CAST(:uuid AS uuid)
             LIMIT 1
         """)
         with self.db.connect() as conn:
@@ -294,6 +296,7 @@ class DraftModel:
                 )
                 
                 draft_pick["draftComplete"] = True
+                notify_draft_updated(conn, league_id, "draft_pick")
                 return draft_pick
 
             nxt = self._get_next_unpicked_turn_from(conn, league_id, next_overall)
@@ -313,6 +316,7 @@ class DraftModel:
                     {"leagueId": league_id, "nextOverall": next_overall},
                 )
                 draft_pick["draftComplete"] = True
+                notify_draft_updated(conn, league_id, "draft_pick")
                 return draft_pick
 
             next_overall, next_member_id = nxt
@@ -886,6 +890,7 @@ class DraftModel:
             ).fetchone()
 
             draft_pick["leagueTeamSlotId"] = slot_row._mapping["id"]
+            notify_draft_updated(conn, league_id, "manual_pick")
 
         logging.debug("Created draft pick: %s", draft_pick)
         return draft_pick
@@ -1600,6 +1605,7 @@ class DraftModel:
                 {"leagueId": league_id},
             )
             draft_pick["draftComplete"] = True
+            notify_draft_updated(conn, league_id, "auto_pick")
             return draft_pick
 
         nxt = self._get_next_unpicked_turn_from(conn, league_id, next_overall)
@@ -1627,6 +1633,7 @@ class DraftModel:
                 {"leagueId": league_id},
             )
             draft_pick["draftComplete"] = True
+            notify_draft_updated(conn, league_id, "auto_pick")
             return draft_pick
 
         next_overall, next_member_id = nxt
@@ -1648,8 +1655,8 @@ class DraftModel:
                 "selectionTime": selection_time,
             },
         )
-
         draft_pick["draftComplete"] = False
         draft_pick["nextMemberId"] = next_member_id
         draft_pick["nextOverallPickNumber"] = next_overall
+        notify_draft_updated(conn, league_id, "auto_pick")
         return draft_pick

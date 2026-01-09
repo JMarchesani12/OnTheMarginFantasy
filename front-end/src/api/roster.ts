@@ -13,8 +13,6 @@ export async function getMemberTeams(
     "memberId": memberId,
   };
 
-  console.log(API_BASE_URL)
-
   const res = await apiFetch(`${API_BASE_URL}/api/roster/memberTeams`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -37,8 +35,6 @@ export async function getAvailableTeams(
     "leagueId": leagueId,
     "weekNumber": weekNumber,
   };
-
-  console.log(API_BASE_URL)
 
   const res = await apiFetch(`${API_BASE_URL}/api/roster/availableTeams`, {
     method: "POST",

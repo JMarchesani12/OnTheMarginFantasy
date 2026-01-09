@@ -74,3 +74,7 @@ export default defineConfig([
 
 
 Run with: `npm run dev`
+
+
+Object.keys(localStorage)
+JSON.parse(localStorage.getItem("sb-{thing}-auth-token") || "{}")

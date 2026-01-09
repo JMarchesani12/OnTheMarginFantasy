@@ -53,8 +53,6 @@ const Home = () => {
 
   const { userId, displayName, email } = useCurrentUser();
 
-  console.log(userId)
-
   const { signOut } = useAuth();
 
   useEffect(() => {

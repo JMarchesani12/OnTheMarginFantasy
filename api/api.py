@@ -12,6 +12,7 @@ from endpoints.scoring.routes import setup_routes as ScoringRoutes
 from endpoints.user.routes import setup_routes as UserRoutes
 from endpoints.sport.routes import setup_routes as SportRoutes
 from endpoints.draft.draftSocket import register_draft_socket_handlers
+from endpoints.draft.startDraftNotifyListener import start_draft_notify_listener
 
 from authMiddleware import install_auth_middleware
 
@@ -67,6 +68,7 @@ def create_app():
 
     socketio.init_app(app)
     register_draft_socket_handlers(engine)
+    start_draft_notify_listener(socketio)
 
     return app
 
