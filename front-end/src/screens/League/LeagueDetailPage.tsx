@@ -237,14 +237,16 @@ const LeagueDetailPage = () => {
   }, [league.tradeDeadline]);
 
   const canStartDraft =
-    league.status === "Pre-Draft" && league.commissionerId === currentUserId;
+    (league.status === "Pre-Draft" || league.status === "Drafting") &&
+    league.commissionerId === currentUserId;
   const canManageLeague = league.commissionerId === currentUserId;
   const canEditTeamName = league.memberId != null;
   const canLeaveLeague =
     league.status === "Pre-Draft" && league.commissionerId !== currentUserId;
   const showAdminActions = canManageLeague;
   const canJoinDraft =
-    league.status === "Pre-Draft" && league.commissionerId !== currentUserId;
+    (league.status === "Pre-Draft" || league.status === "Drafting") &&
+    league.commissionerId !== currentUserId;
 
   const handleStartDraft = () => {
     if (!league) {
@@ -513,7 +515,7 @@ const LeagueDetailPage = () => {
                   type="button"
                   onClick={handleJoinDraft}
                 >
-                  Join Draft
+                  Join Draft Lobby
                 </button>
               )}
             </div>
@@ -550,7 +552,7 @@ const LeagueDetailPage = () => {
                   onClick={handleStartDraft}
                   disabled={startDraftLoading}
                 >
-                  Open Draft Lobby
+                  Join Draft Lobby
                 </button>
               )}
               {startDraftError && (

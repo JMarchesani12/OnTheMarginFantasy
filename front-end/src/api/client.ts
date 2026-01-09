@@ -12,20 +12,37 @@ async function getAuthHeader() {
 
 type ApiFetchOptions = RequestInit & {
   skipAuth?: boolean;
+  retryOnAuthError?: boolean;
 };
 
 export async function apiFetch(
   input: RequestInfo | URL,
   init: ApiFetchOptions = {}
 ) {
-  const headers = new Headers(init.headers ?? {});
+  const { skipAuth, retryOnAuthError, ...fetchInit } = init;
+  const shouldRetry = retryOnAuthError !== false;
+  const headers = new Headers(fetchInit.headers ?? {});
 
-  if (!init.skipAuth) {
+  if (!skipAuth) {
     const authHeader = await getAuthHeader();
     if (!headers.has("Authorization") && authHeader.Authorization) {
       headers.set("Authorization", authHeader.Authorization);
     }
   }
 
-  return fetch(input, { ...init, headers });
+  const response = await fetch(input, { ...fetchInit, headers });
+
+  if (shouldRetry && !skipAuth && [400, 401, 403].includes(response.status)) {
+    const bodyText = await response.clone().text();
+    if (bodyText.toLowerCase().includes("invalid session")) {
+      const { data } = await supabase.auth.refreshSession();
+      if (data?.session?.access_token) {
+        const retryHeaders = new Headers(fetchInit.headers ?? {});
+        retryHeaders.set("Authorization", `Bearer ${data.session.access_token}`);
+        return fetch(input, { ...fetchInit, headers: retryHeaders });
+      }
+    }
+  }
+
+  return response;
 }

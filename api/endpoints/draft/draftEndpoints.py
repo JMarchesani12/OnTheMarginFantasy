@@ -115,7 +115,8 @@ class DraftEndpoints:
             return jsonify(self.draftModel.get_draft_state_snapshot(league_id)), 200
         except ValueError as e:
             return jsonify({"message": str(e)}), 400
-        except Exception:
+        except Exception as e:
+            print(e)
             return jsonify({"message": "Failed to get draft state"}), 500
 
 

@@ -62,6 +62,8 @@ const LeagueDraftPage = () => {
   const socketRef = useRef<Socket | null>(null);
   const previousDraftStatusRef = useRef<string | null>(null);
   const joinQueuedRef = useRef(false);
+  const pausedSnapshotLoadedRef = useRef(false);
+  const initialSnapshotLoadedRef = useRef(false);
   const resolveConferenceName = useCallback(
     (conferenceName: string | null) => {
       if (conferenceName) {
@@ -76,7 +78,10 @@ const LeagueDraftPage = () => {
   );
 
   const isBrowser = typeof window !== "undefined";
-  const storageKey = leagueId ? `draftSelections:${leagueId}` : null;
+  const storageKey =
+    leagueId && league?.memberId
+      ? `draftSelections:${leagueId}:${league.memberId}`
+      : null;
   const socketUrl =
     import.meta.env.VITE_SOCKET_URL ??
     import.meta.env.VITE_API_BASE_URL ??
@@ -217,25 +222,27 @@ const LeagueDraftPage = () => {
       }
 
       if (Array.isArray(recent)) {
-        const normalized = normalizeOwnedTeams(
-          (recent as RawOwnedTeam[]).map((team) => ({
-            ...team,
-            teamId:
-              typeof team.teamId === "number"
-                ? team.teamId
-                : typeof (team as Record<string, unknown>).sportTeamId === "number"
-                ? ((team as Record<string, unknown>).sportTeamId as number)
-                : team.teamId,
-            teamName:
-              typeof team.teamName === "string"
-                ? team.teamName
-                : typeof (team as Record<string, unknown>).sportTeamName === "string"
-                ? ((team as Record<string, unknown>).sportTeamName as string)
-                : team.teamName,
-          }))
-        );
-        setDraftSelections(normalized);
-        persistSelections(normalized);
+        if (!Array.isArray(picks)) {
+          const normalized = normalizeOwnedTeams(
+            (recent as RawOwnedTeam[]).map((team) => ({
+              ...team,
+              teamId:
+                typeof team.teamId === "number"
+                  ? team.teamId
+                  : typeof (team as Record<string, unknown>).sportTeamId === "number"
+                  ? ((team as Record<string, unknown>).sportTeamId as number)
+                  : team.teamId,
+              teamName:
+                typeof team.teamName === "string"
+                  ? team.teamName
+                  : typeof (team as Record<string, unknown>).sportTeamName === "string"
+                  ? ((team as Record<string, unknown>).sportTeamName as string)
+                  : team.teamName,
+            }))
+          );
+          setDraftSelections(normalized);
+          persistSelections(normalized);
+        }
       }
 
       if (state && typeof state === "object") {
@@ -249,19 +256,29 @@ const LeagueDraftPage = () => {
       if (Array.isArray(picks)) {
         const normalizedPicks = picks as DraftSummaryPick[];
         setDraftSummaryPicks(normalizedPicks);
-        const pickedTeams = normalizedPicks.map((pick) => {
-          const known = teamMetaRef.current.get(pick.sportTeamId);
-          if (known) {
-            return known;
-          }
-          return {
-            teamId: pick.sportTeamId,
-            teamName: pick.sportTeamName ?? `Team ${pick.sportTeamId}`,
-            conferenceName: null,
-          };
+        const userPicks = normalizedPicks.filter(
+          (pick) => pick.memberId === league.memberId
+        );
+        setDraftSelections((current) => {
+          const currentById = new Map(current.map((team) => [team.teamId, team]));
+          const pickedTeams = userPicks.map((pick) => {
+            const known =
+              teamMetaRef.current.get(pick.sportTeamId) ??
+              currentById.get(pick.sportTeamId);
+            if (known) {
+              return known;
+            }
+            return {
+              teamId: pick.sportTeamId,
+              teamName: pick.sportTeamName ?? `Team ${pick.sportTeamId}`,
+              conferenceName:
+                (pick as DraftSummaryPick & { conferenceName?: string | null })
+                  .conferenceName ?? null,
+            };
+          });
+          persistSelections(pickedTeams);
+          return pickedTeams;
         });
-        setDraftSelections(pickedTeams);
-        persistSelections(pickedTeams);
         const pickedIds = new Set(normalizedPicks.map((pick) => pick.sportTeamId));
         setAvailableTeams((current) =>
           current.filter((team) => !pickedIds.has(team.teamId))
@@ -379,7 +396,35 @@ const LeagueDraftPage = () => {
       const data = await getDraftState(leagueId);
       if (data && typeof data === "object") {
         if (Array.isArray(data.picks)) {
-          setDraftSummaryPicks(data.picks);
+          const normalizedPicks = data.picks as DraftSummaryPick[];
+          setDraftSummaryPicks(normalizedPicks);
+          const userPicks = normalizedPicks.filter(
+            (pick) => pick.memberId === league.memberId
+          );
+          setDraftSelections((current) => {
+            const currentById = new Map(current.map((team) => [team.teamId, team]));
+            const pickedTeams = userPicks.map((pick) => {
+              const known =
+                teamMetaRef.current.get(pick.sportTeamId) ??
+                currentById.get(pick.sportTeamId);
+              if (known) {
+                return known;
+              }
+              return {
+                teamId: pick.sportTeamId,
+                teamName: pick.sportTeamName ?? `Team ${pick.sportTeamId}`,
+                conferenceName:
+                  (pick as DraftSummaryPick & { conferenceName?: string | null })
+                    .conferenceName ?? null,
+              };
+            });
+            persistSelections(pickedTeams);
+            return pickedTeams;
+          });
+          const pickedIds = new Set(normalizedPicks.map((pick) => pick.sportTeamId));
+          setAvailableTeams((current) =>
+            current.filter((team) => !pickedIds.has(team.teamId))
+          );
         }
 
         if (Array.isArray(data.members)) {
@@ -406,6 +451,14 @@ const LeagueDraftPage = () => {
       setDraftSummaryLoading(false);
     }
   }, [leagueId]);
+
+  useEffect(() => {
+    if (!leagueId || initialSnapshotLoadedRef.current) {
+      return;
+    }
+    initialSnapshotLoadedRef.current = true;
+    void loadDraftSummary();
+  }, [leagueId, loadDraftSummary]);
 
   if (!league || !leagueId) {
     return (
@@ -526,6 +579,11 @@ const LeagueDraftPage = () => {
       return;
     }
 
+    if (draftStatus === "paused" && !pausedSnapshotLoadedRef.current) {
+      pausedSnapshotLoadedRef.current = true;
+      void loadDraftSummary();
+    }
+
     if (draftStatus === "complete" && previousDraftStatusRef.current !== "complete") {
       setShowDraftComplete(true);
       void loadDraftSummary();
@@ -589,11 +647,39 @@ const LeagueDraftPage = () => {
       .sort((a, b) => a.memberName.localeCompare(b.memberName));
   }, [draftMembers, draftSummaryPicks]);
 
+  const latestPick = useMemo(() => {
+    if (draftSummaryPicks.length === 0) {
+      return null;
+    }
+    return draftSummaryPicks.reduce((latest, pick) =>
+      pick.overallPickNumber > latest.overallPickNumber ? pick : latest
+    );
+  }, [draftSummaryPicks]);
+  const latestPickMemberName = useMemo(() => {
+    if (!latestPick) {
+      return null;
+    }
+    return (
+      latestPick.memberTeamName ??
+      draftMembers.find((member) => member.memberId === latestPick.memberId)?.teamName ??
+      `Member ${latestPick.memberId}`
+    );
+  }, [draftMembers, latestPick]);
+  const latestPickTeamName = useMemo(() => {
+    if (!latestPick) {
+      return null;
+    }
+    return latestPick.sportTeamName ?? `Team ${latestPick.sportTeamId}`;
+  }, [latestPick]);
+
   const groupedPickedTeams = useMemo(() => {
     const map = new Map<string, OwnedTeam[]>();
 
     draftSelections.forEach((team) => {
       const key = resolveConferenceName(team.conferenceName);
+      if (key === "Unassigned") {
+        return;
+      }
       const current = map.get(key) ?? [];
       current.push(team);
       map.set(key, current);
@@ -699,7 +785,8 @@ const LeagueDraftPage = () => {
       </button>
 
       <header className="draft-page__header">
-        <div>
+        <div className="draft-page__header-content">
+          <div className="draft-page__header-main">
           <p className="draft-page__eyebrow">Draft Center</p>
           <h1>{league.leagueName}</h1>
           <p className="draft-page__subhead">
@@ -764,6 +851,18 @@ const LeagueDraftPage = () => {
                 </button>
               )}
             </div>
+          )}
+        </div>
+          {latestPickMemberName && latestPickTeamName && (
+            <aside className="draft-page__latest" aria-live="polite">
+              <p className="draft-page__latest-label">Latest Pick</p>
+              <p className="draft-page__latest-value draft-page__latest-member">
+                {latestPickMemberName}:
+              </p>
+              <p className="draft-page__latest-value draft-page__latest-team">
+                {latestPickTeamName}
+              </p>
+            </aside>
           )}
         </div>
       </header>
@@ -878,19 +977,34 @@ const LeagueDraftPage = () => {
                 <span key={`picked-header-${idx + 1}`}>Team {idx + 1}</span>
               ))}
             </div>
-            {conferenceRows.map(([conference, teams]) => (
-              <div className="draft-page__picked-row" key={conference}>
-                <span className="draft-page__picked-conf">{conference}</span>
-                {Array.from({ length: teamColumns }, (_, idx) => {
-                  const team = teams[idx];
-                  return (
-                    <span className="draft-page__picked-teams" key={`${conference}-${idx}`}>
-                      {team ? team.teamName : "—"}
-                    </span>
-                  );
-                })}
-              </div>
-            ))}
+            {conferenceRows.map(([conference, teams]) => {
+              const limit = conferenceLimits.get(conference);
+              const hasLimit = typeof limit === "number";
+              const isMaxed = hasLimit && teams.length >= limit;
+              return (
+                <div className="draft-page__picked-row" key={conference}>
+                  <span className="draft-page__picked-conf">
+                    {conference}
+                    {hasLimit && (
+                      <span className="draft-page__picked-conf-meta">
+                        {teams.length}/{limit}
+                        {isMaxed && (
+                          <span className="draft-page__picked-conf-maxed">Maxed</span>
+                        )}
+                      </span>
+                    )}
+                  </span>
+                  {Array.from({ length: teamColumns }, (_, idx) => {
+                    const team = teams[idx];
+                    return (
+                      <span className="draft-page__picked-teams" key={`${conference}-${idx}`}>
+                        {team ? team.teamName : "—"}
+                      </span>
+                    );
+                  })}
+                </div>
+              );
+            })}
           </div>
         )}
       </section>

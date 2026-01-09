@@ -1168,10 +1168,19 @@ class DraftModel:
                       dp."memberId",
                       lm."teamName" AS "memberTeamName",
                       dp."sportTeamId",
-                      st."displayName" AS "sportTeamName"
+                      st."displayName" AS "sportTeamName",
+                      sc.id AS "sportConferenceId",
+                      conf.name AS "conferenceName"
                     FROM "DraftPick" dp
                     JOIN "LeagueMember" lm ON lm.id = dp."memberId"
                     JOIN "SportTeam" st ON st.id = dp."sportTeamId"
+                    LEFT JOIN "ConferenceMembership" cm
+                      ON cm."sportTeamId" = dp."sportTeamId"
+                     AND cm."seasonYear" IS NULL
+                    LEFT JOIN "SportConference" sc
+                      ON sc.id = cm."sportConferenceId"
+                    LEFT JOIN "Conference" conf
+                      ON conf.id = sc."conferenceId"
                     WHERE dp."leagueId" = :leagueId
                     ORDER BY dp."overallPickNumber"
                 """),

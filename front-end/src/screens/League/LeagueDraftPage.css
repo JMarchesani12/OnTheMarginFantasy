@@ -32,6 +32,19 @@
 }
 
 /* Header */
+.draft-page__header-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 2rem;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.draft-page__header-main {
+  min-width: min(520px, 100%);
+  flex: 1 1 520px;
+}
+
 .draft-page__header h1 {
   margin: 0;
   font-size: clamp(2rem, 4vw, 3rem);
@@ -65,6 +78,42 @@
   margin: 0.35rem 0 0;
   color: #8EA0D6;
   font-size: 0.85rem;
+}
+
+.draft-page__latest {
+  flex: 0 0 min(280px, 100%);
+  border-radius: 1rem;
+  border: 1px solid #243055;
+  padding: 0.85rem 1rem;
+  background: linear-gradient(180deg, #0A0D18 0%, #0F1638 100%);
+  box-shadow: 0 16px 45px #00000046;
+}
+
+.draft-page__latest-label {
+  margin: 0 0 0.35rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #8EA0D6;
+}
+
+.draft-page__latest-value {
+  margin: 0;
+  color: #F4F7FF;
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+
+.draft-page__latest-member {
+  color: #22D3EE;
+  font-size: 0.9rem;
+  letter-spacing: 0.01em;
+}
+
+.draft-page__latest-team {
+  color: #F4F7FF;
+  font-size: 1rem;
 }
 
 /* Actions */
@@ -343,6 +392,30 @@
 .draft-page__picked-conf {
   font-weight: 700;
   color: #F4F7FF;
+}
+
+.draft-page__picked-conf-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: 0.45rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid #243055;
+  background: #0A0D18;
+  color: #8EA0D6;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.draft-page__picked-conf-maxed {
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  background: #FF4D6D;
+  color: #0A0D18;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.03em;
 }
 
 .draft-page__picked-teams {
