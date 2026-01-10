@@ -75,7 +75,11 @@ def main():
 
         # If scoring throws, we do NOT want to mark complete or lock next week.
         try:
-            scoring.score_week(league_id, week_number)
+            # Avoid Flask jsonify/app context; run scoring model directly.
+            scoring.scoringModel.compute_weekly_scores(
+                league_id=league_id,
+                week_number=week_number,
+            )
         except Exception as e:
             print(f"ERROR scoring league {league_id} week {week_number}: {e}")
             continue

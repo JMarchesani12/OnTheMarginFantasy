@@ -1021,44 +1021,47 @@ const LeagueDraftPage = () => {
             aria-modal="true"
             aria-labelledby="draft-complete-title"
           >
+            <button
+              type="button"
+              className="draft-page__modal-x"
+              onClick={handleCloseDraftSummary}
+              aria-label="Close draft summary"
+            >
+              ×
+            </button>
             <p className="draft-page__modal-eyebrow">Draft Complete</p>
             <h2 id="draft-complete-title">Draft Summary</h2>
             <p className="draft-page__modal-subhead">
               All picks are locked in. Review your league results below.
             </p>
-            {draftSummaryLoading ? (
-              <p className="draft-page__modal-loading">Loading summary…</p>
-            ) : groupedSummary.length === 0 ? (
-              <p className="draft-page__modal-empty">No picks available.</p>
-            ) : (
-              <div className="draft-page__modal-grid">
-                {groupedSummary.map((member) => (
-                  <div className="draft-page__modal-section" key={member.memberId}>
-                    <h3>{member.memberName}</h3>
-                    <ol>
-                      {member.picks.map((pick) => (
-                        <li key={pick.id}>
-                          <span className="draft-page__modal-pick">
-                            #{pick.overallPickNumber} · Round {pick.roundNumber}, Pick{" "}
-                            {pick.pickInRound}
-                          </span>
-                          <span className="draft-page__modal-team">
-                            {pick.sportTeamName ?? `Team ${pick.sportTeamId}`}
-                          </span>
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
-                ))}
-              </div>
-            )}
-            <button
-              type="button"
-              className="draft-page__modal-close"
-              onClick={handleCloseDraftSummary}
-            >
-              Close and return to league
-            </button>
+            <div className="draft-page__modal-body">
+              {draftSummaryLoading ? (
+                <p className="draft-page__modal-loading">Loading summary…</p>
+              ) : groupedSummary.length === 0 ? (
+                <p className="draft-page__modal-empty">No picks available.</p>
+              ) : (
+                <div className="draft-page__modal-grid">
+                  {groupedSummary.map((member) => (
+                    <div className="draft-page__modal-section" key={member.memberId}>
+                      <h3>{member.memberName}</h3>
+                      <ol>
+                        {member.picks.map((pick) => (
+                          <li key={pick.id}>
+                            <span className="draft-page__modal-pick">
+                              #{pick.overallPickNumber} · Round {pick.roundNumber}, Pick{" "}
+                              {pick.pickInRound}
+                            </span>
+                            <span className="draft-page__modal-team">
+                              {pick.sportTeamName ?? `Team ${pick.sportTeamId}`}
+                            </span>
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

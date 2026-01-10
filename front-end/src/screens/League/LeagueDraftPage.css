@@ -491,7 +491,9 @@
   padding: 2rem;
   box-shadow: 0 25px 60px #00000066;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .draft-page__modal-card::before {
@@ -509,6 +511,32 @@
   z-index: 1;
 }
 
+.draft-page__modal-x {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  border: 1px solid #243055;
+  background: #0B1024;
+  color: #F4F7FF;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 10px 24px #00000055;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+}
+
+.draft-page__modal-x:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px #00000066;
+  border-color: #3C4B86;
+}
+
 .draft-page__modal-eyebrow {
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -521,6 +549,29 @@
 .draft-page__modal-subhead {
   margin: 0.5rem 0 1.5rem;
   color: #B7C2E6;
+}
+
+.draft-page__modal-body {
+  max-height: 50vh;
+  overflow-y: auto;
+  padding-right: 0.6rem;
+  margin-right: -0.6rem;
+  scrollbar-color: #243055 #0B1024;
+  scrollbar-width: thin;
+}
+
+.draft-page__modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.draft-page__modal-body::-webkit-scrollbar-track {
+  background: #0B1024;
+  border-radius: 999px;
+}
+
+.draft-page__modal-body::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #243055, #1B254A);
+  border-radius: 999px;
 }
 
 /* Modal grid / sections */
@@ -566,30 +617,6 @@
 }
 
 /* Modal close */
-.draft-page__modal-close {
-  margin-top: 1.75rem;
-  border: 1px solid #00000000;
-  border-radius: 999px;
-  padding: 0.8rem 2rem;
-  background: linear-gradient(120deg, #22D3EE, #A3FF12);
-  color: #061012;
-  font-weight: 900;
-  cursor: pointer;
-  box-shadow:
-    0 18px 45px #22D3EE1F,
-    0 18px 45px #A3FF121F,
-    0 2px 0 #FFFFFF1A inset;
-  transition: transform 150ms ease, box-shadow 150ms ease;
-}
-
-.draft-page__modal-close:hover {
-  transform: translateY(-2px);
-  box-shadow:
-    0 22px 60px #22D3EE26,
-    0 22px 60px #A3FF1226,
-    0 2px 0 #FFFFFF24 inset;
-}
-
 .draft-page__modal-loading,
 .draft-page__modal-empty {
   color: #B7C2E6;
@@ -597,6 +624,10 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+  .draft-page__modal-body {
+    max-height: 60vh;
+  }
+
   .draft-page__submit {
     width: 100%;
   }

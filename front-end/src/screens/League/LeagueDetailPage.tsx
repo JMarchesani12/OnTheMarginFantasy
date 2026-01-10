@@ -348,6 +348,20 @@ const LeagueDetailPage = () => {
     };
   }, [scoreboard, members, league.currentWeekNumber]);
 
+  const currentWeekDifferential = useMemo(() => {
+    const currentWeek = league.currentWeekNumber ?? null;
+    if (!currentWeek || !league.memberId) {
+      return null;
+    }
+
+    const weekScores = scoreboard[currentWeek] ?? [];
+    const entry = weekScores.find((score) => score.memberId === league.memberId);
+
+    return typeof entry?.pointDifferential === "number"
+      ? entry.pointDifferential
+      : null;
+  }, [scoreboard, league.currentWeekNumber, league.memberId]);
+
   return (
     <div className="league-detail">
       <button
@@ -459,6 +473,16 @@ const LeagueDetailPage = () => {
               <div className="league-detail__team-stat">
                 <span className="label">Season Points</span>
                 <span className="value">{league.seasonPoints ?? 0}</span>
+              </div>
+              <div className="league-detail__team-stat">
+                <span className="label">
+                  Week {league.currentWeekNumber ?? "-"} Diff
+                </span>
+                <span className="value">
+                  {currentWeekDifferential == null
+                    ? "--"
+                    : `${currentWeekDifferential > 0 ? "+" : ""}${currentWeekDifferential} pts`}
+                </span>
               </div>
               {league.draftOrder != null && (
                 <div className="league-detail__team-stat">
