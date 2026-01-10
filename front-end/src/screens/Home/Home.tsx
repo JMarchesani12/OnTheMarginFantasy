@@ -33,11 +33,29 @@ const applyStageFilter = (items: League[], stage: StageValue) => {
   return items;
 };
 
+const normalizeLeaguesResponse = (response: unknown): League[] => {
+  if (Array.isArray(response)) {
+    return response as League[];
+  }
+
+  if (
+    response &&
+    typeof response === "object" &&
+    Array.isArray((response as { leagues?: League[] }).leagues)
+  ) {
+    return (response as { leagues: League[] }).leagues;
+  }
+
+  console.warn("Unexpected leagues payload", response);
+  return [];
+};
+
 const Home = () => {
   const navigate = useNavigate();
   const [tab, setTab] = useState<HomeTab>("leagues");
   const [stage, setStage] = useState<StageValue>("active");
   const [leagues, setLeagues] = useState<League[]>([]);
+  const [memberLeagues, setMemberLeagues] = useState<League[]>([]);
   const [sports, setSports] = useState<Sport[]>([]);
   const [sportsLoading, setSportsLoading] = useState(false);
   const [sportsError, setSportsError] = useState<string | null>(null);
@@ -70,22 +88,7 @@ const Home = () => {
           return;
         }
 
-        console.log(response)
-
-        if (Array.isArray(response)) {
-          setLeagues(applyStageFilter(response as League[], stage));
-        } else if (
-          response &&
-          typeof response === "object" &&
-          Array.isArray((response as { leagues?: League[] }).leagues)
-        ) {
-          setLeagues(
-            applyStageFilter((response as { leagues: League[] }).leagues, stage)
-          );
-        } else {
-          console.warn("Unexpected leagues payload", response);
-          setLeagues([]);
-        }
+        setLeagues(applyStageFilter(normalizeLeaguesResponse(response), stage));
       } catch (error) {
         console.error("Failed to load leagues", error);
       }
@@ -97,6 +100,35 @@ const Home = () => {
       isMounted = false;
     };
   }, [userId, stage]);
+
+  useEffect(() => {
+    if (!userId) {
+      return;
+    }
+
+    let isMounted = true;
+
+    const loadMemberLeagues = async () => {
+      try {
+        const response = await getLeaguesForUser(userId, "all");
+        if (!isMounted) {
+          return;
+        }
+        setMemberLeagues(normalizeLeaguesResponse(response));
+      } catch (error) {
+        console.error("Failed to load member leagues", error);
+        if (isMounted) {
+          setMemberLeagues([]);
+        }
+      }
+    };
+
+    loadMemberLeagues();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [userId]);
 
   useEffect(() => {
     let isMounted = true;
@@ -191,6 +223,16 @@ const Home = () => {
     });
     return map;
   }, [sports]);
+
+  const memberLeagueIds = useMemo(
+    () => new Set(memberLeagues.map((league) => league.leagueId)),
+    [memberLeagues]
+  );
+
+  const filteredSearchResults = useMemo(
+    () => searchResults.filter((result) => !memberLeagueIds.has(result.id)),
+    [searchResults, memberLeagueIds]
+  );
 
   const welcomeName =
     (displayName ?? "").trim() ||
@@ -379,7 +421,7 @@ const Home = () => {
             <p className="home__search-error">{searchError}</p>
           )}
 
-          {!searchLoading && debouncedQuery && searchResults.length === 0 && (
+          {!searchLoading && debouncedQuery && filteredSearchResults.length === 0 && (
             <p className="home__search-status">No leagues match that search.</p>
           )}
 
@@ -390,7 +432,7 @@ const Home = () => {
           )}
 
           <div className="home__search-results">
-            {searchResults.map((result) => {
+            {filteredSearchResults.map((result) => {
               const sportLabel =
                 sportLabelById.get(result.sport) ?? "Unknown sport";
               const commissionerName =
@@ -420,7 +462,7 @@ const Home = () => {
             })}
           </div>
 
-          {debouncedQuery && searchResults.length > 0 && (
+          {debouncedQuery && filteredSearchResults.length > 0 && (
             <div className="home__pagination">
               <button
                 type="button"

@@ -214,7 +214,7 @@ class LeagueModel:
             lm.id               AS "memberId",
             lm."teamName"       AS "teamName",
             lm."draftOrder"     AS "draftOrder",
-            lm."seasonPoints"   AS "seasonPoints",
+            COALESCE(sp."seasonPoints", lm."seasonPoints", 0) AS "seasonPoints",
 
             -- Current week info (nullable if no matching week)
             w.id                AS "currentWeekId",
@@ -226,6 +226,16 @@ class LeagueModel:
             JOIN "League"      l  ON l.id = lm."leagueId"
             JOIN "Sport"       s  ON s.id = l."sport"
             JOIN "User"        cu ON cu.id = l.commissioner
+            LEFT JOIN (
+                SELECT
+                    "leagueId",
+                    "memberId",
+                    SUM("pointsAwarded") AS "seasonPoints"
+                FROM "WeeklyTeamScore"
+                GROUP BY "leagueId", "memberId"
+            ) sp
+            ON sp."leagueId" = lm."leagueId"
+            AND sp."memberId" = lm.id
 
             LEFT JOIN "Week"   w
             ON w."leagueId" = l.id
