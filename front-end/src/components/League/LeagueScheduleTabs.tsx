@@ -194,7 +194,15 @@ export const LeagueScheduleTabs = ({
         conferenceName,
         cellsByDate
       }))
-      .sort((a, b) => a.teamName.localeCompare(b.teamName));
+      .sort((a, b) => {
+        const aConference = a.conferenceName ?? "Independent";
+        const bConference = b.conferenceName ?? "Independent";
+        const conferenceMatch = aConference.localeCompare(bConference);
+        if (conferenceMatch !== 0) {
+          return conferenceMatch;
+        }
+        return a.teamName.localeCompare(b.teamName);
+      });
 
     return { dateHeaders, teamRows };
   }, [schedule]);

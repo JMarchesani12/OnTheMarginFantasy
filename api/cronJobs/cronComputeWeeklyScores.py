@@ -19,8 +19,8 @@ def build_scoring(engine):
 
 
 GET_WEEKS_JUST_ENDED = text("""
-    -- Pick ONLY the most-recent ended, unscored week per league
-    SELECT DISTINCT ON (w."leagueId")
+    -- Pick ALL ended, unscored weeks across leagues
+    SELECT
         w.id,
         w."leagueId"   AS "leagueId",
         w."weekNumber" AS "weekNumber",
@@ -28,7 +28,7 @@ GET_WEEKS_JUST_ENDED = text("""
     FROM "Week" w
     WHERE w."endDate" < :now
       AND w."scoringComplete" = FALSE
-    ORDER BY w."leagueId", w."endDate" DESC
+    ORDER BY w."leagueId", w."weekNumber" ASC
 """)
 
 MARK_WEEK_SCORED = text("""
@@ -66,10 +66,14 @@ def main():
         return
 
     # 2) Score each (league, week), mark complete, lock next week
+    failed_leagues = set()
     for row in weeks_to_score:
         league_id = int(row._mapping["leagueId"])
         week_number = int(row._mapping["weekNumber"])
         week_id = int(row._mapping["id"])
+
+        if league_id in failed_leagues:
+            continue
 
         print(f"Scoring league {league_id}, week {week_number} (Week.id={week_id})")
 
@@ -82,6 +86,7 @@ def main():
             )
         except Exception as e:
             print(f"ERROR scoring league {league_id} week {week_number}: {e}")
+            failed_leagues.add(league_id)
             continue
 
         next_week_number = week_number + 1
