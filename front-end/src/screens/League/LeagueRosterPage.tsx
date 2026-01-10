@@ -340,6 +340,19 @@ const LeagueRosterPage = () => {
     return deadline.getTime() < Date.now();
   }, [league?.tradeDeadline]);
 
+  const freeAgentDeadlinePassed = useMemo(() => {
+    if (!league?.freeAgentDeadline) {
+      return false;
+    }
+
+    const deadline = new Date(league.freeAgentDeadline);
+    if (Number.isNaN(deadline.getTime())) {
+      return false;
+    }
+
+    return deadline.getTime() < Date.now();
+  }, [league?.freeAgentDeadline]);
+
   const renderTeamGroups = (
     groups: GroupedTeams,
     {
@@ -402,7 +415,7 @@ const LeagueRosterPage = () => {
   }
 
   const addDropSubmitDisabled =
-    tradeDeadlinePassed ||
+    freeAgentDeadlinePassed ||
     loading ||
     (!selectedAdd && !selectedDrop);
 
@@ -439,12 +452,32 @@ const LeagueRosterPage = () => {
           </p>
         </div>
         <div className="roster-page__meta">
-          <span>
-            Trade deadline: {formatLeagueDate(league.tradeDeadline)}
-          </span>
+          <div className="roster-page__meta-line">
+            <span className="roster-page__meta-label">Trade deadline</span>
+            <span className="roster-page__meta-value">
+              {formatLeagueDate(league.tradeDeadline)}
+            </span>
+            <span className="roster-page__deadline-badge roster-page__deadline-badge--trade">
+              Trades
+            </span>
+          </div>
+          <div className="roster-page__meta-line">
+            <span className="roster-page__meta-label">Free agent deadline</span>
+            <span className="roster-page__meta-value">
+              {formatLeagueDate(league.freeAgentDeadline)}
+            </span>
+            <span className="roster-page__deadline-badge roster-page__deadline-badge--fa">
+              Add/Drop
+            </span>
+          </div>
           {tradeDeadlinePassed && (
             <span className="roster-page__deadline">
-              Deadline passed — roster moves locked.
+              Trade deadline passed — trades locked.
+            </span>
+          )}
+          {freeAgentDeadlinePassed && (
+            <span className="roster-page__deadline">
+              Free agent deadline passed — add/drop locked.
             </span>
           )}
         </div>
@@ -515,7 +548,7 @@ const LeagueRosterPage = () => {
                   emptyText: "No available teams.",
                   selectedTeam: selectedAdd,
                   onToggle: toggleAddTeam,
-                  disabled: tradeDeadlinePassed,
+                  disabled: freeAgentDeadlinePassed,
                 })}
               </div>
             </div>
@@ -530,7 +563,7 @@ const LeagueRosterPage = () => {
                   emptyText: "No teams on roster.",
                   selectedTeam: selectedDrop,
                   onToggle: toggleDropTeam,
-                  disabled: tradeDeadlinePassed,
+                  disabled: freeAgentDeadlinePassed,
                 })}
               </div>
             </div>
@@ -584,9 +617,10 @@ const LeagueRosterPage = () => {
             >
               Submit Add / Drop Request
             </button>
-            {tradeDeadlinePassed && (
+            {freeAgentDeadlinePassed && (
               <p className="roster-page__deadline">
-                Trade deadline passed on {formatLeagueDate(league.tradeDeadline)}.
+                Free agent deadline passed on{" "}
+                {formatLeagueDate(league.freeAgentDeadline)}.
               </p>
             )}
           </footer>
@@ -732,7 +766,11 @@ const LeagueRosterPage = () => {
               )}
             </>
           )}
-          <TradeRequestsPanel leagueId={league.leagueId} memberId={league.memberId} />
+          <TradeRequestsPanel
+            leagueId={league.leagueId}
+            memberId={league.memberId}
+            tradeDeadlinePassed={tradeDeadlinePassed}
+          />
         </>
       )}
     </div>

@@ -235,6 +235,19 @@ const LeagueDetailPage = () => {
 
     return deadline.getTime() < now.getTime();
   }, [league.tradeDeadline]);
+  const freeAgentDeadlinePassed = useMemo(() => {
+    if (!league.freeAgentDeadline) {
+      return false;
+    }
+
+    const now = new Date();
+    const deadline = new Date(league.freeAgentDeadline);
+    if (Number.isNaN(deadline.getTime())) {
+      return false;
+    }
+
+    return deadline.getTime() < now.getTime();
+  }, [league.freeAgentDeadline]);
 
   const canStartDraft =
     (league.status === "Pre-Draft" || league.status === "Drafting") &&
@@ -247,6 +260,7 @@ const LeagueDetailPage = () => {
   const canJoinDraft =
     (league.status === "Pre-Draft" || league.status === "Drafting") &&
     league.commissionerId !== currentUserId;
+  const rosterActionsLocked = tradeDeadlinePassed && freeAgentDeadlinePassed;
 
   const handleStartDraft = () => {
     if (!league) {
@@ -498,7 +512,7 @@ const LeagueDetailPage = () => {
                 className="league-detail__add-drop-btn"
                 type="button"
                 onClick={openRosterManagement}
-                disabled={tradeDeadlinePassed}
+                disabled={rosterActionsLocked}
               >
                 Manage Roster
               </button>
@@ -521,7 +535,19 @@ const LeagueDetailPage = () => {
             </div>
             {tradeDeadlinePassed && (
               <p className="league-detail__add-drop-note">
+                <span className="league-detail__deadline-pill league-detail__deadline-pill--trade">
+                  Trades
+                </span>
                 Trade deadline passed on {formatLeagueDate(league.tradeDeadline)}
+              </p>
+            )}
+            {freeAgentDeadlinePassed && (
+              <p className="league-detail__add-drop-note">
+                <span className="league-detail__deadline-pill league-detail__deadline-pill--fa">
+                  Add/Drop
+                </span>
+                Free agent deadline passed on{" "}
+                {formatLeagueDate(league.freeAgentDeadline)}
               </p>
             )}
             {canLeaveLeague && (

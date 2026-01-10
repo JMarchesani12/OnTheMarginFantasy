@@ -122,6 +122,38 @@ class TransactionModel:
         count = int(row._mapping["count"])
         if count != len(set(member_ids)):
             raise ValueError("One or more members do not belong to this league")
+
+    def _assert_trade_deadline(self, conn, league_id: int) -> None:
+        row = conn.execute(
+            text("""
+                SELECT ("tradeDeadline" IS NOT NULL AND now() > "tradeDeadline") AS "pastDeadline"
+                FROM "League"
+                WHERE id = :league_id
+            """),
+            {"league_id": league_id},
+        ).fetchone()
+
+        if not row:
+            raise ValueError(f"League {league_id} not found")
+
+        if bool(row._mapping["pastDeadline"]):
+            raise ValueError("Trade deadline has passed")
+
+    def _assert_free_agent_deadline(self, conn, league_id: int) -> None:
+        row = conn.execute(
+            text("""
+                SELECT ("freeAgentDeadline" IS NOT NULL AND now() > "freeAgentDeadline") AS "pastDeadline"
+                FROM "League"
+                WHERE id = :league_id
+            """),
+            {"league_id": league_id},
+        ).fetchone()
+
+        if not row:
+            raise ValueError(f"League {league_id} not found")
+
+        if bool(row._mapping["pastDeadline"]):
+            raise ValueError("Free agent deadline has passed")
         
 
     def _get_week_for_league(self, league_id: int, week_id: int) -> Dict[str, Any]:
@@ -357,6 +389,7 @@ class TransactionModel:
         self._validate_members_in_league(league_id, [from_member_id, to_member_id])
 
         with self.db.begin() as conn:
+            self._assert_trade_deadline(conn, league_id)
             self._validate_trade(
                 conn,
                 league_id,
@@ -441,6 +474,7 @@ class TransactionModel:
                 )
                 return {"transactionId": transaction_id, "status": self.STATUS_REJECTED}
 
+            self._assert_trade_deadline(conn, txm["leagueId"])
             week = self._get_week_for_league(txm["leagueId"], txm["weekId"])
             if week["isLocked"]:
                 raise ValueError("Week is locked")
@@ -491,6 +525,7 @@ class TransactionModel:
                 raise ValueError("Transaction not found")
 
             txm = tx._mapping
+            self._assert_trade_deadline(conn, txm["leagueId"])
 
             week = self._get_week_for_league(txm["leagueId"], txm["weekId"])
 
@@ -796,6 +831,7 @@ class TransactionModel:
         self._validate_members_in_league(league_id, [member_id])
 
         with self.db.begin() as conn:
+            self._assert_free_agent_deadline(conn, league_id)
             # Conference info for any teams involved
             involved_team_ids: List[int] = []
             if add_team_id is not None:

@@ -308,6 +308,32 @@
   margin: 0;
   font-size: 0.85rem;
   color: #8EA0D6;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.league-detail__deadline-pill {
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 900;
+  border: 1px solid #243055;
+  background: #0B0E1A;
+}
+
+.league-detail__deadline-pill--trade {
+  border-color: #22D3EE;
+  color: #22D3EE;
+  box-shadow: 0 0 0 2px #22D3EE12;
+}
+
+.league-detail__deadline-pill--fa {
+  border-color: #A3FF12;
+  color: #A3FF12;
+  box-shadow: 0 0 0 2px #A3FF1212;
 }
 
 .league-detail__team-row {

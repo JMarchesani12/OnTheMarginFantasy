@@ -72,6 +72,49 @@
   color: #B7C2E6;
 }
 
+.roster-page__meta-line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.roster-page__meta-label {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+  color: #8EA0D6;
+  font-weight: 900;
+}
+
+.roster-page__meta-value {
+  color: #F4F7FF;
+  font-weight: 800;
+}
+
+.roster-page__deadline-badge {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 900;
+  border: 1px solid #243055;
+  background: #0B0E1A;
+}
+
+.roster-page__deadline-badge--trade {
+  border-color: #22D3EE;
+  color: #22D3EE;
+  box-shadow: 0 0 0 2px #22D3EE12;
+}
+
+.roster-page__deadline-badge--fa {
+  border-color: #A3FF12;
+  color: #A3FF12;
+  box-shadow: 0 0 0 2px #A3FF1212;
+}
+
 /* Deadline */
 .roster-page__deadline {
   color: #FF4D6D;

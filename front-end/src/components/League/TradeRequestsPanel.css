@@ -49,6 +49,19 @@
   color: #F4F7FF;
 }
 
+.trade-requests__lock-badge {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 900;
+  border: 1px solid #FF4D6D;
+  color: #FF4D6D;
+  background: #FF4D6D1A;
+  box-shadow: 0 0 0 2px #FF4D6D12;
+}
+
 /* Tabs */
 .trade-requests__tabs {
   display: inline-flex;

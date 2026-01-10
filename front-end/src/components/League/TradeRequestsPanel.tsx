@@ -15,6 +15,7 @@ import "./TradeRequestsPanel.css";
 type TradeRequestsPanelProps = {
   leagueId: number;
   memberId: number;
+  tradeDeadlinePassed: boolean;
 };
 
 type TradeTab = "incoming" | "outgoing" | "league";
@@ -25,7 +26,11 @@ const actionLabels: Record<TradeTab, string> = {
   league: "League",
 };
 
-const TradeRequestsPanel = ({ leagueId, memberId }: TradeRequestsPanelProps) => {
+const TradeRequestsPanel = ({
+  leagueId,
+  memberId,
+  tradeDeadlinePassed,
+}: TradeRequestsPanelProps) => {
   const [activeTab, setActiveTab] = useState<TradeTab>("incoming");
   const [trades, setTrades] = useState<OpenTradesResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -112,7 +117,8 @@ const TradeRequestsPanel = ({ leagueId, memberId }: TradeRequestsPanelProps) => 
   };
 
   const renderActions = (trade: TradeStatus) => {
-    const disabled = actionLoadingId === trade.transactionId;
+    const disabled =
+      actionLoadingId === trade.transactionId || tradeDeadlinePassed;
 
     if (activeTab === "incoming") {
       return (
@@ -167,6 +173,9 @@ const TradeRequestsPanel = ({ leagueId, memberId }: TradeRequestsPanelProps) => 
     <section className="trade-requests">
       <header className="trade-requests__header">
         <h3>Trade Requests</h3>
+        {tradeDeadlinePassed && (
+          <span className="trade-requests__lock-badge">Trades Locked</span>
+        )}
         <div className="trade-requests__tabs">
           {(["incoming", "outgoing", "league"] as TradeTab[]).map((tab) => (
             <button
@@ -192,6 +201,11 @@ const TradeRequestsPanel = ({ leagueId, memberId }: TradeRequestsPanelProps) => 
         </button>
       </header>
 
+      {tradeDeadlinePassed && (
+        <p className="trade-requests__error">
+          Trade deadline passed — trade actions are disabled.
+        </p>
+      )}
       {error && <p className="trade-requests__error">{error}</p>}
       {(loading || actionLoadingId !== null) && (
         <p className="trade-requests__loading">Syncing trades…</p>
