@@ -276,12 +276,41 @@ class LeagueModel:
             """
         )
 
+        current_week_sql = text("""
+            SELECT w."weekNumber"
+            FROM "Week" w
+            WHERE w."leagueId" = :league_id
+              AND now() >= w."startDate"
+              AND now() <= w."endDate"
+            ORDER BY w."weekNumber" DESC
+            LIMIT 1
+        """)
+
         with self.db.connect() as conn:
             result = conn.execute(sql, {"league_id": league_id})
             rows = [dict(r._mapping) for r in result]
+            current_week_row = conn.execute(
+                current_week_sql,
+                {"league_id": league_id},
+            ).fetchone()
+
+        current_week_number = None
+        if current_week_row:
+            current_week_number = int(current_week_row[0])
 
         members: List[Dict[str, Any]] = []
         for r in rows:
+            member_id = r["memberId"]
+            current_week_point_differential = 0
+            if current_week_number is not None:
+                games = self.scheduleModel.get_member_games_for_week(
+                    league_id=league_id,
+                    member_id=member_id,
+                    week_number=current_week_number,
+                )
+                for g in games:
+                    current_week_point_differential += int(g["memberPointDiff"])
+
             members.append(
                 {
                     "id": r["memberId"],
@@ -291,7 +320,8 @@ class LeagueModel:
                     "teamName": r["teamName"],
                     "draftOrder": r["draftOrder"],
                     "seasonPoints": r["seasonPoints"],
-                    "displayName": r['displayName']
+                    "displayName": r['displayName'],
+                    "currentWeekPointDifferential": current_week_point_differential,
                 }
             )
 

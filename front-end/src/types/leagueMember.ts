@@ -8,6 +8,7 @@ export type LeagueMember = {
   teamName: string | null;
   userId: number;
   displayName: number;
+  currentWeekPointDifferential: number;
 };
 
 export type UpdateLeagueMember = {

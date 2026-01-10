@@ -348,19 +348,41 @@ const LeagueDetailPage = () => {
     };
   }, [scoreboard, members, league.currentWeekNumber]);
 
+  const currentMember = useMemo(
+    () => members.find((member) => member.id === league.memberId),
+    [members, league.memberId]
+  );
+
+  const currentMemberRow = useMemo(
+    () => scoreboardRows.rows.find((row) => row.memberId === league.memberId),
+    [scoreboardRows.rows, league.memberId]
+  );
+
   const currentWeekDifferential = useMemo(() => {
     const currentWeek = league.currentWeekNumber ?? null;
     if (!currentWeek || !league.memberId) {
-      return null;
+      return { weekNumber: currentWeek, differential: 0 };
+    }
+
+    if (typeof currentMember?.currentWeekPointDifferential === "number") {
+      return {
+        weekNumber: currentWeek,
+        differential: currentMember.currentWeekPointDifferential,
+      };
     }
 
     const weekScores = scoreboard[currentWeek] ?? [];
     const entry = weekScores.find((score) => score.memberId === league.memberId);
+    const fallbackDifferential =
+      typeof entry?.pointDifferential === "number" ? entry.pointDifferential : 0;
 
-    return typeof entry?.pointDifferential === "number"
-      ? entry.pointDifferential
-      : null;
-  }, [scoreboard, league.currentWeekNumber, league.memberId]);
+    return { weekNumber: currentWeek, differential: fallbackDifferential };
+  }, [
+    scoreboard,
+    league.currentWeekNumber,
+    league.memberId,
+    currentMember?.currentWeekPointDifferential,
+  ]);
 
   return (
     <div className="league-detail">
@@ -472,16 +494,19 @@ const LeagueDetailPage = () => {
             <div className="league-detail__team-stats">
               <div className="league-detail__team-stat">
                 <span className="label">Season Points</span>
-                <span className="value">{league.seasonPoints ?? 0}</span>
+                <span className="value">
+                  {currentMemberRow?.totalPoints ??
+                    currentMember?.seasonPoints ??
+                    league.seasonPoints ??
+                    0}
+                </span>
               </div>
               <div className="league-detail__team-stat">
                 <span className="label">
-                  Week {league.currentWeekNumber ?? "-"} Diff
+                  Week {currentWeekDifferential.weekNumber ?? "-"} Diff
                 </span>
                 <span className="value">
-                  {currentWeekDifferential == null
-                    ? "--"
-                    : `${currentWeekDifferential > 0 ? "+" : ""}${currentWeekDifferential} pts`}
+                  {`${currentWeekDifferential.differential > 0 ? "+" : ""}${currentWeekDifferential.differential} pts`}
                 </span>
               </div>
               {league.draftOrder != null && (
