@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /leagues
+Disallow: /settings
+Sitemap: https://www.onthemarginfantasy.com/sitemap.xml

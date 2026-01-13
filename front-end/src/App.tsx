@@ -7,6 +7,7 @@ const LeagueDetailPage = React.lazy(() => import("./screens/League/LeagueDetailP
 const LeagueRosterPage = React.lazy(() => import("./screens/League/LeagueRosterPage"));
 const LeagueDraftPage = React.lazy(() => import("./screens/League/LeagueDraftPage"));
 const SignIn = React.lazy(() => import("./screens/Auth/SignIn"));
+const LandingPage = React.lazy(() => import("./screens/Landing/LandingPage"));
 const ConferenceSchedulePage = React.lazy(
   () => import("./screens/League/ConferenceSchedulePage")
 );
@@ -26,7 +27,8 @@ const App: React.FC = () => {
     <BrowserRouter>
       <Suspense fallback={<div className="app-loading">Loading…</div>}>
         <Routes>
-          <Route path="/" element={<SignIn />} />
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/signin" element={<SignIn />} />
           <Route path="/leagues" element={<Home />} />
           <Route path="/leagues/new" element={<CreateLeague />} />
           <Route path="/settings" element={<SettingsPage />} />

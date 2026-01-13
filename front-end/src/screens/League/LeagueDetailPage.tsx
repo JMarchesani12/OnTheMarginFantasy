@@ -176,6 +176,11 @@ const LeagueDetailPage = () => {
       await updateLeagueMember(league.memberId, nextName);
 
       setTeamNameValue(nextName);
+      setMembers((current) =>
+        current.map((member) =>
+          member.id === league.memberId ? { ...member, teamName: nextName } : member
+        )
+      );
       setEditingTeamName(false);
       setTeamNameSuccess("Team name updated.");
     } catch (err: any) {

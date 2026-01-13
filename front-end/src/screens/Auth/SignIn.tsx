@@ -1,12 +1,14 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient";
+import { useAuth } from "../../context/AuthContext";
 import "./SignIn.css";
 
 const PENDING_USER_CREATE_KEY = "otm:pending-user-create";
 
 const SignIn = () => {
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const [mode, setMode] = useState<"signIn" | "signUp">("signIn");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,6 +22,12 @@ const SignIn = () => {
   const [message, setMessage] = useState<string | null>(null);
 
   const isSignUp = mode === "signUp";
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate("/leagues", { replace: true });
+    }
+  }, [authLoading, user, navigate]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
