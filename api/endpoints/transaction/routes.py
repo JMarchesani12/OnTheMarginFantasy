@@ -43,3 +43,9 @@ def setup_routes(app, engine):
         view_func=transactionEndpoints.veto_trade,
         methods=["POST"],
     )
+
+    app.add_url_rule(
+        "/api/league/<int:league_id>/transaction/<int:transaction_id>/trade/apply",
+        view_func=transactionEndpoints.apply_trade,
+        methods=["POST"],
+    )

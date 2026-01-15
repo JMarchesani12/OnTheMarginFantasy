@@ -34,7 +34,7 @@ const LandingPage = () => {
             </Link>
           </div>
           <div className="landing__tags">
-            <span>Draft one team per conference</span>
+            <span>Draft a set number of teams per conference</span>
             <span>Weekly scoring</span>
             <span>Live draft room</span>
           </div>
@@ -79,7 +79,7 @@ const LandingPage = () => {
           <h3>How it works</h3>
           <ol>
             <li>Build a league with your rules and draft order.</li>
-            <li>Draft one team from every conference.</li>
+            <li>Draft a set number of teams from every conference.</li>
             <li>Every week, point differential decides the winner.</li>
           </ol>
         </article>
@@ -115,7 +115,7 @@ const LandingPage = () => {
         </div>
         <div className="landing__stat-card">
           <h3>Built for the grind</h3>
-          <p>Weeks run Mon–Sun. Trade windows lock rosters for the week.</p>
+          <p>Trade windows lock rosters for the week.</p>
           <div className="landing__stat-row">
             <span>Live scoring</span>
             <strong>Every game</strong>
@@ -126,7 +126,7 @@ const LandingPage = () => {
           </div>
           <div className="landing__stat-row">
             <span>Roster style</span>
-            <strong>One team per conference</strong>
+            <strong>Set teams per conference</strong>
           </div>
         </div>
       </section>

@@ -21,7 +21,7 @@ class DraftEndpoints:
         league_id = int(data["leagueId"])
         member_id = int(data["memberId"])
         sport_team_id = int(data["sportTeamId"])
-        week_number = int(data.get("weekNumber", 1))
+        week_number = int(data.get("weekNumber", 0))
 
         try:
             draft_pick = self.draftModel.create_draft_pick_live(

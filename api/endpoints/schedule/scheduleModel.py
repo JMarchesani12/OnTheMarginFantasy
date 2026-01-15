@@ -131,7 +131,7 @@ class ScheduleModel:
             row = conn.execute(
                 text("""
                     insert into "Week" ("leagueId","weekNumber","startDate","endDate","isLocked","scoringComplete")
-                    values (:leagueId, 0, null, :endDate, true, false)
+                    values (:leagueId, 0, null, :endDate, false, false)
                     returning id, "leagueId", "weekNumber", "startDate", "endDate", "isLocked", "scoringComplete"
                 """),
                 {"leagueId": league_id, "endDate": end_dt},

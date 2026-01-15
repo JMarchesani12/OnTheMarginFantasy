@@ -460,7 +460,6 @@ class TransactionModel:
                     text("""
                         UPDATE "Transaction"
                         SET status = :status,
-                            "decidedAt" = now(),
                             "decidedByMemberId" = :by,
                             "rejectReason" = :reason
                         WHERE id = :id
@@ -543,7 +542,7 @@ class TransactionModel:
                     """),
                     {
                         "league_id": txm['leagueId'],
-                        "member_id": txm['fromMemberId'],
+                        "member_id": txm['memberFromId'],
                         "team_ids": txm['fromTeamIds'],
                         "week_number": week['weekNumber'],
                     },
@@ -562,7 +561,7 @@ class TransactionModel:
                     """),
                     {
                         "league_id": txm['leagueId'],
-                        "member_id": txm['toMemberId'],
+                        "member_id": txm['memberToId'],
                         "team_ids": txm['toTeamIds'],
                         "week_number": week['weekNumber'],
                     },
@@ -580,7 +579,7 @@ class TransactionModel:
                 rows = [
                     {
                         "league_id": txm['leagueId'],
-                        "member_id": txm['toMemberId'],
+                        "member_id": txm['memberToId'],
                         "team_id": int(tid),
                         "week_number": week['weekNumber'],
                         "acquired_via": self.TYPE_TRADE,
@@ -593,7 +592,7 @@ class TransactionModel:
                 rows = [
                     {
                         "league_id": txm['leagueId'],
-                        "member_id": txm['fromMemberId'],
+                        "member_id": txm['memberFromId'],
                         "team_id": int(tid),
                         "week_number": week['weekNumber'],
                         "acquired_via": self.TYPE_TRADE,
@@ -605,8 +604,7 @@ class TransactionModel:
             conn.execute(
                 text("""
                     UPDATE "Transaction"
-                    SET status = :status,
-                        "decidedAt" = now(),
+                    SET status = :status
                     WHERE id = :id
                 """),
                 {
@@ -646,7 +644,6 @@ class TransactionModel:
                 text("""
                     UPDATE "Transaction"
                     SET status = :status,
-                        "decidedAt" = now(),
                         "decidedByMemberId" = :by
                     WHERE id = :id
                 """),
@@ -1352,8 +1349,7 @@ class TransactionModel:
                 conn.execute(
                     text("""
                         UPDATE "Transaction"
-                        SET status = :status,
-                            "decidedAt" = now()
+                        SET status = :status
                         WHERE id = :id
                     """),
                     {"status": getattr(self, "STATUS_VETOED", "VETOED"), "id": transaction_id},

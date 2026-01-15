@@ -202,3 +202,14 @@ class TransactionEndpoints:
             return jsonify(result), 200
         except ValueError as e:
             return jsonify({"error": str(e)}), 400
+        
+    # POST /api/league/<int:league_id>/transaction/<int:transaction_id>/trade/apply
+    # body: {}
+    def apply_trade(self, league_id: int, transaction_id: int):
+        try:
+            result = self.transactionModel.apply_trade(
+                transaction_id=int(transaction_id)
+            )
+            return jsonify(result), 200
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 400

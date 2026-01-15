@@ -288,7 +288,7 @@ class DraftModel:
                 conn.execute(
                     text("""
                         UPDATE "League"
-                        SET status = 'POST-DRAFT',
+                        SET status = 'Post-Draft',
                             "updatedAt" = now()
                         WHERE id = :leagueId
                     """),
@@ -456,7 +456,7 @@ class DraftModel:
                     conn.execute(
                         text("""
                             UPDATE "League"
-                            SET status = 'POST-DRAFT',
+                            SET status = 'Post-Draft',
                                 "updatedAt" = now()
                             WHERE id = :leagueId
                         """),
@@ -561,7 +561,7 @@ class DraftModel:
                     conn.execute(
                         text("""
                             UPDATE "League"
-                            SET status = 'POST-DRAFT',
+                            SET status = 'Post-Draft',
                                 "updatedAt" = now()
                             WHERE id = :leagueId
                         """),
@@ -1607,7 +1607,7 @@ class DraftModel:
             conn.execute(
                 text("""
                     UPDATE "League"
-                    SET status = 'POST-DRAFT',
+                    SET status = 'Post-Draft',
                         "updatedAt" = now()
                     WHERE id = :leagueId
                 """),
@@ -1635,7 +1635,7 @@ class DraftModel:
             conn.execute(
                 text("""
                     UPDATE "League"
-                    SET status = 'POST-DRAFT',
+                    SET status = 'Post-Draft',
                         "updatedAt" = now()
                     WHERE id = :leagueId
                 """),

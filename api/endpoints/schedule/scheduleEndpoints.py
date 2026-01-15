@@ -157,7 +157,7 @@ class ScheduleEndpoints:
 
         try:
             weeks = self.model.ensure_weeks_for_league(
-                leagueId=int(body["leagueId"])
+                league_id=int(body["leagueId"])
             )
             return jsonify({
                 "leagueId": body["leagueId"],
