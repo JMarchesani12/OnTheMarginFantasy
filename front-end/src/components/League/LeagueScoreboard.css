@@ -62,12 +62,17 @@
 .league-scoreboard__table {
   overflow-x: auto;
   border-radius: 0.75rem;
+  --week-count: 1;
+}
+
+.league-scoreboard__table > * {
+  min-width: calc(160px + (var(--week-count) * 110px) + 80px);
 }
 
 /* Rows */
 .league-scoreboard__row {
   display: grid;
-  grid-template-columns: minmax(160px, 1fr) repeat(auto-fit, minmax(100px, 1fr)) 80px;
+  grid-template-columns: minmax(160px, 1fr) repeat(var(--week-count), minmax(100px, 1fr)) 80px;
   gap: 0.6rem;
   padding: 0.7rem 0.75rem;
   border-bottom: 1px solid #243055;

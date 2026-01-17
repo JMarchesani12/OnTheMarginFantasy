@@ -353,6 +353,62 @@ const LeagueDetailPage = () => {
     };
   }, [scoreboard, members, league.currentWeekNumber]);
 
+  const currentWeekTotals = useMemo(() => {
+    const currentWeek = league.currentWeekNumber ?? null;
+    const scores = currentWeek ? scoreboard[currentWeek] ?? [] : [];
+    const scoreMap = new Map<number, ScoreWeek>();
+    scores.forEach((score) => {
+      scoreMap.set(score.memberId, score);
+    });
+
+    const totals = new Map<
+      number,
+      { memberId: number; teamName: string; differential: number }
+    >();
+
+    members.forEach((member) => {
+      const score = scoreMap.get(member.id);
+      const memberDifferential =
+        typeof member.currentWeekPointDifferential === "number"
+          ? member.currentWeekPointDifferential
+          : undefined;
+      const scoreboardDifferential =
+        typeof score?.pointDifferential === "number"
+          ? score.pointDifferential
+          : undefined;
+      const differential = memberDifferential ?? scoreboardDifferential ?? 0;
+
+      totals.set(member.id, {
+        memberId: member.id,
+        teamName:
+          member.teamName ??
+          score?.teamName ??
+          `Member ${member.id}`,
+        differential,
+      });
+    });
+
+    scores.forEach((score) => {
+      if (!totals.has(score.memberId)) {
+        totals.set(score.memberId, {
+          memberId: score.memberId,
+          teamName: score.teamName ?? `Member ${score.memberId}`,
+          differential:
+            typeof score.pointDifferential === "number"
+              ? score.pointDifferential
+              : 0,
+        });
+      }
+    });
+
+    return {
+      weekNumber: currentWeek,
+      rows: Array.from(totals.values()).sort(
+        (a, b) => b.differential - a.differential
+      ),
+    };
+  }, [scoreboard, members, league.currentWeekNumber]);
+
   const currentMember = useMemo(
     () => members.find((member) => member.id === league.memberId),
     [members, league.memberId]
@@ -668,13 +724,55 @@ const LeagueDetailPage = () => {
         />
       )}
 
-      <LeagueScoreboard
-        weekNumbers={scoreboardRows.weekNumbers}
-        rows={scoreboardRows.rows}
-        currentWeekNumber={league.currentWeekNumber ?? null}
-        loading={scoreboardLoading}
-        error={scoreboardError}
-      />
+      <div className="league-detail__scoreboard-grid">
+        <LeagueScoreboard
+          weekNumbers={scoreboardRows.weekNumbers}
+          rows={scoreboardRows.rows}
+          currentWeekNumber={league.currentWeekNumber ?? null}
+          loading={scoreboardLoading}
+          error={scoreboardError}
+        />
+        <section className="league-detail__week-totals">
+          <header className="league-detail__week-totals-header">
+            <p className="league-detail__week-totals-eyebrow">Current Week</p>
+            <h2>Point Differential</h2>
+            <p className="league-detail__week-totals-subhead">
+              Week {currentWeekTotals.weekNumber ?? "-"}
+            </p>
+          </header>
+
+          {scoreboardLoading && (
+            <p className="league-detail__week-totals-loading">
+              Loading week totals…
+            </p>
+          )}
+          {scoreboardError && (
+            <p className="league-detail__week-totals-error">
+              {scoreboardError}
+            </p>
+          )}
+
+          {!scoreboardLoading &&
+            !scoreboardError &&
+            currentWeekTotals.rows.length > 0 && (
+              <div className="league-detail__week-totals-list">
+                {currentWeekTotals.rows.map((row) => (
+                  <div
+                    className="league-detail__week-totals-row"
+                    key={`week-total-${row.memberId}`}
+                  >
+                    <span className="league-detail__week-totals-team">
+                      {row.teamName}
+                    </span>
+                    <span className="league-detail__week-totals-value">
+                      {`${row.differential > 0 ? "+" : ""}${row.differential} pts`}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+        </section>
+      </div>
 
     </div>
   );

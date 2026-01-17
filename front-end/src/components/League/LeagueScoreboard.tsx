@@ -23,6 +23,11 @@ const LeagueScoreboard: FC<LeagueScoreboardProps> = ({
   loading,
   error,
 }) => {
+  const throughWeek =
+    typeof currentWeekNumber === "number" && currentWeekNumber > 1
+      ? currentWeekNumber - 1
+      : null;
+
   if (!weekNumbers.length && !loading && !error) {
     return null;
   }
@@ -34,7 +39,7 @@ const LeagueScoreboard: FC<LeagueScoreboardProps> = ({
           <p className="league-scoreboard__eyebrow">Scoreboard</p>
           <h2>Weekly Performance</h2>
           <p className="league-scoreboard__subhead">
-            Through week {currentWeekNumber ?? "-"}
+            Through week {throughWeek ?? "-"}
           </p>
         </div>
       </header>
@@ -43,7 +48,12 @@ const LeagueScoreboard: FC<LeagueScoreboardProps> = ({
       {error && <p className="league-scoreboard__error">{error}</p>}
 
       {!loading && !error && weekNumbers.length > 0 && (
-        <div className="league-scoreboard__table" role="region" aria-label="Weekly scores">
+        <div
+          className="league-scoreboard__table"
+          role="region"
+          aria-label="Weekly scores"
+          style={{ ["--week-count" as const]: weekNumbers.length }}
+        >
           <div className="league-scoreboard__row league-scoreboard__row--header">
             <span>Team</span>
             {weekNumbers.map((week) => (

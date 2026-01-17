@@ -120,7 +120,7 @@ class DraftEndpoints:
             return jsonify({"message": "Failed to get draft state"}), 500
 
 
-    # POST /api/draft/pick
+    # POST /api/draft/pick-manual
     # {
     #   "leagueId": 1,
     #   "memberId": 7,
