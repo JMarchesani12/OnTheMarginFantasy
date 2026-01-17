@@ -1,4 +1,4 @@
-import type { FC } from "react";
+import type { CSSProperties, FC } from "react";
 import "./LeagueScoreboard.css";
 
 export type ScoreboardRow = {
@@ -52,7 +52,7 @@ const LeagueScoreboard: FC<LeagueScoreboardProps> = ({
           className="league-scoreboard__table"
           role="region"
           aria-label="Weekly scores"
-          style={{ ["--week-count" as const]: weekNumbers.length }}
+          style={{ "--week-count": weekNumbers.length } as CSSProperties}
         >
           <div className="league-scoreboard__row league-scoreboard__row--header">
             <span>Team</span>
