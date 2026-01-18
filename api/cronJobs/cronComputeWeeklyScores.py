@@ -27,6 +27,7 @@ GET_WEEKS_JUST_ENDED = text("""
         w."endDate"    AS "endDate"
     FROM "Week" w
     WHERE w."endDate" < :now
+      AND w."weekNumber" > 0
       AND w."scoringComplete" = FALSE
     ORDER BY w."leagueId", w."weekNumber" ASC
 """)

@@ -189,6 +189,9 @@ class ScoringModel:
             3) split (no change)
         - Writes into WeeklyTeamScore.
         """
+        if week_number < 1:
+            raise ValueError("Week number must be >= 1")
+
         week = self._get_week_by_number(league_id, week_number)
         week_id = int(week["id"])
 
@@ -1386,7 +1389,9 @@ class ScoringModel:
             return []
 
         # normalize: int + unique + sorted (optional but nice)
-        week_numbers = sorted({int(w) for w in week_numbers})
+        week_numbers = sorted({int(w) for w in week_numbers if int(w) >= 1})
+        if not week_numbers:
+            return []
 
         sql = text("""
             SELECT

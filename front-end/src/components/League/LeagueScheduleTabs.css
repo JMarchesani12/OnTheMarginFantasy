@@ -105,6 +105,26 @@
   color: #B7C2E6;
 }
 
+.league-schedule__toggle {
+  border-radius: 999px;
+  border: 1px solid #334277;
+  background: #0B0E1A;
+  color: #F4F7FF;
+  padding: 0.25rem 0.75rem;
+  cursor: pointer;
+  font-weight: 700;
+  box-shadow: 0 12px 35px #00000033;
+  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+}
+
+.league-schedule__toggle:hover {
+  transform: translateY(-1px);
+  border-color: #22D3EE;
+  box-shadow:
+    0 0 0 4px #22D3EE1A,
+    0 16px 45px #00000044;
+}
+
 .league-schedule__week-controls button {
   border-radius: 999px;
   border: 1px solid #334277;

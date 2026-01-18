@@ -764,7 +764,15 @@ const LeagueDetailPage = () => {
                     <span className="league-detail__week-totals-team">
                       {row.teamName}
                     </span>
-                    <span className="league-detail__week-totals-value">
+                    <span
+                      className={`league-detail__week-totals-value ${
+                        row.differential > 0
+                          ? "is-positive"
+                          : row.differential < 0
+                          ? "is-negative"
+                          : "is-neutral"
+                      }`}
+                    >
                       {`${row.differential > 0 ? "+" : ""}${row.differential} pts`}
                     </span>
                   </div>

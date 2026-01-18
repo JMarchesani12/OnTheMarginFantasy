@@ -48,6 +48,8 @@ export const LeagueScheduleTabs = ({
   );
   const [weekNumber, setWeekNumber] = useState(initialWeekNumber);
   const [weekInputValue, setWeekInputValue] = useState(String(initialWeekNumber));
+  const storageKey = `league-schedule-collapsed:${leagueId}:${currentMemberId}`;
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const [schedule, setSchedule] = useState<MemberWeekSchedule | null>(null);
   const [loading, setLoading] = useState(false);
@@ -78,6 +80,26 @@ export const LeagueScheduleTabs = ({
 
     loadSchedule();
   }, [activeMemberId, weekNumber, leagueId]);
+
+  useEffect(() => {
+    if (!currentMemberId) return;
+    try {
+      const stored = window.localStorage.getItem(storageKey);
+      if (stored === null) return;
+      setIsCollapsed(stored === "true");
+    } catch {
+      // ignore storage errors
+    }
+  }, [storageKey, currentMemberId]);
+
+  useEffect(() => {
+    if (!currentMemberId) return;
+    try {
+      window.localStorage.setItem(storageKey, String(isCollapsed));
+    } catch {
+      // ignore storage errors
+    }
+  }, [storageKey, currentMemberId, isCollapsed]);
 
   // Build headers + rows from schedule
   const { dateHeaders, teamRows } = useMemo(() => {
@@ -282,6 +304,15 @@ export const LeagueScheduleTabs = ({
         </div>
 
         <div className="league-schedule__week-controls">
+          <button
+            type="button"
+            className="league-schedule__toggle"
+            onClick={() => setIsCollapsed((prev) => !prev)}
+            aria-expanded={!isCollapsed}
+            aria-controls="league-schedule-body"
+          >
+            {isCollapsed ? "Show Schedule" : "Hide Schedule"}
+          </button>
           <button type="button" onClick={handlePrevWeek} disabled={weekNumber <= 1}>
             ‹
           </button>
@@ -309,7 +340,8 @@ export const LeagueScheduleTabs = ({
       </div>
 
       {/* Body */}
-      <div className="league-schedule__body">
+      {!isCollapsed && (
+        <div className="league-schedule__body" id="league-schedule-body">
         {loading && <p>Loading schedule…</p>}
         {error && <p className="league-schedule__error">{error}</p>}
 
@@ -408,7 +440,8 @@ export const LeagueScheduleTabs = ({
             </table>
           </div>
         )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

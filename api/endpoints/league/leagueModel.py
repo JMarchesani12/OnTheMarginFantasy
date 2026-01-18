@@ -228,11 +228,14 @@ class LeagueModel:
             JOIN "User"        cu ON cu.id = l.commissioner
             LEFT JOIN (
                 SELECT
-                    "leagueId",
-                    "memberId",
-                    SUM("pointsAwarded") AS "seasonPoints"
-                FROM "WeeklyTeamScore"
-                GROUP BY "leagueId", "memberId"
+                    wts."leagueId",
+                    wts."memberId",
+                    SUM(wts."pointsAwarded") AS "seasonPoints"
+                FROM "WeeklyTeamScore" wts
+                JOIN "Week" w
+                  ON w.id = wts."weekId"
+                 AND w."weekNumber" > 0
+                GROUP BY wts."leagueId", wts."memberId"
             ) sp
             ON sp."leagueId" = lm."leagueId"
             AND sp."memberId" = lm.id
@@ -277,10 +280,23 @@ class LeagueModel:
               lm."userId"         AS "userId",
               lm."teamName"       AS "teamName",
               lm."draftOrder"     AS "draftOrder",
-              lm."seasonPoints"   AS "seasonPoints",
+              COALESCE(sp."seasonPoints", lm."seasonPoints", 0) AS "seasonPoints",
               u."displayName"     AS "displayName"
             FROM "LeagueMember" lm
             JOIN "User" u on u.id = lm."userId"
+            LEFT JOIN (
+                SELECT
+                    wts."leagueId",
+                    wts."memberId",
+                    SUM(wts."pointsAwarded") AS "seasonPoints"
+                FROM "WeeklyTeamScore" wts
+                JOIN "Week" w
+                  ON w.id = wts."weekId"
+                 AND w."weekNumber" > 0
+                GROUP BY wts."leagueId", wts."memberId"
+            ) sp
+            ON sp."leagueId" = lm."leagueId"
+            AND sp."memberId" = lm.id
             WHERE lm."leagueId" = :league_id
             ORDER BY lm."draftOrder", lm.id
             """
