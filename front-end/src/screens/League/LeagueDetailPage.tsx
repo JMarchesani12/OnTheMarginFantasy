@@ -11,6 +11,7 @@ import LeagueScoreboard, {
 import { getScoresForWeek } from "../../api/scoring";
 import type { ScoreWeek } from "../../types/scoring";
 import { useCurrentUser } from "../../context/currentUserContext";
+import { getEffectiveWeekNumber } from "../../utils/weekCutoff";
 import "./LeagueDetailPage.css";
 
 type LocationState = {
@@ -42,6 +43,15 @@ const LeagueDetailPage = () => {
   const [teamNameSuccess, setTeamNameSuccess] = useState<string | null>(null);
   const startDraftLoading = false;
   const [startDraftError, setStartDraftError] = useState<string | null>(null);
+  const effectiveWeekNumber = useMemo(
+    () =>
+      getEffectiveWeekNumber({
+        currentWeekNumber: league?.currentWeekNumber ?? null,
+        currentWeekStartDate: league?.currentWeekStartDate ?? null,
+        timeZone: league?.settings?.timezone ?? null,
+      }),
+    [league?.currentWeekNumber, league?.currentWeekStartDate, league?.settings?.timezone]
+  );
 
   useEffect(() => {
     setTeamNameValue(league?.teamName ?? "");
@@ -76,7 +86,7 @@ const LeagueDetailPage = () => {
       return;
     }
 
-    const currentWeek = league.currentWeekNumber ?? null;
+    const currentWeek = effectiveWeekNumber ?? null;
     if (!currentWeek || currentWeek < 1) {
       return;
     }
@@ -136,7 +146,7 @@ const LeagueDetailPage = () => {
     return () => {
       isCancelled = true;
     };
-  }, [league?.leagueId, league?.currentWeekNumber]);
+  }, [league?.leagueId, effectiveWeekNumber]);
 
   const openRosterManagement = () => {
     if (!league) return;
@@ -292,7 +302,7 @@ const LeagueDetailPage = () => {
     const weekNumbersFromScores = Object.keys(scoreboard)
       .map((key) => Number(key))
       .sort((a, b) => a - b);
-    const fallbackWeekNumber = league.currentWeekNumber ?? 1;
+    const fallbackWeekNumber = effectiveWeekNumber ?? 1;
     const weekNumbers =
       weekNumbersFromScores.length > 0
         ? weekNumbersFromScores
@@ -351,10 +361,10 @@ const LeagueDetailPage = () => {
       weekNumbers,
       rows: Array.from(rows.values()).sort((a, b) => b.totalPoints - a.totalPoints),
     };
-  }, [scoreboard, members, league.currentWeekNumber]);
+  }, [scoreboard, members, effectiveWeekNumber]);
 
   const currentWeekTotals = useMemo(() => {
-    const currentWeek = league.currentWeekNumber ?? null;
+    const currentWeek = effectiveWeekNumber ?? null;
     const scores = currentWeek ? scoreboard[currentWeek] ?? [] : [];
     const scoreMap = new Map<number, ScoreWeek>();
     scores.forEach((score) => {
@@ -407,7 +417,7 @@ const LeagueDetailPage = () => {
         (a, b) => b.differential - a.differential
       ),
     };
-  }, [scoreboard, members, league.currentWeekNumber]);
+  }, [scoreboard, members, effectiveWeekNumber]);
 
   const currentMember = useMemo(
     () => members.find((member) => member.id === league.memberId),
@@ -420,7 +430,7 @@ const LeagueDetailPage = () => {
   );
 
   const currentWeekDifferential = useMemo(() => {
-    const currentWeek = league.currentWeekNumber ?? null;
+    const currentWeek = effectiveWeekNumber ?? null;
     if (!currentWeek || !league.memberId) {
       return { weekNumber: currentWeek, differential: 0 };
     }
@@ -440,7 +450,7 @@ const LeagueDetailPage = () => {
     return { weekNumber: currentWeek, differential: fallbackDifferential };
   }, [
     scoreboard,
-    league.currentWeekNumber,
+    effectiveWeekNumber,
     league.memberId,
     currentMember?.currentWeekPointDifferential,
   ]);
@@ -720,7 +730,7 @@ const LeagueDetailPage = () => {
           leagueId={league.leagueId}
           members={members}
           currentMemberId={league.memberId}
-          initialWeekNumber={league.currentWeekNumber ?? 1}
+          initialWeekNumber={effectiveWeekNumber ?? 1}
         />
       )}
 
@@ -728,7 +738,7 @@ const LeagueDetailPage = () => {
         <LeagueScoreboard
           weekNumbers={scoreboardRows.weekNumbers}
           rows={scoreboardRows.rows}
-          currentWeekNumber={league.currentWeekNumber ?? null}
+          currentWeekNumber={effectiveWeekNumber ?? null}
           loading={scoreboardLoading}
           error={scoreboardError}
         />

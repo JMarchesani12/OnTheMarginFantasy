@@ -9,6 +9,7 @@ import { submitFreeAgencyRequest, tradeRequestProposal } from "../../api/transac
 import TradeRequestsPanel from "../../components/League/TradeRequestsPanel";
 import { formatLeagueDate } from "../../utils/date";
 import { normalizeOwnedTeams, type RawOwnedTeam } from "../../utils/teams";
+import { getEffectiveWeekNumber } from "../../utils/weekCutoff";
 import "./LeagueRosterPage.css";
 
 type LocationState = {
@@ -55,7 +56,12 @@ const LeagueRosterPage = () => {
   const [tradeTeamsError, setTradeTeamsError] = useState<string | null>(null);
   const [selectedTradeGive, setSelectedTradeGive] = useState<OwnedTeam | null>(null);
   const [selectedTradeReceive, setSelectedTradeReceive] = useState<OwnedTeam | null>(null);
-  const rosterWeekNumber = league?.currentWeekNumber ?? 1;
+  const rosterWeekNumber =
+    getEffectiveWeekNumber({
+      currentWeekNumber: league?.currentWeekNumber ?? null,
+      currentWeekStartDate: league?.currentWeekStartDate ?? null,
+      timeZone: league?.settings?.timezone ?? null,
+    }) ?? 1;
   const rosterWeekId = league?.currentWeekId ?? rosterWeekNumber;
 
   useEffect(() => {

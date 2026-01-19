@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional
 
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
+from zoneinfo import ZoneInfo
 
 from endpoints.schedule.scheduleModel import ScheduleModel
 
@@ -18,6 +19,34 @@ class LeagueModel:
     def __init__(self, db: Engine):
         self.db = db
         self.scheduleModel = ScheduleModel(db, os.getenv("ESPN_BASE_URL"))
+
+    def _get_timezone_name_from_settings(self, settings: Dict[str, Any]) -> Optional[str]:
+        if not isinstance(settings, dict):
+            return None
+
+        schedule_cfg = settings.get("schedule") or {}
+        if isinstance(schedule_cfg, dict):
+            tz_name = schedule_cfg.get("timezone") or schedule_cfg.get("timeZone")
+            if tz_name:
+                return tz_name
+
+        return settings.get("timezone") or settings.get("timeZone")
+
+    def _validate_timezone_name(self, tz_name: str) -> None:
+        try:
+            ZoneInfo(tz_name)
+        except Exception as exc:
+            raise ValueError(f"Invalid timezone: {tz_name}") from exc
+
+    def _ensure_timezone_in_settings(self, settings: Dict[str, Any]) -> Dict[str, Any]:
+        tz_name = self._get_timezone_name_from_settings(settings)
+        if tz_name:
+            self._validate_timezone_name(tz_name)
+            return settings
+
+        updated = dict(settings or {})
+        updated["timezone"] = "UTC"
+        return updated
 
     def get_league(self, leagueId):
         with self.db.begin() as conn:
@@ -35,8 +64,13 @@ class LeagueModel:
         print(league)
 
         # JSON-encode the settings dict so Postgres can cast it to jsonb
-        if isinstance(league.get("settings"), (dict, list)):
+        if isinstance(league.get("settings"), dict):
+            league["settings"] = self._ensure_timezone_in_settings(league["settings"])
             league["settings"] = json.dumps(league["settings"])
+        elif isinstance(league.get("settings"), list):
+            league["settings"] = json.dumps(league["settings"])
+        elif league.get("settings") is None:
+            league["settings"] = json.dumps(self._ensure_timezone_in_settings({}))
 
         sql = text("""
             WITH created AS (
@@ -119,6 +153,11 @@ class LeagueModel:
             "tradeDeadline",
             "freeAgentDeadline"
         }
+
+        if "settings" in patch and isinstance(patch.get("settings"), dict):
+            tz_name = self._get_timezone_name_from_settings(patch["settings"])
+            if tz_name:
+                self._validate_timezone_name(tz_name)
 
         update_data: Dict[str, Any] = {"leagueId": league_id}
         set_clauses = []

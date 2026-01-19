@@ -14,6 +14,7 @@ import {
   getLocalDateKeyForGame,
   type DateHeader,
 } from "../../utils/scheduleTable";
+import { getEffectiveWeekNumber } from "../../utils/weekCutoff";
 import "./ConferenceSchedulePage.css";
 
 type LocationState = {
@@ -63,7 +64,16 @@ const ConferenceSchedulePage = () => {
   const leagueId = league?.leagueId ?? (league_id ? Number(league_id) : null);
   const memberId = league?.memberId ?? null;
 
-  const [weekNumber, setWeekNumber] = useState(league?.currentWeekNumber ?? 1);
+  const initialWeekNumber = useMemo(
+    () =>
+      getEffectiveWeekNumber({
+        currentWeekNumber: league?.currentWeekNumber ?? null,
+        currentWeekStartDate: league?.currentWeekStartDate ?? null,
+        timeZone: league?.settings?.timezone ?? null,
+      }) ?? 1,
+    [league?.currentWeekNumber, league?.currentWeekStartDate, league?.settings?.timezone]
+  );
+  const [weekNumber, setWeekNumber] = useState(initialWeekNumber);
   const [weekInfo, setWeekInfo] = useState<WeekInfo | null>(null);
   const [weekInfoLoading, setWeekInfoLoading] = useState(false);
 
@@ -82,6 +92,10 @@ const ConferenceSchedulePage = () => {
     typeof window !== "undefined" && leagueId
       ? `conferenceSelection:${leagueId}`
       : null;
+
+  useEffect(() => {
+    setWeekNumber(initialWeekNumber);
+  }, [initialWeekNumber]);
 
   useEffect(() => {
     if (!storageKey) {

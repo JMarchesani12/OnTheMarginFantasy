@@ -49,7 +49,13 @@ export function buildDateHeadersFromWeek(
   const endParts = getWeekYMD(endDateStr);
 
   const start = new Date(startParts.year, startParts.month - 1, startParts.day);
-  const end = new Date(endParts.year, endParts.month - 1, endParts.day);
+  let end = new Date(endParts.year, endParts.month - 1, endParts.day);
+  const dayMs = 24 * 60 * 60 * 1000;
+  const diffDays = Math.round((end.getTime() - start.getTime()) / dayMs);
+  if (diffDays >= 7) {
+    end = new Date(start);
+    end.setDate(end.getDate() + 6);
+  }
 
   const headers: DateHeader[] = [];
   const cursor = new Date(start);

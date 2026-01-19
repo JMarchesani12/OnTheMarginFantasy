@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional
 
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
+from zoneinfo import ZoneInfo
 
 from endpoints.schedule.helpers.espn.espnClient import ESPNClient
 from endpoints.schedule.helpers.weekHelper import compute_weeks_from_start
@@ -45,6 +46,22 @@ class ScheduleModel:
         if isinstance(settings, str):
             settings = json.loads(settings)
         return settings or {}
+    
+    def _get_league_timezone(self, league_id: int) -> dt.tzinfo:
+        settings = self._get_league_settings(league_id)
+        schedule_cfg = settings.get("schedule") or {}
+        tz_name = (
+            settings.get("timezone")
+            or settings.get("timeZone")
+            or schedule_cfg.get("timezone")
+            or schedule_cfg.get("timeZone")
+        )
+        if not tz_name:
+            return dt.timezone.utc
+        try:
+            return ZoneInfo(tz_name)
+        except Exception:
+            return dt.timezone.utc
 
     def _get_sport_season_for_league(self, league_id: int) -> Dict[str, Any]: 
         sql = text(""" 
@@ -144,6 +161,7 @@ class ScheduleModel:
         league_id: int,
         weeks: List[tuple[dt.date, dt.date]],
         starting_week_number: int = 1,
+        tzinfo: Optional[dt.tzinfo] = None,
     ) -> List[Dict[str, Any]]:
         if not weeks:
             return []
@@ -160,8 +178,14 @@ class ScheduleModel:
 
         with self.db.begin() as conn:
             for idx, (start_d, end_d) in enumerate(weeks, start=starting_week_number):
-                start_dt = dt.datetime.combine(start_d, dt.time.min, tzinfo=dt.timezone.utc)
-                end_dt = dt.datetime.combine(end_d, dt.time.max, tzinfo=dt.timezone.utc)
+                if tzinfo is None:
+                    start_dt = dt.datetime.combine(start_d, dt.time.min, tzinfo=dt.timezone.utc)
+                    end_dt = dt.datetime.combine(end_d, dt.time.max, tzinfo=dt.timezone.utc)
+                else:
+                    start_local = dt.datetime.combine(start_d, dt.time.min, tzinfo=tzinfo)
+                    end_local = dt.datetime.combine(end_d, dt.time.max, tzinfo=tzinfo)
+                    start_dt = start_local.astimezone(dt.timezone.utc)
+                    end_dt = end_local.astimezone(dt.timezone.utc)
 
                 row = conn.execute(
                     sql,
@@ -194,26 +218,32 @@ class ScheduleModel:
             return existing
 
         season = self._get_sport_season_for_league(league_id)
+        local_tz = self._get_league_timezone(league_id)
 
-        # Regular season weeks
-        reg_start_dt = season["regularSeasonStart"]
-        reg_end_dt = season["regularSeasonEnd"]
-        reg_start_date = reg_start_dt.date()
-        reg_end_date = reg_end_dt.date()
+        # Regular season weeks (season dates are timezone-agnostic)
+        reg_start_date = season["regularSeasonStart"]
+        reg_end_date = season["regularSeasonEnd"]
 
         created_all: List[Dict[str, Any]] = []
-        created_all.append(self._insert_week0(league_id, reg_start_dt - dt.timedelta(days=1)))
+        week0_end_date = reg_start_date - dt.timedelta(days=1)
+        week0_end_local = dt.datetime.combine(week0_end_date, dt.time.max, tzinfo=local_tz)
+        created_all.append(
+            self._insert_week0(league_id, week0_end_local.astimezone(dt.timezone.utc))
+        )
 
         regular_week_ranges = compute_weeks_from_start(reg_start_date, reg_end_date)
-        created_regular = self._insert_weeks(league_id, regular_week_ranges, starting_week_number=1)
+        created_regular = self._insert_weeks(
+            league_id,
+            regular_week_ranges,
+            starting_week_number=1,
+            tzinfo=local_tz,
+        )
         created_all.extend(created_regular)
 
         # Postseason weeks
         if season.get("playoffStart") and season.get("playoffEnd"):
-            playoff_start_dt = season["playoffStart"]
-            playoff_end_dt = season["playoffEnd"]
-            playoff_start_date = playoff_start_dt.date()
-            playoff_end_date = playoff_end_dt.date()
+            playoff_start_date = season["playoffStart"]
+            playoff_end_date = season["playoffEnd"]
 
             playoff_ranges = compute_weeks_from_start(playoff_start_date, playoff_end_date)
             last_regular_week = created_regular[-1]["weekNumber"] if created_regular else 0
@@ -222,6 +252,7 @@ class ScheduleModel:
                 league_id,
                 playoff_ranges,
                 starting_week_number=last_regular_week + 1,
+                tzinfo=local_tz,
             )
             created_all.extend(created_playoff)
 
@@ -1060,10 +1091,10 @@ class ScheduleModel:
         conn,
         sport_id: int,
         season_year: int,
-        regular_start: dt.datetime,
-        regular_end: dt.datetime,
-        playoff_start: Optional[dt.datetime],
-        playoff_end: Optional[dt.datetime],
+        regular_start: dt.date,
+        regular_end: dt.date,
+        playoff_start: Optional[dt.date],
+        playoff_end: Optional[dt.date],
     ) -> int:
         row = conn.execute(
             text("""

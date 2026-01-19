@@ -383,6 +383,7 @@ const ManageLeaguePage = () => {
       const payload: UpdateLeague = {
         settings: {
           bonuses,
+          timezone: leagueState?.settings?.timezone,
           transactions: {
             tradeVeto: {
               enabled: form.tradeVetoEnabled,
@@ -425,6 +426,7 @@ const ManageLeaguePage = () => {
       const payload: UpdateLeague = {
         settings: {
           bonuses: leagueState?.settings?.bonuses ?? {},
+          timezone: leagueState?.settings?.timezone,
           transactions: leagueState?.settings?.transactions ?? {
             tradeVeto: { enabled: true, requiredVetoCount: 0 },
           },

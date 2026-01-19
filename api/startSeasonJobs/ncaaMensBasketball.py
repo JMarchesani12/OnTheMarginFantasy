@@ -1,5 +1,5 @@
 import argparse
-from datetime import datetime, timezone
+from datetime import date
 import os
 import sys
 
@@ -60,15 +60,15 @@ FIND_UNMATCHED_SPORT_CONFERENCES = text("""
     AND td.id IS NULL;
 """)
 
-def parse_dt(s: str) -> datetime:
+def parse_date(s: str) -> date:
     s = s.strip()
     if s.endswith("Z"):
         s = s[:-1] + "+00:00"
 
     if len(s) == 10:
-        return datetime.fromisoformat(s).replace(tzinfo=timezone.utc)
+        return date.fromisoformat(s)
 
-    return datetime.fromisoformat(s)
+    return date.fromisoformat(s.split("T")[0])
 
 def arg_or_env(args, arg_name: str, env_name: str, *, required: bool = True):
     val = getattr(args, arg_name)
@@ -114,10 +114,10 @@ def main():
     playoff_start_s = arg_or_env(args, "PLAYOFF_START", "PLAYOFF_START", required=False)
     playoff_end_s = arg_or_env(args, "PLAYOFF_END", "PLAYOFF_END", required=False)
 
-    regular_start = parse_dt(regular_start_s)
-    regular_end = parse_dt(regular_end_s)
-    playoff_start = parse_dt(playoff_start_s) if playoff_start_s else None
-    playoff_end = parse_dt(playoff_end_s) if playoff_end_s else None
+    regular_start = parse_date(regular_start_s)
+    regular_end = parse_date(regular_end_s)
+    playoff_start = parse_date(playoff_start_s) if playoff_start_s else None
+    playoff_end = parse_date(playoff_end_s) if playoff_end_s else None
 
     schedule_model = ScheduleModel(engine, espn_base_url)
 

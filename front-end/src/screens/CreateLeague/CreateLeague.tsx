@@ -66,6 +66,7 @@ const makeInitialState = (): CreateLeagueFormState => ({
 
 const CreateLeague: React.FC = () => {
   const { userId } = useCurrentUser();
+  const localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   const [form, setForm] = useState<CreateLeagueFormState>(makeInitialState);
   const [sports, setSports] = useState<Sport[]>([]);
@@ -159,6 +160,7 @@ const CreateLeague: React.FC = () => {
       status: "Pre-Draft",
       settings: {
         bonuses,
+        timezone: localTimeZone,
         transactions: {
           tradeVeto: {
             enabled: form.tradeVetoEnabled,

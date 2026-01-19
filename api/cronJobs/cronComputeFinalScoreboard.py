@@ -20,7 +20,7 @@ def build_scoring(engine):
 
 def main():
     scoring = build_scoring(engine)
-    now = datetime.now(timezone.utc)
+    today = datetime.now(timezone.utc).date()
 
     # 1. Find SportSeasons whose playoffEnd has passed,
     #    and that we haven't finalized yet.
@@ -37,11 +37,11 @@ def main():
                     ss."seasonYear" AS "seasonYear"
                 FROM "SportSeason" ss
                 WHERE ss."playoffEnd" IS NOT NULL
-                  AND ss."playoffEnd" <= :now
+                  AND ss."playoffEnd" <= :today
                   AND COALESCE(ss."seasonFinalized", FALSE) = FALSE
                 """
             ),
-            {"now": now},
+            {"today": today},
         ).fetchall()
 
     if not sport_seasons:
