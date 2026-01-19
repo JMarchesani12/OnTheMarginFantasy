@@ -178,6 +178,37 @@ class TransactionModel:
             raise ValueError(f"Week {week_id} does not belong to league {league_id}")
 
         return dict(row._mapping)
+    
+    def _get_next_unlocked_week_for_league(
+        self,
+        league_id: int,
+        after_week_number: int,
+    ) -> Dict[str, Any]:
+        """
+        Returns the next unlocked week after the given week number.
+        """
+        sql = text("""
+            SELECT id, "weekNumber", "isLocked"
+            FROM "Week"
+            WHERE "leagueId" = :league_id
+              AND "weekNumber" > :week_number
+              AND "isLocked" = FALSE
+            ORDER BY "weekNumber" ASC
+            LIMIT 1
+        """)
+
+        with self.db.connect() as conn:
+            row = conn.execute(
+                sql,
+                {"league_id": league_id, "week_number": after_week_number},
+            ).fetchone()
+
+        if not row:
+            raise ValueError(
+                f"No unlocked future week found after week {after_week_number}"
+            )
+
+        return dict(row._mapping)
 
 
     # ------------------------------------------------------------------
@@ -819,7 +850,12 @@ class TransactionModel:
         week_info = self._get_week_for_league(league_id, week_id)
         week_number = week_info["weekNumber"]
         if week_info["isLocked"]:
-            raise ValueError(f"Week {week_id} is locked; no transactions allowed")
+            next_week = self._get_next_unlocked_week_for_league(
+                league_id,
+                after_week_number=int(week_number),
+            )
+            week_id = int(next_week["id"])
+            week_number = int(next_week["weekNumber"])
 
         # Enforce swap limit first
         self._ensure_member_can_swap(league_id, member_id)

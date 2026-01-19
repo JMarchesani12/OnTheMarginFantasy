@@ -6,6 +6,7 @@ export type ScoreboardRow = {
   teamName: string;
   totalPoints: number;
   weeklyPoints: Record<number, number | null | undefined>;
+  weeklyDifferentials: Record<number, number | null | undefined>;
 };
 
 type LeagueScoreboardProps = {
@@ -66,9 +67,28 @@ const LeagueScoreboard: FC<LeagueScoreboardProps> = ({
               <span className="league-scoreboard__team">{row.teamName}</span>
               {weekNumbers.map((week) => {
                 const points = row.weeklyPoints[week];
+                const differential = row.weeklyDifferentials[week];
                 return (
-                  <span key={`cell-${row.memberId}-${week}`}>
-                    {typeof points === "number" ? `${points} pts` : "--"}
+                  <span
+                    key={`cell-${row.memberId}-${week}`}
+                    className="league-scoreboard__cell"
+                  >
+                    <span className="league-scoreboard__cell-value">
+                      {typeof points === "number" ? `${points} pts` : "--"}
+                    </span>
+                    {typeof differential === "number" && (
+                      <span
+                        className={`league-scoreboard__diff ${
+                          differential > 0
+                            ? "is-positive"
+                            : differential < 0
+                            ? "is-negative"
+                            : "is-neutral"
+                        }`}
+                      >
+                        {`${differential > 0 ? "+" : ""}${differential}`}
+                      </span>
+                    )}
                   </span>
                 );
               })}

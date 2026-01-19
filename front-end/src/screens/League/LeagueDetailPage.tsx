@@ -325,9 +325,11 @@ const LeagueDetailPage = () => {
             membersById.get(score.memberId)?.teamName ??
             `Member ${score.memberId}`,
           weeklyPoints: {} as Record<number, number | null | undefined>,
+          weeklyDifferentials: {} as Record<number, number | null | undefined>,
           totalPoints: 0,
         };
         row.weeklyPoints[week] = score.pointsAwarded;
+        row.weeklyDifferentials[week] = score.pointDifferential;
         row.totalPoints += score.pointsAwarded ?? 0;
         rows.set(score.memberId, row);
       });
@@ -339,6 +341,7 @@ const LeagueDetailPage = () => {
           memberId: member.id,
           teamName: member.teamName ?? `Member ${member.id}`,
           weeklyPoints: {} as Record<number, number | null | undefined>,
+          weeklyDifferentials: {} as Record<number, number | null | undefined>,
           totalPoints: 0,
         });
       }
