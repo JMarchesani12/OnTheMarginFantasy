@@ -1006,8 +1006,6 @@ const LeagueDetailPage = () => {
           weekNumbers={scoreboardRows.weekNumbers}
           rows={scoreboardRows.rows}
           weeklyDifferentialTotals={weeklyDifferentialTotals}
-          dailyDifferentialTotals={dailyTotalsForCurrentWeek.totals}
-          dailyDifferentialDates={dailyTotalsForCurrentWeek.dates}
           currentWeekNumber={effectiveWeekNumber ?? null}
           loading={scoreboardLoading}
           error={scoreboardError}

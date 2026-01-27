@@ -165,45 +165,6 @@
   color: #C3D0FF;
 }
 
-/* Daily diff list */
-.league-scoreboard__daily {
-  margin-top: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.league-scoreboard__daily-label {
-  margin: 0;
-  text-transform: uppercase;
-  font-size: 0.75rem;
-  letter-spacing: 0.08em;
-  color: #8EA0D6;
-  font-weight: 800;
-}
-
-.league-scoreboard__daily-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-  gap: 0.5rem;
-}
-
-.league-scoreboard__daily-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.5rem 0.6rem;
-  border-radius: 0.6rem;
-  border: 1px solid #243055;
-  background: #0A0D18;
-}
-
-.league-scoreboard__daily-date {
-  font-size: 0.7rem;
-  color: #8EA0D6;
-  letter-spacing: 0.04em;
-}
-
 /* States */
 .league-scoreboard__loading {
   color: #B7C2E6;

@@ -13,8 +13,6 @@ type LeagueScoreboardProps = {
   weekNumbers: number[];
   rows: ScoreboardRow[];
   weeklyDifferentialTotals?: Record<number, number>;
-  dailyDifferentialTotals?: Record<string, number>;
-  dailyDifferentialDates?: string[];
   currentWeekNumber: number | null;
   loading: boolean;
   error: string | null;
@@ -24,8 +22,6 @@ const LeagueScoreboard: FC<LeagueScoreboardProps> = ({
   weekNumbers,
   rows,
   weeklyDifferentialTotals,
-  dailyDifferentialTotals,
-  dailyDifferentialDates,
   currentWeekNumber,
   loading,
   error,
@@ -133,34 +129,6 @@ const LeagueScoreboard: FC<LeagueScoreboardProps> = ({
         </div>
       )}
 
-      {dailyDifferentialTotals && dailyDifferentialDates && (
-        <div className="league-scoreboard__daily">
-          <p className="league-scoreboard__daily-label">Daily diff</p>
-          <div className="league-scoreboard__daily-list">
-            {dailyDifferentialDates.map((dateKey) => {
-                const total = dailyDifferentialTotals[dateKey] ?? 0;
-                const className =
-                  typeof total !== "number"
-                    ? "is-neutral"
-                    : total > 0
-                    ? "is-positive"
-                    : total < 0
-                    ? "is-negative"
-                    : "is-neutral";
-                return (
-                  <div key={`daily-${dateKey}`} className="league-scoreboard__daily-item">
-                    <span className="league-scoreboard__daily-date">{dateKey}</span>
-                    <span className={`league-scoreboard__diff-total ${className}`}>
-                      {typeof total === "number"
-                        ? `${total > 0 ? "+" : ""}${total}`
-                        : "--"}
-                    </span>
-                  </div>
-                );
-              })}
-          </div>
-        </div>
-      )}
     </section>
   );
 };
