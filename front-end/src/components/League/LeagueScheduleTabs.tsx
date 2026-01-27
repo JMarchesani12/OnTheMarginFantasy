@@ -17,6 +17,7 @@ type LeagueScheduleTabsProps = {
   currentMemberId: number;      // league.memberId
   initialWeekNumber?: number;   // default 1
   maxWeekNumber?: number;       // NEW: optional cap, e.g. 18
+  timeZone?: string | null;
 };
 
 type ScheduleCell = {
@@ -41,7 +42,8 @@ export const LeagueScheduleTabs = ({
   members,
   currentMemberId,
   initialWeekNumber = 1,
-  maxWeekNumber
+  maxWeekNumber,
+  timeZone
 }: LeagueScheduleTabsProps) => {
   const [activeMemberId, setActiveMemberId] = useState<number | null>(
     currentMemberId || (members[0]?.id ?? null)
@@ -229,6 +231,65 @@ export const LeagueScheduleTabs = ({
     return { dateHeaders, teamRows };
   }, [schedule]);
 
+  const todayKey = useMemo(() => {
+    const formatter = new Intl.DateTimeFormat("en-CA", {
+      timeZone: timeZone ?? undefined,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+    const parts = formatter.formatToParts(new Date());
+    const year = parts.find((p) => p.type === "year")?.value ?? "0000";
+    const month = parts.find((p) => p.type === "month")?.value ?? "00";
+    const day = parts.find((p) => p.type === "day")?.value ?? "00";
+    return `${year}-${month}-${day}`;
+  }, [timeZone]);
+
+  const activeMemberDailyTotals = useMemo(() => {
+    const totals: Record<string, number> = {};
+    const member = members.find((item) => item.id === activeMemberId);
+    (member?.dailyPointDifferentials ?? []).forEach((entry) => {
+      if (!entry?.date) {
+        return;
+      }
+      totals[entry.date] = (totals[entry.date] ?? 0) + (entry.pointDifferential ?? 0);
+    });
+    return totals;
+  }, [members, activeMemberId]);
+
+  const dailyTotals = useMemo(() => {
+    const totals: Record<string, number> = {};
+    const hasDailyTotals = Object.keys(activeMemberDailyTotals).length > 0;
+    dateHeaders.forEach((header) => {
+      const isFuture = header.key > todayKey;
+      const totalFromApi = activeMemberDailyTotals[header.key];
+      totals[header.key] = isFuture
+        ? 0
+        : hasDailyTotals
+        ? totalFromApi ?? 0
+        : 0;
+    });
+
+    if (!hasDailyTotals) {
+      teamRows.forEach((row) => {
+        Object.entries(row.cellsByDate).forEach(([dateKey, cells]) => {
+          if (dateKey > todayKey) {
+            totals[dateKey] = 0;
+            return;
+          }
+          let sum = totals[dateKey] ?? 0;
+          cells.forEach((cell) => {
+            if (typeof cell.memberPointDiff === "number") {
+              sum += cell.memberPointDiff;
+            }
+          });
+          totals[dateKey] = sum;
+        });
+      });
+    }
+
+    return totals;
+  }, [dateHeaders, teamRows, activeMemberDailyTotals, todayKey]);
 
   const sortedMembers = useMemo(
     () =>
@@ -436,10 +497,94 @@ export const LeagueScheduleTabs = ({
                     })}
                   </tr>
                 ))}
+                <tr className="league-schedule__summary-row">
+                  <td className="league-schedule__team-col">
+                    <span className="league-schedule__summary-label">
+                      Daily diff
+                    </span>
+                  </td>
+                  {dateHeaders.map((d) => {
+                    const total = dailyTotals[d.key];
+                    const className =
+                      typeof total !== "number"
+                        ? "is-neutral"
+                        : total > 0
+                        ? "is-positive"
+                        : total < 0
+                        ? "is-negative"
+                        : "is-neutral";
+                    return (
+                      <td key={`summary-open-${d.key}`}>
+                        <span
+                          className={`league-schedule__summary-value ${className}`}
+                        >
+                          {typeof total === "number"
+                            ? `${total > 0 ? "+" : ""}${total}`
+                            : "--"}
+                        </span>
+                      </td>
+                    );
+                  })}
+                </tr>
               </tbody>
             </table>
           </div>
         )}
+        </div>
+      )}
+
+      {isCollapsed && (
+        <div className="league-schedule__body league-schedule__body--collapsed" id="league-schedule-body">
+          {loading && <p>Loading schedule…</p>}
+          {error && <p className="league-schedule__error">{error}</p>}
+          {!loading && !error && dateHeaders.length === 0 && (
+            <p>No games for this week.</p>
+          )}
+          {!loading && !error && dateHeaders.length > 0 && (
+            <div className="league-schedule__table-wrapper">
+              <table className="league-schedule__table">
+                <thead>
+                  <tr>
+                    <th className="league-schedule__team-col">Date</th>
+                    {dateHeaders.map((d) => (
+                      <th key={`collapsed-${d.key}`}>{d.label}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="league-schedule__summary-row">
+                    <td className="league-schedule__team-col">
+                      <span className="league-schedule__summary-label">
+                        Daily diff
+                      </span>
+                    </td>
+                    {dateHeaders.map((d) => {
+                      const total = dailyTotals[d.key];
+                      const className =
+                        typeof total !== "number"
+                          ? "is-neutral"
+                          : total > 0
+                          ? "is-positive"
+                          : total < 0
+                          ? "is-negative"
+                          : "is-neutral";
+                      return (
+                        <td key={`summary-${d.key}`}>
+                          <span
+                            className={`league-schedule__summary-value ${className}`}
+                          >
+                            {typeof total === "number"
+                              ? `${total > 0 ? "+" : ""}${total}`
+                              : "--"}
+                          </span>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
     </div>

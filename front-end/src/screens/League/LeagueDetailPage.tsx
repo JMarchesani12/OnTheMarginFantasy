@@ -1,8 +1,14 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
-import type { League } from "../../types/league";
+import type { League, SingleLeague } from "../../types/league";
 import type { LeagueMember } from "../../types/leagueMember";
-import { getMembersOfLeague, removeLeagueMember, updateLeagueMember } from "../../api/leagues";
+import {
+  getLeaguesForUser,
+  getMembersOfLeague,
+  getLeague,
+  removeLeagueMember,
+  updateLeagueMember,
+} from "../../api/leagues";
 import { formatLeagueDate } from "../../utils/date";
 import { LeagueScheduleTabs } from "../../components/League/LeagueScheduleTabs";
 import LeagueScoreboard, {
@@ -12,6 +18,7 @@ import { getScoresForWeek } from "../../api/scoring";
 import type { ScoreWeek } from "../../types/scoring";
 import { useCurrentUser } from "../../context/currentUserContext";
 import { getEffectiveWeekNumber } from "../../utils/weekCutoff";
+import { buildDateHeadersFromWeek } from "../../utils/scheduleTable";
 import "./LeagueDetailPage.css";
 
 type LocationState = {
@@ -21,9 +28,12 @@ type LocationState = {
 const LeagueDetailPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { league_id } = useParams();
   const state = location.state as LocationState | null;
-  const league = state?.league;
   const { userId: currentUserId, error: userError } = useCurrentUser();
+  const [league, setLeague] = useState<League | null>(state?.league ?? null);
+  const [leagueLoading, setLeagueLoading] = useState(false);
+  const [leagueError, setLeagueError] = useState<string | null>(null);
 
   const [members, setMembers] = useState<LeagueMember[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
@@ -43,15 +53,156 @@ const LeagueDetailPage = () => {
   const [teamNameSuccess, setTeamNameSuccess] = useState<string | null>(null);
   const startDraftLoading = false;
   const [startDraftError, setStartDraftError] = useState<string | null>(null);
+  const leagueTimeZone = league?.settings?.timezone ?? null;
   const effectiveWeekNumber = useMemo(
     () =>
       getEffectiveWeekNumber({
         currentWeekNumber: league?.currentWeekNumber ?? null,
         currentWeekStartDate: league?.currentWeekStartDate ?? null,
-        timeZone: league?.settings?.timezone ?? null,
+        timeZone: leagueTimeZone,
       }),
-    [league?.currentWeekNumber, league?.currentWeekStartDate, league?.settings?.timezone]
+    [league?.currentWeekNumber, league?.currentWeekStartDate, leagueTimeZone]
   );
+
+  useEffect(() => {
+    if (state?.league) {
+      setLeague(state.league);
+    }
+  }, [state?.league]);
+
+  const normalizeLeaguesResponse = (response: unknown): League[] => {
+    if (Array.isArray(response)) {
+      return response as League[];
+    }
+
+    if (
+      response &&
+      typeof response === "object" &&
+      Array.isArray((response as { leagues?: League[] }).leagues)
+    ) {
+      return (response as { leagues: League[] }).leagues;
+    }
+
+    return [];
+  };
+
+  const normalizeLeagueSettings = (value: unknown) => {
+    if (!value) return undefined;
+    if (typeof value === "string") {
+      try {
+        return JSON.parse(value) as League["settings"];
+      } catch {
+        return undefined;
+      }
+    }
+    return value as League["settings"];
+  };
+
+  const mapLeagueFromResponse = (
+    payload: SingleLeague | League | { league?: SingleLeague | League }
+  ): League => {
+    const data =
+      (payload as { league?: SingleLeague | League }).league ?? payload;
+
+    if ((data as League).leagueId) {
+      const leagueData = data as League;
+      return {
+        ...leagueData,
+        settings: normalizeLeagueSettings(leagueData.settings) ?? leagueData.settings,
+      };
+    }
+
+    const single = data as SingleLeague;
+    const status = single.status ?? "Pre-Draft";
+    const commissionerId =
+      (single as { commissionerId?: number }).commissionerId ??
+      (single as { commissioner?: number }).commissioner ??
+      0;
+
+    return {
+      leagueId: single.id,
+      leagueCreatedAt: single.createdAt,
+      leagueName: single.name,
+      sport: String(single.sport),
+      maxPlayersToHaveMaxRounds: 0,
+      numPlayers: single.numPlayers,
+      status,
+      settings: normalizeLeagueSettings(single.settings) ?? {
+        bonuses: {},
+        transactions: { tradeVeto: { enabled: false, requiredVetoCount: 0 } },
+        draft: {
+          draftType: "SNAKE",
+          selectionTime: 60,
+          numberOfRounds: 0,
+          timeoutAction: "AUTO-SKIP",
+          graceSeconds: 0,
+        },
+      },
+      updatedAt: single.updatedAt ?? single.createdAt,
+      draftDate: single.draftDate,
+      tradeDeadline: single.tradeDeadline,
+      freeAgentDeadline: single.freeAgentDeadline,
+      seasonYear: single.seasonYear,
+      commissionerId,
+      commissionerDisplayName:
+        (single as { commissionerDisplayName?: string })
+          .commissionerDisplayName ?? "",
+      memberId: 0,
+      teamName: null,
+      draftOrder: null,
+      seasonPoints: null,
+      currentWeekEndDate: null,
+      currentWeekId: null,
+      currentWeekNumber: null,
+      currentWeekStartDate: null,
+    };
+  };
+
+  useEffect(() => {
+    if (league || !league_id || !currentUserId) {
+      return;
+    }
+
+    let isMounted = true;
+
+    const loadLeague = async () => {
+      try {
+        setLeagueLoading(true);
+        setLeagueError(null);
+        const response = await getLeaguesForUser(currentUserId, "all");
+        if (!isMounted) return;
+        const matches = normalizeLeaguesResponse(response);
+        const found = matches.find(
+          (item) => item.leagueId === Number(league_id)
+        );
+        if (found) {
+          setLeague(mapLeagueFromResponse(found));
+          return;
+        }
+
+        const fallback = await getLeague(Number(league_id));
+        if (isMounted) {
+          setLeague(
+            mapLeagueFromResponse(fallback as unknown as League)
+          );
+        }
+      } catch (err: any) {
+        if (isMounted) {
+          setLeagueError(err?.message ?? "Failed to load league details.");
+        }
+      } finally {
+        if (isMounted) {
+          setLeagueLoading(false);
+        }
+      }
+    };
+
+    loadLeague();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [league, league_id, currentUserId]);
 
   useEffect(() => {
     setTeamNameValue(league?.teamName ?? "");
@@ -229,7 +380,14 @@ const LeagueDetailPage = () => {
         >
           ← Back
         </button>
-        <p>League data is not available. Try opening this page from your leagues list.</p>
+        {leagueLoading ? (
+          <p>Loading league details…</p>
+        ) : (
+          <p>
+            {leagueError ??
+              "League data is not available. Try opening this page from your leagues list."}
+          </p>
+        )}
       </div>
     );
   }
@@ -366,6 +524,29 @@ const LeagueDetailPage = () => {
     };
   }, [scoreboard, members, effectiveWeekNumber]);
 
+  const weeklyDifferentialTotals = useMemo(() => {
+    const totals: Record<number, number> = {};
+    scoreboardRows.weekNumbers.forEach((week) => {
+      totals[week] = 0;
+    });
+
+    Object.entries(scoreboard).forEach(([weekKey, scores]) => {
+      const week = Number(weekKey);
+      if (!Number.isFinite(week) || !(week in totals)) {
+        return;
+      }
+      let sum = 0;
+      scores.forEach((score) => {
+        if (typeof score.pointDifferential === "number") {
+          sum += score.pointDifferential;
+        }
+      });
+      totals[week] = sum;
+    });
+
+    return totals;
+  }, [scoreboard, scoreboardRows.weekNumbers]);
+
   const currentWeekTotals = useMemo(() => {
     const currentWeek = effectiveWeekNumber ?? null;
     const scores = currentWeek ? scoreboard[currentWeek] ?? [] : [];
@@ -421,6 +602,88 @@ const LeagueDetailPage = () => {
       ),
     };
   }, [scoreboard, members, effectiveWeekNumber]);
+
+  const dailyDifferentialTotals = useMemo(() => {
+    const totals: Record<string, number> = {};
+
+    members.forEach((member) => {
+      (member.dailyPointDifferentials ?? []).forEach((entry) => {
+        if (!entry?.date) {
+          return;
+        }
+        const current = totals[entry.date] ?? 0;
+        totals[entry.date] = current + (entry.pointDifferential ?? 0);
+      });
+    });
+
+    return totals;
+  }, [members]);
+
+  const currentWeekDateKeys = useMemo(() => {
+    if (!league?.currentWeekStartDate || !league?.currentWeekEndDate) {
+      return [];
+    }
+
+    const shiftDays = (dateLike: Date | string, days: number) => {
+      const date =
+        typeof dateLike === "string" ? new Date(dateLike) : new Date(dateLike);
+      if (Number.isNaN(date.getTime())) {
+        return null;
+      }
+      const next = new Date(date);
+      next.setDate(next.getDate() + days);
+      return next.toISOString();
+    };
+
+    const shouldShift =
+      typeof effectiveWeekNumber === "number" &&
+      typeof league.currentWeekNumber === "number" &&
+      effectiveWeekNumber < league.currentWeekNumber;
+
+    const startDate = shouldShift
+      ? shiftDays(league.currentWeekStartDate, -7)
+      : new Date(league.currentWeekStartDate).toISOString();
+    const endDate = shouldShift
+      ? shiftDays(league.currentWeekEndDate, -7)
+      : new Date(league.currentWeekEndDate).toISOString();
+
+    if (!startDate || !endDate) {
+      return [];
+    }
+
+    return buildDateHeadersFromWeek(startDate, endDate).map((header) => header.key);
+  }, [
+    league?.currentWeekStartDate,
+    league?.currentWeekEndDate,
+    league?.currentWeekNumber,
+    effectiveWeekNumber,
+  ]);
+
+  const dailyTotalsForCurrentWeek = useMemo(() => {
+    if (currentWeekDateKeys.length === 0) {
+      return { dates: [], totals: {} as Record<string, number> };
+    }
+
+    const formatter = new Intl.DateTimeFormat("en-CA", {
+      timeZone: leagueTimeZone ?? undefined,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+    const parts = formatter.formatToParts(new Date());
+    const year = parts.find((p) => p.type === "year")?.value ?? "0000";
+    const month = parts.find((p) => p.type === "month")?.value ?? "00";
+    const day = parts.find((p) => p.type === "day")?.value ?? "00";
+    const todayKey = `${year}-${month}-${day}`;
+
+    const totals: Record<string, number> = {};
+    currentWeekDateKeys.forEach((dateKey) => {
+      const isFuture = dateKey > todayKey;
+      totals[dateKey] = isFuture ? 0 : dailyDifferentialTotals[dateKey] ?? 0;
+    });
+
+    return { dates: currentWeekDateKeys, totals };
+  }, [currentWeekDateKeys, dailyDifferentialTotals, leagueTimeZone]);
 
   const currentMember = useMemo(
     () => members.find((member) => member.id === league.memberId),
@@ -734,6 +997,7 @@ const LeagueDetailPage = () => {
           members={members}
           currentMemberId={league.memberId}
           initialWeekNumber={effectiveWeekNumber ?? 1}
+          timeZone={leagueTimeZone}
         />
       )}
 
@@ -741,6 +1005,9 @@ const LeagueDetailPage = () => {
         <LeagueScoreboard
           weekNumbers={scoreboardRows.weekNumbers}
           rows={scoreboardRows.rows}
+          weeklyDifferentialTotals={weeklyDifferentialTotals}
+          dailyDifferentialTotals={dailyTotalsForCurrentWeek.totals}
+          dailyDifferentialDates={dailyTotalsForCurrentWeek.dates}
           currentWeekNumber={effectiveWeekNumber ?? null}
           loading={scoreboardLoading}
           error={scoreboardError}

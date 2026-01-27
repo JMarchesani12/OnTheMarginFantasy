@@ -98,11 +98,13 @@ export async function getConferences(
 export async function requestToJoinLeague(
   leagueId: number,
   userId: number,
-  message?: string
+  message?: string,
+  teamName?: string
 ): Promise<RequestResponse> {
   const body = {
         "userId": userId,
-        "message": message
+        "message": message,
+        "teamName": teamName
     }
   const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/joinRequest`, {
     method: "POST",

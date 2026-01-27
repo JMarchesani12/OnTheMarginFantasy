@@ -9,6 +9,10 @@ export type LeagueMember = {
   userId: number;
   displayName: number;
   currentWeekPointDifferential: number;
+  dailyPointDifferentials?: {
+    date: string;
+    pointDifferential: number;
+  }[];
 };
 
 export type UpdateLeagueMember = {

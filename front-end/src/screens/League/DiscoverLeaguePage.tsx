@@ -20,7 +20,7 @@ const DiscoverLeaguePage = () => {
   const location = useLocation();
   const state = location.state as LocationState | null;
   const league = state?.league;
-  const { userId } = useCurrentUser();
+  const { userId, displayName, email } = useCurrentUser();
 
   const [sports, setSports] = useState<Sport[]>([]);
   const [sportsLoading, setSportsLoading] = useState(false);
@@ -130,11 +130,17 @@ const DiscoverLeaguePage = () => {
       return;
     }
 
+    const fallbackName =
+      displayName?.trim() ||
+      email?.split("@")[0] ||
+      "My";
+    const teamName = `${fallbackName}'s Team`;
+
     setRequestStatus("submitting");
     setRequestError(null);
 
     try {
-      await requestToJoinLeague(league.id, userId);
+      await requestToJoinLeague(league.id, userId, undefined, teamName);
       setRequestStatus("success");
     } catch (error: any) {
       setRequestStatus("error");

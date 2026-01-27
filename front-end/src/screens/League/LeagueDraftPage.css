@@ -74,6 +74,43 @@
   color: #B7C2E6;
 }
 
+.draft-page__turn--user {
+  color: #F4F7FF;
+  font-weight: 800;
+}
+
+.draft-page__turn-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: #22D3EE;
+  color: #071019;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.draft-page__clock-alert {
+  margin: 0.4rem 0 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid #22D3EE;
+  background: #0B1620;
+  color: #22D3EE;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow:
+    0 0 0 1px #22D3EE2A inset,
+    0 12px 35px #0000004A;
+}
+
 .draft-page__waiting {
   margin: 0.35rem 0 0;
   color: #8EA0D6;

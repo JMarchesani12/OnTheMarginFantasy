@@ -1,3 +1,4 @@
+import datetime as dt
 import json
 import logging
 import os
@@ -342,7 +343,7 @@ class LeagueModel:
         )
 
         current_week_sql = text("""
-            SELECT w."weekNumber"
+            SELECT w."weekNumber", w."startDate", w."endDate"
             FROM "Week" w
             WHERE w."leagueId" = :league_id
               AND now() >= w."startDate"
@@ -360,21 +361,60 @@ class LeagueModel:
             ).fetchone()
 
         current_week_number = None
+        current_week_start = None
+        current_week_end = None
         if current_week_row:
             current_week_number = int(current_week_row[0])
+            current_week_start = current_week_row[1]
+            current_week_end = current_week_row[2]
 
         members: List[Dict[str, Any]] = []
+        local_tz = self.scheduleModel._get_league_timezone(league_id)
+        date_keys: List[dt.date] = []
+        if current_week_start and current_week_end:
+            start_dt = current_week_start
+            end_dt = current_week_end
+            if isinstance(start_dt, str):
+                start_dt = dt.datetime.fromisoformat(start_dt)
+            if isinstance(end_dt, str):
+                end_dt = dt.datetime.fromisoformat(end_dt)
+            if start_dt.tzinfo is None:
+                start_dt = start_dt.replace(tzinfo=dt.timezone.utc)
+            if end_dt.tzinfo is None:
+                end_dt = end_dt.replace(tzinfo=dt.timezone.utc)
+            cur_date = start_dt.astimezone(local_tz).date()
+            end_date = end_dt.astimezone(local_tz).date()
+            while cur_date <= end_date:
+                date_keys.append(cur_date)
+                cur_date = cur_date + dt.timedelta(days=1)
+
         for r in rows:
             member_id = r["memberId"]
             current_week_point_differential = 0
+            daily_point_differentials: List[Dict[str, Any]] = []
             if current_week_number is not None:
                 games = self.scheduleModel.get_member_games_for_week(
                     league_id=league_id,
                     member_id=member_id,
                     week_number=current_week_number,
                 )
+                daily_totals = {d: 0 for d in date_keys}
                 for g in games:
                     current_week_point_differential += int(g["memberPointDiff"])
+                    game_dt = g.get("date")
+                    if game_dt is None:
+                        continue
+                    if isinstance(game_dt, str):
+                        game_dt = dt.datetime.fromisoformat(game_dt)
+                    if game_dt.tzinfo is None:
+                        game_dt = game_dt.replace(tzinfo=dt.timezone.utc)
+                    game_date = game_dt.astimezone(local_tz).date()
+                    if game_date in daily_totals:
+                        daily_totals[game_date] += int(g["memberPointDiff"])
+                daily_point_differentials = [
+                    {"date": d.isoformat(), "pointDifferential": daily_totals[d]}
+                    for d in date_keys
+                ]
 
             members.append(
                 {
@@ -387,6 +427,7 @@ class LeagueModel:
                     "seasonPoints": r["seasonPoints"],
                     "displayName": r['displayName'],
                     "currentWeekPointDifferential": current_week_point_differential,
+                    "dailyPointDifferentials": daily_point_differentials,
                 }
             )
 

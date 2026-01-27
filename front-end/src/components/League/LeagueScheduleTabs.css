@@ -298,6 +298,36 @@
   opacity: 0.85;
 }
 
+/* Summary row */
+.league-schedule__summary-row td {
+  background: #0B0E1A;
+}
+
+.league-schedule__summary-label {
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+  color: #8EA0D6;
+}
+
+.league-schedule__summary-value {
+  font-weight: 800;
+  color: #C3D0FF;
+}
+
+.league-schedule__summary-value.is-positive {
+  color: #A3FF12;
+}
+
+.league-schedule__summary-value.is-negative {
+  color: #FF4D6D;
+}
+
+.league-schedule__summary-value.is-neutral {
+  color: #C3D0FF;
+}
+
 /* ===========================
    Team column
    =========================== */

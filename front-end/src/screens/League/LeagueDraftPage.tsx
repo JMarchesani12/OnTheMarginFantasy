@@ -521,8 +521,9 @@ const LeagueDraftPage = () => {
     typeof draftState?.currentMemberId === "number"
       ? (draftState.currentMemberId as number)
       : null;
+  const userMemberId = league?.memberId ?? null;
   const isUsersTurn =
-    currentMemberId !== null && currentMemberId === league.memberId;
+    currentMemberId !== null && currentMemberId === userMemberId;
   const currentMemberName =
     draftMembers.find((member) => member.memberId === currentMemberId)?.teamName ??
     "Unknown";
@@ -534,6 +535,10 @@ const LeagueDraftPage = () => {
     inTheHoleSlot?.memberTeamName ??
     draftMembers.find((member) => member.memberId === inTheHoleSlot?.memberId)?.teamName ??
     null;
+  const isUserOnDeck =
+    userMemberId != null && onDeckSlot?.memberId === userMemberId;
+  const isUserInTheHole =
+    userMemberId != null && inTheHoleSlot?.memberId === userMemberId;
   const draftStatus =
     typeof draftState?.status === "string" ? (draftState.status as string) : null;
   const isDraftLive = draftStatus === "live";
@@ -801,17 +806,28 @@ const LeagueDraftPage = () => {
             <p className="draft-page__status">Joined: {joinedCountLabel}</p>
           )}
           {currentMemberId && (
-            <p className="draft-page__turn">
+            <p className={`draft-page__turn ${isUsersTurn ? "draft-page__turn--user" : ""}`}>
               On the clock: {currentMemberName}
-              {isUsersTurn ? " (your turn)" : ""}
+              {isUsersTurn && <span className="draft-page__turn-badge">You</span>}
               {timeLeftLabel ? ` · ${timeLeftLabel}` : ""}
             </p>
           )}
+          {isUsersTurn && (
+            <div className="draft-page__clock-alert" role="status">
+              You are on the clock
+            </div>
+          )}
           {onDeckName && (
-            <p className="draft-page__turn">On deck: {onDeckName}</p>
+            <p className={`draft-page__turn ${isUserOnDeck ? "draft-page__turn--user" : ""}`}>
+              On deck: {onDeckName}
+              {isUserOnDeck && <span className="draft-page__turn-badge">You</span>}
+            </p>
           )}
           {inTheHoleName && (
-            <p className="draft-page__turn">In the hole: {inTheHoleName}</p>
+            <p className={`draft-page__turn ${isUserInTheHole ? "draft-page__turn--user" : ""}`}>
+              In the hole: {inTheHoleName}
+              {isUserInTheHole && <span className="draft-page__turn-badge">You</span>}
+            </p>
           )}
           {(showJoinButton || showCommissionerActions) && (
             <div className="draft-page__actions">
