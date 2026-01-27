@@ -659,31 +659,6 @@ const LeagueDetailPage = () => {
     effectiveWeekNumber,
   ]);
 
-  const dailyTotalsForCurrentWeek = useMemo(() => {
-    if (currentWeekDateKeys.length === 0) {
-      return { dates: [], totals: {} as Record<string, number> };
-    }
-
-    const formatter = new Intl.DateTimeFormat("en-CA", {
-      timeZone: leagueTimeZone ?? undefined,
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
-    const parts = formatter.formatToParts(new Date());
-    const year = parts.find((p) => p.type === "year")?.value ?? "0000";
-    const month = parts.find((p) => p.type === "month")?.value ?? "00";
-    const day = parts.find((p) => p.type === "day")?.value ?? "00";
-    const todayKey = `${year}-${month}-${day}`;
-
-    const totals: Record<string, number> = {};
-    currentWeekDateKeys.forEach((dateKey) => {
-      const isFuture = dateKey > todayKey;
-      totals[dateKey] = isFuture ? 0 : dailyDifferentialTotals[dateKey] ?? 0;
-    });
-
-    return { dates: currentWeekDateKeys, totals };
-  }, [currentWeekDateKeys, dailyDifferentialTotals, leagueTimeZone]);
 
   const currentMember = useMemo(
     () => members.find((member) => member.id === league.memberId),
