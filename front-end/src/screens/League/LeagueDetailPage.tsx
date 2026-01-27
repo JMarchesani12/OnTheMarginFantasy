@@ -18,7 +18,6 @@ import { getScoresForWeek } from "../../api/scoring";
 import type { ScoreWeek } from "../../types/scoring";
 import { useCurrentUser } from "../../context/currentUserContext";
 import { getEffectiveWeekNumber } from "../../utils/weekCutoff";
-import { buildDateHeadersFromWeek } from "../../utils/scheduleTable";
 import "./LeagueDetailPage.css";
 
 type LocationState = {
@@ -602,62 +601,6 @@ const LeagueDetailPage = () => {
       ),
     };
   }, [scoreboard, members, effectiveWeekNumber]);
-
-  const dailyDifferentialTotals = useMemo(() => {
-    const totals: Record<string, number> = {};
-
-    members.forEach((member) => {
-      (member.dailyPointDifferentials ?? []).forEach((entry) => {
-        if (!entry?.date) {
-          return;
-        }
-        const current = totals[entry.date] ?? 0;
-        totals[entry.date] = current + (entry.pointDifferential ?? 0);
-      });
-    });
-
-    return totals;
-  }, [members]);
-
-  const currentWeekDateKeys = useMemo(() => {
-    if (!league?.currentWeekStartDate || !league?.currentWeekEndDate) {
-      return [];
-    }
-
-    const shiftDays = (dateLike: Date | string, days: number) => {
-      const date =
-        typeof dateLike === "string" ? new Date(dateLike) : new Date(dateLike);
-      if (Number.isNaN(date.getTime())) {
-        return null;
-      }
-      const next = new Date(date);
-      next.setDate(next.getDate() + days);
-      return next.toISOString();
-    };
-
-    const shouldShift =
-      typeof effectiveWeekNumber === "number" &&
-      typeof league.currentWeekNumber === "number" &&
-      effectiveWeekNumber < league.currentWeekNumber;
-
-    const startDate = shouldShift
-      ? shiftDays(league.currentWeekStartDate, -7)
-      : new Date(league.currentWeekStartDate).toISOString();
-    const endDate = shouldShift
-      ? shiftDays(league.currentWeekEndDate, -7)
-      : new Date(league.currentWeekEndDate).toISOString();
-
-    if (!startDate || !endDate) {
-      return [];
-    }
-
-    return buildDateHeadersFromWeek(startDate, endDate).map((header) => header.key);
-  }, [
-    league?.currentWeekStartDate,
-    league?.currentWeekEndDate,
-    league?.currentWeekNumber,
-    effectiveWeekNumber,
-  ]);
 
 
   const currentMember = useMemo(
