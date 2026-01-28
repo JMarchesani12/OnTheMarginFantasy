@@ -12,7 +12,6 @@ export type ScoreboardRow = {
 type LeagueScoreboardProps = {
   weekNumbers: number[];
   rows: ScoreboardRow[];
-  weeklyDifferentialTotals?: Record<number, number>;
   currentWeekNumber: number | null;
   loading: boolean;
   error: string | null;
@@ -21,7 +20,6 @@ type LeagueScoreboardProps = {
 const LeagueScoreboard: FC<LeagueScoreboardProps> = ({
   weekNumbers,
   rows,
-  weeklyDifferentialTotals,
   currentWeekNumber,
   loading,
   error,
@@ -97,35 +95,6 @@ const LeagueScoreboard: FC<LeagueScoreboardProps> = ({
               <span className="league-scoreboard__total">{row.totalPoints}</span>
             </div>
           ))}
-          {weeklyDifferentialTotals && (
-            <div className="league-scoreboard__row league-scoreboard__row--footer">
-              <span>Week diff</span>
-              {weekNumbers.map((week) => {
-                const total = weeklyDifferentialTotals[week];
-                const className =
-                  typeof total !== "number"
-                    ? "is-neutral"
-                    : total > 0
-                    ? "is-positive"
-                    : total < 0
-                    ? "is-negative"
-                    : "is-neutral";
-                return (
-                  <span
-                    key={`diff-total-${week}`}
-                    className={`league-scoreboard__diff-total ${className}`}
-                  >
-                    {typeof total === "number"
-                      ? `${total > 0 ? "+" : ""}${total}`
-                      : "--"}
-                  </span>
-                );
-              })}
-              <span className="league-scoreboard__diff-total league-scoreboard__diff-total--spacer">
-                —
-              </span>
-            </div>
-          )}
         </div>
       )}
 

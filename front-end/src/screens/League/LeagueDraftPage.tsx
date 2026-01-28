@@ -12,10 +12,14 @@ import type {
 } from "../../types/draft";
 import { getAvailableTeams } from "../../api/roster";
 import { createDraftPick, getDraftState, pauseDraft, resumeDraft, startDraft } from "../../api/draft";
-import { getConferences } from "../../api/leagues";
+import { getConferences, getLeague, getLeaguesForUser } from "../../api/leagues";
 import { useAuth } from "../../context/AuthContext";
 import { useCurrentUser } from "../../context/currentUserContext";
 import { normalizeOwnedTeams, type RawOwnedTeam } from "../../utils/teams";
+import {
+  mapLeagueFromResponse,
+  normalizeLeaguesResponse,
+} from "../../utils/leagueMapping";
 import "./LeagueDraftPage.css";
 
 type LocationState = {
@@ -30,11 +34,62 @@ const LeagueDraftPage = () => {
   const { league_id } = useParams();
   const location = useLocation();
   const state = location.state as LocationState | null;
-  const league = state?.league;
+  const [league, setLeague] = useState<League | null>(state?.league ?? null);
+  const [leagueLoading, setLeagueLoading] = useState(false);
+  const [leagueError, setLeagueError] = useState<string | null>(null);
   const { session } = useAuth();
   const { userId: currentUserId } = useCurrentUser();
 
   const leagueId = league?.leagueId ?? (league_id ? Number(league_id) : null);
+
+  useEffect(() => {
+    if (state?.league) {
+      setLeague(mapLeagueFromResponse(state.league));
+    }
+  }, [state?.league]);
+
+  useEffect(() => {
+    if (league || !league_id || !currentUserId) {
+      return;
+    }
+
+    let isMounted = true;
+
+    const loadLeague = async () => {
+      try {
+        setLeagueLoading(true);
+        setLeagueError(null);
+        const response = await getLeaguesForUser(currentUserId, "all");
+        if (!isMounted) return;
+        const matches = normalizeLeaguesResponse(response);
+        const found = matches.find(
+          (item) => item.leagueId === Number(league_id)
+        );
+        if (found) {
+          setLeague(mapLeagueFromResponse(found));
+          return;
+        }
+        const fallback = await getLeague(Number(league_id));
+        if (isMounted) {
+          setLeague(mapLeagueFromResponse(fallback));
+        }
+      } catch (err: any) {
+        if (isMounted) {
+          setLeagueError(err?.message ?? "Failed to load league details.");
+        }
+      } finally {
+        if (isMounted) {
+          setLeagueLoading(false);
+        }
+      }
+    };
+
+    loadLeague();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [league, league_id, currentUserId]);
 
   const [availableTeams, setAvailableTeams] = useState<OwnedTeam[]>([]);
   const [selectedTeam, setSelectedTeam] = useState<OwnedTeam | null>(null);
@@ -474,9 +529,14 @@ const LeagueDraftPage = () => {
         >
           ← Back
         </button>
-        <p className="draft-page__empty">
-          League context missing. Return to your leagues list and try again.
-        </p>
+        {leagueLoading ? (
+          <p className="draft-page__empty">Loading league details…</p>
+        ) : (
+          <p className="draft-page__empty">
+            {leagueError ??
+              "League context missing. Return to your leagues list and try again."}
+          </p>
+        )}
       </div>
     );
   }

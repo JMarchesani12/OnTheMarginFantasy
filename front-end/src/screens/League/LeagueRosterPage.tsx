@@ -3,13 +3,18 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import type { League } from "../../types/league";
 import type { OwnedTeam } from "../../types/schedule";
 import type { LeagueMember } from "../../types/leagueMember";
-import { getMembersOfLeague } from "../../api/leagues";
+import { getLeague, getLeaguesForUser, getMembersOfLeague } from "../../api/leagues";
 import { getAvailableTeams, getMemberTeams } from "../../api/roster";
 import { submitFreeAgencyRequest, tradeRequestProposal } from "../../api/transaction";
 import TradeRequestsPanel from "../../components/League/TradeRequestsPanel";
 import { formatLeagueDate } from "../../utils/date";
 import { normalizeOwnedTeams, type RawOwnedTeam } from "../../utils/teams";
 import { getEffectiveWeekNumber } from "../../utils/weekCutoff";
+import {
+  mapLeagueFromResponse,
+  normalizeLeaguesResponse,
+} from "../../utils/leagueMapping";
+import { useCurrentUser } from "../../context/currentUserContext";
 import "./LeagueRosterPage.css";
 
 type LocationState = {
@@ -23,7 +28,10 @@ const LeagueRosterPage = () => {
   const { league_id } = useParams();
   const location = useLocation();
   const state = location.state as LocationState | null;
-  const league = state?.league;
+  const [league, setLeague] = useState<League | null>(state?.league ?? null);
+  const [leagueLoading, setLeagueLoading] = useState(false);
+  const [leagueError, setLeagueError] = useState<string | null>(null);
+  const { userId: currentUserId } = useCurrentUser();
 
   const leagueId = league?.leagueId ?? (league_id ? Number(league_id) : null);
   const memberId = league?.memberId ?? null;
@@ -109,6 +117,55 @@ const LeagueRosterPage = () => {
   useEffect(() => {
     loadRosterData();
   }, [loadRosterData]);
+
+  useEffect(() => {
+    if (state?.league) {
+      setLeague(mapLeagueFromResponse(state.league));
+    }
+  }, [state?.league]);
+
+  useEffect(() => {
+    if (league || !league_id || !currentUserId) {
+      return;
+    }
+
+    let isMounted = true;
+
+    const loadLeague = async () => {
+      try {
+        setLeagueLoading(true);
+        setLeagueError(null);
+        const response = await getLeaguesForUser(currentUserId, "all");
+        if (!isMounted) return;
+        const matches = normalizeLeaguesResponse(response);
+        const found = matches.find(
+          (item) => item.leagueId === Number(league_id)
+        );
+        if (found) {
+          setLeague(mapLeagueFromResponse(found));
+          return;
+        }
+        const fallback = await getLeague(Number(league_id));
+        if (isMounted) {
+          setLeague(mapLeagueFromResponse(fallback));
+        }
+      } catch (err: any) {
+        if (isMounted) {
+          setLeagueError(err?.message ?? "Failed to load league details.");
+        }
+      } finally {
+        if (isMounted) {
+          setLeagueLoading(false);
+        }
+      }
+    };
+
+    loadLeague();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [league, league_id, currentUserId]);
 
   useEffect(() => {
     if (!leagueId) {
@@ -413,9 +470,14 @@ const LeagueRosterPage = () => {
         >
           ← Back
         </button>
-        <p className="roster-page__empty">
-          League context missing. Please open this page from your league detail view.
-        </p>
+        {leagueLoading ? (
+          <p className="roster-page__empty">Loading league details…</p>
+        ) : (
+          <p className="roster-page__empty">
+            {leagueError ??
+              "League context missing. Please open this page from your league detail view."}
+          </p>
+        )}
       </div>
     );
   }

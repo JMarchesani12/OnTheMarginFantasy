@@ -97,15 +97,6 @@
   background: #0B0E1A;
 }
 
-.league-scoreboard__row--footer {
-  font-weight: 800;
-  text-transform: uppercase;
-  font-size: 0.75rem;
-  letter-spacing: 0.06em;
-  color: #8EA0D6;
-  background: #0B0E1A;
-}
-
 /* Cells */
 .league-scoreboard__team {
   font-weight: 700;
@@ -131,26 +122,6 @@
 .league-scoreboard__diff {
   font-size: 0.75rem;
   font-weight: 700;
-}
-
-.league-scoreboard__diff-total {
-  font-weight: 800;
-}
-
-.league-scoreboard__diff-total--spacer {
-  color: #8EA0D6;
-}
-
-.league-scoreboard__diff-total.is-positive {
-  color: #A3FF12;
-}
-
-.league-scoreboard__diff-total.is-negative {
-  color: #FF4D6D;
-}
-
-.league-scoreboard__diff-total.is-neutral {
-  color: #C3D0FF;
 }
 
 .league-scoreboard__diff.is-positive {

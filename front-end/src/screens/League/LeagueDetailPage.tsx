@@ -1,6 +1,6 @@
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
-import type { League, SingleLeague } from "../../types/league";
+import type { League } from "../../types/league";
 import type { LeagueMember } from "../../types/leagueMember";
 import {
   getLeaguesForUser,
@@ -18,6 +18,10 @@ import { getScoresForWeek } from "../../api/scoring";
 import type { ScoreWeek } from "../../types/scoring";
 import { useCurrentUser } from "../../context/currentUserContext";
 import { getEffectiveWeekNumber } from "../../utils/weekCutoff";
+import {
+  mapLeagueFromResponse,
+  normalizeLeaguesResponse,
+} from "../../utils/leagueMapping";
 import "./LeagueDetailPage.css";
 
 type LocationState = {
@@ -69,93 +73,6 @@ const LeagueDetailPage = () => {
     }
   }, [state?.league]);
 
-  const normalizeLeaguesResponse = (response: unknown): League[] => {
-    if (Array.isArray(response)) {
-      return response as League[];
-    }
-
-    if (
-      response &&
-      typeof response === "object" &&
-      Array.isArray((response as { leagues?: League[] }).leagues)
-    ) {
-      return (response as { leagues: League[] }).leagues;
-    }
-
-    return [];
-  };
-
-  const normalizeLeagueSettings = (value: unknown) => {
-    if (!value) return undefined;
-    if (typeof value === "string") {
-      try {
-        return JSON.parse(value) as League["settings"];
-      } catch {
-        return undefined;
-      }
-    }
-    return value as League["settings"];
-  };
-
-  const mapLeagueFromResponse = (
-    payload: SingleLeague | League | { league?: SingleLeague | League }
-  ): League => {
-    const data =
-      (payload as { league?: SingleLeague | League }).league ?? payload;
-
-    if ((data as League).leagueId) {
-      const leagueData = data as League;
-      return {
-        ...leagueData,
-        settings: normalizeLeagueSettings(leagueData.settings) ?? leagueData.settings,
-      };
-    }
-
-    const single = data as SingleLeague;
-    const status = single.status ?? "Pre-Draft";
-    const commissionerId =
-      (single as { commissionerId?: number }).commissionerId ??
-      (single as { commissioner?: number }).commissioner ??
-      0;
-
-    return {
-      leagueId: single.id,
-      leagueCreatedAt: single.createdAt,
-      leagueName: single.name,
-      sport: String(single.sport),
-      maxPlayersToHaveMaxRounds: 0,
-      numPlayers: single.numPlayers,
-      status,
-      settings: normalizeLeagueSettings(single.settings) ?? {
-        bonuses: {},
-        transactions: { tradeVeto: { enabled: false, requiredVetoCount: 0 } },
-        draft: {
-          draftType: "SNAKE",
-          selectionTime: 60,
-          numberOfRounds: 0,
-          timeoutAction: "AUTO-SKIP",
-          graceSeconds: 0,
-        },
-      },
-      updatedAt: single.updatedAt ?? single.createdAt,
-      draftDate: single.draftDate,
-      tradeDeadline: single.tradeDeadline,
-      freeAgentDeadline: single.freeAgentDeadline,
-      seasonYear: single.seasonYear,
-      commissionerId,
-      commissionerDisplayName:
-        (single as { commissionerDisplayName?: string })
-          .commissionerDisplayName ?? "",
-      memberId: 0,
-      teamName: null,
-      draftOrder: null,
-      seasonPoints: null,
-      currentWeekEndDate: null,
-      currentWeekId: null,
-      currentWeekNumber: null,
-      currentWeekStartDate: null,
-    };
-  };
 
   useEffect(() => {
     if (league || !league_id || !currentUserId) {
@@ -522,29 +439,6 @@ const LeagueDetailPage = () => {
       rows: Array.from(rows.values()).sort((a, b) => b.totalPoints - a.totalPoints),
     };
   }, [scoreboard, members, effectiveWeekNumber]);
-
-  const weeklyDifferentialTotals = useMemo(() => {
-    const totals: Record<number, number> = {};
-    scoreboardRows.weekNumbers.forEach((week) => {
-      totals[week] = 0;
-    });
-
-    Object.entries(scoreboard).forEach(([weekKey, scores]) => {
-      const week = Number(weekKey);
-      if (!Number.isFinite(week) || !(week in totals)) {
-        return;
-      }
-      let sum = 0;
-      scores.forEach((score) => {
-        if (typeof score.pointDifferential === "number") {
-          sum += score.pointDifferential;
-        }
-      });
-      totals[week] = sum;
-    });
-
-    return totals;
-  }, [scoreboard, scoreboardRows.weekNumbers]);
 
   const currentWeekTotals = useMemo(() => {
     const currentWeek = effectiveWeekNumber ?? null;
@@ -923,7 +817,6 @@ const LeagueDetailPage = () => {
         <LeagueScoreboard
           weekNumbers={scoreboardRows.weekNumbers}
           rows={scoreboardRows.rows}
-          weeklyDifferentialTotals={weeklyDifferentialTotals}
           currentWeekNumber={effectiveWeekNumber ?? null}
           loading={scoreboardLoading}
           error={scoreboardError}

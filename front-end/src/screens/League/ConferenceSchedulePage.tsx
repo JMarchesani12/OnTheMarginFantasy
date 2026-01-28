@@ -7,7 +7,8 @@ import {
   getScheduleForConferenceForWeek,
   getScheduleForMemberForWeek,
 } from "../../api/schedule";
-import { getConferences } from "../../api/leagues";
+import { getConferences, getLeague, getLeaguesForUser } from "../../api/leagues";
+import { useCurrentUser } from "../../context/currentUserContext";
 import {
   buildDateHeadersFromWeek,
   formatLocalTime,
@@ -15,6 +16,10 @@ import {
   type DateHeader,
 } from "../../utils/scheduleTable";
 import { getEffectiveWeekNumber } from "../../utils/weekCutoff";
+import {
+  mapLeagueFromResponse,
+  normalizeLeaguesResponse,
+} from "../../utils/leagueMapping";
 import "./ConferenceSchedulePage.css";
 
 type LocationState = {
@@ -59,7 +64,10 @@ const ConferenceSchedulePage = () => {
   const location = useLocation();
   const { league_id } = useParams();
   const state = location.state as LocationState | null;
-  const league = state?.league;
+  const [league, setLeague] = useState<League | null>(state?.league ?? null);
+  const [leagueLoading, setLeagueLoading] = useState(false);
+  const [leagueError, setLeagueError] = useState<string | null>(null);
+  const { userId: currentUserId } = useCurrentUser();
 
   const leagueId = league?.leagueId ?? (league_id ? Number(league_id) : null);
   const memberId = league?.memberId ?? null;
@@ -92,6 +100,55 @@ const ConferenceSchedulePage = () => {
     typeof window !== "undefined" && leagueId
       ? `conferenceSelection:${leagueId}`
       : null;
+
+  useEffect(() => {
+    if (state?.league) {
+      setLeague(mapLeagueFromResponse(state.league));
+    }
+  }, [state?.league]);
+
+  useEffect(() => {
+    if (league || !league_id || !currentUserId) {
+      return;
+    }
+
+    let isMounted = true;
+
+    const loadLeague = async () => {
+      try {
+        setLeagueLoading(true);
+        setLeagueError(null);
+        const response = await getLeaguesForUser(currentUserId, "all");
+        if (!isMounted) return;
+        const matches = normalizeLeaguesResponse(response);
+        const found = matches.find(
+          (item) => item.leagueId === Number(league_id)
+        );
+        if (found) {
+          setLeague(mapLeagueFromResponse(found));
+          return;
+        }
+        const fallback = await getLeague(Number(league_id));
+        if (isMounted) {
+          setLeague(mapLeagueFromResponse(fallback));
+        }
+      } catch (err: any) {
+        if (isMounted) {
+          setLeagueError(err?.message ?? "Failed to load league details.");
+        }
+      } finally {
+        if (isMounted) {
+          setLeagueLoading(false);
+        }
+      }
+    };
+
+    loadLeague();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [league, league_id, currentUserId]);
 
   useEffect(() => {
     setWeekNumber(initialWeekNumber);
@@ -219,10 +276,46 @@ const ConferenceSchedulePage = () => {
       return { dateHeaders: [] as DateHeader[], teamRows: [] as TeamRow[] };
     }
 
-    const headers =
-      weekInfo && weekInfo.startDate && weekInfo.endDate
-        ? buildDateHeadersFromWeek(weekInfo.startDate, weekInfo.endDate)
-        : buildFallbackHeaders(schedule.games);
+    const shiftDays = (dateLike: Date | string, days: number) => {
+      const date =
+        typeof dateLike === "string" ? new Date(dateLike) : new Date(dateLike);
+      if (Number.isNaN(date.getTime())) {
+        return null;
+      }
+      const next = new Date(date);
+      next.setDate(next.getDate() + days);
+      return next.toISOString();
+    };
+
+    let headers: DateHeader[] = [];
+    if (weekInfo?.startDate && weekInfo?.endDate) {
+      headers = buildDateHeadersFromWeek(weekInfo.startDate, weekInfo.endDate);
+    } else if (
+      league?.currentWeekStartDate &&
+      league?.currentWeekEndDate &&
+      typeof league.currentWeekNumber === "number"
+    ) {
+      const weekOffset = weekNumber - league.currentWeekNumber;
+      const inferredStart = shiftDays(league.currentWeekStartDate, weekOffset * 7);
+      const inferredEnd = shiftDays(league.currentWeekEndDate, weekOffset * 7);
+      if (inferredStart && inferredEnd) {
+        headers = buildDateHeadersFromWeek(inferredStart, inferredEnd);
+      }
+    }
+
+    if (headers.length === 0) {
+      headers = buildFallbackHeaders(schedule.games);
+      if (headers.length > 0) {
+        const [year, month, day] = headers[0].key.split("-").map(Number);
+        const first = new Date(year, (month ?? 1) - 1, day ?? 1);
+        const dayOffset = (first.getDay() + 6) % 7;
+        const start = new Date(first);
+        start.setDate(start.getDate() - dayOffset);
+        const end = new Date(start);
+        end.setDate(end.getDate() + 6);
+        headers = buildDateHeadersFromWeek(start.toISOString(), end.toISOString());
+      }
+    }
 
     const teamMap = new Map<
       number,
@@ -303,7 +396,7 @@ const ConferenceSchedulePage = () => {
       .sort((a, b) => a.teamName.localeCompare(b.teamName));
 
     return { dateHeaders: headers, teamRows: rows };
-  }, [schedule, weekInfo]);
+  }, [schedule, weekInfo, league, weekNumber]);
 
   const filteredRows = useMemo(() => {
     if (!searchTerm) {
@@ -324,6 +417,10 @@ const ConferenceSchedulePage = () => {
     const raw = evt.target.value;
     if (raw === "") {
       setActiveConferenceId(null);
+      setSchedule(null);
+      setWeekInfo(null);
+      setError(null);
+      setSearchTerm("");
       return;
     }
     const nextId = Number(raw);
@@ -366,7 +463,14 @@ const ConferenceSchedulePage = () => {
         >
           ← Back
         </button>
-        <p>League context missing. Re-open this page from your league dashboard.</p>
+        {leagueLoading ? (
+          <p>Loading league details…</p>
+        ) : (
+          <p>
+            {leagueError ??
+              "League context missing. Re-open this page from your league dashboard."}
+          </p>
+        )}
       </div>
     );
   }

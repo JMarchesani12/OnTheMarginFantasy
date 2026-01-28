@@ -3,7 +3,13 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import type { League } from "../../types/league";
 import type { TeamSeasonSchedule } from "../../types/schedule";
 import { getScheduleForTeam } from "../../api/schedule";
+import { getLeague, getLeaguesForUser } from "../../api/leagues";
 import { LEAGUE_TIME_ZONE } from "../../utils/scheduleTable";
+import {
+  mapLeagueFromResponse,
+  normalizeLeaguesResponse,
+} from "../../utils/leagueMapping";
+import { useCurrentUser } from "../../context/currentUserContext";
 import "./TeamSchedulePage.css";
 
 type LocationState = {
@@ -18,12 +24,6 @@ type LocationState = {
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
   timeZone: LEAGUE_TIME_ZONE,
   weekday: "short",
-  month: "short",
-  day: "numeric",
-});
-
-const weekRangeFormatter = new Intl.DateTimeFormat(undefined, {
-  timeZone: LEAGUE_TIME_ZONE,
   month: "short",
   day: "numeric",
 });
@@ -46,7 +46,10 @@ const TeamSchedulePage = () => {
   const location = useLocation();
   const { league_id, team_id } = useParams();
   const state = location.state as LocationState | null;
-  const league = state?.league;
+  const [league, setLeague] = useState<League | null>(state?.league ?? null);
+  const [leagueLoading, setLeagueLoading] = useState(false);
+  const [leagueError, setLeagueError] = useState<string | null>(null);
+  const { userId: currentUserId } = useCurrentUser();
 
   const teamId = team_id ? Number(team_id) : null;
   const teamLabel = state?.teamName ?? (teamId ? `Team ${teamId}` : "Team");
@@ -54,6 +57,55 @@ const TeamSchedulePage = () => {
   const [schedule, setSchedule] = useState<TeamSeasonSchedule | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (state?.league) {
+      setLeague(mapLeagueFromResponse(state.league));
+    }
+  }, [state?.league]);
+
+  useEffect(() => {
+    if (league || !league_id || !currentUserId) {
+      return;
+    }
+
+    let isMounted = true;
+
+    const loadLeague = async () => {
+      try {
+        setLeagueLoading(true);
+        setLeagueError(null);
+        const response = await getLeaguesForUser(currentUserId, "all");
+        if (!isMounted) return;
+        const matches = normalizeLeaguesResponse(response);
+        const found = matches.find(
+          (item) => item.leagueId === Number(league_id)
+        );
+        if (found) {
+          setLeague(mapLeagueFromResponse(found));
+          return;
+        }
+        const fallback = await getLeague(Number(league_id));
+        if (isMounted) {
+          setLeague(mapLeagueFromResponse(fallback));
+        }
+      } catch (err: any) {
+        if (isMounted) {
+          setLeagueError(err?.message ?? "Failed to load league details.");
+        }
+      } finally {
+        if (isMounted) {
+          setLeagueLoading(false);
+        }
+      }
+    };
+
+    loadLeague();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [league, league_id, currentUserId]);
 
   useEffect(() => {
     if (!league || !teamId) return;
@@ -119,7 +171,14 @@ const TeamSchedulePage = () => {
         >
           ← Back
         </button>
-        <p>Missing team or league context. Please open this page from your league.</p>
+        {leagueLoading ? (
+          <p>Loading league details…</p>
+        ) : (
+          <p>
+            {leagueError ??
+              "Missing team or league context. Please open this page from your league."}
+          </p>
+        )}
       </div>
     );
   }
@@ -138,28 +197,6 @@ const TeamSchedulePage = () => {
           <h1>{teamLabel}</h1>
           <p>Season {league.seasonYear}</p>
         </div>
-        {state?.fromConferenceId && state?.fromWeekNumber && (
-          <div className="team-schedule__badge">
-            <span className="team-schedule__badge-week">
-              Week {state.fromWeekNumber}
-              {state.fromWeekStartDate || state.fromWeekEndDate ? (
-                <>
-                  {" • "}
-                  {[
-                    state.fromWeekStartDate
-                      ? weekRangeFormatter.format(new Date(state.fromWeekStartDate))
-                      : null,
-                    state.fromWeekEndDate
-                      ? weekRangeFormatter.format(new Date(state.fromWeekEndDate))
-                      : null,
-                  ]
-                    .filter(Boolean)
-                    .join(" – ")}
-                </>
-              ) : null}
-            </span>
-          </div>
-        )}
       </header>
 
       <div className="team-schedule__record">
