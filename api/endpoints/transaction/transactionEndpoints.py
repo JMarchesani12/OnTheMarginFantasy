@@ -219,7 +219,7 @@ class TransactionEndpoints:
     # GET /api/league/<league_id>/transactions
     def get_transactions_for_league(self, league_id: int):
         try:
-            status = request.args.get("status")
+            status = request.args.get("status") or TransactionModel.STATUS_PENDING
             result = self.transactionModel.get_transactions_for_league(
                 league_id=int(league_id),
                 status=status,
