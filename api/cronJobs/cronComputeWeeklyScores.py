@@ -45,7 +45,7 @@ LOCK_NEXT_WEEK = text("""
        AND "weekNumber" = :next_week_number
 """)
 
-GET_PENDING_TRADES = text("""
+GET_PENDING_TRANSACTIONS = text("""
     SELECT id
     FROM "Transaction"
     WHERE status = 'PENDING_APPLY'
@@ -99,14 +99,14 @@ def main():
                 {"league_id": league_id, "next_week_number": next_week_number},
             )
 
-    # 3) Apply trades after scoring
+    # 3) Apply pending transactions after scoring
     with engine.begin() as conn:
-        trade_rows = conn.execute(GET_PENDING_TRADES).fetchall()
+        trade_rows = conn.execute(GET_PENDING_TRANSACTIONS).fetchall()
 
     for tr in trade_rows:
-        transaction_model.apply_trade(int(tr._mapping["id"]))
+        transaction_model.apply_pending_transaction(int(tr._mapping["id"]))
 
-    print("Weekly scoring, next-week locking, and trades complete.")
+    print("Weekly scoring, next-week locking, and transactions complete.")
 
 
 if __name__ == "__main__":

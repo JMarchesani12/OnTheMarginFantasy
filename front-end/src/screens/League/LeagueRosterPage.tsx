@@ -6,6 +6,7 @@ import type { LeagueMember } from "../../types/leagueMember";
 import { getLeague, getLeaguesForUser, getMembersOfLeague } from "../../api/leagues";
 import { getAvailableTeams, getMemberTeams } from "../../api/roster";
 import { submitFreeAgencyRequest, tradeRequestProposal } from "../../api/transaction";
+import PendingTransactionsPanel from "../../components/League/PendingTransactionsPanel";
 import TradeRequestsPanel from "../../components/League/TradeRequestsPanel";
 import { formatLeagueDate } from "../../utils/date";
 import { normalizeOwnedTeams, type RawOwnedTeam } from "../../utils/teams";
@@ -299,6 +300,17 @@ const LeagueRosterPage = () => {
     () => groupTeams(applyFilters(tradeMemberTeams)),
     [tradeMemberTeams, searchTerm, conferenceFilter]
   );
+
+  const teamNameLookup = useMemo(() => {
+    const lookup: Record<number, string> = {};
+    [...ownedTeams, ...availableTeams, ...tradeMemberTeams].forEach((team) => {
+      if (!Number.isFinite(team.teamId)) return;
+      if (!lookup[team.teamId]) {
+        lookup[team.teamId] = team.teamName;
+      }
+    });
+    return lookup;
+  }, [ownedTeams, availableTeams, tradeMemberTeams]);
 
   const toggleAddTeam = (team: OwnedTeam) => {
     setSelectedAdd((current) =>
@@ -841,6 +853,11 @@ const LeagueRosterPage = () => {
           />
         </>
       )}
+      <PendingTransactionsPanel
+        leagueId={league.leagueId}
+        members={members}
+        teamNameLookup={teamNameLookup}
+      />
     </div>
   );
 };

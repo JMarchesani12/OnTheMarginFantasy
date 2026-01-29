@@ -49,3 +49,9 @@ def setup_routes(app, engine):
         view_func=transactionEndpoints.apply_trade,
         methods=["POST"],
     )
+
+    app.add_url_rule(
+        "/api/league/<int:league_id>/transaction/pending",
+        view_func=transactionEndpoints.get_transactions_for_league,
+        methods=["GET"],
+    )

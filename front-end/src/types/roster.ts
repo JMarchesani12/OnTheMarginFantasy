@@ -74,3 +74,23 @@ export type VetoResponse = {
     transactionId: number;
     vetoCount: number;
 }
+
+export type PendingTransaction = {
+    id: number;
+    leagueId: number;
+    weekId: number | null;
+    weekNumber: number | null;
+    type: string;
+    status: string;
+    memberFromId: number | null;
+    memberToId: number | null;
+    fromTeamIds?: number[] | null;
+    toTeamIds?: number[] | null;
+    fromTeams?: Team[] | null;
+    toTeams?: Team[] | null;
+    memberFromDisplayName?: string | null;
+    memberToDisplayName?: string | null;
+    createdAt: string;
+};
+
+export type PendingTransactionsResponse = PendingTransaction[];

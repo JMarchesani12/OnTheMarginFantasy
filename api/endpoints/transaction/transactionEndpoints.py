@@ -213,3 +213,19 @@ class TransactionEndpoints:
             return jsonify(result), 200
         except ValueError as e:
             return jsonify({"error": str(e)}), 400
+        except Exception:
+            return jsonify({"error": "Failed to apply trade"}), 500
+
+    # GET /api/league/<league_id>/transactions
+    def get_transactions_for_league(self, league_id: int):
+        try:
+            status = request.args.get("status")
+            result = self.transactionModel.get_transactions_for_league(
+                league_id=int(league_id),
+                status=status,
+            )
+            return jsonify(result), 200
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 400
+        except Exception:
+            return jsonify({"error": "Failed to get transactions"}), 500

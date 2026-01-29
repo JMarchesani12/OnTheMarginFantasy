@@ -179,6 +179,158 @@ class TransactionModel:
 
         return dict(row._mapping)
     
+    def _get_pending_free_agent_team_ids_for_week(
+        self,
+        conn,
+        league_id: int,
+        week_id: int,
+    ) -> Dict[str, set[int]]:
+        params = {
+            "league_id": league_id,
+            "week_id": week_id,
+            "status": self.STATUS_PENDING,
+            "type": self.TYPE_FREE_AGENT,
+        }
+
+        add_rows = conn.execute(
+            text("""
+                SELECT DISTINCT (jsonb_array_elements_text(t."toTeamIds"))::int AS team_id
+                FROM "Transaction" t
+                WHERE t."leagueId" = :league_id
+                  AND t."weekId" = :week_id
+                  AND t.status = :status
+                  AND t.type = :type
+                  AND t."toTeamIds" IS NOT NULL
+            """),
+            params,
+        ).scalars().all()
+
+        drop_rows = conn.execute(
+            text("""
+                SELECT DISTINCT (jsonb_array_elements_text(t."fromTeamIds"))::int AS team_id
+                FROM "Transaction" t
+                WHERE t."leagueId" = :league_id
+                  AND t."weekId" = :week_id
+                  AND t.status = :status
+                  AND t.type = :type
+                  AND t."fromTeamIds" IS NOT NULL
+            """),
+            params,
+        ).scalars().all()
+
+        return {
+            "adds": {int(x) for x in add_rows},
+            "drops": {int(x) for x in drop_rows},
+        }
+
+    def _parse_team_ids(self, raw) -> List[int]:
+        if not raw:
+            return []
+        if isinstance(raw, list):
+            return [int(x) for x in raw]
+        if isinstance(raw, str):
+            return [int(x) for x in json.loads(raw)]
+        return [int(x) for x in list(raw)]
+
+    def apply_free_agent_transaction(self, transaction_id: int) -> None:
+        with self.db.begin() as conn:
+            tx = conn.execute(
+                text("""
+                    SELECT *
+                    FROM "Transaction"
+                    WHERE id = :id
+                    FOR UPDATE
+                """),
+                {"id": transaction_id},
+            ).fetchone()
+
+            if not tx:
+                raise ValueError("Transaction not found")
+
+            txm = tx._mapping
+            if txm["type"] != self.TYPE_FREE_AGENT:
+                raise ValueError("Transaction is not a free agent add/drop")
+            if txm["status"] != self.STATUS_PENDING:
+                raise ValueError("Transaction is not pending apply")
+
+            week = self._get_week_for_league(txm["leagueId"], txm["weekId"])
+            week_number = int(week["weekNumber"])
+
+            drop_team_ids = self._parse_team_ids(txm["fromTeamIds"])
+            add_team_ids = self._parse_team_ids(txm["toTeamIds"])
+
+            if drop_team_ids:
+                conn.execute(
+                    text("""
+                        UPDATE "LeagueTeamSlot"
+                        SET "droppedWeek" = :week_number
+                        WHERE "leagueId"   = :league_id
+                          AND "memberId"   = :member_id
+                          AND "sportTeamId" = ANY(:team_ids)
+                          AND "acquiredWeek" <= :week_number
+                          AND ("droppedWeek" IS NULL OR "droppedWeek" > :week_number)
+                    """),
+                    {
+                        "league_id": txm["leagueId"],
+                        "member_id": txm["memberFromId"],
+                        "team_ids": drop_team_ids,
+                        "week_number": week_number,
+                    },
+                )
+
+            if add_team_ids:
+                insert_sql = text("""
+                    INSERT INTO "LeagueTeamSlot"
+                        ("leagueId","memberId","sportTeamId","acquiredWeek","acquiredVia")
+                    VALUES
+                        (:league_id, :member_id, :team_id, :week_number, :acquired_via)
+                """)
+                rows = [
+                    {
+                        "league_id": txm["leagueId"],
+                        "member_id": txm["memberFromId"],
+                        "team_id": int(tid),
+                        "week_number": week_number,
+                        "acquired_via": self.TYPE_FREE_AGENT,
+                    }
+                    for tid in add_team_ids
+                ]
+                conn.execute(insert_sql, rows)
+
+            conn.execute(
+                text("""
+                    UPDATE "Transaction"
+                    SET status = :status
+                    WHERE id = :id
+                """),
+                {"status": self.STATUS_COMPLETED, "id": transaction_id},
+            )
+
+    def apply_pending_transaction(self, transaction_id: int) -> None:
+        with self.db.connect() as conn:
+            tx = conn.execute(
+                text("""
+                    SELECT id, type, status
+                    FROM "Transaction"
+                    WHERE id = :id
+                """),
+                {"id": transaction_id},
+            ).fetchone()
+
+        if not tx:
+            raise ValueError("Transaction not found")
+
+        txm = tx._mapping
+        if txm["status"] != self.STATUS_PENDING:
+            raise ValueError("Transaction is not pending apply")
+
+        if txm["type"] == self.TYPE_TRADE:
+            self.apply_trade(transaction_id)
+        elif txm["type"] == self.TYPE_FREE_AGENT:
+            self.apply_free_agent_transaction(transaction_id)
+        else:
+            raise ValueError(f"Unsupported transaction type: {txm['type']}")
+
     def _get_next_unlocked_week_for_league(
         self,
         league_id: int,
@@ -865,6 +1017,23 @@ class TransactionModel:
 
         with self.db.begin() as conn:
             self._assert_free_agent_deadline(conn, league_id)
+            pending = self._get_pending_free_agent_team_ids_for_week(
+                conn,
+                league_id=league_id,
+                week_id=week_id,
+            )
+            pending_adds = pending["adds"]
+            pending_drops = pending["drops"]
+
+            if add_team_id is not None and add_team_id in pending_adds:
+                raise ValueError(
+                    f"Team {add_team_id} already has a pending add for week {week_number}"
+                )
+            if drop_team_id is not None and drop_team_id in pending_drops:
+                raise ValueError(
+                    f"Team {drop_team_id} already has a pending drop for week {week_number}"
+                )
+
             # Conference info for any teams involved
             involved_team_ids: List[int] = []
             if add_team_id is not None:
@@ -922,9 +1091,10 @@ class TransactionModel:
                 if self._is_team_owned_in_week(
                     conn, league_id, add_team_id, week_number
                 ):
-                    raise ValueError(
-                        f"Team {add_team_id} is not a free agent in week {week_number}"
-                    )
+                    if add_team_id not in pending_drops:
+                        raise ValueError(
+                            f"Team {add_team_id} is not a free agent in week {week_number}"
+                        )
 
                 info = team_conf_info[add_team_id]
                 cid = info["sportConferenceId"]
@@ -937,56 +1107,15 @@ class TransactionModel:
                     )
                 counts_after[cid] = new_count
 
-            # 3) Apply DB changes: drop then add
-            if drop_team_id is not None:
-                drop_sql = text(
-                    """
-                    UPDATE "LeagueTeamSlot"
-                    SET "droppedWeek" = :week_number
-                    WHERE "leagueId"   = :league_id
-                      AND "memberId"   = :member_id
-                      AND "sportTeamId" = :team_id
-                      AND "acquiredWeek" <= :week_number
-                      AND ("droppedWeek" IS NULL OR "droppedWeek" > :week_number)
-                    """
-                )
-                conn.execute(
-                    drop_sql,
-                    {
-                        "league_id": league_id,
-                        "member_id": member_id,
-                        "team_id": drop_team_id,
-                        "week_number": week_number,
-                    },
-                )
-
-            if add_team_id is not None:
-                insert_sql = text(
-                    """
-                    INSERT INTO "LeagueTeamSlot"
-                        ("leagueId", "memberId", "sportTeamId", "acquiredWeek", "acquiredVia")
-                    VALUES
-                        (:league_id, :member_id, :team_id, :week_number, :acquired_via)
-                    """
-                )
-                conn.execute(
-                    insert_sql,
-                    {
-                        "league_id": league_id,
-                        "member_id": member_id,
-                        "team_id": add_team_id,
-                        "week_number": week_number,
-                        "acquired_via": self.TYPE_FREE_AGENT,
-                    },
-                )
-
-            # 4) Log Transaction
+            # 3) Log Transaction (pending apply)
+            from_team_ids = [drop_team_id] if drop_team_id is not None else []
+            to_team_ids = [add_team_id] if add_team_id is not None else []
             tx_sql = text(
                 """
                 INSERT INTO "Transaction"
-                    ("leagueId", "weekId", type, "memberFromId", "memberToId", status)
+                    ("leagueId", "weekId", type, "memberFromId", "memberToId", status, "fromTeamIds", "toTeamIds")
                 VALUES
-                    (:league_id, :week_id, :type, :member_from_id, NULL, :status)
+                    (:league_id, :week_id, :type, :member_from_id, :member_to_id, :status, CAST(:from_teams AS jsonb), CAST(:to_teams AS jsonb))
                 RETURNING id
                 """
             )
@@ -998,16 +1127,24 @@ class TransactionModel:
                     "week_id": week_id,
                     "type": self.TYPE_FREE_AGENT,
                     "member_from_id": member_id,
-                    "status": self.STATUS_COMPLETED,
+                    "member_to_id": member_id,
+                    "status": self.STATUS_PENDING,
+                    "from_teams": json.dumps(from_team_ids),
+                    "to_teams": json.dumps(to_team_ids),
                 },
             ).fetchone()
 
             transaction_id = int(tx_row._mapping["id"])
 
-            # 5) Updated roster
+            # 4) Current roster (does not include pending move)
             member_roster = self._get_member_roster_team_ids_for_week(
                 conn, league_id, member_id, week_number
             )
+            if drop_team_id is not None and drop_team_id in member_roster:
+                member_roster = [t for t in member_roster if t != drop_team_id]
+            if add_team_id is not None and add_team_id not in member_roster:
+                member_roster.append(add_team_id)
+            member_roster = sorted({int(t) for t in member_roster})
 
         return {
             "leagueId": league_id,
@@ -1015,11 +1152,74 @@ class TransactionModel:
             "weekNumber": week_number,
             "transactionId": transaction_id,
             "type": self.TYPE_FREE_AGENT,
+            "status": self.STATUS_PENDING,
             "memberId": member_id,
             "added": add_team_id,
             "dropped": drop_team_id,
             "memberRosterTeamIds": member_roster,
         }
+
+    def get_transactions_for_league(
+        self,
+        league_id: int,
+        status: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        sql = """
+            SELECT
+              t.id,
+              t."leagueId",
+              t."weekId",
+              w."weekNumber",
+              t.type,
+              t.status,
+              t."memberFromId",
+              t."memberToId",
+              u_from."displayName" AS "memberFromDisplayName",
+              u_to."displayName" AS "memberToDisplayName",
+              ft."fromTeams",
+              tt."toTeams",
+              t."createdAt"
+            FROM "Transaction" t
+            LEFT JOIN "Week" w ON w.id = t."weekId"
+            LEFT JOIN "LeagueMember" lm_from ON lm_from.id = t."memberFromId"
+            LEFT JOIN "User" u_from ON u_from.id = lm_from."userId"
+            LEFT JOIN "LeagueMember" lm_to ON lm_to.id = t."memberToId"
+            LEFT JOIN "User" u_to ON u_to.id = lm_to."userId"
+            LEFT JOIN LATERAL (
+              SELECT jsonb_agg(
+                jsonb_build_object(
+                  'id', st.id,
+                  'displayName', st."displayName"
+                )
+                ORDER BY st."displayName"
+              ) AS "fromTeams"
+              FROM jsonb_array_elements_text(t."fromTeamIds") AS f(team_id)
+              JOIN "SportTeam" st ON st.id = (f.team_id)::int
+            ) ft ON TRUE
+            LEFT JOIN LATERAL (
+              SELECT jsonb_agg(
+                jsonb_build_object(
+                  'id', st.id,
+                  'displayName', st."displayName"
+                )
+                ORDER BY st."displayName"
+              ) AS "toTeams"
+              FROM jsonb_array_elements_text(t."toTeamIds") AS tt(team_id)
+              JOIN "SportTeam" st ON st.id = (tt.team_id)::int
+            ) tt ON TRUE
+            WHERE t."leagueId" = :leagueId
+        """
+        params: Dict[str, Any] = {"leagueId": league_id}
+        if status:
+            sql += " AND t.status = :status"
+            params["status"] = status
+
+        sql += ' ORDER BY t."createdAt" DESC, t.id DESC'
+
+        with self.db.connect() as conn:
+            rows = conn.execute(text(sql), params).mappings().all()
+
+        return [dict(r) for r in rows]
 
     def get_week_roster_violations(
         self,

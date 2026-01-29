@@ -1,4 +1,4 @@
-import type { FreeAgencyResponse, OpenTradesResponse, TradeResponse, TradeResponseAction, VetoResponse } from "../types/roster";
+import type { FreeAgencyResponse, OpenTradesResponse, PendingTransactionsResponse, TradeResponse, TradeResponseAction, VetoResponse } from "../types/roster";
 import { apiFetch, API_BASE_URL } from "./client";
 
 type FreeAgencyPayload = {
@@ -170,5 +170,18 @@ export async function vetoTrade(
   }
 
   const data = (await res.json()) as VetoResponse;
+  return data;
+}
+
+export async function getPendingTradesAndAddDrop(
+    leagueId: number
+): Promise<PendingTransactionsResponse> {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/transaction/pending`)
+
+  if (!res.ok) {
+    throw new Error(`Failed to get pending transactions: ${res.status}`);
+  }
+
+  const data = (await res.json()) as PendingTransactionsResponse;
   return data;
 }

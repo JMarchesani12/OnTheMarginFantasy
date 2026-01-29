@@ -7,6 +7,39 @@ class RosterModel:
     def __init__(self, db: Engine):
         self.db = db
 
+    def _get_week_by_number(self, conn, league_id: int, week_number: int):
+        row = conn.execute(
+            text("""
+                SELECT id, "weekNumber", "isLocked"
+                FROM "Week"
+                WHERE "leagueId" = :league_id
+                  AND "weekNumber" = :week_number
+                LIMIT 1
+            """),
+            {"league_id": league_id, "week_number": week_number},
+        ).fetchone()
+
+        return dict(row._mapping) if row else None
+
+    def _get_next_unlocked_week_number(self, conn, league_id: int, week_number: int) -> int:
+        row = conn.execute(
+            text("""
+                SELECT "weekNumber"
+                FROM "Week"
+                WHERE "leagueId" = :league_id
+                  AND "weekNumber" > :week_number
+                  AND "isLocked" = FALSE
+                ORDER BY "weekNumber" ASC
+                LIMIT 1
+            """),
+            {"league_id": league_id, "week_number": week_number},
+        ).fetchone()
+
+        if not row:
+            raise ValueError(f"No unlocked future week found after week {week_number}")
+
+        return int(row[0])
+
     def get_member_teams_for_week(
       self,
       league_id: int,
@@ -72,14 +105,43 @@ class RosterModel:
 
         with self.db.connect() as conn:
             league_row = conn.execute(league_sql, {"leagueId": league_id}).fetchone()
+            week_info = self._get_week_by_number(conn, league_id, week_number)
+            if week_info and week_info.get("isLocked"):
+                week_number = self._get_next_unlocked_week_number(
+                    conn,
+                    league_id=league_id,
+                    week_number=week_number,
+                )
+                week_info = self._get_week_by_number(conn, league_id, week_number)
 
         if not league_row:
             return []
+        if not week_info:
+            return []
 
         sport_id = league_row._mapping["sport"]
+        week_id = int(week_info["id"])
 
         # 2) Query available teams with conference info
         sql = text("""
+            WITH pending_adds AS (
+              SELECT DISTINCT (jsonb_array_elements_text(t."toTeamIds"))::int AS team_id
+              FROM "Transaction" t
+              WHERE t."leagueId" = :leagueId
+                AND t."weekId" = :weekId
+                AND t.status = 'PENDING_APPLY'
+                AND t.type = 'FREE_AGENT'
+                AND t."toTeamIds" IS NOT NULL
+            ),
+            pending_drops AS (
+              SELECT DISTINCT (jsonb_array_elements_text(t."fromTeamIds"))::int AS team_id
+              FROM "Transaction" t
+              WHERE t."leagueId" = :leagueId
+                AND t."weekId" = :weekId
+                AND t.status = 'PENDING_APPLY'
+                AND t.type = 'FREE_AGENT'
+                AND t."fromTeamIds" IS NOT NULL
+            )
             SELECT
               st.id,
               st."displayName",
@@ -97,13 +159,17 @@ class RosterModel:
             JOIN "Conference" conf
               ON conf.id = sc."conferenceId"
             WHERE st."sportId" = :sportId
-              AND NOT EXISTS (
-                SELECT 1
-                FROM "LeagueTeamSlot" lts
-                WHERE lts."leagueId" = :leagueId
-                  AND lts."sportTeamId" = st.id
-                  AND lts."acquiredWeek" <= :weekNumber
-                  AND (lts."droppedWeek" IS NULL OR lts."droppedWeek" > :weekNumber)
+              AND st.id NOT IN (SELECT team_id FROM pending_adds)
+              AND (
+                NOT EXISTS (
+                  SELECT 1
+                  FROM "LeagueTeamSlot" lts
+                  WHERE lts."leagueId" = :leagueId
+                    AND lts."sportTeamId" = st.id
+                    AND lts."acquiredWeek" <= :weekNumber
+                    AND (lts."droppedWeek" IS NULL OR lts."droppedWeek" > :weekNumber)
+                )
+                OR st.id IN (SELECT team_id FROM pending_drops)
               )
             ORDER BY conf.name, st."displayName"
         """)
@@ -114,6 +180,7 @@ class RosterModel:
                 {
                     "leagueId": league_id,
                     "sportId": sport_id,
+                    "weekId": week_id,
                     "weekNumber": week_number,
                 },
             )
