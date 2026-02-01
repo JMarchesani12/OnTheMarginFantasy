@@ -16,6 +16,7 @@ import { getConferences, getLeague, getLeaguesForUser } from "../../api/leagues"
 import { useAuth } from "../../context/AuthContext";
 import { useCurrentUser } from "../../context/currentUserContext";
 import { normalizeOwnedTeams, type RawOwnedTeam } from "../../utils/teams";
+import { safeLocalStorage } from "../../utils/safeStorage";
 import {
   mapLeagueFromResponse,
   normalizeLeaguesResponse,
@@ -219,7 +220,7 @@ const LeagueDraftPage = () => {
     }
 
     try {
-      const stored = window.localStorage.getItem(storageKey);
+      const stored = safeLocalStorage.getItem(storageKey);
       if (stored) {
         const parsed = JSON.parse(stored) as RawOwnedTeam[];
         setDraftSelections(normalizeOwnedTeams(parsed));
@@ -236,7 +237,7 @@ const LeagueDraftPage = () => {
       }
 
       try {
-        window.localStorage.setItem(storageKey, JSON.stringify(teams));
+        safeLocalStorage.setItem(storageKey, JSON.stringify(teams));
       } catch (err) {
         console.warn("Failed to persist draft selections", err);
       }

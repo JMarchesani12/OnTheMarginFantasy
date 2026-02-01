@@ -9,6 +9,7 @@ import {
   formatLocalTime,
   type DateHeader,
 } from "../../utils/scheduleTable";
+import { safeLocalStorage } from "../../utils/safeStorage";
 import "./LeagueScheduleTabs.css";
 
 type LeagueScheduleTabsProps = {
@@ -86,7 +87,7 @@ export const LeagueScheduleTabs = ({
   useEffect(() => {
     if (!currentMemberId) return;
     try {
-      const stored = window.localStorage.getItem(storageKey);
+      const stored = safeLocalStorage.getItem(storageKey);
       if (stored === null) return;
       setIsCollapsed(stored === "true");
     } catch {
@@ -97,7 +98,7 @@ export const LeagueScheduleTabs = ({
   useEffect(() => {
     if (!currentMemberId) return;
     try {
-      window.localStorage.setItem(storageKey, String(isCollapsed));
+      safeLocalStorage.setItem(storageKey, String(isCollapsed));
     } catch {
       // ignore storage errors
     }

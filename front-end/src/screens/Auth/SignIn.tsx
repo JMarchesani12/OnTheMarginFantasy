@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient";
 import { useAuth } from "../../context/AuthContext";
+import { safeLocalStorage } from "../../utils/safeStorage";
 import "./SignIn.css";
 
 const PENDING_USER_CREATE_KEY = "otm:pending-user-create";
@@ -57,7 +58,7 @@ const SignIn = () => {
           throw signUpError;
         }
 
-        localStorage.setItem(
+        safeLocalStorage.setItem(
           PENDING_USER_CREATE_KEY,
           JSON.stringify({ email, displayName: username.trim() })
         );

@@ -15,6 +15,7 @@ import {
   mapLeagueFromResponse,
   normalizeLeaguesResponse,
 } from "../../utils/leagueMapping";
+import { safeLocalStorage } from "../../utils/safeStorage";
 import { useCurrentUser } from "../../context/currentUserContext";
 import "./LeagueRosterPage.css";
 
@@ -53,7 +54,7 @@ const LeagueRosterPage = () => {
     if (!tabStorageKey || !isBrowser) {
       return "addDrop";
     }
-    const stored = window.localStorage.getItem(tabStorageKey);
+    const stored = safeLocalStorage.getItem(tabStorageKey);
     return stored === "trade" ? "trade" : "addDrop";
   });
   const [members, setMembers] = useState<LeagueMember[]>([]);
@@ -77,7 +78,7 @@ const LeagueRosterPage = () => {
     if (!tabStorageKey || !isBrowser) {
       return;
     }
-    window.localStorage.setItem(tabStorageKey, activeTab);
+    safeLocalStorage.setItem(tabStorageKey, activeTab);
   }, [tabStorageKey, activeTab, isBrowser]);
 
   const loadRosterData = useCallback(async () => {
@@ -481,6 +482,13 @@ const LeagueRosterPage = () => {
           onClick={() => navigate(-1)}
         >
           ← Back
+        </button>
+        <button
+          className="roster-page__back"
+          type="button"
+          onClick={() => navigate("/leagues")}
+        >
+          Go to My Leagues
         </button>
         {leagueLoading ? (
           <p className="roster-page__empty">Loading league details…</p>

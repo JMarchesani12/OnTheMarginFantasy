@@ -20,6 +20,7 @@ import {
   mapLeagueFromResponse,
   normalizeLeaguesResponse,
 } from "../../utils/leagueMapping";
+import { safeLocalStorage } from "../../utils/safeStorage";
 import "./ConferenceSchedulePage.css";
 
 type LocationState = {
@@ -158,7 +159,7 @@ const ConferenceSchedulePage = () => {
     if (!storageKey) {
       return;
     }
-    const saved = window.localStorage.getItem(storageKey);
+    const saved = safeLocalStorage.getItem(storageKey);
     if (saved) {
       const parsed = Number(saved);
       if (!Number.isNaN(parsed)) {
@@ -426,11 +427,11 @@ const ConferenceSchedulePage = () => {
     const nextId = Number(raw);
     const resolved = Number.isNaN(nextId) ? null : nextId;
     setActiveConferenceId(resolved);
-    if (storageKey && typeof window !== "undefined") {
+    if (storageKey) {
       if (resolved === null) {
-        window.localStorage.removeItem(storageKey);
+        safeLocalStorage.removeItem(storageKey);
       } else {
-        window.localStorage.setItem(storageKey, String(resolved));
+        safeLocalStorage.setItem(storageKey, String(resolved));
       }
     }
   };

@@ -8,6 +8,7 @@ import {
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
 import { createUser, getUserByUuid } from '../api/user';
+import { safeLocalStorage } from '../utils/safeStorage';
 
 const PENDING_USER_CREATE_KEY = 'otm:pending-user-create';
 const USER_CREATED_KEY_PREFIX = 'otm:user-created:';
@@ -33,8 +34,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const userId = currentSession.user.id;
       const createdKey = `${USER_CREATED_KEY_PREFIX}${userId}`;
-      const alreadyCreated = localStorage.getItem(createdKey);
-      const pendingRaw = localStorage.getItem(PENDING_USER_CREATE_KEY);
+      const alreadyCreated = safeLocalStorage.getItem(createdKey);
+      const pendingRaw = safeLocalStorage.getItem(PENDING_USER_CREATE_KEY);
 
       let pending: { email?: string; displayName?: string } | null = null;
       if (pendingRaw) {
@@ -42,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           pending = JSON.parse(pendingRaw);
         } catch (error) {
           console.warn('Failed to parse pending user payload.', error);
-          localStorage.removeItem(PENDING_USER_CREATE_KEY);
+          safeLocalStorage.removeItem(PENDING_USER_CREATE_KEY);
         }
       }
 
@@ -50,7 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!email) return;
 
       if (pending?.email && pending.email !== email) {
-        localStorage.removeItem(PENDING_USER_CREATE_KEY);
+        safeLocalStorage.removeItem(PENDING_USER_CREATE_KEY);
       }
 
       if (alreadyCreated && !pendingRaw) {
@@ -60,9 +61,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const existingUser = await getUserByUuid(userId);
         if (existingUser) {
-          localStorage.setItem(createdKey, 'true');
+          safeLocalStorage.setItem(createdKey, 'true');
           if (pendingRaw) {
-            localStorage.removeItem(PENDING_USER_CREATE_KEY);
+            safeLocalStorage.removeItem(PENDING_USER_CREATE_KEY);
           }
           return;
         }
@@ -77,21 +78,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const resolvedDisplayName =
           displayName?.trim() || email.split("@")[0] || email;
         await createUser(userId, email, resolvedDisplayName);
-        localStorage.removeItem(PENDING_USER_CREATE_KEY);
-        localStorage.setItem(createdKey, 'true');
+        safeLocalStorage.removeItem(PENDING_USER_CREATE_KEY);
+        safeLocalStorage.setItem(createdKey, 'true');
       } catch (error) {
         console.warn('User record creation failed.', error);
       }
     };
 
-    // Initial session load
-    supabase.auth.getSession().then(({ data }) => {
-      // console.log(data.session?.access_token)
+    const loadSession = async () => {
+      const { data } = await supabase.auth.getSession();
       setSession(data.session ?? null);
       setUser(data.session?.user ?? null);
       setLoading(false);
       void maybeCreateUser(data.session);
-    });
+    };
+
+    // Initial session load
+    void loadSession();
 
     // Listen for auth changes
     const {
@@ -103,7 +106,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       void maybeCreateUser(newSession);
     });
 
-    return () => subscription.unsubscribe();
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        void loadSession();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      subscription.unsubscribe();
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, []);
 
   const signInWithEmail = async (email: string) => {
