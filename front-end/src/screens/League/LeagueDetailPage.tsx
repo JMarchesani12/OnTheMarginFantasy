@@ -285,34 +285,8 @@ const LeagueDetailPage = () => {
     }
   };
 
-  // If you want, you can later add a fetch here if `league` is missing.
-  if (!league) {
-    return (
-      <div className="league-detail">
-        <button
-          className="league-detail__back"
-          type="button"
-          onClick={() => navigate(-1)}
-        >
-          ← Back
-        </button>
-        {leagueLoading ? (
-          <p>Loading league details…</p>
-        ) : (
-          <p>
-            {leagueError ??
-              "League data is not available. Try opening this page from your leagues list."}
-          </p>
-        )}
-      </div>
-    );
-  }
-
-  const statusClass = `league-detail__status league-detail__status--${league.status
-    .toLowerCase()
-    .replace(/\s+/g, "-")}`;
   const tradeDeadlinePassed = useMemo(() => {
-    if (!league.tradeDeadline) {
+    if (!league?.tradeDeadline) {
       return false;
     }
 
@@ -323,9 +297,9 @@ const LeagueDetailPage = () => {
     }
 
     return deadline.getTime() < now.getTime();
-  }, [league.tradeDeadline]);
+  }, [league?.tradeDeadline]);
   const freeAgentDeadlinePassed = useMemo(() => {
-    if (!league.freeAgentDeadline) {
+    if (!league?.freeAgentDeadline) {
       return false;
     }
 
@@ -336,38 +310,7 @@ const LeagueDetailPage = () => {
     }
 
     return deadline.getTime() < now.getTime();
-  }, [league.freeAgentDeadline]);
-
-  const canStartDraft =
-    (league.status === "Pre-Draft" || league.status === "Drafting") &&
-    league.commissionerId === currentUserId;
-  const canManageLeague = league.commissionerId === currentUserId;
-  const canEditTeamName = league.memberId != null;
-  const canLeaveLeague =
-    league.status === "Pre-Draft" && league.commissionerId !== currentUserId;
-  const showAdminActions = canManageLeague;
-  const canJoinDraft =
-    (league.status === "Pre-Draft" || league.status === "Drafting") &&
-    league.commissionerId !== currentUserId;
-  const rosterActionsLocked = tradeDeadlinePassed && freeAgentDeadlinePassed;
-
-  const handleStartDraft = () => {
-    if (!league) {
-      return;
-    }
-
-    setStartDraftError(null);
-    openDraftPage(true);
-  };
-
-  const handleJoinDraft = () => {
-    if (!league) {
-      return;
-    }
-
-    setStartDraftError(null);
-    openDraftPage(true);
-  };
+  }, [league?.freeAgentDeadline]);
 
   const scoreboardRows = useMemo<{
     weekNumbers: number[];
@@ -497,19 +440,27 @@ const LeagueDetailPage = () => {
   }, [scoreboard, members, effectiveWeekNumber]);
 
 
+  const currentMemberId = league?.memberId ?? null;
   const currentMember = useMemo(
-    () => members.find((member) => member.id === league.memberId),
-    [members, league.memberId]
+    () =>
+      currentMemberId
+        ? members.find((member) => member.id === currentMemberId) ?? null
+        : null,
+    [members, currentMemberId]
   );
 
   const currentMemberRow = useMemo(
-    () => scoreboardRows.rows.find((row) => row.memberId === league.memberId),
-    [scoreboardRows.rows, league.memberId]
+    () =>
+      currentMemberId
+        ? scoreboardRows.rows.find((row) => row.memberId === currentMemberId) ??
+          null
+        : null,
+    [scoreboardRows.rows, currentMemberId]
   );
 
   const currentWeekDifferential = useMemo(() => {
     const currentWeek = effectiveWeekNumber ?? null;
-    if (!currentWeek || !league.memberId) {
+    if (!currentWeek || !currentMemberId) {
       return { weekNumber: currentWeek, differential: 0 };
     }
 
@@ -521,7 +472,7 @@ const LeagueDetailPage = () => {
     }
 
     const weekScores = scoreboard[currentWeek] ?? [];
-    const entry = weekScores.find((score) => score.memberId === league.memberId);
+    const entry = weekScores.find((score) => score.memberId === currentMemberId);
     const fallbackDifferential =
       typeof entry?.pointDifferential === "number" ? entry.pointDifferential : 0;
 
@@ -529,9 +480,58 @@ const LeagueDetailPage = () => {
   }, [
     scoreboard,
     effectiveWeekNumber,
-    league.memberId,
+    currentMemberId,
     currentMember?.currentWeekPointDifferential,
   ]);
+
+  // If you want, you can later add a fetch here if `league` is missing.
+  if (!league) {
+    return (
+      <div className="league-detail">
+        <button
+          className="league-detail__back"
+          type="button"
+          onClick={() => navigate(-1)}
+        >
+          ← Back
+        </button>
+        {leagueLoading ? (
+          <p>Loading league details…</p>
+        ) : (
+          <p>
+            {leagueError ??
+              "League data is not available. Try opening this page from your leagues list."}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  const statusClass = `league-detail__status league-detail__status--${league.status
+    .toLowerCase()
+    .replace(/\s+/g, "-")}`;
+  const canStartDraft =
+    (league.status === "Pre-Draft" || league.status === "Drafting") &&
+    league.commissionerId === currentUserId;
+  const canManageLeague = league.commissionerId === currentUserId;
+  const canEditTeamName = league.memberId != null;
+  const canLeaveLeague =
+    league.status === "Pre-Draft" && league.commissionerId !== currentUserId;
+  const showAdminActions = canManageLeague;
+  const canJoinDraft =
+    (league.status === "Pre-Draft" || league.status === "Drafting") &&
+    league.commissionerId !== currentUserId;
+  const rosterActionsLocked = tradeDeadlinePassed && freeAgentDeadlinePassed;
+
+  const handleStartDraft = () => {
+    setStartDraftError(null);
+    openDraftPage(true);
+  };
+
+  const handleJoinDraft = () => {
+    setStartDraftError(null);
+    openDraftPage(true);
+  };
 
   return (
     <div className="league-detail">
