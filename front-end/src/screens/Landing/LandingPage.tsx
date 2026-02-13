@@ -5,7 +5,7 @@ const LandingPage = () => {
   return (
     <main className="landing">
       <header className="landing__nav">
-        <div className="landing__logo">Sicko Fantasy</div>
+        <div className="landing__logo">On The Margin Fantasy</div>
         <div className="landing__nav-actions">
           <Link className="landing__link" to="/signin">
             Sign in
@@ -21,7 +21,7 @@ const LandingPage = () => {
           <p className="landing__eyebrow">College fantasy · Team based · Point differential</p>
           <h1>Every possession matters. Every conference counts.</h1>
           <p className="landing__lead">
-            Sicko Fantasy is a college fantasy league where you draft teams, not
+            On The Margin Fantasy is a college fantasy league where you draft teams, not
             players. Wins add points, losses subtract, and the weekly point
             differential decides who climbs the standings.
           </p>
@@ -103,7 +103,7 @@ const LandingPage = () => {
         <div>
           <h2>Team-based college fantasy, finally.</h2>
           <p>
-            Sicko Fantasy rewards conference knowledge, weekly strategy, and a
+            On The Margin Fantasy rewards conference knowledge, weekly strategy, and a
             little bit of chaos. Perfect for rival groups, alumni chats, and
             anyone who wants more than just a box score.
           </p>
@@ -133,7 +133,7 @@ const LandingPage = () => {
 
       <section className="landing__cta-block">
         <h2>Ready to build your league?</h2>
-        <p>Launch a Sicko Fantasy league and start drafting in minutes.</p>
+        <p>Launch a On The Margin league and start drafting in minutes.</p>
         <Link className="landing__cta" to="/signin">
           Get started
         </Link>
