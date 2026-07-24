@@ -22,6 +22,27 @@ class ScheduleModel:
         self.db = db
         self.espn_base_url = espn_base_url.rstrip("/")
 
+    TIER_ADJUSTED_HOME_POINT_DIFF_SQL = """
+            CASE
+                WHEN gr."homeScore" = gr."awayScore" THEN 0
+                WHEN COALESCE(home_team.tier, 1) = COALESCE(away_team.tier, 1)
+                THEN ABS(gr."homeScore" - gr."awayScore")
+                WHEN gr."homeScore" > gr."awayScore"
+                    AND COALESCE(home_team.tier, 1) < COALESCE(away_team.tier, 1)
+                THEN CEIL(ABS(gr."homeScore" - gr."awayScore") / 2.0)::int
+                WHEN gr."homeScore" > gr."awayScore"
+                    AND COALESCE(home_team.tier, 1) > COALESCE(away_team.tier, 1)
+                THEN ABS(gr."homeScore" - gr."awayScore") * 2
+                WHEN gr."awayScore" > gr."homeScore"
+                    AND COALESCE(away_team.tier, 1) < COALESCE(home_team.tier, 1)
+                THEN -CEIL(ABS(gr."homeScore" - gr."awayScore") / 2.0)::int
+                WHEN gr."awayScore" > gr."homeScore"
+                    AND COALESCE(away_team.tier, 1) > COALESCE(home_team.tier, 1)
+                THEN -(ABS(gr."homeScore" - gr."awayScore") * 2)
+                ELSE gr."homeScore" - gr."awayScore"
+            END
+    """
+
     # -------------------------------------------------------------------------
     # Basic lookups
     # -------------------------------------------------------------------------
@@ -665,7 +686,7 @@ class ScheduleModel:
         Return all games that count for this member in this week, with memberPointDiff
         already computed (everyone-vs-everyone, single-owner perspective).
         """
-        sql = text("""
+        sql = text(f"""
             WITH target_week AS (
             SELECT
                 w."startDate",
@@ -709,13 +730,17 @@ class ScheduleModel:
                     AND gr."awayTeamId" IN (SELECT "sportTeamId" FROM member_teams)
                 THEN 0
                 WHEN gr."homeTeamId" IN (SELECT "sportTeamId" FROM member_teams)
-                THEN gr."homeScore" - gr."awayScore"
+                THEN {self.TIER_ADJUSTED_HOME_POINT_DIFF_SQL}
                 WHEN gr."awayTeamId" IN (SELECT "sportTeamId" FROM member_teams)
-                THEN gr."awayScore" - gr."homeScore"
+                THEN -({self.TIER_ADJUSTED_HOME_POINT_DIFF_SQL})
                 ELSE 0
             END AS "memberPointDiff"
-            FROM "GameResult" gr,
-                target_week tw
+            FROM "GameResult" gr
+            CROSS JOIN target_week tw
+            LEFT JOIN "SportTeam" home_team
+                ON home_team.id = gr."homeTeamId"
+            LEFT JOIN "SportTeam" away_team
+                ON away_team.id = gr."awayTeamId"
             WHERE gr.sport           = tw."sportId"
             AND gr."sportSeasonId" = tw."sportSeasonId"
             AND gr.date BETWEEN tw."startDate" AND tw."endDate"
@@ -750,7 +775,7 @@ class ScheduleModel:
         All games in this week where a team owned by member A played
         a team owned by member B (in either home/away direction).
         """
-        sql = text("""
+        sql = text(f"""
             WITH target_week AS (
             SELECT
                 w."startDate",
@@ -797,9 +822,15 @@ class ScheduleModel:
             (gr."homeTeamId" IN (SELECT "sportTeamId" FROM a_teams)) AS "homeOwnedByA",
             (gr."awayTeamId" IN (SELECT "sportTeamId" FROM a_teams)) AS "awayOwnedByA",
             (gr."homeTeamId" IN (SELECT "sportTeamId" FROM b_teams)) AS "homeOwnedByB",
-            (gr."awayTeamId" IN (SELECT "sportTeamId" FROM b_teams)) AS "awayOwnedByB"
-            FROM "GameResult" gr,
-                target_week tw
+            (gr."awayTeamId" IN (SELECT "sportTeamId" FROM b_teams)) AS "awayOwnedByB",
+            {self.TIER_ADJUSTED_HOME_POINT_DIFF_SQL} AS "homeMemberPointDiff",
+            -({self.TIER_ADJUSTED_HOME_POINT_DIFF_SQL}) AS "awayMemberPointDiff"
+            FROM "GameResult" gr
+            CROSS JOIN target_week tw
+            LEFT JOIN "SportTeam" home_team
+                ON home_team.id = gr."homeTeamId"
+            LEFT JOIN "SportTeam" away_team
+                ON away_team.id = gr."awayTeamId"
             WHERE gr.sport           = tw."sportId"
             AND gr."sportSeasonId" = tw."sportSeasonId"
             AND gr.date BETWEEN tw."startDate" AND tw."endDate"

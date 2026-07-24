@@ -360,18 +360,17 @@ class ScoringModel:
                 a_pd = 0
                 b_pd = 0
                 for g in games:
-                    home_score = int(g["homeScore"])
-                    away_score = int(g["awayScore"])
-
+                    home_diff = int(g["homeMemberPointDiff"])
+                    away_diff = int(g["awayMemberPointDiff"])
                     if g.get("homeOwnedByA"):
-                        a_pd += home_score - away_score
+                        a_pd += home_diff
                     if g.get("awayOwnedByA"):
-                        a_pd += away_score - home_score
+                        a_pd += away_diff
 
                     if g.get("homeOwnedByB"):
-                        b_pd += home_score - away_score
+                        b_pd += home_diff
                     if g.get("awayOwnedByB"):
-                        b_pd += away_score - home_score
+                        b_pd += away_diff
 
                 totals[a_id] += a_pd
                 totals[b_id] += b_pd
