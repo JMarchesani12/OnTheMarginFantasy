@@ -440,4 +440,5 @@ if __name__ == "__main__":
     main()
 
 
-# For Casey: During the playoff season, only give points to the winner, do not subtract points for the loser
+# For Casey: During the playoff season, only give points to the winner, do not subtract points for the loser.
+# Currently the implementation is no points are awarded (I think)
