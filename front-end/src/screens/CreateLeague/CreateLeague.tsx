@@ -7,7 +7,6 @@ import {
   BonusesEditor,
   type BonusWithLocalId,
 } from "./BonusesEditor";
-import { getSportRounds } from "../../api/draft";
 import { getSports } from "../../api/sport";
 import type { Sport } from "../../types/sport";
 import { useCurrentUser } from "../../context/currentUserContext";
@@ -15,6 +14,7 @@ import { useCurrentUser } from "../../context/currentUserContext";
 interface CreateLeagueFormState {
   leagueName: string;
   sportId: string;          // string in form, converted to number on submit
+  subdivision: "FBS" | "FCS";
   numPlayers: string;
 
   // read-only display fields
@@ -44,6 +44,7 @@ const initialSeasonYear = new Date().getFullYear().toString();
 const makeInitialState = (): CreateLeagueFormState => ({
   leagueName: "",
   sportId: "",
+  subdivision: "FBS",
   numPlayers: "1",
 
   status: "Pre-Draft",
@@ -138,7 +139,19 @@ const CreateLeague: React.FC = () => {
       return;
     }
 
-    const rounds = await getSportRounds(Number(form.sportId))
+    const selectedSport = sports.find(
+      (sport) => sport.id === Number(form.sportId),
+    );
+    if (
+      selectedSport?.maxDraftRounds == null ||
+      selectedSport.maxPlayersToHaveMaxRounds == null
+    ) {
+      setError(
+        `${selectedSport?.name ?? "Selected sport"} is missing its draft configuration.`,
+      );
+      return;
+    }
+    const rounds = Number(selectedSport.maxDraftRounds);
 
     // build bonuses object: { [bonusKey]: { [placementKey]: points } }
     const bonuses: Record<string, Record<string, number>> = {};
@@ -160,6 +173,9 @@ const CreateLeague: React.FC = () => {
       status: "Pre-Draft",
       settings: {
         bonuses,
+        ...(Number(form.sportId) === 2
+          ? { subdivision: form.subdivision }
+          : {}),
         timezone: localTimeZone,
         transactions: {
           tradeVeto: {
@@ -242,6 +258,21 @@ const CreateLeague: React.FC = () => {
                 <p className="cl-form-error">{sportsError}</p>
               )}
             </div>
+
+            {Number(form.sportId) === 2 && (
+              <div className="cl-field-group">
+                <label className="cl-field-label">Subdivision</label>
+                <select
+                  value={form.subdivision}
+                  onChange={(e) =>
+                    update({ subdivision: e.target.value as "FBS" | "FCS" })
+                  }
+                >
+                  <option value="FBS">FBS</option>
+                  <option value="FCS">FCS</option>
+                </select>
+              </div>
+            )}
           </div>
 
           {/* Dates */}

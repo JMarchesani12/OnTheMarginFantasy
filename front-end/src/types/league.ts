@@ -41,6 +41,7 @@ export interface DraftMeta {
 
 export interface LeagueSettings {
   bonuses: LeagueBonuses;
+  subdivision?: string;
   timezone?: string;
   transactions: LeagueSettingsTransactions;
   draft: DraftMeta;

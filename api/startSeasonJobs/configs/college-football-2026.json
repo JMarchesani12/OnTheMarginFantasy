@@ -1,0 +1,25 @@
+{
+  "_comment": "Confirm all dates before running this manifest.",
+  "sport": "college-football",
+  "seasonYear": 2026,
+  "seasonStart": "2026-08-27",
+  "seasonEnd": "2027-01-25",
+  "subdivisions": [
+    {
+      "code": "FBS",
+      "name": "Football Bowl Subdivision",
+      "regularSeasonStart": "2026-08-29",
+      "regularSeasonEnd": "2026-12-12",
+      "postseasonStart": "2026-12-13",
+      "postseasonEnd": "2027-01-25"
+    },
+    {
+      "code": "FCS",
+      "name": "Football Championship Subdivision",
+      "regularSeasonStart": "2026-08-27",
+      "regularSeasonEnd": "2026-11-27",
+      "postseasonStart": "2026-11-28",
+      "postseasonEnd": "2027-01-04"
+    }
+  ]
+}
