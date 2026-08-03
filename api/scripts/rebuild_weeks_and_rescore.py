@@ -120,6 +120,8 @@ def _compute_week_boundaries(
 
     reg_start_date = season["regularSeasonStart"]
     reg_end_date = season["regularSeasonEnd"]
+    if season["allSubdivisions"] and season.get("postseasonEnd"):
+        reg_end_date = max(reg_end_date, season["postseasonEnd"])
 
     all_regular_week_ranges = compute_weeks_from_start(
         reg_start_date,
@@ -147,7 +149,11 @@ def _compute_week_boundaries(
             (idx, start_local.astimezone(dt.timezone.utc), end_local.astimezone(dt.timezone.utc))
         )
 
-    if season.get("postseasonStart") and season.get("postseasonEnd"):
+    if (
+        not season["allSubdivisions"]
+        and season.get("postseasonStart")
+        and season.get("postseasonEnd")
+    ):
         playoff_start_date = season["postseasonStart"]
         playoff_end_date = season["postseasonEnd"]
 

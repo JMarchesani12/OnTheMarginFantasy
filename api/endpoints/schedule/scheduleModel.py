@@ -159,9 +159,43 @@ class ScheduleModel:
         schedule_cfg = settings.get("schedule") or {}
         configured_code = settings.get("subdivision") or schedule_cfg.get("subdivision")
 
+        if not subdivision_rows:
+            raise ValueError(
+                f"SportSeason {season['sportSeasonId']} has no subdivision windows"
+            )
+
+        normalized_code = str(configured_code).strip().upper() if configured_code else None
+        use_all_subdivisions = normalized_code == "ALL" or (
+            normalized_code is None and len(subdivision_rows) > 1
+        )
+
         subdivision = None
-        if configured_code:
-            normalized_code = str(configured_code).strip().upper()
+        if use_all_subdivisions:
+            postseason_starts = [
+                item["postseasonStart"]
+                for item in subdivision_rows
+                if item["postseasonStart"] is not None
+            ]
+            postseason_ends = [
+                item["postseasonEnd"]
+                for item in subdivision_rows
+                if item["postseasonEnd"] is not None
+            ]
+            subdivision = {
+                "sportSeasonSubdivisionId": None,
+                "subdivisionCode": "ALL",
+                "subdivisionName": "All Subdivisions",
+                "regularSeasonStart": min(
+                    item["regularSeasonStart"] for item in subdivision_rows
+                ),
+                "regularSeasonEnd": max(
+                    item["regularSeasonEnd"] for item in subdivision_rows
+                ),
+                "postseasonStart": min(postseason_starts) if postseason_starts else None,
+                "postseasonEnd": max(postseason_ends) if postseason_ends else None,
+                "allSubdivisions": True,
+            }
+        elif normalized_code:
             subdivision = next(
                 (
                     item
@@ -174,22 +208,12 @@ class ScheduleModel:
                 available = ", ".join(row["subdivisionCode"] for row in subdivision_rows)
                 raise ValueError(
                     f"Subdivision {normalized_code!r} is not configured for league {league_id}. "
-                    f"Available subdivisions: {available or 'none'}"
+                    f"Available subdivisions: {available or 'none'}, ALL"
                 )
         elif len(subdivision_rows) == 1:
             subdivision = subdivision_rows[0]
-        elif len(subdivision_rows) > 1:
-            available = ", ".join(row["subdivisionCode"] for row in subdivision_rows)
-            raise ValueError(
-                f"League {league_id} must set settings.subdivision. "
-                f"Available subdivisions: {available}"
-            )
-        else:
-            raise ValueError(
-                f"SportSeason {season['sportSeasonId']} has no subdivision windows"
-            )
-
         season.update(dict(subdivision))
+        season.setdefault("allSubdivisions", False)
         return season
 
     def _get_sport_api_config(self, sport_id: int) -> tuple[str, List[int]]:
@@ -308,11 +332,12 @@ class ScheduleModel:
         If Week rows already exist for this league, returns them.
 
         Otherwise:
-          - Uses the league's SportSeasonSubdivision to build regular-season weeks:
+          - Uses the league's subdivision window(s) to build weeks:
               Week 0 includes any partial opening week
               Week 1+ use the sport's full week boundary through regEnd
-          - If the subdivision has postseason dates, continues numbering into
-            postseason weeks.
+          - A single subdivision appends its postseason range.
+          - Multiple subdivisions use one continuous window through the latest
+            postseason end so their overlapping phases do not duplicate weeks.
         """
         existing = self._get_existing_weeks(league_id)
         if existing:
@@ -325,6 +350,8 @@ class ScheduleModel:
         # Regular season weeks (season dates are timezone-agnostic)
         reg_start_date = season["regularSeasonStart"]
         reg_end_date = season["regularSeasonEnd"]
+        if season["allSubdivisions"] and season.get("postseasonEnd"):
+            reg_end_date = max(reg_end_date, season["postseasonEnd"])
 
         all_regular_week_ranges = compute_weeks_from_start(
             reg_start_date,
@@ -356,7 +383,11 @@ class ScheduleModel:
         created_all.extend(created_regular)
 
         # Postseason weeks
-        if season.get("postseasonStart") and season.get("postseasonEnd"):
+        if (
+            not season["allSubdivisions"]
+            and season.get("postseasonStart")
+            and season.get("postseasonEnd")
+        ):
             playoff_start_date = season["postseasonStart"]
             playoff_end_date = season["postseasonEnd"]
 
