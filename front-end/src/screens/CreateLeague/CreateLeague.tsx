@@ -15,6 +15,7 @@ import { useCurrentUser } from "../../context/currentUserContext";
 interface CreateLeagueFormState {
   leagueName: string;
   sportId: string;          // string in form, converted to number on submit
+  subdivision: "FBS" | "FCS";
   numPlayers: string;
 
   // read-only display fields
@@ -44,6 +45,7 @@ const initialSeasonYear = new Date().getFullYear().toString();
 const makeInitialState = (): CreateLeagueFormState => ({
   leagueName: "",
   sportId: "",
+  subdivision: "FBS",
   numPlayers: "1",
 
   status: "Pre-Draft",
@@ -160,6 +162,9 @@ const CreateLeague: React.FC = () => {
       status: "Pre-Draft",
       settings: {
         bonuses,
+        ...(Number(form.sportId) === 2
+          ? { subdivision: form.subdivision }
+          : {}),
         timezone: localTimeZone,
         transactions: {
           tradeVeto: {
@@ -242,6 +247,21 @@ const CreateLeague: React.FC = () => {
                 <p className="cl-form-error">{sportsError}</p>
               )}
             </div>
+
+            {Number(form.sportId) === 2 && (
+              <div className="cl-field-group">
+                <label className="cl-field-label">Subdivision</label>
+                <select
+                  value={form.subdivision}
+                  onChange={(e) =>
+                    update({ subdivision: e.target.value as "FBS" | "FCS" })
+                  }
+                >
+                  <option value="FBS">FBS</option>
+                  <option value="FCS">FCS</option>
+                </select>
+              </div>
+            )}
           </div>
 
           {/* Dates */}

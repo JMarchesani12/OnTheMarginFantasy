@@ -12,7 +12,7 @@ def get_active_leagues_for_date(engine, target_date: dt.date):
     """
     Returns league ids that:
       - have a SportSeason row
-      - and where target_date is between regularSeasonStart and playoffEnd
+      - and where target_date is between seasonStart and seasonEnd
       - and league.status is not 'Completed'
     """
     sql = text("""
@@ -22,8 +22,8 @@ def get_active_leagues_for_date(engine, target_date: dt.date):
           ON ss."sportId" = l."sport"
          AND ss."seasonYear" = l."seasonYear"
         WHERE
-          ss."regularSeasonStart"::date <= :d
-          AND ss."playoffEnd"::date >= :d
+          ss."seasonStart"::date <= :d
+          AND ss."seasonEnd"::date >= :d
           AND l.status <> 'Completed'
     """)
 

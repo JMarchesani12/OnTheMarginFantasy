@@ -1,0 +1,17 @@
+{
+  "_comment": "Confirm all dates before running this manifest.",
+  "sport": "ncaa-mens-basketball",
+  "seasonYear": 2026,
+  "seasonStart": "2026-11-02",
+  "seasonEnd": "2027-04-06",
+  "subdivisions": [
+    {
+      "code": "D1",
+      "name": "NCAA Division I",
+      "regularSeasonStart": "2026-11-02",
+      "regularSeasonEnd": "2027-03-07",
+      "postseasonStart": "2027-03-08",
+      "postseasonEnd": "2027-04-06"
+    }
+  ]
+}

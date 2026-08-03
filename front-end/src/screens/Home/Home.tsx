@@ -287,7 +287,7 @@ const Home = () => {
                     <h3>Trades and free agents</h3>
                     <p>
                       Swap within a conference up to 3 times per season. Moves
-                      lock for the week and take effect the following Monday.
+                      lock for the week and take effect the following week.
                     </p>
                   </article>
                 </div>
