@@ -22,7 +22,7 @@ def main():
     scoring = build_scoring(engine)
     today = datetime.now(timezone.utc).date()
 
-    # 1. Find SportSeasons whose playoffEnd has passed,
+    # 1. Find SportSeasons whose seasonEnd has passed,
     #    and that we haven't finalized yet.
     #
     # You may want a flag on SportSeason or League, e.g. "seasonFinalized".
@@ -36,8 +36,7 @@ def main():
                     ss."sportId"   AS "sportId",
                     ss."seasonYear" AS "seasonYear"
                 FROM "SportSeason" ss
-                WHERE ss."playoffEnd" IS NOT NULL
-                  AND ss."playoffEnd" <= :today
+                WHERE ss."seasonEnd" <= :today
                   AND COALESCE(ss."seasonFinalized", FALSE) = FALSE
                 """
             ),

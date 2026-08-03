@@ -7,7 +7,25 @@ from sqlalchemy.engine import Engine
 from zoneinfo import ZoneInfo
 
 from endpoints.schedule.helpers.espn.espnClient import ESPNClient
-from endpoints.schedule.helpers.weekHelper import compute_weeks_from_start
+from endpoints.schedule.helpers.weekHelper import (
+    compute_weeks_from_start,
+    partition_initial_partial_week,
+)
+
+
+WEEKDAY_NUMBERS = {
+    "monday": 0,
+    "tuesday": 1,
+    "wednesday": 2,
+    "thursday": 3,
+    "friday": 4,
+    "saturday": 5,
+    "sunday": 6,
+}
+
+# Basketball and future sports default to Monday. College football uses Tuesday.
+SPORT_WEEK_START_WEEKDAYS = {2: WEEKDAY_NUMBERS["tuesday"]}
+
 
 class ScheduleModel:
     """
@@ -84,32 +102,140 @@ class ScheduleModel:
         except Exception:
             return dt.timezone.utc
 
-    def _get_sport_season_for_league(self, league_id: int) -> Dict[str, Any]: 
-        sql = text(""" 
-                SELECT 
-                   ss.id AS "sportSeasonId", 
-                   ss."sportId", ss."seasonYear", 
-                   ss."regularSeasonStart", 
-                   ss."regularSeasonEnd", 
-                   ss."playoffStart", 
-                   ss."playoffEnd", 
-                   ss."scheduleBootstrapped", 
-                   ss."scheduleBootstrappedAt" 
-                FROM "League" l 
-                JOIN "SportSeason" ss 
-                ON ss."sportId" = l."sport" 
-                AND ss."seasonYear" = l."seasonYear" 
-                WHERE l.id = :leagueId LIMIT 1 
-            """
-        ) 
-        
-        with self.db.begin() as conn: 
-            row = conn.execute(sql, {"leagueId": league_id}).fetchone() 
-            
-        if not row: 
-            raise ValueError( "No SportSeason found for this league's sport + seasonYear. " "Make sure SportSeason exists." ) 
-        
-        return dict(row._mapping)
+    def _get_week_start_weekday(self, league_id: int) -> int:
+        league = self._get_league(league_id)
+        settings = league.get("settings") or {}
+        if isinstance(settings, str):
+            settings = json.loads(settings)
+
+        schedule_cfg = settings.get("schedule") or {}
+        configured = schedule_cfg.get("weekStartDay")
+        if configured is None:
+            configured = schedule_cfg.get("weekStartWeekday")
+
+        if configured is None:
+            return SPORT_WEEK_START_WEEKDAYS.get(int(league["sport"]), 0)
+
+        if isinstance(configured, str):
+            weekday = WEEKDAY_NUMBERS.get(configured.strip().lower())
+            if weekday is not None:
+                return weekday
+        elif isinstance(configured, int) and not isinstance(configured, bool):
+            if 0 <= configured <= 6:
+                return configured
+
+        raise ValueError(
+            "League settings.schedule.weekStartDay must be a weekday name "
+            "or an integer from 0 (Monday) through 6 (Sunday)"
+        )
+
+    def _get_sport_season_for_league(self, league_id: int) -> Dict[str, Any]:
+        sql = text("""
+            SELECT
+                ss.id AS "sportSeasonId",
+                ss."sportId",
+                ss."seasonYear",
+                ss."seasonStart",
+                ss."seasonEnd",
+                ss."scheduleBootstrapped",
+                ss."scheduleBootstrappedAt",
+                l.settings
+            FROM "League" l
+            JOIN "SportSeason" ss
+              ON ss."sportId" = l."sport"
+             AND ss."seasonYear" = l."seasonYear"
+            WHERE l.id = :leagueId
+            LIMIT 1
+        """)
+
+        with self.db.begin() as conn:
+            row = conn.execute(sql, {"leagueId": league_id}).mappings().first()
+            if not row:
+                raise ValueError(
+                    "No SportSeason found for this league's sport + seasonYear. "
+                    "Make sure SportSeason exists."
+                )
+
+            subdivision_rows = conn.execute(
+                text("""
+                    SELECT
+                        id AS "sportSeasonSubdivisionId",
+                        code AS "subdivisionCode",
+                        name AS "subdivisionName",
+                        "regularSeasonStart",
+                        "regularSeasonEnd",
+                        "postseasonStart",
+                        "postseasonEnd"
+                    FROM "SportSeasonSubdivision"
+                    WHERE "sportSeasonId" = :sportSeasonId
+                    ORDER BY code
+                """),
+                {"sportSeasonId": row["sportSeasonId"]},
+            ).mappings().all()
+
+        season = dict(row)
+        settings = season.pop("settings") or {}
+        if isinstance(settings, str):
+            settings = json.loads(settings)
+        schedule_cfg = settings.get("schedule") or {}
+        configured_code = settings.get("subdivision") or schedule_cfg.get("subdivision")
+
+        if not subdivision_rows:
+            raise ValueError(
+                f"SportSeason {season['sportSeasonId']} has no subdivision windows"
+            )
+
+        normalized_code = str(configured_code).strip().upper() if configured_code else None
+        use_all_subdivisions = normalized_code == "ALL" or (
+            normalized_code is None and len(subdivision_rows) > 1
+        )
+
+        subdivision = None
+        if use_all_subdivisions:
+            postseason_starts = [
+                item["postseasonStart"]
+                for item in subdivision_rows
+                if item["postseasonStart"] is not None
+            ]
+            postseason_ends = [
+                item["postseasonEnd"]
+                for item in subdivision_rows
+                if item["postseasonEnd"] is not None
+            ]
+            subdivision = {
+                "sportSeasonSubdivisionId": None,
+                "subdivisionCode": "ALL",
+                "subdivisionName": "All Subdivisions",
+                "regularSeasonStart": min(
+                    item["regularSeasonStart"] for item in subdivision_rows
+                ),
+                "regularSeasonEnd": max(
+                    item["regularSeasonEnd"] for item in subdivision_rows
+                ),
+                "postseasonStart": min(postseason_starts) if postseason_starts else None,
+                "postseasonEnd": max(postseason_ends) if postseason_ends else None,
+                "allSubdivisions": True,
+            }
+        elif normalized_code:
+            subdivision = next(
+                (
+                    item
+                    for item in subdivision_rows
+                    if str(item["subdivisionCode"]).upper() == normalized_code
+                ),
+                None,
+            )
+            if subdivision is None:
+                available = ", ".join(row["subdivisionCode"] for row in subdivision_rows)
+                raise ValueError(
+                    f"Subdivision {normalized_code!r} is not configured for league {league_id}. "
+                    f"Available subdivisions: {available or 'none'}, ALL"
+                )
+        elif len(subdivision_rows) == 1:
+            subdivision = subdivision_rows[0]
+        season.update(dict(subdivision))
+        season.setdefault("allSubdivisions", False)
+        return season
 
     def _get_sport_api_config(self, sport_id: int) -> tuple[str, List[int]]:
         """
@@ -227,12 +353,12 @@ class ScheduleModel:
         If Week rows already exist for this league, returns them.
 
         Otherwise:
-          - Uses SportSeason regularSeasonStart/End to build regular-season weeks:
-              Week 1: regStart → upcoming Sunday (may be partial)
-              Week 2+: Monday → Sunday through regEnd
-          - If League.settings.schedule.includePostseason is true AND
-            SportSeason has playoffStart/playoffEnd, continues numbering into
-            postseason weeks.
+          - Uses the league's subdivision window(s) to build weeks:
+              Week 0 includes any partial opening week
+              Week 1+ use the sport's full week boundary through regEnd
+          - A single subdivision appends its postseason range.
+          - Multiple subdivisions use one continuous window through the latest
+            postseason end so their overlapping phases do not duplicate weeks.
         """
         existing = self._get_existing_weeks(league_id)
         if existing:
@@ -240,19 +366,35 @@ class ScheduleModel:
 
         season = self._get_sport_season_for_league(league_id)
         local_tz = self._get_league_timezone(league_id)
+        week_start_weekday = self._get_week_start_weekday(league_id)
 
         # Regular season weeks (season dates are timezone-agnostic)
         reg_start_date = season["regularSeasonStart"]
         reg_end_date = season["regularSeasonEnd"]
+        if season["allSubdivisions"] and season.get("postseasonEnd"):
+            reg_end_date = max(reg_end_date, season["postseasonEnd"])
+
+        all_regular_week_ranges = compute_weeks_from_start(
+            reg_start_date,
+            reg_end_date,
+            week_start_weekday=week_start_weekday,
+        )
+        opening_partial_week, regular_week_ranges = partition_initial_partial_week(
+            all_regular_week_ranges,
+            week_start_weekday,
+        )
 
         created_all: List[Dict[str, Any]] = []
-        week0_end_date = reg_start_date - dt.timedelta(days=1)
+        week0_end_date = (
+            opening_partial_week[1]
+            if opening_partial_week
+            else reg_start_date - dt.timedelta(days=1)
+        )
         week0_end_local = dt.datetime.combine(week0_end_date, dt.time.max, tzinfo=local_tz)
         created_all.append(
             self._insert_week0(league_id, week0_end_local.astimezone(dt.timezone.utc))
         )
 
-        regular_week_ranges = compute_weeks_from_start(reg_start_date, reg_end_date)
         created_regular = self._insert_weeks(
             league_id,
             regular_week_ranges,
@@ -262,11 +404,19 @@ class ScheduleModel:
         created_all.extend(created_regular)
 
         # Postseason weeks
-        if season.get("playoffStart") and season.get("playoffEnd"):
-            playoff_start_date = season["playoffStart"]
-            playoff_end_date = season["playoffEnd"]
+        if (
+            not season["allSubdivisions"]
+            and season.get("postseasonStart")
+            and season.get("postseasonEnd")
+        ):
+            playoff_start_date = season["postseasonStart"]
+            playoff_end_date = season["postseasonEnd"]
 
-            playoff_ranges = compute_weeks_from_start(playoff_start_date, playoff_end_date)
+            playoff_ranges = compute_weeks_from_start(
+                playoff_start_date,
+                playoff_end_date,
+                week_start_weekday=week_start_weekday,
+            )
             last_regular_week = created_regular[-1]["weekNumber"] if created_regular else 0
 
             created_playoff = self._insert_weeks(
@@ -547,8 +697,8 @@ class ScheduleModel:
         max_days: Optional[int] = None,
     ) -> Dict[str, Any]:
         """
-        Bootstraps ALL regular-season games for a SportSeason by iterating
-        from regularSeasonStart to regularSeasonEnd and ingesting the ESPN scoreboard each day.
+        Bootstraps all games for a SportSeason by iterating from seasonStart to
+        seasonEnd and ingesting the ESPN scoreboard each day.
         """
 
         with self.db.begin() as conn:
@@ -558,8 +708,8 @@ class ScheduleModel:
                         id,
                         "sportId",
                         COALESCE("scheduleBootstrapped", false) AS "scheduleBootstrapped",
-                        "regularSeasonStart"::date AS "regularSeasonStart",
-                        "regularSeasonEnd"::date AS "regularSeasonEnd"
+                        "seasonStart"::date AS "seasonStart",
+                        "seasonEnd"::date AS "seasonEnd"
                     FROM "SportSeason"
                     WHERE id = :id
                 """),
@@ -577,14 +727,14 @@ class ScheduleModel:
                 "reason": "already scheduleBootstrapped (use force=True to re-run)",
             }
 
-        start_date = ss["regularSeasonStart"]
-        end_date = ss["regularSeasonEnd"]
+        start_date = ss["seasonStart"]
+        end_date = ss["seasonEnd"]
 
         if not start_date or not end_date:
-            raise ValueError("SportSeason missing regularSeasonStart/regularSeasonEnd")
+            raise ValueError("SportSeason missing seasonStart/seasonEnd")
 
         if end_date < start_date:
-            raise ValueError(f"Invalid regular season window: {start_date} -> {end_date}")
+            raise ValueError(f"Invalid season window: {start_date} -> {end_date}")
 
         days_total = (end_date - start_date).days + 1
         if max_days is not None:
@@ -1122,32 +1272,26 @@ class ScheduleModel:
         conn,
         sport_id: int,
         season_year: int,
-        regular_start: dt.date,
-        regular_end: dt.date,
-        playoff_start: Optional[dt.date],
-        playoff_end: Optional[dt.date],
+        season_start: dt.date,
+        season_end: dt.date,
     ) -> int:
         row = conn.execute(
             text("""
                 INSERT INTO "SportSeason"
-                    ("sportId","seasonYear","regularSeasonStart","regularSeasonEnd","playoffStart","playoffEnd")
+                    ("sportId", "seasonYear", "seasonStart", "seasonEnd")
                 VALUES
-                    (:sportId,:year,:rs,:re,:ps,:pe)
+                    (:sportId, :year, :seasonStart, :seasonEnd)
                 ON CONFLICT ("sportId","seasonYear")
                 DO UPDATE SET
-                    "regularSeasonStart" = EXCLUDED."regularSeasonStart",
-                    "regularSeasonEnd"   = EXCLUDED."regularSeasonEnd",
-                    "playoffStart"       = EXCLUDED."playoffStart",
-                    "playoffEnd"         = EXCLUDED."playoffEnd"
+                    "seasonStart" = EXCLUDED."seasonStart",
+                    "seasonEnd" = EXCLUDED."seasonEnd"
                 RETURNING id
             """),
             {
                 "sportId": sport_id,
                 "year": season_year,
-                "rs": regular_start,
-                "re": regular_end,
-                "ps": playoff_start,
-                "pe": playoff_end,
+                "seasonStart": season_start,
+                "seasonEnd": season_end,
             },
         ).fetchone()
 

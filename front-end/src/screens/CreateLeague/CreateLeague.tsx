@@ -7,7 +7,6 @@ import {
   BonusesEditor,
   type BonusWithLocalId,
 } from "./BonusesEditor";
-import { getSportRounds } from "../../api/draft";
 import { getSports } from "../../api/sport";
 import type { Sport } from "../../types/sport";
 import { useCurrentUser } from "../../context/currentUserContext";
@@ -138,7 +137,19 @@ const CreateLeague: React.FC = () => {
       return;
     }
 
-    const rounds = await getSportRounds(Number(form.sportId))
+    const selectedSport = sports.find(
+      (sport) => sport.id === Number(form.sportId),
+    );
+    if (
+      selectedSport?.maxDraftRounds == null ||
+      selectedSport.maxPlayersToHaveMaxRounds == null
+    ) {
+      setError(
+        `${selectedSport?.name ?? "Selected sport"} is missing its draft configuration.`,
+      );
+      return;
+    }
+    const rounds = Number(selectedSport.maxDraftRounds);
 
     // build bonuses object: { [bonusKey]: { [placementKey]: points } }
     const bonuses: Record<string, Record<string, number>> = {};
@@ -242,6 +253,7 @@ const CreateLeague: React.FC = () => {
                 <p className="cl-form-error">{sportsError}</p>
               )}
             </div>
+
           </div>
 
           {/* Dates */}

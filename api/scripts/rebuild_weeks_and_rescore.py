@@ -6,7 +6,10 @@ from sqlalchemy import text
 from db import engine
 from endpoints.schedule.scheduleModel import ScheduleModel
 from endpoints.scoring.scoringModel import ScoringModel
-from endpoints.schedule.helpers.weekHelper import compute_weeks_from_start
+from endpoints.schedule.helpers.weekHelper import (
+    compute_weeks_from_start,
+    partition_initial_partial_week,
+)
 
 
 GET_ALL_LEAGUES = text("""
@@ -23,23 +26,6 @@ GET_LEAGUES_WITHOUT_SPORTSEASON = text("""
      AND ss."seasonYear" = :seasonYear
     WHERE ss.id IS NULL
     ORDER BY l.id
-""")
-
-GET_SPORT_SEASON = text("""
-    SELECT
-       ss.id AS "sportSeasonId",
-       ss."sportId",
-       ss."seasonYear",
-       ss."regularSeasonStart",
-       ss."regularSeasonEnd",
-       ss."playoffStart",
-       ss."playoffEnd",
-       ss."scheduleBootstrapped",
-       ss."scheduleBootstrappedAt"
-    FROM "SportSeason" ss
-    WHERE ss."sportId" = :sportId
-      AND ss."seasonYear" = :seasonYear
-    LIMIT 1
 """)
 
 GET_EXISTING_WEEKS = text("""
@@ -123,30 +109,39 @@ def _compute_week_boundaries(
     league_id: int,
     season_year: int,
 ):
-    league = schedule_model._get_league(league_id)
-    sport_id = int(league["sport"])
-    with engine.begin() as conn:
-        season = conn.execute(
-            GET_SPORT_SEASON,
-            {"sportId": sport_id, "seasonYear": season_year},
-        ).mappings().first()
-    if not season:
+    season = schedule_model._get_sport_season_for_league(league_id)
+    if int(season["seasonYear"]) != season_year:
         raise ValueError(
-            f"No SportSeason found for sport={sport_id} seasonYear={season_year}"
+            f"League {league_id} belongs to seasonYear={season['seasonYear']}, "
+            f"not requested seasonYear={season_year}"
         )
     local_tz = schedule_model._get_league_timezone(league_id)
+    week_start_weekday = schedule_model._get_week_start_weekday(league_id)
 
     reg_start_date = season["regularSeasonStart"]
     reg_end_date = season["regularSeasonEnd"]
+    if season["allSubdivisions"] and season.get("postseasonEnd"):
+        reg_end_date = max(reg_end_date, season["postseasonEnd"])
+
+    all_regular_week_ranges = compute_weeks_from_start(
+        reg_start_date,
+        reg_end_date,
+        week_start_weekday=week_start_weekday,
+    )
+    opening_partial_week, regular_week_ranges = partition_initial_partial_week(
+        all_regular_week_ranges,
+        week_start_weekday,
+    )
 
     week_boundaries = []
-
-    # Week 0: end at local end-of-day before regular season start
-    week0_end_date = reg_start_date - dt.timedelta(days=1)
+    week0_end_date = (
+        opening_partial_week[1]
+        if opening_partial_week
+        else reg_start_date - dt.timedelta(days=1)
+    )
     week0_end_local = dt.datetime.combine(week0_end_date, dt.time.max, tzinfo=local_tz)
     week_boundaries.append((0, None, week0_end_local.astimezone(dt.timezone.utc)))
 
-    regular_week_ranges = compute_weeks_from_start(reg_start_date, reg_end_date)
     for idx, (start_d, end_d) in enumerate(regular_week_ranges, start=1):
         start_local = dt.datetime.combine(start_d, dt.time.min, tzinfo=local_tz)
         end_local = dt.datetime.combine(end_d, dt.time.max, tzinfo=local_tz)
@@ -154,11 +149,19 @@ def _compute_week_boundaries(
             (idx, start_local.astimezone(dt.timezone.utc), end_local.astimezone(dt.timezone.utc))
         )
 
-    if season.get("playoffStart") and season.get("playoffEnd"):
-        playoff_start_date = season["playoffStart"]
-        playoff_end_date = season["playoffEnd"]
+    if (
+        not season["allSubdivisions"]
+        and season.get("postseasonStart")
+        and season.get("postseasonEnd")
+    ):
+        playoff_start_date = season["postseasonStart"]
+        playoff_end_date = season["postseasonEnd"]
 
-        playoff_ranges = compute_weeks_from_start(playoff_start_date, playoff_end_date)
+        playoff_ranges = compute_weeks_from_start(
+            playoff_start_date,
+            playoff_end_date,
+            week_start_weekday=week_start_weekday,
+        )
         starting_week_number = len(regular_week_ranges) + 1
         for offset, (start_d, end_d) in enumerate(playoff_ranges):
             week_number = starting_week_number + offset
