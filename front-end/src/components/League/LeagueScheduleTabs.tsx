@@ -10,13 +10,14 @@ import {
   type DateHeader,
 } from "../../utils/scheduleTable";
 import { safeLocalStorage } from "../../utils/safeStorage";
+import { MIN_SCHEDULE_WEEK_NUMBER } from "../../utils/weekCutoff";
 import "./LeagueScheduleTabs.css";
 
 type LeagueScheduleTabsProps = {
   leagueId: number;
   members: LeagueMember[];
   currentMemberId: number;      // league.memberId
-  initialWeekNumber?: number;   // default 1
+  initialWeekNumber?: number;
   maxWeekNumber?: number;       // NEW: optional cap, e.g. 18
   timeZone?: string | null;
 };
@@ -42,7 +43,7 @@ export const LeagueScheduleTabs = ({
   leagueId,
   members,
   currentMemberId,
-  initialWeekNumber = 1,
+  initialWeekNumber = MIN_SCHEDULE_WEEK_NUMBER,
   maxWeekNumber,
   timeZone
 }: LeagueScheduleTabsProps) => {
@@ -306,7 +307,7 @@ export const LeagueScheduleTabs = ({
   );
 
   const handlePrevWeek = () => {
-    const next = Math.max(1, weekNumber - 1);
+    const next = Math.max(MIN_SCHEDULE_WEEK_NUMBER, weekNumber - 1);
     setWeekNumber(next);
     setWeekInputValue(String(next));
   };
@@ -337,7 +338,7 @@ export const LeagueScheduleTabs = ({
 
     // Clamp to valid range
     let next = parsed;
-    if (next < 1) next = 1;
+    if (next < MIN_SCHEDULE_WEEK_NUMBER) next = MIN_SCHEDULE_WEEK_NUMBER;
     if (maxWeekNumber != null && next > maxWeekNumber) {
       next = maxWeekNumber;
     }
@@ -375,7 +376,11 @@ export const LeagueScheduleTabs = ({
           >
             {isCollapsed ? "Show Schedule" : "Hide Schedule"}
           </button>
-          <button type="button" onClick={handlePrevWeek} disabled={weekNumber <= 1}>
+          <button
+            type="button"
+            onClick={handlePrevWeek}
+            disabled={weekNumber <= MIN_SCHEDULE_WEEK_NUMBER}
+          >
             ‹
           </button>
 
@@ -383,7 +388,7 @@ export const LeagueScheduleTabs = ({
             Week
             <input
               type="number"
-              min={1}
+              min={MIN_SCHEDULE_WEEK_NUMBER}
               max={maxWeekNumber ?? undefined}
               value={weekInputValue}
               onChange={handleWeekInputChange}

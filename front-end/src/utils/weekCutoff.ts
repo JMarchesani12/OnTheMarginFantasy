@@ -5,6 +5,7 @@ type WeekCutoffInput = {
   timeZone?: string | null;
 };
 
+export const MIN_SCHEDULE_WEEK_NUMBER = 0;
 const DEFAULT_CUTOFF_HOUR_LOCAL = 2;
 
 const getTimeZoneOffset = (date: Date, timeZone: string) => {

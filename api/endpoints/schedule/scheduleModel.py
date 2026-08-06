@@ -269,15 +269,15 @@ class ScheduleModel:
             rows = conn.execute(sql, {"leagueId": league_id}).fetchall()
         return [dict(r._mapping) for r in rows]
 
-    def _insert_week0(self, league_id: int, end_dt) -> Dict[str, Any]:
+    def _insert_week0(self, league_id: int, start_dt, end_dt) -> Dict[str, Any]:
         with self.db.begin() as conn:
             row = conn.execute(
                 text("""
                     insert into "Week" ("leagueId","weekNumber","startDate","endDate","isLocked","scoringComplete")
-                    values (:leagueId, 0, null, :endDate, false, false)
+                    values (:leagueId, 0, :startDate, :endDate, false, false)
                     returning id, "leagueId", "weekNumber", "startDate", "endDate", "isLocked", "scoringComplete"
                 """),
-                {"leagueId": league_id, "endDate": end_dt},
+                {"leagueId": league_id, "startDate": start_dt, "endDate": end_dt},
             ).mappings().first()
         return dict(row)
 
@@ -370,8 +370,13 @@ class ScheduleModel:
             else reg_start_date - dt.timedelta(days=1)
         )
         week0_end_local = dt.datetime.combine(week0_end_date, dt.time.max, tzinfo=local_tz)
+        week0_start_local = (week0_end_local + dt.timedelta(microseconds=1)) - dt.timedelta(days=7)
         created_all.append(
-            self._insert_week0(league_id, week0_end_local.astimezone(dt.timezone.utc))
+            self._insert_week0(
+                league_id,
+                week0_start_local.astimezone(dt.timezone.utc),
+                week0_end_local.astimezone(dt.timezone.utc),
+            )
         )
 
         created_regular = self._insert_weeks(
@@ -818,7 +823,10 @@ class ScheduleModel:
         sql = text("""
             WITH target_week AS (
             SELECT
-                w."startDate",
+                COALESCE(
+                    w."startDate",
+                    w."endDate" + interval '1 microsecond' - interval '7 days'
+                ) AS "startDate",
                 w."endDate",
                 l."sport"        AS "sportId",
                 l."seasonYear"   AS "seasonYear",
@@ -838,8 +846,8 @@ class ScheduleModel:
             FROM "LeagueTeamSlot" lts
             WHERE lts."leagueId"   = :leagueId
                 AND lts."memberId"   = :memberId
-                AND lts."acquiredWeek" <= :weekNumber
-                AND (lts."droppedWeek" IS NULL OR lts."droppedWeek" > :weekNumber)
+                AND lts."acquiredWeek" <= GREATEST(:weekNumber, 1)
+                AND (lts."droppedWeek" IS NULL OR lts."droppedWeek" > GREATEST(:weekNumber, 1))
             )
             SELECT
             gr.id,
@@ -923,8 +931,8 @@ class ScheduleModel:
             FROM "LeagueTeamSlot" lts
             WHERE lts."leagueId"   = :leagueId
                 AND lts."memberId"   = :memberA
-                AND lts."acquiredWeek" <= :weekNumber
-                AND (lts."droppedWeek" IS NULL OR lts."droppedWeek" > :weekNumber)
+                AND lts."acquiredWeek" <= GREATEST(:weekNumber, 1)
+                AND (lts."droppedWeek" IS NULL OR lts."droppedWeek" > GREATEST(:weekNumber, 1))
             ),
             b_teams AS (
             SELECT lts."sportTeamId"
@@ -1017,17 +1025,25 @@ class ScheduleModel:
         """
         sql = text("""
             SELECT
-                id,
-                "createdAt",
-                "leagueId",
-                "weekNumber",
-                "startDate",
-                "endDate",
-                "isLocked",
-                "scoringComplete"
-            FROM "Week"
-            WHERE "leagueId"   = :leagueId
-              AND "weekNumber" = :weekNumber
+                w.id,
+                w."createdAt",
+                w."leagueId",
+                w."weekNumber",
+                COALESCE(
+                    w."startDate",
+                    w."endDate" + interval '1 microsecond' - interval '7 days'
+                ) AS "startDate",
+                w."endDate",
+                w."isLocked",
+                w."scoringComplete"
+            FROM "Week" w
+            JOIN "League" l
+              ON l.id = w."leagueId"
+            JOIN "SportSeason" ss
+              ON ss."sportId" = l.sport
+             AND ss."seasonYear" = l."seasonYear"
+            WHERE w."leagueId"   = :leagueId
+              AND w."weekNumber" = :weekNumber
             LIMIT 1
         """)
 
@@ -1064,14 +1080,27 @@ class ScheduleModel:
             SELECT
                 st.id              AS "teamId",
                 st."displayName"   AS "teamName",
+                sc.id              AS "sportConferenceId",
                 c.name             AS "conferenceName"
             FROM member_teams mt
             JOIN "SportTeam" st
             ON st.id = mt."sportTeamId"
             LEFT JOIN "ConferenceMembership" cm
-            ON cm."sportTeamId" = st.id
+            ON (
+              cm."sportTeamId" = st.id
+              OR EXISTS (
+                SELECT 1
+                FROM "SportTeam" membership_st
+                WHERE membership_st.id = cm."sportTeamId"
+                  AND membership_st."externalId" = st."externalId"
+              )
+            )
+            AND (cm."sportId" IS NULL OR cm."sportId" = st."sportId")
+            LEFT JOIN "SportConference" source_sc
+            ON source_sc.id = cm."sportConferenceId"
             LEFT JOIN "SportConference" sc
-            ON sc.id = cm."sportConferenceId"
+            ON sc."conferenceId" = source_sc."conferenceId"
+            AND sc."sportId" = st."sportId"
             LEFT JOIN "Conference" c
             ON c.id = sc."conferenceId"
             ORDER BY st."displayName";
@@ -1094,10 +1123,20 @@ class ScheduleModel:
         Returns (startDate, endDate) for the league week.
         """
         sql = text("""
-            SELECT "startDate", "endDate"
-            FROM "Week"
-            WHERE "leagueId" = :leagueId
-              AND "weekNumber" = :weekNumber
+            SELECT
+                COALESCE(
+                    w."startDate",
+                    w."endDate" + interval '1 microsecond' - interval '7 days'
+                ) AS "startDate",
+                w."endDate"
+            FROM "Week" w
+            JOIN "League" l
+              ON l.id = w."leagueId"
+            JOIN "SportSeason" ss
+              ON ss."sportId" = l.sport
+             AND ss."seasonYear" = l."seasonYear"
+            WHERE w."leagueId" = :leagueId
+              AND w."weekNumber" = :weekNumber
             LIMIT 1
         """)
         with self.db.begin() as conn:
@@ -1120,7 +1159,7 @@ class ScheduleModel:
 
         sql = text("""
             WITH sc AS (
-                SELECT id, "sportId"
+                SELECT id, "sportId", "conferenceId"
                 FROM "SportConference"
                 WHERE id = :sportConferenceId
                 LIMIT 1
@@ -1133,9 +1172,19 @@ class ScheduleModel:
                 LIMIT 1
             ),
             conf_teams AS (
-                SELECT cm."sportTeamId"
+                SELECT st.id AS "sportTeamId"
                 FROM "ConferenceMembership" cm
-                WHERE cm."sportConferenceId" = :sportConferenceId
+                JOIN "SportConference" source_sc
+                  ON source_sc.id = cm."sportConferenceId"
+                JOIN sc
+                  ON sc."sportId" = cm."sportId"
+                 AND sc.id = :sportConferenceId
+                JOIN "SportTeam" membership_st
+                  ON membership_st.id = cm."sportTeamId"
+                JOIN "SportTeam" st
+                  ON st."externalId" = membership_st."externalId"
+                 AND st."sportId" = sc."sportId"
+                WHERE source_sc."conferenceId" = sc."conferenceId"
                   AND (cm."seasonYear" IS NULL OR cm."seasonYear" = :seasonYear)
             )
             SELECT

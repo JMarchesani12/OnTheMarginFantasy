@@ -17,7 +17,7 @@ import LeagueScoreboard, {
 import { getScoresForWeek } from "../../api/scoring";
 import type { ScoreWeek } from "../../types/scoring";
 import { useCurrentUser } from "../../context/currentUserContext";
-import { getEffectiveWeekNumber } from "../../utils/weekCutoff";
+import { getEffectiveWeekNumber, MIN_SCHEDULE_WEEK_NUMBER } from "../../utils/weekCutoff";
 import {
   mapLeagueFromResponse,
   normalizeLeaguesResponse,
@@ -808,7 +808,7 @@ const LeagueDetailPage = () => {
           leagueId={league.leagueId}
           members={members}
           currentMemberId={league.memberId}
-          initialWeekNumber={effectiveWeekNumber ?? 1}
+          initialWeekNumber={effectiveWeekNumber ?? MIN_SCHEDULE_WEEK_NUMBER}
           timeZone={leagueTimeZone}
         />
       )}

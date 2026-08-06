@@ -15,7 +15,7 @@ import {
   getLocalDateKeyForGame,
   type DateHeader,
 } from "../../utils/scheduleTable";
-import { getEffectiveWeekNumber } from "../../utils/weekCutoff";
+import { getEffectiveWeekNumber, MIN_SCHEDULE_WEEK_NUMBER } from "../../utils/weekCutoff";
 import {
   mapLeagueFromResponse,
   normalizeLeaguesResponse,
@@ -79,7 +79,7 @@ const ConferenceSchedulePage = () => {
         currentWeekNumber: league?.currentWeekNumber ?? null,
         currentWeekStartDate: league?.currentWeekStartDate ?? null,
         timeZone: league?.settings?.timezone ?? null,
-      }) ?? 1,
+      }) ?? MIN_SCHEDULE_WEEK_NUMBER,
     [league?.currentWeekNumber, league?.currentWeekStartDate, league?.settings?.timezone]
   );
   const [weekNumber, setWeekNumber] = useState(initialWeekNumber);
@@ -451,7 +451,7 @@ const ConferenceSchedulePage = () => {
   };
 
   const updateWeek = (delta: number) => {
-    setWeekNumber((prev) => Math.max(1, prev + delta));
+    setWeekNumber((prev) => Math.max(MIN_SCHEDULE_WEEK_NUMBER, prev + delta));
   };
 
   if (!league || !leagueId) {
@@ -521,7 +521,11 @@ const ConferenceSchedulePage = () => {
         </div>
 
         <div className="conference-schedule__week">
-          <button type="button" onClick={() => updateWeek(-1)} disabled={weekNumber <= 1}>
+          <button
+            type="button"
+            onClick={() => updateWeek(-1)}
+            disabled={weekNumber <= MIN_SCHEDULE_WEEK_NUMBER}
+          >
             ‹
           </button>
           <span>Week {weekNumber}</span>
