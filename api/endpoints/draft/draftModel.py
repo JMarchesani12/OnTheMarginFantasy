@@ -657,29 +657,52 @@ class DraftModel:
     def _get_conference_info_for_team(
         self,
         conn,
+        league_id: int,
         sport_team_id: int,
     ) -> Optional[Dict[str, Any]]:
         """
         Returns:
           { sportConferenceId, conferenceName, maxTeamsPerOwner }
         or None if the team has no conference membership (Independent).
-        Assumes ConferenceMembership.seasonYear IS NULL (your current data).
         """
         sql = text("""
+            WITH league_info AS (
+              SELECT "seasonYear"
+              FROM "League"
+              WHERE id = :leagueId
+            )
             SELECT
               sc.id                 AS "sportConferenceId",
               c.name                AS "conferenceName",
               sc."maxTeamsPerOwner" AS "maxTeamsPerOwner"
-            FROM "ConferenceMembership" cm
+            FROM "SportTeam" st
+            JOIN "ConferenceMembership" cm
+              ON (
+                cm."sportTeamId" = st.id
+                OR EXISTS (
+                  SELECT 1
+                  FROM "SportTeam" membership_st
+                  WHERE membership_st.id = cm."sportTeamId"
+                    AND membership_st."externalId" = st."externalId"
+                )
+              )
+             AND (cm."sportId" IS NULL OR cm."sportId" = st."sportId")
+            CROSS JOIN league_info li
+            JOIN "SportConference" source_sc
+              ON source_sc.id = cm."sportConferenceId"
             JOIN "SportConference" sc
-              ON sc.id = cm."sportConferenceId"
+              ON sc."conferenceId" = source_sc."conferenceId"
+             AND sc."sportId" = st."sportId"
             JOIN "Conference" c
               ON c.id = sc."conferenceId"
-            WHERE cm."sportTeamId" = :sportTeamId
-              AND cm."seasonYear" IS NULL
+            WHERE st.id = :sportTeamId
+              AND (cm."seasonYear" IS NULL OR cm."seasonYear" = li."seasonYear")
             LIMIT 1
         """)
-        row = conn.execute(sql, {"sportTeamId": sport_team_id}).fetchone()
+        row = conn.execute(
+            sql,
+            {"leagueId": league_id, "sportTeamId": sport_team_id},
+        ).fetchone()
         return dict(row._mapping) if row else None
 
     def _count_member_teams_in_sport_conference(
@@ -695,7 +718,12 @@ class DraftModel:
         Uses DISTINCT to avoid double counting if ConferenceMembership has duplicates.
         """
         sql = text("""
-            WITH owned AS (
+            WITH league_info AS (
+              SELECT "seasonYear"
+              FROM "League"
+              WHERE id = :leagueId
+            ),
+            owned AS (
               SELECT lts."sportTeamId"
               FROM "LeagueTeamSlot" lts
               WHERE lts."leagueId"     = :leagueId
@@ -705,10 +733,27 @@ class DraftModel:
             )
             SELECT COUNT(DISTINCT o."sportTeamId")::int AS cnt
             FROM owned o
+            JOIN "SportTeam" st
+              ON st.id = o."sportTeamId"
             JOIN "ConferenceMembership" cm
-              ON cm."sportTeamId" = o."sportTeamId"
-            WHERE cm."sportConferenceId" = :sportConferenceId
-              AND cm."seasonYear" IS NULL
+              ON (
+                cm."sportTeamId" = st.id
+                OR EXISTS (
+                  SELECT 1
+                  FROM "SportTeam" membership_st
+                  WHERE membership_st.id = cm."sportTeamId"
+                    AND membership_st."externalId" = st."externalId"
+                )
+              )
+             AND (cm."sportId" IS NULL OR cm."sportId" = st."sportId")
+            CROSS JOIN league_info li
+            JOIN "SportConference" source_sc
+              ON source_sc.id = cm."sportConferenceId"
+            JOIN "SportConference" sc
+              ON sc."conferenceId" = source_sc."conferenceId"
+             AND sc."sportId" = st."sportId"
+            WHERE sc.id = :sportConferenceId
+              AND (cm."seasonYear" IS NULL OR cm."seasonYear" = li."seasonYear")
         """)
         row = conn.execute(
             sql,
@@ -737,7 +782,7 @@ class DraftModel:
         Policy for teams with no conference membership:
           - allowed (treated as Independent).
         """
-        conf = self._get_conference_info_for_team(conn, sport_team_id)
+        conf = self._get_conference_info_for_team(conn, league_id, sport_team_id)
         if conf is None:
             # Independent / no membership: allow
             return
@@ -1159,6 +1204,11 @@ class DraftModel:
 
             picks = c.execute(
                 text("""
+                    WITH league_info AS (
+                      SELECT "seasonYear"
+                      FROM "League"
+                      WHERE id = :leagueId
+                    )
                     SELECT
                       dp.id,
                       dp."createdAt",
@@ -1172,13 +1222,26 @@ class DraftModel:
                       sc.id AS "sportConferenceId",
                       conf.name AS "conferenceName"
                     FROM "DraftPick" dp
+                    CROSS JOIN league_info li
                     JOIN "LeagueMember" lm ON lm.id = dp."memberId"
                     JOIN "SportTeam" st ON st.id = dp."sportTeamId"
                     LEFT JOIN "ConferenceMembership" cm
-                      ON cm."sportTeamId" = dp."sportTeamId"
-                     AND cm."seasonYear" IS NULL
+                      ON (
+                        cm."sportTeamId" = st.id
+                        OR EXISTS (
+                          SELECT 1
+                          FROM "SportTeam" membership_st
+                          WHERE membership_st.id = cm."sportTeamId"
+                            AND membership_st."externalId" = st."externalId"
+                        )
+                      )
+                     AND (cm."sportId" IS NULL OR cm."sportId" = st."sportId")
+                     AND (cm."seasonYear" IS NULL OR cm."seasonYear" = li."seasonYear")
+                    LEFT JOIN "SportConference" source_sc
+                      ON source_sc.id = cm."sportConferenceId"
                     LEFT JOIN "SportConference" sc
-                      ON sc.id = cm."sportConferenceId"
+                      ON sc."conferenceId" = source_sc."conferenceId"
+                     AND sc."sportId" = st."sportId"
                     LEFT JOIN "Conference" conf
                       ON conf.id = sc."conferenceId"
                     WHERE dp."leagueId" = :leagueId
@@ -1335,15 +1398,38 @@ class DraftModel:
         # Count currently-owned teams for this member in this conference as of 'week'
         row = conn.execute(
             text("""
+                WITH league_info AS (
+                  SELECT "seasonYear"
+                  FROM "League"
+                  WHERE id = :leagueId
+                )
                 SELECT COUNT(*) AS cnt
                 FROM "LeagueTeamSlot" lts
+                JOIN "SportTeam" st
+                ON st.id = lts."sportTeamId"
                 JOIN "ConferenceMembership" cm
-                ON cm."sportTeamId" = lts."sportTeamId"
-                AND cm."sportConferenceId" = :sportConferenceId
+                ON (
+                  cm."sportTeamId" = st.id
+                  OR EXISTS (
+                    SELECT 1
+                    FROM "SportTeam" membership_st
+                    WHERE membership_st.id = cm."sportTeamId"
+                      AND membership_st."externalId" = st."externalId"
+                  )
+                )
+                AND (cm."sportId" IS NULL OR cm."sportId" = st."sportId")
+                CROSS JOIN league_info li
+                JOIN "SportConference" source_sc
+                ON source_sc.id = cm."sportConferenceId"
+                JOIN "SportConference" sc
+                ON sc."conferenceId" = source_sc."conferenceId"
+                AND sc."sportId" = st."sportId"
                 WHERE lts."leagueId" = :leagueId
                 AND lts."memberId" = :memberId
                 AND lts."acquiredWeek" <= :week
                 AND (lts."droppedWeek" IS NULL OR lts."droppedWeek" > :week)
+                AND sc.id = :sportConferenceId
+                AND (cm."seasonYear" IS NULL OR cm."seasonYear" = li."seasonYear")
             """),
             {
                 "leagueId": league_id,
@@ -1384,18 +1470,35 @@ class DraftModel:
         """
         row = conn.execute(
             text("""
-                SELECT cm."sportTeamId" AS "sportTeamId"
+                WITH league_info AS (
+                  SELECT "seasonYear"
+                  FROM "League"
+                  WHERE id = :leagueId
+                )
+                SELECT st.id AS "sportTeamId"
                 FROM "ConferenceMembership" cm
+                CROSS JOIN league_info li
+                JOIN "SportTeam" membership_st
+                ON membership_st.id = cm."sportTeamId"
+                JOIN "SportTeam" st
+                ON st."externalId" = membership_st."externalId"
+                AND st."sportId" = cm."sportId"
+                JOIN "SportConference" source_sc
+                ON source_sc.id = cm."sportConferenceId"
+                JOIN "SportConference" sc
+                ON sc."conferenceId" = source_sc."conferenceId"
+                AND sc."sportId" = st."sportId"
                 LEFT JOIN "DraftPick" dp
                 ON dp."leagueId" = :leagueId
-                AND dp."sportTeamId" = cm."sportTeamId"
+                AND dp."sportTeamId" = st.id
                 LEFT JOIN "LeagueTeamSlot" lts
                 ON lts."leagueId" = :leagueId
-                AND lts."sportTeamId" = cm."sportTeamId"
+                AND lts."sportTeamId" = st.id
                 AND lts."acquiredWeek" <= :week
                 AND (lts."droppedWeek" IS NULL OR lts."droppedWeek" > :week)
-                WHERE cm."sportConferenceId" = :sportConferenceId
-                AND cm."seasonYear" IS NULL
+                WHERE sc.id = :sportConferenceId
+                AND (cm."sportId" IS NULL OR cm."sportId" = st."sportId")
+                AND (cm."seasonYear" IS NULL OR cm."seasonYear" = li."seasonYear")
                 AND dp.id IS NULL
                 AND lts.id IS NULL
                 ORDER BY random()
@@ -1421,10 +1524,14 @@ class DraftModel:
         """
         row = conn.execute(
             text("""
+                WITH league_info AS (
+                  SELECT "seasonYear"
+                  FROM "League"
+                  WHERE id = :leagueId
+                )
                 SELECT st.id AS "sportTeamId"
                 FROM "SportTeam" st
-                LEFT JOIN "ConferenceMembership" cm
-                ON cm."sportTeamId" = st.id
+                CROSS JOIN league_info li
                 LEFT JOIN "DraftPick" dp
                 ON dp."leagueId" = :leagueId
                 AND dp."sportTeamId" = st.id
@@ -1434,7 +1541,15 @@ class DraftModel:
                 AND lts."acquiredWeek" <= :week
                 AND (lts."droppedWeek" IS NULL OR lts."droppedWeek" > :week)
                 WHERE st."sportId" = :sportId
-                AND cm.id IS NULL
+                AND NOT EXISTS (
+                  SELECT 1
+                  FROM "ConferenceMembership" cm
+                  JOIN "SportTeam" membership_st
+                    ON membership_st.id = cm."sportTeamId"
+                  WHERE membership_st."externalId" = st."externalId"
+                    AND (cm."sportId" IS NULL OR cm."sportId" = st."sportId")
+                    AND (cm."seasonYear" IS NULL OR cm."seasonYear" = li."seasonYear")
+                )
                 AND dp.id IS NULL
                 AND lts.id IS NULL
                 ORDER BY random()

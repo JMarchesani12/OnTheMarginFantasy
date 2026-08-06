@@ -47,6 +47,11 @@ class RosterModel:
       week_number: int
   ) -> List[Dict[str, Any]]:
       sql = text("""
+          WITH league_info AS (
+            SELECT "seasonYear"
+            FROM "League"
+            WHERE id = :leagueId
+          )
           SELECT
             lts.id                AS "slotId",
             lts."sportTeamId",
@@ -55,14 +60,29 @@ class RosterModel:
             lts."acquiredVia",
             st."displayName",
             st."externalId",
+            sc.id                 AS "sportConferenceId",
             c.name                AS "conferenceName"
           FROM "LeagueTeamSlot" lts
           JOIN "SportTeam" st
             ON st.id = lts."sportTeamId"
+          CROSS JOIN league_info li
           LEFT JOIN "ConferenceMembership" cm
-            ON cm."sportTeamId" = st.id
+            ON (
+              cm."sportTeamId" = st.id
+              OR EXISTS (
+                SELECT 1
+                FROM "SportTeam" membership_st
+                WHERE membership_st.id = cm."sportTeamId"
+                  AND membership_st."externalId" = st."externalId"
+              )
+            )
+           AND (cm."sportId" IS NULL OR cm."sportId" = st."sportId")
+           AND (cm."seasonYear" IS NULL OR cm."seasonYear" = li."seasonYear")
+          LEFT JOIN "SportConference" source_sc
+            ON source_sc.id = cm."sportConferenceId"
           LEFT JOIN "SportConference" sc
-            ON sc.id = cm."sportConferenceId"
+            ON sc."conferenceId" = source_sc."conferenceId"
+           AND sc."sportId" = st."sportId"
           LEFT JOIN "Conference" c
             ON c.id = sc."conferenceId"
           WHERE lts."leagueId" = :leagueId
@@ -100,8 +120,8 @@ class RosterModel:
         so the frontend can group by conference.
         """
 
-        # 1) Get the league's sport so we only include teams from that sport
-        league_sql = text('SELECT sport FROM "League" WHERE id = :leagueId')
+        # 1) Get the league's sport/season so we only include teams from that season.
+        league_sql = text('SELECT sport, "seasonYear" FROM "League" WHERE id = :leagueId')
 
         with self.db.connect() as conn:
             league_row = conn.execute(league_sql, {"leagueId": league_id}).fetchone()
@@ -116,11 +136,10 @@ class RosterModel:
 
         if not league_row:
             return []
-        if not week_info:
-            return []
 
         sport_id = league_row._mapping["sport"]
-        week_id = int(week_info["id"])
+        season_year = league_row._mapping["seasonYear"]
+        week_id = int(week_info["id"]) if week_info else None
 
         # 2) Query available teams with conference info
         sql = text("""
@@ -148,15 +167,28 @@ class RosterModel:
               st."externalId",
               st."schoolId",
               st."sportId",
-              cm."sportConferenceId",
+              sc.id AS "sportConferenceId",
               sc."conferenceId",
               conf.name AS "conferenceName"
             FROM "SportTeam" st
-            JOIN "ConferenceMembership" cm
-              ON cm."sportTeamId" = st.id
-            JOIN "SportConference" sc
-              ON sc.id = cm."sportConferenceId"
-            JOIN "Conference" conf
+            LEFT JOIN "ConferenceMembership" cm
+              ON (
+                cm."sportTeamId" = st.id
+                OR EXISTS (
+                  SELECT 1
+                  FROM "SportTeam" membership_st
+                  WHERE membership_st.id = cm."sportTeamId"
+                    AND membership_st."externalId" = st."externalId"
+                )
+              )
+             AND (cm."sportId" IS NULL OR cm."sportId" = st."sportId")
+             AND (cm."seasonYear" IS NULL OR cm."seasonYear" = :seasonYear)
+            LEFT JOIN "SportConference" source_sc
+              ON source_sc.id = cm."sportConferenceId"
+            LEFT JOIN "SportConference" sc
+              ON sc."conferenceId" = source_sc."conferenceId"
+             AND sc."sportId" = st."sportId"
+            LEFT JOIN "Conference" conf
               ON conf.id = sc."conferenceId"
             WHERE st."sportId" = :sportId
               AND st.id NOT IN (SELECT team_id FROM pending_adds)
@@ -180,6 +212,7 @@ class RosterModel:
                 {
                     "leagueId": league_id,
                     "sportId": sport_id,
+                    "seasonYear": season_year,
                     "weekId": week_id,
                     "weekNumber": week_number,
                 },
