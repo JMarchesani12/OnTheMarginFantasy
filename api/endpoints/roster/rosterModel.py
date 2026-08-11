@@ -67,21 +67,11 @@ class RosterModel:
             ON st.id = lts."sportTeamId"
           CROSS JOIN league_info li
           LEFT JOIN "ConferenceMembership" cm
-            ON (
-              cm."sportTeamId" = st.id
-              OR EXISTS (
-                SELECT 1
-                FROM "SportTeam" membership_st
-                WHERE membership_st.id = cm."sportTeamId"
-                  AND membership_st."externalId" = st."externalId"
-              )
-            )
-           AND (cm."sportId" IS NULL OR cm."sportId" = st."sportId")
+            ON cm."sportTeamId" = st.id
+           AND cm."sportId" = st."sportId"
            AND (cm."seasonYear" IS NULL OR cm."seasonYear" = li."seasonYear")
-          LEFT JOIN "SportConference" source_sc
-            ON source_sc.id = cm."sportConferenceId"
           LEFT JOIN "SportConference" sc
-            ON sc."conferenceId" = source_sc."conferenceId"
+            ON sc.id = cm."sportConferenceId"
            AND sc."sportId" = st."sportId"
           LEFT JOIN "Conference" c
             ON c.id = sc."conferenceId"
@@ -172,21 +162,11 @@ class RosterModel:
               conf.name AS "conferenceName"
             FROM "SportTeam" st
             LEFT JOIN "ConferenceMembership" cm
-              ON (
-                cm."sportTeamId" = st.id
-                OR EXISTS (
-                  SELECT 1
-                  FROM "SportTeam" membership_st
-                  WHERE membership_st.id = cm."sportTeamId"
-                    AND membership_st."externalId" = st."externalId"
-                )
-              )
-             AND (cm."sportId" IS NULL OR cm."sportId" = st."sportId")
+              ON cm."sportTeamId" = st.id
+             AND cm."sportId" = st."sportId"
              AND (cm."seasonYear" IS NULL OR cm."seasonYear" = :seasonYear)
-            LEFT JOIN "SportConference" source_sc
-              ON source_sc.id = cm."sportConferenceId"
             LEFT JOIN "SportConference" sc
-              ON sc."conferenceId" = source_sc."conferenceId"
+              ON sc.id = cm."sportConferenceId"
              AND sc."sportId" = st."sportId"
             LEFT JOIN "Conference" conf
               ON conf.id = sc."conferenceId"

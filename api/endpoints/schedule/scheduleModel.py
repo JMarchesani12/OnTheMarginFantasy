@@ -1086,20 +1086,10 @@ class ScheduleModel:
             JOIN "SportTeam" st
             ON st.id = mt."sportTeamId"
             LEFT JOIN "ConferenceMembership" cm
-            ON (
-              cm."sportTeamId" = st.id
-              OR EXISTS (
-                SELECT 1
-                FROM "SportTeam" membership_st
-                WHERE membership_st.id = cm."sportTeamId"
-                  AND membership_st."externalId" = st."externalId"
-              )
-            )
-            AND (cm."sportId" IS NULL OR cm."sportId" = st."sportId")
-            LEFT JOIN "SportConference" source_sc
-            ON source_sc.id = cm."sportConferenceId"
+            ON cm."sportTeamId" = st.id
+            AND cm."sportId" = st."sportId"
             LEFT JOIN "SportConference" sc
-            ON sc."conferenceId" = source_sc."conferenceId"
+            ON sc.id = cm."sportConferenceId"
             AND sc."sportId" = st."sportId"
             LEFT JOIN "Conference" c
             ON c.id = sc."conferenceId"
@@ -1174,18 +1164,13 @@ class ScheduleModel:
             conf_teams AS (
                 SELECT st.id AS "sportTeamId"
                 FROM "ConferenceMembership" cm
-                JOIN "SportConference" source_sc
-                  ON source_sc.id = cm."sportConferenceId"
                 JOIN sc
                   ON sc."sportId" = cm."sportId"
-                 AND sc.id = :sportConferenceId
-                JOIN "SportTeam" membership_st
-                  ON membership_st.id = cm."sportTeamId"
+                 AND sc.id = cm."sportConferenceId"
                 JOIN "SportTeam" st
-                  ON st."externalId" = membership_st."externalId"
+                  ON st.id = cm."sportTeamId"
                  AND st."sportId" = sc."sportId"
-                WHERE source_sc."conferenceId" = sc."conferenceId"
-                  AND (cm."seasonYear" IS NULL OR cm."seasonYear" = :seasonYear)
+                WHERE (cm."seasonYear" IS NULL OR cm."seasonYear" = :seasonYear)
             )
             SELECT
                 gr.id,

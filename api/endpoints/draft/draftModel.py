@@ -677,21 +677,11 @@ class DraftModel:
               sc."maxTeamsPerOwner" AS "maxTeamsPerOwner"
             FROM "SportTeam" st
             JOIN "ConferenceMembership" cm
-              ON (
-                cm."sportTeamId" = st.id
-                OR EXISTS (
-                  SELECT 1
-                  FROM "SportTeam" membership_st
-                  WHERE membership_st.id = cm."sportTeamId"
-                    AND membership_st."externalId" = st."externalId"
-                )
-              )
-             AND (cm."sportId" IS NULL OR cm."sportId" = st."sportId")
+              ON cm."sportTeamId" = st.id
+             AND cm."sportId" = st."sportId"
             CROSS JOIN league_info li
-            JOIN "SportConference" source_sc
-              ON source_sc.id = cm."sportConferenceId"
             JOIN "SportConference" sc
-              ON sc."conferenceId" = source_sc."conferenceId"
+              ON sc.id = cm."sportConferenceId"
              AND sc."sportId" = st."sportId"
             JOIN "Conference" c
               ON c.id = sc."conferenceId"
@@ -736,21 +726,11 @@ class DraftModel:
             JOIN "SportTeam" st
               ON st.id = o."sportTeamId"
             JOIN "ConferenceMembership" cm
-              ON (
-                cm."sportTeamId" = st.id
-                OR EXISTS (
-                  SELECT 1
-                  FROM "SportTeam" membership_st
-                  WHERE membership_st.id = cm."sportTeamId"
-                    AND membership_st."externalId" = st."externalId"
-                )
-              )
-             AND (cm."sportId" IS NULL OR cm."sportId" = st."sportId")
+              ON cm."sportTeamId" = st.id
+             AND cm."sportId" = st."sportId"
             CROSS JOIN league_info li
-            JOIN "SportConference" source_sc
-              ON source_sc.id = cm."sportConferenceId"
             JOIN "SportConference" sc
-              ON sc."conferenceId" = source_sc."conferenceId"
+              ON sc.id = cm."sportConferenceId"
              AND sc."sportId" = st."sportId"
             WHERE sc.id = :sportConferenceId
               AND (cm."seasonYear" IS NULL OR cm."seasonYear" = li."seasonYear")
@@ -1226,21 +1206,11 @@ class DraftModel:
                     JOIN "LeagueMember" lm ON lm.id = dp."memberId"
                     JOIN "SportTeam" st ON st.id = dp."sportTeamId"
                     LEFT JOIN "ConferenceMembership" cm
-                      ON (
-                        cm."sportTeamId" = st.id
-                        OR EXISTS (
-                          SELECT 1
-                          FROM "SportTeam" membership_st
-                          WHERE membership_st.id = cm."sportTeamId"
-                            AND membership_st."externalId" = st."externalId"
-                        )
-                      )
-                     AND (cm."sportId" IS NULL OR cm."sportId" = st."sportId")
+                      ON cm."sportTeamId" = st.id
+                     AND cm."sportId" = st."sportId"
                      AND (cm."seasonYear" IS NULL OR cm."seasonYear" = li."seasonYear")
-                    LEFT JOIN "SportConference" source_sc
-                      ON source_sc.id = cm."sportConferenceId"
                     LEFT JOIN "SportConference" sc
-                      ON sc."conferenceId" = source_sc."conferenceId"
+                      ON sc.id = cm."sportConferenceId"
                      AND sc."sportId" = st."sportId"
                     LEFT JOIN "Conference" conf
                       ON conf.id = sc."conferenceId"
@@ -1408,21 +1378,11 @@ class DraftModel:
                 JOIN "SportTeam" st
                 ON st.id = lts."sportTeamId"
                 JOIN "ConferenceMembership" cm
-                ON (
-                  cm."sportTeamId" = st.id
-                  OR EXISTS (
-                    SELECT 1
-                    FROM "SportTeam" membership_st
-                    WHERE membership_st.id = cm."sportTeamId"
-                      AND membership_st."externalId" = st."externalId"
-                  )
-                )
-                AND (cm."sportId" IS NULL OR cm."sportId" = st."sportId")
+                ON cm."sportTeamId" = st.id
+                AND cm."sportId" = st."sportId"
                 CROSS JOIN league_info li
-                JOIN "SportConference" source_sc
-                ON source_sc.id = cm."sportConferenceId"
                 JOIN "SportConference" sc
-                ON sc."conferenceId" = source_sc."conferenceId"
+                ON sc.id = cm."sportConferenceId"
                 AND sc."sportId" = st."sportId"
                 WHERE lts."leagueId" = :leagueId
                 AND lts."memberId" = :memberId
@@ -1478,15 +1438,11 @@ class DraftModel:
                 SELECT st.id AS "sportTeamId"
                 FROM "ConferenceMembership" cm
                 CROSS JOIN league_info li
-                JOIN "SportTeam" membership_st
-                ON membership_st.id = cm."sportTeamId"
                 JOIN "SportTeam" st
-                ON st."externalId" = membership_st."externalId"
+                ON st.id = cm."sportTeamId"
                 AND st."sportId" = cm."sportId"
-                JOIN "SportConference" source_sc
-                ON source_sc.id = cm."sportConferenceId"
                 JOIN "SportConference" sc
-                ON sc."conferenceId" = source_sc."conferenceId"
+                ON sc.id = cm."sportConferenceId"
                 AND sc."sportId" = st."sportId"
                 LEFT JOIN "DraftPick" dp
                 ON dp."leagueId" = :leagueId
@@ -1497,7 +1453,6 @@ class DraftModel:
                 AND lts."acquiredWeek" <= :week
                 AND (lts."droppedWeek" IS NULL OR lts."droppedWeek" > :week)
                 WHERE sc.id = :sportConferenceId
-                AND (cm."sportId" IS NULL OR cm."sportId" = st."sportId")
                 AND (cm."seasonYear" IS NULL OR cm."seasonYear" = li."seasonYear")
                 AND dp.id IS NULL
                 AND lts.id IS NULL
@@ -1544,10 +1499,8 @@ class DraftModel:
                 AND NOT EXISTS (
                   SELECT 1
                   FROM "ConferenceMembership" cm
-                  JOIN "SportTeam" membership_st
-                    ON membership_st.id = cm."sportTeamId"
-                  WHERE membership_st."externalId" = st."externalId"
-                    AND (cm."sportId" IS NULL OR cm."sportId" = st."sportId")
+                  WHERE cm."sportTeamId" = st.id
+                    AND cm."sportId" = st."sportId"
                     AND (cm."seasonYear" IS NULL OR cm."seasonYear" = li."seasonYear")
                 )
                 AND dp.id IS NULL
