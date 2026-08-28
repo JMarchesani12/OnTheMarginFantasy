@@ -73,7 +73,9 @@ export default defineConfig([
 ```
 
 
-Run with: `npm run dev`
+Run with: `npm run dev` in front-end folder
+
+Run with: `
 
 
 Object.keys(localStorage)

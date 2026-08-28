@@ -154,7 +154,7 @@ const LeagueDetailPage = () => {
     }
 
     const currentWeek = effectiveWeekNumber ?? null;
-    if (!currentWeek || currentWeek < 1) {
+    if (currentWeek === null || currentWeek < 0) {
       return;
     }
 
@@ -169,7 +169,7 @@ const LeagueDetailPage = () => {
 
         if (currentWeek <= 10) {
           const { results } = await getScoresForWeek(
-            Array.from({ length: currentWeek }, (_, idx) => idx + 1),
+            Array.from({ length: currentWeek + 1 }, (_, idx) => idx),
             league.leagueId
           );
 
@@ -179,7 +179,7 @@ const LeagueDetailPage = () => {
             scoresByWeek[score.weekNumber] = list;
           });
         } else {
-          for (let week = 1; week <= currentWeek; week += 10) {
+          for (let week = 0; week <= currentWeek; week += 10) {
             const chunk = Array.from(
               { length: Math.min(10, currentWeek - week + 1) },
               (_, idx) => week + idx
@@ -385,7 +385,7 @@ const LeagueDetailPage = () => {
 
   const currentWeekTotals = useMemo(() => {
     const currentWeek = effectiveWeekNumber ?? null;
-    const scores = currentWeek ? scoreboard[currentWeek] ?? [] : [];
+    const scores = currentWeek !== null ? scoreboard[currentWeek] ?? [] : [];
     const scoreMap = new Map<number, ScoreWeek>();
     scores.forEach((score) => {
       scoreMap.set(score.memberId, score);
@@ -460,7 +460,7 @@ const LeagueDetailPage = () => {
 
   const currentWeekDifferential = useMemo(() => {
     const currentWeek = effectiveWeekNumber ?? null;
-    if (!currentWeek || !currentMemberId) {
+    if (currentWeek === null || !currentMemberId) {
       return { weekNumber: currentWeek, differential: 0 };
     }
 

@@ -25,7 +25,9 @@ const LeagueScoreboard: FC<LeagueScoreboardProps> = ({
   error,
 }) => {
   const throughWeek =
-    typeof currentWeekNumber === "number" && currentWeekNumber > 1
+    currentWeekNumber === 0
+      ? 0
+      : typeof currentWeekNumber === "number" && currentWeekNumber > 1
       ? currentWeekNumber - 1
       : null;
 

@@ -40,6 +40,26 @@ class ScheduleModel:
         self.db = db
         self.espn_base_url = espn_base_url.rstrip("/")
 
+    @staticmethod
+    def _apply_tier_adjustment(
+        raw_point_diff: int,
+        owned_team_tier: Optional[int],
+        opponent_team_tier: Optional[int],
+    ) -> int:
+        if owned_team_tier is None or opponent_team_tier is None:
+            return raw_point_diff
+
+        if int(opponent_team_tier) <= int(owned_team_tier):
+            return raw_point_diff
+
+        if raw_point_diff > 0:
+            return (raw_point_diff + 1) // 2
+
+        if raw_point_diff < 0:
+            return raw_point_diff * 2
+
+        return raw_point_diff
+
     # -------------------------------------------------------------------------
     # Basic lookups
     # -------------------------------------------------------------------------
@@ -848,6 +868,12 @@ class ScheduleModel:
                 AND lts."memberId"   = :memberId
                 AND lts."acquiredWeek" <= GREATEST(:weekNumber, 1)
                 AND (lts."droppedWeek" IS NULL OR lts."droppedWeek" > GREATEST(:weekNumber, 1))
+            ),
+            max_tier AS (
+            SELECT COALESCE(MAX(st.tier), 0) AS "maxTier"
+            FROM "SportTeam" st,
+                target_week tw
+            WHERE st."sportId" = tw."sportId"
             )
             SELECT
             gr.id,
@@ -862,6 +888,8 @@ class ScheduleModel:
             gr."awayScore",
             (gr."homeTeamId" IN (SELECT "sportTeamId" FROM member_teams)) AS "ownsHome",
             (gr."awayTeamId" IN (SELECT "sportTeamId" FROM member_teams)) AS "ownsAway",
+            COALESCE(home_st.tier, mt."maxTier" + 1) AS "homeTeamTier",
+            COALESCE(away_st.tier, mt."maxTier" + 1) AS "awayTeamTier",
             CASE
                 WHEN gr."homeTeamId" IN (SELECT "sportTeamId" FROM member_teams)
                     AND gr."awayTeamId" IN (SELECT "sportTeamId" FROM member_teams)
@@ -871,9 +899,14 @@ class ScheduleModel:
                 WHEN gr."awayTeamId" IN (SELECT "sportTeamId" FROM member_teams)
                 THEN gr."awayScore" - gr."homeScore"
                 ELSE 0
-            END AS "memberPointDiff"
-            FROM "GameResult" gr,
-                target_week tw
+            END AS "rawMemberPointDiff"
+            FROM "GameResult" gr
+            CROSS JOIN target_week tw
+            CROSS JOIN max_tier mt
+            LEFT JOIN "SportTeam" home_st
+                ON home_st.id = gr."homeTeamId"
+            LEFT JOIN "SportTeam" away_st
+                ON away_st.id = gr."awayTeamId"
             WHERE gr.sport           = tw."sportId"
             AND gr."sportSeasonId" = tw."sportSeasonId"
             AND gr.date BETWEEN tw."startDate" AND tw."endDate"
@@ -895,7 +928,32 @@ class ScheduleModel:
                 },
             ).fetchall()
 
-        return [dict(r._mapping) for r in rows]
+        games = []
+        for row in rows:
+            game = dict(row._mapping)
+            raw_point_diff = int(game["rawMemberPointDiff"])
+
+            if game["ownsHome"] and game["ownsAway"]:
+                member_point_diff = 0
+            elif game["ownsHome"]:
+                member_point_diff = self._apply_tier_adjustment(
+                    raw_point_diff=raw_point_diff,
+                    owned_team_tier=game.get("homeTeamTier"),
+                    opponent_team_tier=game.get("awayTeamTier"),
+                )
+            elif game["ownsAway"]:
+                member_point_diff = self._apply_tier_adjustment(
+                    raw_point_diff=raw_point_diff,
+                    owned_team_tier=game.get("awayTeamTier"),
+                    opponent_team_tier=game.get("homeTeamTier"),
+                )
+            else:
+                member_point_diff = 0
+
+            game["memberPointDiff"] = member_point_diff
+            games.append(game)
+
+        return games
     
     def get_head_to_head_games(
         self,

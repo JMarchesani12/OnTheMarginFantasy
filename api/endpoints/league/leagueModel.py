@@ -274,7 +274,7 @@ class LeagueModel:
                 FROM "WeeklyTeamScore" wts
                 JOIN "Week" w
                   ON w.id = wts."weekId"
-                 AND w."weekNumber" > 0
+                 AND w."weekNumber" >= 0
                 GROUP BY wts."leagueId", wts."memberId"
             ) sp
             ON sp."leagueId" = lm."leagueId"
@@ -282,7 +282,10 @@ class LeagueModel:
 
             LEFT JOIN "Week"   w
             ON w."leagueId" = l.id
-            AND now() >= w."startDate"
+            AND now() >= COALESCE(
+                w."startDate",
+                w."endDate" + interval '1 microsecond' - interval '7 days'
+            )
             AND now() <= w."endDate"
 
             WHERE lm."userId" = :user_id
@@ -332,7 +335,7 @@ class LeagueModel:
                 FROM "WeeklyTeamScore" wts
                 JOIN "Week" w
                   ON w.id = wts."weekId"
-                 AND w."weekNumber" > 0
+                 AND w."weekNumber" >= 0
                 GROUP BY wts."leagueId", wts."memberId"
             ) sp
             ON sp."leagueId" = lm."leagueId"
@@ -346,7 +349,10 @@ class LeagueModel:
             SELECT w."weekNumber", w."startDate", w."endDate"
             FROM "Week" w
             WHERE w."leagueId" = :league_id
-              AND now() >= w."startDate"
+              AND now() >= COALESCE(
+                w."startDate",
+                w."endDate" + interval '1 microsecond' - interval '7 days'
+              )
               AND now() <= w."endDate"
             ORDER BY w."weekNumber" DESC
             LIMIT 1

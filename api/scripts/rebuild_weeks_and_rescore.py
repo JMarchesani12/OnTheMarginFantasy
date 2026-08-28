@@ -84,7 +84,7 @@ GET_ENDED_WEEKS = text("""
     SELECT id, "weekNumber"
     FROM "Week"
     WHERE "leagueId" = :leagueId
-      AND "weekNumber" > 0
+      AND "weekNumber" >= 0
       AND "endDate" IS NOT NULL
       AND "endDate" < :now
     ORDER BY "weekNumber" ASC
