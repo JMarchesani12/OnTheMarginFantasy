@@ -46,6 +46,15 @@ class RosterModel:
       member_id: int,
       week_number: int
   ) -> List[Dict[str, Any]]:
+      with self.db.connect() as conn:
+          week_info = self._get_week_by_number(conn, league_id, week_number)
+          if week_info and week_info.get("isLocked"):
+              week_number = self._get_next_unlocked_week_number(
+                  conn,
+                  league_id=league_id,
+                  week_number=week_number,
+              )
+
       sql = text("""
           WITH league_info AS (
             SELECT "seasonYear"
