@@ -28,6 +28,26 @@ class TierAdjustedPointDiffTests(unittest.TestCase):
             -14,
         )
 
+    def test_doubles_win_margin_for_lower_tier_team_against_higher_tier_opponent(self):
+        self.assertEqual(
+            ScheduleModel._apply_tier_adjustment(
+                raw_point_diff=10,
+                owned_team_tier=2,
+                opponent_team_tier=1,
+            ),
+            20,
+        )
+
+    def test_halves_loss_margin_for_lower_tier_team_against_higher_tier_opponent(self):
+        self.assertEqual(
+            ScheduleModel._apply_tier_adjustment(
+                raw_point_diff=-10,
+                owned_team_tier=2,
+                opponent_team_tier=1,
+            ),
+            -5,
+        )
+
     def test_keeps_margin_for_same_tier_opponent(self):
         self.assertEqual(
             ScheduleModel._apply_tier_adjustment(

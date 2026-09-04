@@ -49,14 +49,25 @@ class ScheduleModel:
         if owned_team_tier is None or opponent_team_tier is None:
             return raw_point_diff
 
-        if int(opponent_team_tier) <= int(owned_team_tier):
+        owned_tier = int(owned_team_tier)
+        opponent_tier = int(opponent_team_tier)
+
+        if owned_tier == opponent_tier:
             return raw_point_diff
 
-        if raw_point_diff > 0:
+        owned_team_is_higher_tier = owned_tier < opponent_tier
+
+        if raw_point_diff > 0 and owned_team_is_higher_tier:
             return (raw_point_diff + 1) // 2
 
-        if raw_point_diff < 0:
+        if raw_point_diff > 0:
             return raw_point_diff * 2
+
+        if raw_point_diff < 0 and owned_team_is_higher_tier:
+            return raw_point_diff * 2
+
+        if raw_point_diff < 0:
+            return -((-raw_point_diff + 1) // 2)
 
         return raw_point_diff
 
