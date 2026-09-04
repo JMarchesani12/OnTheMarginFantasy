@@ -279,8 +279,10 @@ const Home = () => {
                   <article className="home__overview-card">
                     <h3>Weekly scoring</h3>
                     <p>
-                      Weeks run Mon-Sun. Score equals total point differential:
-                      wins add points, losses subtract.
+                      Weeks follow each sport: basketball runs Monday-Sunday,
+                      football runs Tuesday-Monday. Same-tier games use the full
+                      margin; higher-tier wins are halved, and lower-tier wins
+                      are doubled.
                     </p>
                   </article>
                   <article className="home__overview-card">

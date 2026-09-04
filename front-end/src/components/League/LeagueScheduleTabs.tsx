@@ -206,7 +206,7 @@ export const LeagueScheduleTabs = ({
       }
     }
 
-    // 3) Build headers from Week row (Mon–Sun, using our earlier helpers)
+    // 3) Build headers from the league's Week row so sport-specific windows apply.
     const dateHeaders: DateHeader[] =
       week != null
         ? buildDateHeadersFromWeek(week.startDate, week.endDate)
