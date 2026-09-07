@@ -109,6 +109,32 @@ class DraftEndpoints:
         except Exception:
             return jsonify({"message": "Failed to resume draft"}), 500
 
+    # POST /api/draft/finalize { "leagueId": 1, "actingUserId": 2 }
+    def finalize(self):
+        data = request.get_json() or {}
+        if "leagueId" not in data or "actingUserId" not in data:
+            return jsonify({"message": "Missing field: leagueId or actingUserId"}), 400
+
+        league_id = int(data["leagueId"])
+
+        try:
+            result = self.draftModel.force_finalize_draft(
+                league_id=league_id,
+                acting_user_id=int(data["actingUserId"]),
+            )
+            snapshot = self.draftModel.get_draft_state_snapshot(league_id)
+            broadcast_draft_update(
+                league_id,
+                {"type": "finalize", "snapshot": snapshot},
+            )
+            return jsonify(result), 200
+        except PermissionError as e:
+            return jsonify({"message": str(e)}), 403
+        except ValueError as e:
+            return jsonify({"message": str(e)}), 400
+        except Exception:
+            return jsonify({"message": "Failed to finalize draft"}), 500
+
     # GET /api/draft/state/<league_id>
     def state(self, league_id: int):
         try:

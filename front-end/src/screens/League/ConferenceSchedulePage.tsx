@@ -21,6 +21,7 @@ import {
   normalizeLeaguesResponse,
 } from "../../utils/leagueMapping";
 import { safeLocalStorage } from "../../utils/safeStorage";
+import { teamSearchMatches } from "../../utils/teamSearch";
 import "./ConferenceSchedulePage.css";
 
 type LocationState = {
@@ -39,6 +40,8 @@ type ScheduleCell = {
 type TeamRow = {
   teamId: number;
   teamName: string;
+  ownerTeamName: string | null;
+  ownerDisplayName: string | null;
   cellsByDate: Record<string, ScheduleCell[]>;
 };
 
@@ -320,12 +323,19 @@ const ConferenceSchedulePage = () => {
 
     const teamMap = new Map<
       number,
-      { teamName: string; cellsByDate: Record<string, ScheduleCell[]> }
+      {
+        teamName: string;
+        ownerTeamName: string | null;
+        ownerDisplayName: string | null;
+        cellsByDate: Record<string, ScheduleCell[]>;
+      }
     >();
 
     const addGame = (
       teamId: number,
       teamName: string,
+      ownerTeamName: string | null,
+      ownerDisplayName: string | null,
       dateKey: string,
       opponentName: string,
       isHome: boolean,
@@ -336,6 +346,8 @@ const ConferenceSchedulePage = () => {
     ) => {
       const entry = teamMap.get(teamId) ?? {
         teamName,
+        ownerTeamName,
+        ownerDisplayName,
         cellsByDate: {},
       };
 
@@ -363,6 +375,8 @@ const ConferenceSchedulePage = () => {
         addGame(
           game.homeTeamId,
           game.homeTeamName,
+          game.homeOwnerTeamName,
+          game.homeOwnerDisplayName,
           dateKey,
           game.awayTeamName,
           true,
@@ -377,6 +391,8 @@ const ConferenceSchedulePage = () => {
         addGame(
           game.awayTeamId,
           game.awayTeamName,
+          game.awayOwnerTeamName,
+          game.awayOwnerDisplayName,
           dateKey,
           game.homeTeamName,
           false,
@@ -392,6 +408,8 @@ const ConferenceSchedulePage = () => {
       .map(([teamId, value]) => ({
         teamId,
         teamName: value.teamName,
+        ownerTeamName: value.ownerTeamName,
+        ownerDisplayName: value.ownerDisplayName,
         cellsByDate: value.cellsByDate,
       }))
       .sort((a, b) => a.teamName.localeCompare(b.teamName));
@@ -403,9 +421,7 @@ const ConferenceSchedulePage = () => {
     if (!searchTerm) {
       return teamRows;
     }
-    return teamRows.filter((row) =>
-      row.teamName.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    return teamRows.filter((row) => teamSearchMatches(row.teamName, searchTerm));
   }, [teamRows, searchTerm]);
 
   const activeConference = useMemo(
@@ -436,12 +452,14 @@ const ConferenceSchedulePage = () => {
     }
   };
 
-  const handleTeamClick = (teamId: number, teamName: string) => {
+  const handleTeamClick = (row: TeamRow) => {
     if (!league) return;
-    navigate(`/leagues/${league.leagueId}/teams/${teamId}`, {
+    navigate(`/leagues/${league.leagueId}/teams/${row.teamId}`, {
       state: {
         league,
-        teamName,
+        teamName: row.teamName,
+        ownerTeamName: row.ownerTeamName,
+        ownerDisplayName: row.ownerDisplayName,
         fromConferenceId: activeConferenceId,
         fromWeekNumber: weekNumber,
         fromWeekStartDate: weekInfo?.startDate ?? null,
@@ -584,10 +602,15 @@ const ConferenceSchedulePage = () => {
                     <button
                       type="button"
                       className="conference-schedule__team-link"
-                      onClick={() => handleTeamClick(row.teamId, row.teamName)}
+                      onClick={() => handleTeamClick(row)}
                     >
                       {row.teamName}
                     </button>
+                    <span className="conference-schedule__owner">
+                      {row.ownerTeamName ?? row.ownerDisplayName
+                        ? `Owned by ${row.ownerTeamName ?? row.ownerDisplayName}`
+                        : "Unowned"}
+                    </span>
                   </td>
 
                   {dateHeaders.map((header) => {

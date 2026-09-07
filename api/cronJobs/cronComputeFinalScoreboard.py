@@ -81,7 +81,8 @@ def main():
                     text(
                         """
                         UPDATE "League"
-                        SET "status" = 'Completed
+                        SET status = 'Completed',
+                            "updatedAt" = now()
                         WHERE id = :league_id
                         """
                     ),

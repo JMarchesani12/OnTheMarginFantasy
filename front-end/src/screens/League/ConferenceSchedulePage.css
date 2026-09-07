@@ -243,6 +243,14 @@ body,
   text-decoration: underline;
 }
 
+.conference-schedule__owner {
+  display: block;
+  margin-top: 0.3rem;
+  color: #8EA0D6;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
 /* ===========================
    Cells
    =========================== */

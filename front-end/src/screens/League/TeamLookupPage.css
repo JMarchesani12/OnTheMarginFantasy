@@ -1,0 +1,134 @@
+.team-lookup {
+  max-width: 840px;
+  margin: 0 auto;
+  padding: 1.75rem 1.25rem 4rem;
+  color: #F4F7FF;
+}
+
+.team-lookup__back {
+  border: none;
+  background: none;
+  color: #22D3EE;
+  cursor: pointer;
+  text-decoration: underline;
+  margin-bottom: 1rem;
+  font-weight: 900;
+  transition: color 120ms ease, transform 120ms ease;
+}
+
+.team-lookup__back:hover {
+  color: #FF4FD8;
+  transform: translateY(-1px);
+}
+
+.team-lookup__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.team-lookup__header h1 {
+  margin: 0 0 0.35rem;
+}
+
+.team-lookup__header p,
+.team-lookup__hint {
+  margin: 0;
+  color: #B7C2E6;
+}
+
+.team-lookup__search {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-bottom: 1rem;
+}
+
+.team-lookup__search label {
+  font-size: 0.85rem;
+  color: #B7C2E6;
+  font-weight: 800;
+}
+
+.team-lookup__search input {
+  border-radius: 0.75rem;
+  border: 1px solid #2F3B6A;
+  background: #0B0E1A;
+  color: #F4F7FF;
+  padding: 0.7rem 0.85rem;
+  outline: none;
+  box-shadow: 0 12px 35px #00000033;
+}
+
+.team-lookup__search input:focus {
+  border-color: #22D3EE;
+}
+
+.team-lookup__error {
+  color: #FF4D6D;
+  font-weight: 800;
+}
+
+.team-lookup__results {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.team-lookup__result {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid #243055;
+  padding: 0.9rem 1rem;
+  background: linear-gradient(180deg, #0A0D18 0%, #0F1638 100%);
+  color: #F4F7FF;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  text-align: left;
+  box-shadow: 0 18px 50px #00000046;
+}
+
+.team-lookup__result:hover {
+  border-color: #22D3EE;
+}
+
+.team-lookup__result-main {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.team-lookup__team-name {
+  font-weight: 900;
+}
+
+.team-lookup__meta,
+.team-lookup__owner {
+  color: #B7C2E6;
+  font-size: 0.85rem;
+}
+
+.team-lookup__owner {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  border: 1px solid #243055;
+  padding: 0.3rem 0.7rem;
+  background: #0B0E1A;
+}
+
+.team-lookup__owner--empty {
+  color: #8EA0D6;
+}
+
+@media (max-width: 640px) {
+  .team-lookup__result {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

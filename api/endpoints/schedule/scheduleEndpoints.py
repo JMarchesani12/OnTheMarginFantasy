@@ -127,13 +127,16 @@ class ScheduleEndpoints:
             return jsonify({"message": f"Missing required fields: {missing}"}), 400
 
         try:
+            league_id = body.get("leagueId")
             games = self.model.get_team_games_by_season(
                 sport_team_id=int(body["sportTeamId"]),
                 season_year=int(body["seasonYear"]),
+                league_id=int(league_id) if league_id is not None else None,
             )
             return jsonify({
                 "seasonYear": body["seasonYear"],
                 "sportTeamId": body["sportTeamId"],
+                "leagueId": league_id,
                 "games": games,
             }), 200
         except ValueError as e:
@@ -142,6 +145,39 @@ class ScheduleEndpoints:
             import traceback
             traceback.print_exc()
             return jsonify({"message": "Failed to get team games by season"}), 500
+
+    # POST /api/schedule/teamSearch
+    # {
+    #     "leagueId": 1,
+    #     "query": "iowa st",
+    #     "limit": 20
+    # }
+    def team_search(self):
+        body = request.get_json(silent=True) or {}
+        league_id = body.get("leagueId")
+        query = body.get("query", "")
+        limit = body.get("limit", 20)
+
+        if league_id is None:
+            return jsonify({"message": "leagueId is required"}), 400
+
+        try:
+            teams = self.model.search_teams_for_league(
+                league_id=int(league_id),
+                query=str(query),
+                limit=int(limit),
+            )
+            return jsonify({
+                "leagueId": league_id,
+                "query": query,
+                "teams": teams,
+            }), 200
+        except ValueError as e:
+            return jsonify({"message": str(e)}), 400
+        except Exception:
+            import traceback
+            traceback.print_exc()
+            return jsonify({"message": "Failed to search teams"}), 500
         
     # POST /api/schedule/createWeeks
     # {

@@ -1,5 +1,6 @@
 import datetime as dt
 import json
+import re
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy import text
@@ -1256,10 +1257,34 @@ class ScheduleModel:
                 gr."awayTeamName",
                 gr."homeScore",
                 gr."awayScore",
+                home_lm.id AS "homeOwnerMemberId",
+                home_lm."teamName" AS "homeOwnerTeamName",
+                home_u."displayName" AS "homeOwnerDisplayName",
+                away_lm.id AS "awayOwnerMemberId",
+                away_lm."teamName" AS "awayOwnerTeamName",
+                away_u."displayName" AS "awayOwnerDisplayName",
                 (gr."homeTeamId" IN (SELECT "sportTeamId" FROM conf_teams)) AS "homeInConference",
                 (gr."awayTeamId" IN (SELECT "sportTeamId" FROM conf_teams)) AS "awayInConference"
             FROM "GameResult" gr
             JOIN ss ON ss."sportSeasonId" = gr."sportSeasonId"
+            LEFT JOIN "LeagueTeamSlot" home_lts
+              ON home_lts."leagueId" = :leagueId
+             AND home_lts."sportTeamId" = gr."homeTeamId"
+             AND home_lts."acquiredWeek" <= :weekNumber
+             AND (home_lts."droppedWeek" IS NULL OR home_lts."droppedWeek" > :weekNumber)
+            LEFT JOIN "LeagueMember" home_lm
+              ON home_lm.id = home_lts."memberId"
+            LEFT JOIN "User" home_u
+              ON home_u.id = home_lm."userId"
+            LEFT JOIN "LeagueTeamSlot" away_lts
+              ON away_lts."leagueId" = :leagueId
+             AND away_lts."sportTeamId" = gr."awayTeamId"
+             AND away_lts."acquiredWeek" <= :weekNumber
+             AND (away_lts."droppedWeek" IS NULL OR away_lts."droppedWeek" > :weekNumber)
+            LEFT JOIN "LeagueMember" away_lm
+              ON away_lm.id = away_lts."memberId"
+            LEFT JOIN "User" away_u
+              ON away_u.id = away_lm."userId"
             WHERE (
                 gr."homeTeamId" IN (SELECT "sportTeamId" FROM conf_teams)
                 OR gr."awayTeamId" IN (SELECT "sportTeamId" FROM conf_teams)
@@ -1271,6 +1296,8 @@ class ScheduleModel:
 
         with self.db.begin() as conn:
             rows = conn.execute(sql, {
+                "leagueId": league_id,
+                "weekNumber": week_number,
                 "sportConferenceId": sport_conference_id,
                 "seasonYear": season_year,
                 "weekStart": week_start,
@@ -1283,10 +1310,37 @@ class ScheduleModel:
         self,
         sport_team_id: int,
         season_year: int,
+        league_id: Optional[int] = None,
     ) -> List[Dict[str, Any]]:
         """
         All games for a given SportTeam across the entire SportSeason for seasonYear.
         """
+        league_context_sql = text("""
+            SELECT
+                COALESCE(current_week."weekNumber", latest_week."weekNumber", 999) AS "weekNumber"
+            FROM "League" l
+            LEFT JOIN LATERAL (
+                SELECT w."weekNumber"
+                FROM "Week" w
+                WHERE w."leagueId" = l.id
+                  AND now() >= COALESCE(
+                    w."startDate",
+                    w."endDate" + interval '1 microsecond' - interval '7 days'
+                  )
+                  AND now() <= w."endDate"
+                ORDER BY w."weekNumber" DESC
+                LIMIT 1
+            ) current_week ON true
+            LEFT JOIN LATERAL (
+                SELECT w."weekNumber"
+                FROM "Week" w
+                WHERE w."leagueId" = l.id
+                ORDER BY w."weekNumber" DESC
+                LIMIT 1
+            ) latest_week ON true
+            WHERE l.id = :leagueId
+            LIMIT 1
+        """)
         sql = text("""
             WITH st AS (
                 SELECT id, "sportId"
@@ -1324,20 +1378,181 @@ class ScheduleModel:
                 CASE
                     WHEN gr."homeTeamId" = :sportTeamId THEN gr."awayTeamName"
                     ELSE gr."homeTeamName"
-                END AS "opponentTeamName"
+                END AS "opponentTeamName",
+                owner_lm.id AS "ownerMemberId",
+                owner_lm."teamName" AS "ownerTeamName",
+                owner_u."displayName" AS "ownerDisplayName"
             FROM "GameResult" gr
             JOIN ss ON ss."sportSeasonId" = gr."sportSeasonId"
+            LEFT JOIN "LeagueTeamSlot" owner_lts
+              ON :leagueId IS NOT NULL
+             AND owner_lts."leagueId" = :leagueId
+             AND owner_lts."sportTeamId" = :sportTeamId
+             AND owner_lts."acquiredWeek" <= :weekNumber
+             AND (owner_lts."droppedWeek" IS NULL OR owner_lts."droppedWeek" > :weekNumber)
+            LEFT JOIN "LeagueMember" owner_lm
+              ON owner_lm.id = owner_lts."memberId"
+            LEFT JOIN "User" owner_u
+              ON owner_u.id = owner_lm."userId"
             WHERE (gr."homeTeamId" = :sportTeamId OR gr."awayTeamId" = :sportTeamId)
             ORDER BY gr.date, gr."externalGameId";
         """)
 
         with self.db.begin() as conn:
+            week_number = 999
+            if league_id is not None:
+                league_context = conn.execute(
+                    league_context_sql,
+                    {"leagueId": league_id},
+                ).fetchone()
+                if league_context:
+                    week_number = int(league_context._mapping["weekNumber"] or 999)
+
             rows = conn.execute(
                 sql,
-                {"sportTeamId": sport_team_id, "seasonYear": season_year},
+                {
+                    "sportTeamId": sport_team_id,
+                    "seasonYear": season_year,
+                    "leagueId": league_id,
+                    "weekNumber": week_number,
+                },
             ).fetchall()
 
         return [dict(r._mapping) for r in rows]
+
+    @staticmethod
+    def _normalize_team_search_text(value: str) -> str:
+        abbreviations = {
+            "st": "state",
+            "univ": "university",
+        }
+        cleaned = re.sub(
+            r"[^a-z0-9]+",
+            " ",
+            (value or "").lower().replace("&", " and "),
+        )
+        tokens = [abbreviations.get(token, token) for token in cleaned.split()]
+        return " ".join(tokens)
+
+    @classmethod
+    def _team_search_rank(cls, row: Dict[str, Any], query: str) -> int:
+        normalized_query = cls._normalize_team_search_text(query)
+        if not normalized_query:
+            return 0
+
+        normalized_candidate = cls._normalize_team_search_text(row.get("teamName") or "")
+        if normalized_candidate == normalized_query:
+            return 100
+        if normalized_candidate.startswith(normalized_query):
+            return 90
+        if normalized_query in normalized_candidate:
+            return 75
+
+        candidate_tokens = normalized_candidate.split()
+        query_tokens = normalized_query.split()
+        if query_tokens and all(
+            any(candidate_token.startswith(query_token) for candidate_token in candidate_tokens)
+            for query_token in query_tokens
+        ):
+            return 50
+        return 0
+
+    def search_teams_for_league(
+        self,
+        league_id: int,
+        query: str,
+        limit: int = 20,
+    ) -> List[Dict[str, Any]]:
+        limit = max(1, min(int(limit or 20), 50))
+        normalized_query = self._normalize_team_search_text(query)
+        if len(normalized_query) < 2:
+            return []
+
+        league_sql = text("""
+            SELECT
+                l.sport,
+                l."seasonYear",
+                COALESCE(current_week."weekNumber", latest_week."weekNumber", 999) AS "weekNumber"
+            FROM "League" l
+            LEFT JOIN LATERAL (
+                SELECT w."weekNumber"
+                FROM "Week" w
+                WHERE w."leagueId" = l.id
+                  AND now() >= COALESCE(
+                    w."startDate",
+                    w."endDate" + interval '1 microsecond' - interval '7 days'
+                  )
+                  AND now() <= w."endDate"
+                ORDER BY w."weekNumber" DESC
+                LIMIT 1
+            ) current_week ON true
+            LEFT JOIN LATERAL (
+                SELECT w."weekNumber"
+                FROM "Week" w
+                WHERE w."leagueId" = l.id
+                ORDER BY w."weekNumber" DESC
+                LIMIT 1
+            ) latest_week ON true
+            WHERE l.id = :leagueId
+            LIMIT 1
+        """)
+
+        team_sql = text("""
+            SELECT
+                st.id AS "teamId",
+                st."displayName" AS "teamName",
+                c.name AS "conferenceName",
+                lm.id AS "ownerMemberId",
+                lm."teamName" AS "ownerTeamName",
+                u."displayName" AS "ownerDisplayName"
+            FROM "SportTeam" st
+            LEFT JOIN "ConferenceMembership" cm
+              ON cm."sportTeamId" = st.id
+             AND cm."sportId" = st."sportId"
+             AND (cm."seasonYear" IS NULL OR cm."seasonYear" = :seasonYear)
+            LEFT JOIN "SportConference" sc
+              ON sc.id = cm."sportConferenceId"
+             AND sc."sportId" = st."sportId"
+            LEFT JOIN "Conference" c
+              ON c.id = sc."conferenceId"
+            LEFT JOIN "LeagueTeamSlot" lts
+              ON lts."leagueId" = :leagueId
+             AND lts."sportTeamId" = st.id
+             AND lts."acquiredWeek" <= :weekNumber
+             AND (lts."droppedWeek" IS NULL OR lts."droppedWeek" > :weekNumber)
+            LEFT JOIN "LeagueMember" lm
+              ON lm.id = lts."memberId"
+            LEFT JOIN "User" u
+              ON u.id = lm."userId"
+            WHERE st."sportId" = :sport
+            ORDER BY st."displayName"
+        """)
+
+        with self.db.begin() as conn:
+            league_row = conn.execute(league_sql, {"leagueId": league_id}).fetchone()
+            if not league_row:
+                raise ValueError(f"League not found: {league_id}")
+
+            league = dict(league_row._mapping)
+            rows = conn.execute(
+                team_sql,
+                {
+                    "leagueId": league_id,
+                    "sport": league["sport"],
+                    "seasonYear": league["seasonYear"],
+                    "weekNumber": int(league["weekNumber"] or 999),
+                },
+            ).fetchall()
+
+        ranked = []
+        for row in rows:
+            item = dict(row._mapping)
+            rank = self._team_search_rank(item, normalized_query)
+            if rank > 0:
+                ranked.append((rank, item["teamName"], item))
+
+        ranked.sort(key=lambda value: (-value[0], value[1]))
+        return [item for _, _, item in ranked[:limit]]
     
     def upsert_sport_season(
         self,

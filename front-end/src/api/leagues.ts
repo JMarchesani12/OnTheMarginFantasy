@@ -52,7 +52,7 @@ export async function getLeaguesForUser(
 ): Promise<League[]> {
     const body = {
         "userId": userId,
-        "type": type
+        "stage": type
     }
   const res = await apiFetch(`${API_BASE_URL}/api/league/byUser`, {
     method: "POST",

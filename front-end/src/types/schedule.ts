@@ -7,6 +7,21 @@ export type OwnedTeam = {
   conferenceName: string | null
 }
 
+export type TeamSearchResult = {
+  teamId: number;
+  teamName: string;
+  conferenceName: string | null;
+  ownerMemberId: number | null;
+  ownerTeamName: string | null;
+  ownerDisplayName: string | null;
+};
+
+export type TeamSearchResponse = {
+  leagueId: number;
+  query: string;
+  teams: TeamSearchResult[];
+};
+
 export type MemberWeekSchedule = {
   ownedTeams: OwnedTeam[];
   week: WeekInfo | null;
@@ -28,11 +43,17 @@ type ConferenceGame = {
   homeTeamName: string;
   homeScore: number;
   homeInConference: boolean;
+  homeOwnerMemberId: number | null;
+  homeOwnerTeamName: string | null;
+  homeOwnerDisplayName: string | null;
 
   awayTeamId: number;
   awayTeamName: string;
   awayScore: number;
   awayInConference: boolean;
+  awayOwnerMemberId: number | null;
+  awayOwnerTeamName: string | null;
+  awayOwnerDisplayName: string | null;
 
   broadcast: string | null;
 }
@@ -63,6 +84,9 @@ type TeamGameView = {
   isHome: boolean;
   opponentTeamId: number;
   opponentTeamName: string;
+  ownerMemberId: number | null;
+  ownerTeamName: string | null;
+  ownerDisplayName: string | null;
 
   broadcast: string | null;
 };

@@ -15,6 +15,109 @@ class DraftModel:
     def __init__(self, db: Engine):
         self.db = db
 
+    def finalize_draft(self, league_id: int, conn=None) -> Dict[str, Any]:
+        """
+        Centralized draft finalization.
+
+        This is used by normal final-pick paths and by explicit commissioner
+        force-finalize. It closes active draft state and derives the league
+        status from season dates so the league cannot remain stuck Drafting.
+        """
+        def _run(c):
+            state_row = c.execute(
+                text("""
+                    UPDATE "DraftState"
+                    SET status = 'complete',
+                        "currentMemberId" = NULL,
+                        "expiresAt" = NULL,
+                        "lastPickAt" = COALESCE("lastPickAt", now()),
+                        "updatedAt" = now()
+                    WHERE "leagueId" = :leagueId
+                    RETURNING "leagueId", status, "currentOverallPickNumber",
+                              "currentMemberId", "expiresAt", "lastPickAt", "updatedAt"
+                """),
+                {"leagueId": league_id},
+            ).fetchone()
+
+            if not state_row:
+                raise ValueError(f"DraftState not found for league {league_id}")
+
+            league_row = c.execute(
+                text("""
+                    UPDATE "League" l
+                    SET status = CASE
+                            WHEN ss."seasonEnd"::date < now()::date THEN 'Completed'
+                            WHEN ss."seasonStart"::date <= now()::date THEN 'In-Season'
+                            ELSE 'Post-Draft'
+                        END,
+                        "updatedAt" = now()
+                    FROM "SportSeason" ss
+                    WHERE l.id = :leagueId
+                      AND ss."sportId" = l.sport
+                      AND ss."seasonYear" = l."seasonYear"
+                    RETURNING l.id AS "leagueId", l.status AS "leagueStatus"
+                """),
+                {"leagueId": league_id},
+            ).fetchone()
+
+            return {
+                "leagueId": league_id,
+                "draftComplete": True,
+                "state": dict(state_row._mapping),
+                "leagueStatus": league_row._mapping["leagueStatus"] if league_row else None,
+            }
+
+        if conn is not None:
+            return _run(conn)
+
+        with self.db.begin() as c:
+            return _run(c)
+
+    def force_finalize_draft(self, league_id: int, acting_user_id: int) -> Dict[str, Any]:
+        with self.db.begin() as conn:
+            league = conn.execute(
+                text("""
+                    SELECT commissioner
+                    FROM "League"
+                    WHERE id = :leagueId
+                    LIMIT 1
+                """),
+                {"leagueId": league_id},
+            ).fetchone()
+            if not league:
+                raise ValueError(f"League {league_id} not found")
+            if int(league._mapping["commissioner"]) != int(acting_user_id):
+                raise PermissionError("Only the commissioner can finalize this draft")
+
+        return self.finalize_draft(league_id)
+        return self.finalize_draft(league_id)
+
+    def _repair_completed_draft_state(self, league_id: int, state: Dict[str, Any], conn) -> Dict[str, Any]:
+        if str(state.get("status")) != "complete":
+            return state
+
+        if state.get("currentMemberId") is None and state.get("expiresAt") is None:
+            return state
+
+        row = conn.execute(
+            text("""
+                UPDATE "DraftState"
+                SET "currentMemberId" = NULL,
+                    "expiresAt" = NULL,
+                    "updatedAt" = now()
+                WHERE "leagueId" = :leagueId
+                  AND status = 'complete'
+                RETURNING "leagueId", status, "currentOverallPickNumber",
+                          "currentMemberId", "expiresAt", "lastPickAt", "updatedAt"
+            """),
+            {"leagueId": league_id},
+        ).mappings().fetchone()
+
+        if not row:
+            return state
+
+        return dict(row._mapping) if hasattr(row, "_mapping") else dict(row)
+
     def is_supabase_user_in_league(self, league_id: int, supabase_uuid: str) -> bool:
         """
         supabase_uuid should be the JWT 'sub' claim (a UUID string).
@@ -274,26 +377,13 @@ class DraftModel:
                 conn.execute(
                     text("""
                         UPDATE "DraftState"
-                        SET status = 'complete',
-                            "currentOverallPickNumber" = :nextOverall,
-                            "currentMemberId" = NULL,
-                            "expiresAt" = NULL,
-                            "lastPickAt" = now(),
+                        SET "currentOverallPickNumber" = :nextOverall,
                             "updatedAt" = now()
                         WHERE "leagueId" = :leagueId
                     """),
                     {"leagueId": league_id, "nextOverall": next_overall},
                 )
-
-                conn.execute(
-                    text("""
-                        UPDATE "League"
-                        SET status = 'Post-Draft',
-                            "updatedAt" = now()
-                        WHERE id = :leagueId
-                    """),
-                    {"leagueId": league_id},
-                )
+                self.finalize_draft(league_id, conn=conn)
                 
                 draft_pick["draftComplete"] = True
                 notify_draft_updated(conn, league_id, "draft_pick")
@@ -305,16 +395,13 @@ class DraftModel:
                 conn.execute(
                     text("""
                         UPDATE "DraftState"
-                        SET status = 'complete',
-                            "currentOverallPickNumber" = :nextOverall,
-                            "currentMemberId" = NULL,
-                            "expiresAt" = NULL,
-                            "lastPickAt" = now(),
+                        SET "currentOverallPickNumber" = :nextOverall,
                             "updatedAt" = now()
                         WHERE "leagueId" = :leagueId
                     """),
                     {"leagueId": league_id, "nextOverall": next_overall},
                 )
+                self.finalize_draft(league_id, conn=conn)
                 draft_pick["draftComplete"] = True
                 notify_draft_updated(conn, league_id, "draft_pick")
                 return draft_pick
@@ -442,26 +529,7 @@ class DraftModel:
 
                 # If nothing left, draft is complete
                 if last_unpicked_overall == 0 or current_overall > last_unpicked_overall:
-                    conn.execute(
-                        text("""
-                            UPDATE "DraftState"
-                            SET status = 'complete',
-                                "currentMemberId" = NULL,
-                                "expiresAt" = NULL,
-                                "updatedAt" = now()
-                            WHERE "leagueId" = :leagueId
-                        """),
-                        {"leagueId": league_id},
-                    )
-                    conn.execute(
-                        text("""
-                            UPDATE "League"
-                            SET status = 'Post-Draft',
-                                "updatedAt" = now()
-                            WHERE id = :leagueId
-                        """),
-                        {"leagueId": league_id},
-                    )
+                    self.finalize_draft(league_id, conn=conn)
                     return {"type": "AUTO-SKIP-MOVE-TO-END", "draftComplete": True}
 
                 # If current_overall is the last unpicked already, "moving to end" changes nothing.
@@ -547,26 +615,7 @@ class DraftModel:
                 ).fetchone()
 
                 if not next_row:
-                    conn.execute(
-                        text("""
-                            UPDATE "DraftState"
-                            SET status = 'complete',
-                                "currentMemberId" = NULL,
-                                "expiresAt" = NULL,
-                                "updatedAt" = now()
-                            WHERE "leagueId" = :leagueId
-                        """),
-                        {"leagueId": league_id},
-                    )
-                    conn.execute(
-                        text("""
-                            UPDATE "League"
-                            SET status = 'Post-Draft',
-                                "updatedAt" = now()
-                            WHERE id = :leagueId
-                        """),
-                        {"leagueId": league_id},
-                    )
+                    self.finalize_draft(league_id, conn=conn)
                     return {"type": "AUTO-SKIP-MOVE-TO-END", "draftComplete": True}
 
                 next_overall = int(next_row._mapping["nextOverall"])
@@ -1172,6 +1221,9 @@ class DraftModel:
                 {"leagueId": league_id},
             ).mappings().fetchone()
 
+            if state:
+                state = self._repair_completed_draft_state(league_id, dict(state), c)
+
             members = c.execute(
                 text("""
                     SELECT id AS "memberId", "userId", "teamName", "draftOrder"
@@ -1662,25 +1714,13 @@ class DraftModel:
             conn.execute(
                 text("""
                     UPDATE "DraftState"
-                    SET status = 'complete',
-                        "currentOverallPickNumber" = :nextOverall,
-                        "currentMemberId" = NULL,
-                        "expiresAt" = NULL,
-                        "lastPickAt" = now(),
+                    SET "currentOverallPickNumber" = :nextOverall,
                         "updatedAt" = now()
                     WHERE "leagueId" = :leagueId
                 """),
                 {"leagueId": league_id, "nextOverall": next_overall},
             )
-            conn.execute(
-                text("""
-                    UPDATE "League"
-                    SET status = 'Post-Draft',
-                        "updatedAt" = now()
-                    WHERE id = :leagueId
-                """),
-                {"leagueId": league_id},
-            )
+            self.finalize_draft(league_id, conn=conn)
             draft_pick["draftComplete"] = True
             notify_draft_updated(conn, league_id, "auto_pick")
             return draft_pick
@@ -1688,27 +1728,7 @@ class DraftModel:
         nxt = self._get_next_unpicked_turn_from(conn, league_id, next_overall)
         if not nxt:
             # Safety: treat as complete
-            conn.execute(
-                text("""
-                    UPDATE "DraftState"
-                    SET status = 'complete',
-                        "currentMemberId" = NULL,
-                        "expiresAt" = NULL,
-                        "lastPickAt" = now(),
-                        "updatedAt" = now()
-                    WHERE "leagueId" = :leagueId
-                """),
-                {"leagueId": league_id},
-            )
-            conn.execute(
-                text("""
-                    UPDATE "League"
-                    SET status = 'Post-Draft',
-                        "updatedAt" = now()
-                    WHERE id = :leagueId
-                """),
-                {"leagueId": league_id},
-            )
+            self.finalize_draft(league_id, conn=conn)
             draft_pick["draftComplete"] = True
             notify_draft_updated(conn, league_id, "auto_pick")
             return draft_pick

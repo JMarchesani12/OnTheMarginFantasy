@@ -175,3 +175,16 @@
   font-weight: 600;
   padding: 0;
 }
+
+.sign-in__switch a,
+.sign-in__forgot {
+  color: #8ac4ff;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.sign-in__forgot {
+  align-self: flex-end;
+  font-size: 0.9rem;
+  margin-top: -0.5rem;
+}

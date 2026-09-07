@@ -112,6 +112,27 @@ export async function resumeDraft(leagueId: number): Promise<DraftSnapshot> {
   return data;
 }
 
+export async function finalizeDraft(
+  leagueId: number,
+  actingUserId: number
+): Promise<{ draftComplete: boolean; leagueId: number; leagueStatus: string | null }> {
+  const payload = {
+    leagueId,
+    actingUserId,
+  };
+  const res = await apiFetch(`${API_BASE_URL}/api/draft/finalize`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const error = await res.json().catch(() => null);
+    throw new Error(error?.message ?? `Failed to finalize draft: ${res.status}`);
+  }
+
+  return await res.json();
+}
+
 export async function getDraftState(leagueId: number): Promise<DraftSnapshot> {
   const res = await apiFetch(`${API_BASE_URL}/api/draft/state/${leagueId}`)
   if (!res.ok) {

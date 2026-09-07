@@ -36,6 +36,16 @@
   margin-bottom: 1rem;
 }
 
+.team-schedule__header h1,
+.team-schedule__header p {
+  margin-top: 0;
+}
+
+.team-schedule__owner {
+  color: #B7C2E6;
+  font-weight: 800;
+}
+
 /* Week badge */
 .team-schedule__badge {
   padding: 0.45rem 0.9rem;

@@ -15,6 +15,8 @@ import "./TeamSchedulePage.css";
 type LocationState = {
   league?: League;
   teamName?: string;
+  ownerTeamName?: string | null;
+  ownerDisplayName?: string | null;
   fromConferenceId?: number | null;
   fromWeekNumber?: number;
   fromWeekStartDate?: string | null;
@@ -115,7 +117,11 @@ const TeamSchedulePage = () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await getScheduleForTeam(league.seasonYear, teamId);
+        const data = await getScheduleForTeam(
+          league.seasonYear,
+          teamId,
+          league.leagueId
+        );
         if (!isCancelled) {
           setSchedule(data);
         }
@@ -161,6 +167,22 @@ const TeamSchedulePage = () => {
     }, { wins: 0, losses: 0, pending: 0 });
   }, [schedule]);
 
+  const ownerLabel = useMemo(() => {
+    if (!schedule) {
+      return null;
+    }
+    const ownedGame = schedule.games.find(
+      (game) => game.ownerTeamName || game.ownerDisplayName
+    );
+    return (
+      ownedGame?.ownerTeamName ??
+      ownedGame?.ownerDisplayName ??
+      state?.ownerTeamName ??
+      state?.ownerDisplayName ??
+      null
+    );
+  }, [schedule, state?.ownerDisplayName, state?.ownerTeamName]);
+
   if (!league || !league_id || !teamId) {
     return (
       <div className="team-schedule">
@@ -196,6 +218,9 @@ const TeamSchedulePage = () => {
         <div>
           <h1>{teamLabel}</h1>
           <p>Season {league.seasonYear}</p>
+          <p className="team-schedule__owner">
+            {ownerLabel ? `Owned by ${ownerLabel}` : "Unowned"}
+          </p>
         </div>
       </header>
 

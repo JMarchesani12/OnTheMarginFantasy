@@ -1,5 +1,10 @@
 // src/api/schedule.ts
-import type { ConferenceSchedule, MemberWeekSchedule, TeamSeasonSchedule } from "../types/schedule";
+import type {
+  ConferenceSchedule,
+  MemberWeekSchedule,
+  TeamSearchResponse,
+  TeamSeasonSchedule,
+} from "../types/schedule";
 import { apiFetch, API_BASE_URL } from "./client";
 
 export async function getScheduleForMemberForWeek(
@@ -56,11 +61,13 @@ export async function getScheduleForConferenceForWeek(
 
 export async function getScheduleForTeam(
   seasonYear: number,
-  sportTeamId: number
+  sportTeamId: number,
+  leagueId?: number
 ): Promise<TeamSeasonSchedule> {
   const payload = {
     seasonYear,
     sportTeamId,
+    ...(leagueId ? { leagueId } : {}),
   };
 
   const res = await apiFetch(`${API_BASE_URL}/api/schedule/teamGamesBySeason`, {
@@ -74,5 +81,24 @@ export async function getScheduleForTeam(
   }
 
   const data = (await res.json()) as TeamSeasonSchedule;
+  return data;
+}
+
+export async function searchTeamsForLeague(
+  leagueId: number,
+  query: string,
+  limit = 20
+): Promise<TeamSearchResponse> {
+  const res = await apiFetch(`${API_BASE_URL}/api/schedule/teamSearch`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ leagueId, query, limit }),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to search teams: ${res.status}`);
+  }
+
+  const data = (await res.json()) as TeamSearchResponse;
   return data;
 }

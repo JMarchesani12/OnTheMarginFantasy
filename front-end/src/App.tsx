@@ -7,12 +7,17 @@ const LeagueDetailPage = React.lazy(() => import("./screens/League/LeagueDetailP
 const LeagueRosterPage = React.lazy(() => import("./screens/League/LeagueRosterPage"));
 const LeagueDraftPage = React.lazy(() => import("./screens/League/LeagueDraftPage"));
 const SignIn = React.lazy(() => import("./screens/Auth/SignIn"));
+const ResetPassword = React.lazy(() => import("./screens/Auth/ResetPassword"));
+const UpdatePassword = React.lazy(() => import("./screens/Auth/UpdatePassword"));
 const LandingPage = React.lazy(() => import("./screens/Landing/LandingPage"));
 const ConferenceSchedulePage = React.lazy(
   () => import("./screens/League/ConferenceSchedulePage")
 );
 const TeamSchedulePage = React.lazy(
   () => import("./screens/League/TeamSchedulePage")
+);
+const TeamLookupPage = React.lazy(
+  () => import("./screens/League/TeamLookupPage")
 );
 const ManageLeaguePage = React.lazy(
   () => import("./screens/League/ManageLeaguePage")
@@ -29,6 +34,8 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/signin" element={<SignIn />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/update-password" element={<UpdatePassword />} />
           <Route path="/leagues" element={<Home />} />
           <Route path="/leagues/new" element={<CreateLeague />} />
           <Route path="/settings" element={<SettingsPage />} />
@@ -53,6 +60,10 @@ const App: React.FC = () => {
           <Route
             path="/leagues/:league_id/teams/:team_id"
             element={<TeamSchedulePage />}
+          />
+          <Route
+            path="/leagues/:league_id/team-search"
+            element={<TeamLookupPage />}
           />
         </Routes>
       </Suspense>

@@ -75,7 +75,7 @@ export default defineConfig([
 
 Run with: `npm run dev` in front-end folder
 
-Run with: `
+Run with: `python3 dev.py` in api folder
 
 
 Object.keys(localStorage)

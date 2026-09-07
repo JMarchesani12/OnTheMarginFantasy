@@ -48,8 +48,6 @@ def create_app():
             "/health",
             "/api/sports",
             "/api/leagues/search",
-            "/api/schedule/conferenceGamesByWeek",
-            "/api/schedule/teamGamesBySeason"
         },
         public_prefixes=[
             "/socket.io",           # allow socket.io handshake route through (see note below)

@@ -11,7 +11,14 @@ import type {
   DraftTurnSlot,
 } from "../../types/draft";
 import { getAvailableTeams } from "../../api/roster";
-import { createDraftPick, getDraftState, pauseDraft, resumeDraft, startDraft } from "../../api/draft";
+import {
+  createDraftPick,
+  finalizeDraft,
+  getDraftState,
+  pauseDraft,
+  resumeDraft,
+  startDraft,
+} from "../../api/draft";
 import { getConferences, getLeague, getLeaguesForUser } from "../../api/leagues";
 import { useAuth } from "../../context/AuthContext";
 import { useCurrentUser } from "../../context/currentUserContext";
@@ -21,6 +28,7 @@ import {
   mapLeagueFromResponse,
   normalizeLeaguesResponse,
 } from "../../utils/leagueMapping";
+import { teamSearchMatches } from "../../utils/teamSearch";
 import "./LeagueDraftPage.css";
 
 type LocationState = {
@@ -428,9 +436,7 @@ const LeagueDraftPage = () => {
 
   const applyFilters = (teams: OwnedTeam[]) =>
     teams.filter((team) => {
-      const matchesSearch = team.teamName
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
+      const matchesSearch = teamSearchMatches(team.teamName, searchTerm);
       const matchesConference =
         conferenceFilter === "all" ||
         resolveConferenceName(team.conferenceName) === conferenceFilter;
@@ -643,6 +649,8 @@ const LeagueDraftPage = () => {
   const canStartDraft = isCommissioner && joinable;
   const canPauseDraft = isCommissioner && draftStatus === "live";
   const canResumeDraft = isCommissioner && draftStatus === "paused";
+  const canFinalizeDraft =
+    isCommissioner && draftStatus !== "complete" && draftStatus !== null;
 
   useEffect(() => {
     if (!draftStatus) {
@@ -790,21 +798,32 @@ const LeagueDraftPage = () => {
   }, [conferenceLimits, groupedPickedTeams]);
 
   const handleCloseDraftSummary = () => {
-    if (!leagueId || !league) {
+    if (!leagueId) {
       return;
     }
 
-    const updatedLeague = {
-      ...league,
-      status: "Post-Draft",
-    };
-
-    navigate(`/leagues/${leagueId}`, { state: { league: updatedLeague } });
+    navigate(`/leagues/${leagueId}`);
   };
 
-  const handleDraftAction = async (action: "start" | "pause" | "resume") => {
+  const handleDraftAction = async (
+    action: "start" | "pause" | "resume" | "finalize"
+  ) => {
     if (!leagueId) {
       return;
+    }
+
+    if (action === "finalize") {
+      if (!currentUserId) {
+        setError("Missing current user.");
+        return;
+      }
+
+      const confirmed = window.confirm(
+        "Finalize this draft now? This closes the draft even if unpicked turns remain."
+      );
+      if (!confirmed) {
+        return;
+      }
     }
 
     try {
@@ -816,9 +835,16 @@ const LeagueDraftPage = () => {
           ? await startDraft(leagueId)
           : action === "pause"
           ? await pauseDraft(leagueId)
-          : await resumeDraft(leagueId);
+          : action === "resume"
+          ? await resumeDraft(leagueId)
+          : (await finalizeDraft(leagueId, currentUserId as number),
+            await getDraftState(leagueId));
 
       applyDraftSnapshot(response);
+      if (action === "finalize") {
+        setShowDraftComplete(true);
+        void loadDraftSummary();
+      }
     } catch (err: any) {
       const message =
         err?.message ??
@@ -826,7 +852,9 @@ const LeagueDraftPage = () => {
           ? "Failed to start draft"
           : action === "pause"
           ? "Failed to pause draft"
-          : "Failed to resume draft");
+          : action === "resume"
+          ? "Failed to resume draft"
+          : "Failed to finalize draft");
       setError(message);
     } finally {
       setDraftActionLoading(false);
@@ -929,6 +957,16 @@ const LeagueDraftPage = () => {
                   disabled={draftActionLoading}
                 >
                   Resume Draft
+                </button>
+              )}
+              {showCommissionerActions && canFinalizeDraft && (
+                <button
+                  type="button"
+                  className="draft-page__action-btn"
+                  onClick={() => handleDraftAction("finalize")}
+                  disabled={draftActionLoading}
+                >
+                  Finalize Draft
                 </button>
               )}
             </div>

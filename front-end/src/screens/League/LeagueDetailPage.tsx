@@ -76,7 +76,7 @@ const LeagueDetailPage = () => {
 
 
   useEffect(() => {
-    if (league || !league_id || !currentUserId) {
+    if (!league_id || !currentUserId) {
       return;
     }
 
@@ -88,6 +88,7 @@ const LeagueDetailPage = () => {
         setLeagueError(null);
         const response = await getLeaguesForUser(currentUserId, "all");
         if (!isMounted) return;
+
         const matches = normalizeLeaguesResponse(response);
         const found = matches.find(
           (item) => item.leagueId === Number(league_id)
@@ -119,7 +120,7 @@ const LeagueDetailPage = () => {
     return () => {
       isMounted = false;
     };
-  }, [league, league_id, currentUserId]);
+  }, [league_id, currentUserId]);
 
   useEffect(() => {
     setTeamNameValue(league?.teamName ?? "");
@@ -231,6 +232,11 @@ const LeagueDetailPage = () => {
   const openConferencePage = () => {
     if (!league) return;
     navigate(`/leagues/${league.leagueId}/conference`, { state: { league } });
+  };
+
+  const openTeamLookupPage = () => {
+    if (!league) return;
+    navigate(`/leagues/${league.leagueId}/team-search`, { state: { league } });
   };
 
   const openManageLeague = () => {
@@ -603,6 +609,26 @@ const LeagueDetailPage = () => {
         </div>
       </section>
 
+      <section className="league-detail__card league-detail__tools-card">
+        <h2>Scores and Schedules</h2>
+        <div className="league-detail__primary-actions">
+          <button
+            className="league-detail__conference-btn"
+            type="button"
+            onClick={openConferencePage}
+          >
+            View Conference Scores
+          </button>
+          <button
+            className="league-detail__conference-btn"
+            type="button"
+            onClick={openTeamLookupPage}
+          >
+            Find Team
+          </button>
+        </div>
+      </section>
+
       <section
         className={`league-detail__content ${
           showAdminActions ? "league-detail__content--admin" : ""
@@ -725,13 +751,6 @@ const LeagueDetailPage = () => {
                 disabled={rosterActionsLocked}
               >
                 Manage Roster
-              </button>
-              <button
-                className="league-detail__conference-btn"
-                type="button"
-                onClick={openConferencePage}
-              >
-                View Conference Scores
               </button>
               {canJoinDraft && (
                 <button

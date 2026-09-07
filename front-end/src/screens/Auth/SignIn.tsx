@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient";
 import { useAuth } from "../../context/AuthContext";
 import { safeLocalStorage } from "../../utils/safeStorage";
@@ -194,6 +194,11 @@ const SignIn = () => {
               </button>
             </div>
           </label>
+          {!isSignUp && (
+            <Link className="sign-in__forgot" to="/reset-password">
+              Forgot password?
+            </Link>
+          )}
           {isSignUp && (
             <label className="sign-in__label" htmlFor="sign-in-confirm-password">
               Confirm Password
