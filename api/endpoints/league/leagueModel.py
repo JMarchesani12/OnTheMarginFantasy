@@ -52,7 +52,25 @@ class LeagueModel:
     def get_league(self, leagueId):
         with self.db.begin() as conn:
             league = conn.execute(
-                text('SELECT * FROM "League" WHERE id = :leagueId'),
+                text("""
+                    SELECT
+                        l.*,
+                        w.id AS "currentWeekId",
+                        w."weekNumber" AS "currentWeekNumber",
+                        w."startDate" AS "currentWeekStartDate",
+                        w."endDate" AS "currentWeekEndDate"
+                    FROM "League" l
+                    LEFT JOIN "Week" w
+                      ON w."leagueId" = l.id
+                     AND now() >= COALESCE(
+                        w."startDate",
+                        w."endDate" + interval '1 microsecond' - interval '7 days'
+                     )
+                     AND now() <= w."endDate"
+                    WHERE l.id = :leagueId
+                    ORDER BY w."weekNumber" DESC NULLS LAST
+                    LIMIT 1
+                """),
                 {"leagueId": leagueId}
             ).fetchone()
 

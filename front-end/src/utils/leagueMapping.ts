@@ -81,9 +81,9 @@ export const mapLeagueFromResponse = (
     teamName: null,
     draftOrder: null,
     seasonPoints: null,
-    currentWeekEndDate: null,
-    currentWeekId: null,
-    currentWeekNumber: null,
-    currentWeekStartDate: null,
+    currentWeekEndDate: single.currentWeekEndDate ?? null,
+    currentWeekId: single.currentWeekId ?? null,
+    currentWeekNumber: single.currentWeekNumber ?? null,
+    currentWeekStartDate: single.currentWeekStartDate ?? null,
   };
 };

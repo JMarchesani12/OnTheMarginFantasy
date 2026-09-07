@@ -81,10 +81,10 @@ export type League = {
   teamName: string | null;
   draftOrder: number | null;
   seasonPoints: number | null;
-  currentWeekEndDate: Date | null;
+  currentWeekEndDate: Date | string | null;
   currentWeekId: number | null;
   currentWeekNumber: number | null;
-  currentWeekStartDate: Date | null;
+  currentWeekStartDate: Date | string | null;
 };
 
 
@@ -167,6 +167,10 @@ export interface GetRequestResponse {
 export type SingleLeague = {
   commissioner: number;
   createdAt: string;
+  currentWeekEndDate?: Date | string | null;
+  currentWeekId?: number | null;
+  currentWeekNumber?: number | null;
+  currentWeekStartDate?: Date | string | null;
   draftDate: string | null;
   freeAgentDeadline: string | null;
   id: number;

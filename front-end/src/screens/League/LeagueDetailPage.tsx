@@ -18,6 +18,7 @@ import { getScoresForWeek } from "../../api/scoring";
 import type { ScoreWeek } from "../../types/scoring";
 import { useCurrentUser } from "../../context/currentUserContext";
 import { getEffectiveWeekNumber, MIN_SCHEDULE_WEEK_NUMBER } from "../../utils/weekCutoff";
+import { getDisplayedSeasonPoints } from "../../utils/leagueDetailCalculations";
 import {
   mapLeagueFromResponse,
   normalizeLeaguesResponse,
@@ -457,6 +458,15 @@ const LeagueDetailPage = () => {
         : null,
     [scoreboardRows.rows, currentMemberId]
   );
+  const currentMemberHasScoreboardScores = useMemo(() => {
+    if (!currentMemberId) {
+      return false;
+    }
+
+    return Object.values(scoreboard).some((scores) =>
+      scores.some((score) => score.memberId === currentMemberId)
+    );
+  }, [scoreboard, currentMemberId]);
 
   const currentWeekDifferential = useMemo(() => {
     const currentWeek = effectiveWeekNumber ?? null;
@@ -644,10 +654,12 @@ const LeagueDetailPage = () => {
               <div className="league-detail__team-stat">
                 <span className="label">Season Points</span>
                 <span className="value">
-                  {currentMemberRow?.totalPoints ??
-                    currentMember?.seasonPoints ??
-                    league.seasonPoints ??
-                    0}
+                  {getDisplayedSeasonPoints({
+                    scoreboardTotalPoints: currentMemberRow?.totalPoints,
+                    hasScoreboardScores: currentMemberHasScoreboardScores,
+                    memberSeasonPoints: currentMember?.seasonPoints,
+                    leagueSeasonPoints: league.seasonPoints,
+                  })}
                 </span>
               </div>
               <div className="league-detail__team-stat">

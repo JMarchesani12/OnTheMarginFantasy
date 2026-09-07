@@ -1,4 +1,5 @@
 import type { CSSProperties, FC } from "react";
+import { getScoreboardThroughWeek } from "../../utils/leagueDetailCalculations";
 import "./LeagueScoreboard.css";
 
 export type ScoreboardRow = {
@@ -24,12 +25,7 @@ const LeagueScoreboard: FC<LeagueScoreboardProps> = ({
   loading,
   error,
 }) => {
-  const throughWeek =
-    currentWeekNumber === 0
-      ? 0
-      : typeof currentWeekNumber === "number" && currentWeekNumber > 1
-      ? currentWeekNumber - 1
-      : null;
+  const throughWeek = getScoreboardThroughWeek(currentWeekNumber);
 
   if (!weekNumbers.length && !loading && !error) {
     return null;
