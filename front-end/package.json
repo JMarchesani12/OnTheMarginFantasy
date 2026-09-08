@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "basketball:tiers": "node --experimental-strip-types ../scripts/basketball-tiers/index.ts",
+    "basketball:tiers:test": "node --test --experimental-strip-types ../scripts/basketball-tiers/*.test.ts",
+    "basketball:tiers:typecheck": "tsc -p ../scripts/basketball-tiers/tsconfig.json"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.86.0",
