@@ -11,6 +11,11 @@ import {
 } from "../../utils/scheduleTable";
 import { safeLocalStorage } from "../../utils/safeStorage";
 import { MIN_SCHEDULE_WEEK_NUMBER } from "../../utils/weekCutoff";
+import { selectDailyTotals } from "../../utils/leagueScheduleDailyTotals";
+import {
+  getOpponentTierDisplayTone,
+  type TierDisplayTone,
+} from "../../utils/scheduleTierDisplay";
 import "./LeagueScheduleTabs.css";
 
 type LeagueScheduleTabsProps = {
@@ -24,6 +29,7 @@ type LeagueScheduleTabsProps = {
 
 type ScheduleCell = {
   opponentName: string;
+  opponentTierDisplayTone: TierDisplayTone;
   isHome: boolean;
   teamScore: number;
   opponentScore: number;
@@ -75,8 +81,8 @@ export const LeagueScheduleTabs = ({
         );
 
         setSchedule(data);
-      } catch (err: any) {
-        setError(err?.message ?? "Failed to load schedule");
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Failed to load schedule");
       } finally {
         setLoading(false);
       }
@@ -136,6 +142,7 @@ export const LeagueScheduleTabs = ({
       fallbackTeamName: string,
       dateKey: string,
       opponentName: string,
+      opponentTierDisplayTone: TierDisplayTone,
       isHome: boolean,
       teamScore: number,
       opponentScore: number,
@@ -161,6 +168,7 @@ export const LeagueScheduleTabs = ({
 
       cellsByDate[dateKey].push({
         opponentName,
+        opponentTierDisplayTone,
         isHome,
         teamScore,
         opponentScore,
@@ -181,6 +189,11 @@ export const LeagueScheduleTabs = ({
           g.homeTeamName,
           dateKey,
           g.awayTeamName,
+          getOpponentTierDisplayTone({
+            sportId: g.sportId,
+            ownedTeamTier: g.homeTeamTier,
+            opponentTeamTier: g.awayTeamTier,
+          }),
           true,
           g.homeScore,
           g.awayScore,
@@ -196,6 +209,11 @@ export const LeagueScheduleTabs = ({
           g.awayTeamName,
           dateKey,
           g.homeTeamName,
+          getOpponentTierDisplayTone({
+            sportId: g.sportId,
+            ownedTeamTier: g.awayTeamTier,
+            opponentTeamTier: g.homeTeamTier,
+          }),
           false,
           g.awayScore,
           g.homeScore,
@@ -260,38 +278,14 @@ export const LeagueScheduleTabs = ({
   }, [members, activeMemberId]);
 
   const dailyTotals = useMemo(() => {
-    const totals: Record<string, number> = {};
-    const hasDailyTotals = Object.keys(activeMemberDailyTotals).length > 0;
-    dateHeaders.forEach((header) => {
-      const isFuture = header.key > todayKey;
-      const totalFromApi = activeMemberDailyTotals[header.key];
-      totals[header.key] = isFuture
-        ? 0
-        : hasDailyTotals
-        ? totalFromApi ?? 0
-        : 0;
+    return selectDailyTotals({
+      dateHeaders,
+      todayKey,
+      activeMemberDailyTotals,
+      isViewingCurrentWeek: weekNumber === initialWeekNumber,
+      teamRows,
     });
-
-    if (!hasDailyTotals) {
-      teamRows.forEach((row) => {
-        Object.entries(row.cellsByDate).forEach(([dateKey, cells]) => {
-          if (dateKey > todayKey) {
-            totals[dateKey] = 0;
-            return;
-          }
-          let sum = totals[dateKey] ?? 0;
-          cells.forEach((cell) => {
-            if (typeof cell.memberPointDiff === "number") {
-              sum += cell.memberPointDiff;
-            }
-          });
-          totals[dateKey] = sum;
-        });
-      });
-    }
-
-    return totals;
-  }, [dateHeaders, teamRows, activeMemberDailyTotals, todayKey]);
+  }, [dateHeaders, teamRows, activeMemberDailyTotals, todayKey, weekNumber, initialWeekNumber]);
 
   const sortedMembers = useMemo(
     () =>
@@ -464,7 +458,9 @@ export const LeagueScheduleTabs = ({
                                 key={idx}
                                 className="league-schedule__cell-game"
                               >
-                                <div className="league-schedule__cell-opponent">
+                                <div
+                                  className={`league-schedule__cell-opponent league-schedule__cell-opponent--${c.opponentTierDisplayTone}`}
+                                >
                                   {c.isHome ? "vs " : "@ "}
                                   {c.opponentName}
                                 </div>

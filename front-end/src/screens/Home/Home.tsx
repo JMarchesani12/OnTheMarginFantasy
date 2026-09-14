@@ -143,9 +143,9 @@ const Home = () => {
           return;
         }
         setSports(data);
-      } catch (error: any) {
+      } catch (error: unknown) {
         if (isMounted) {
-          setSportsError(error?.message ?? "Failed to load sports");
+          setSportsError(error instanceof Error ? error.message : "Failed to load sports");
         }
       } finally {
         if (isMounted) {
@@ -198,9 +198,9 @@ const Home = () => {
           setSearchResults(results);
           setHasMore(results.length === SEARCH_LIMIT);
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         if (!isCancelled) {
-          setSearchError(error?.message ?? "Failed to search leagues");
+          setSearchError(error instanceof Error ? error.message : "Failed to search leagues");
         }
       } finally {
         if (!isCancelled) {
@@ -280,9 +280,11 @@ const Home = () => {
                     <h3>Weekly scoring</h3>
                     <p>
                       Weeks follow each sport: basketball runs Monday-Sunday,
-                      football runs Tuesday-Monday. Same-tier games use the full
-                      margin; higher-tier wins are halved, and lower-tier wins
-                      are doubled.
+                      football runs Tuesday-Monday. A red opponent name means a
+                      win counts for half the margin; green means a win counts
+                      double. Football adjusts for any tier gap, while
+                      basketball adjusts only when the teams are two tiers
+                      apart.
                     </p>
                   </article>
                   <article className="home__overview-card">

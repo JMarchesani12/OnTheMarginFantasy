@@ -46,14 +46,17 @@ class ScheduleModel:
         raw_point_diff: int,
         owned_team_tier: Optional[int],
         opponent_team_tier: Optional[int],
+        sport_id: Optional[int] = None,
     ) -> int:
         if owned_team_tier is None or opponent_team_tier is None:
             return raw_point_diff
 
         owned_tier = int(owned_team_tier)
         opponent_tier = int(opponent_team_tier)
+        tier_gap = abs(owned_tier - opponent_tier)
 
-        if owned_tier == opponent_tier:
+        adjustment_threshold = 2 if sport_id == 1 else 1
+        if tier_gap < adjustment_threshold:
             return raw_point_diff
 
         owned_team_is_higher_tier = owned_tier < opponent_tier
@@ -878,8 +881,8 @@ class ScheduleModel:
             FROM "LeagueTeamSlot" lts
             WHERE lts."leagueId"   = :leagueId
                 AND lts."memberId"   = :memberId
-                AND lts."acquiredWeek" <= GREATEST(:weekNumber, 1)
-                AND (lts."droppedWeek" IS NULL OR lts."droppedWeek" > GREATEST(:weekNumber, 1))
+                AND lts."acquiredWeek" <= :weekNumber
+                AND (lts."droppedWeek" IS NULL OR lts."droppedWeek" > :weekNumber)
             ),
             max_tier AS (
             SELECT COALESCE(MAX(st.tier), 0) AS "maxTier"
@@ -891,6 +894,7 @@ class ScheduleModel:
             gr.id,
             gr."externalGameId",
             gr.date,
+            tw."sportId",
             gr.broadcast,
             gr."homeTeamId",
             gr."awayTeamId",
@@ -952,12 +956,14 @@ class ScheduleModel:
                     raw_point_diff=raw_point_diff,
                     owned_team_tier=game.get("homeTeamTier"),
                     opponent_team_tier=game.get("awayTeamTier"),
+                    sport_id=game.get("sportId"),
                 )
             elif game["ownsAway"]:
                 member_point_diff = self._apply_tier_adjustment(
                     raw_point_diff=raw_point_diff,
                     owned_team_tier=game.get("awayTeamTier"),
                     opponent_team_tier=game.get("homeTeamTier"),
+                    sport_id=game.get("sportId"),
                 )
             else:
                 member_point_diff = 0
@@ -1001,8 +1007,8 @@ class ScheduleModel:
             FROM "LeagueTeamSlot" lts
             WHERE lts."leagueId"   = :leagueId
                 AND lts."memberId"   = :memberA
-                AND lts."acquiredWeek" <= GREATEST(:weekNumber, 1)
-                AND (lts."droppedWeek" IS NULL OR lts."droppedWeek" > GREATEST(:weekNumber, 1))
+                AND lts."acquiredWeek" <= :weekNumber
+                AND (lts."droppedWeek" IS NULL OR lts."droppedWeek" > :weekNumber)
             ),
             b_teams AS (
             SELECT lts."sportTeamId"

@@ -270,6 +270,14 @@
   margin-bottom: 0.1rem;
 }
 
+.league-schedule__cell-opponent--red {
+  color: #FF4D6D;
+}
+
+.league-schedule__cell-opponent--green {
+  color: #6AFFBE;
+}
+
 .league-schedule__cell-score {
   font-size: 0.85rem;
   color: #B7C2E6;
