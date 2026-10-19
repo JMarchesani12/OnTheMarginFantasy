@@ -425,7 +425,9 @@ const LeagueDraftPage = () => {
       map.set(key, current);
     });
 
-    return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
+    return Array.from(map.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([conference, members]) => [conference, [...members].sort((a, b) => a.teamName.localeCompare(b.teamName))]);
   };
 
   const uniqueConferences = useMemo(() => {

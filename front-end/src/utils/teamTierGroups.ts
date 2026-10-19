@@ -9,7 +9,7 @@ export function getTierLabel(tier: number | null, sport?: TierSport): string {
   return labels[tier - 1] ?? `Tier ${tier}`;
 }
 
-type TierTeam = { teamName: string; tier?: number | null };
+type TierTeam = { teamName: string; tier?: number | null; conferenceName?: string | null };
 
 export function groupTeamsByTier<T extends TierTeam>(teams: readonly T[], sport?: TierSport): {
   tier: number | null;
@@ -28,6 +28,8 @@ export function groupTeamsByTier<T extends TierTeam>(teams: readonly T[], sport?
     .map(([tier, members]) => ({
       tier,
       label: tiers.size > 1 ? getTierLabel(tier, sport) : null,
-      teams: [...members].sort((a, b) => a.teamName.localeCompare(b.teamName)),
+      teams: [...members].sort((a, b) =>
+        (a.conferenceName?.trim() || "Independent").localeCompare(b.conferenceName?.trim() || "Independent")
+        || a.teamName.localeCompare(b.teamName)),
     }));
 }

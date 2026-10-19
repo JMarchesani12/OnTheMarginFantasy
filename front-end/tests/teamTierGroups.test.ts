@@ -41,3 +41,17 @@ test("uses sport labels for multiple groups and keeps single-tier headings hidde
   assert.deepEqual(groupTeamsByTier([{teamName: "B", tier: 2}, {teamName: "A", tier: 1}], 1).map(g => g.label), ["Power", "High Major"]);
   assert.equal(groupTeamsByTier([{teamName: "A", tier: 1}], 1)[0].label, null);
 });
+
+test("orders conferences before team names within each tier", () => {
+  const teams = [
+    { teamName: "Auburn", conferenceName: "SEC", tier: 1 },
+    { teamName: "Wake Forest", conferenceName: "ACC", tier: 1 },
+    { teamName: "Duke", conferenceName: "ACC", tier: 1 },
+    { teamName: "Army", conferenceName: null, tier: 1 },
+    { teamName: "Zeta", conferenceName: "ACC", tier: 2 },
+  ];
+  assert.deepEqual(groupTeamsByTier(teams, 1).map(group => group.teams.map(team => team.teamName)), [
+    ["Duke", "Wake Forest", "Army", "Auburn"], ["Zeta"],
+  ]);
+  assert.equal(teams[0].teamName, "Auburn");
+});
