@@ -39,3 +39,15 @@ export const getDisplayedSeasonPoints = ({
 
   return 0;
 };
+
+export const getLeagueRank = (
+  standings: readonly { memberId: number; points: number }[],
+  memberId: number | null,
+): { rank: number; tied: boolean } | null => {
+  const member = standings.find((entry) => entry.memberId === memberId);
+  if (!member) return null;
+  return {
+    rank: 1 + standings.filter((entry) => entry.points > member.points).length,
+    tied: standings.some((entry) => entry.memberId !== memberId && entry.points === member.points),
+  };
+};

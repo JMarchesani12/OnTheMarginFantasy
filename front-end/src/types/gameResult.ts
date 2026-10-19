@@ -1,4 +1,6 @@
+import type { TierAdjustment } from "./leagueRules";
 export type GameResult = {
+  tierAdjustment?: TierAdjustment;
   awayScore: number;
   awayTeamTier: number | null;
   awayTeamId: number;

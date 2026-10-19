@@ -1,0 +1,14 @@
+.league-rules { max-width: 1000px; margin: 0 auto; padding: 2rem 1rem 4rem; color: #F4F7FF; }
+.league-rules a { color: #67E8F9; }
+.league-rules header { margin: 1.5rem 0; }
+.league-rules h1 { margin-bottom: 0.5rem; }
+.league-rules h2 { font-size: 1.2rem; margin-top: 0; }
+.league-rules p, .league-rules li { line-height: 1.6; color: #B7C2E6; }
+.league-rules small { color: #8EA0D6; }
+.league-rules__card { margin: 1rem 0; padding: 1.25rem; border: 1px solid #243055; border-radius: 1rem; background: linear-gradient(180deg, #0B0E1A, #0E1230); }
+.league-rules__tiers { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 1rem; }
+.league-rules__tiers section { border: 1px solid #243055; border-radius: 0.75rem; padding: 1rem; }
+.league-rules__settings { margin: 0; }
+.league-rules__settings > div { margin: 0.65rem 0; }
+.league-rules__settings dt { font-weight: 700; }
+.league-rules__settings dd { margin: 0.35rem 0 0 1rem; overflow-wrap: anywhere; color: #B7C2E6; }

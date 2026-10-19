@@ -18,7 +18,7 @@ import { getScoresForWeek } from "../../api/scoring";
 import type { ScoreWeek } from "../../types/scoring";
 import { useCurrentUser } from "../../context/currentUserContext";
 import { getEffectiveWeekNumber, MIN_SCHEDULE_WEEK_NUMBER } from "../../utils/weekCutoff";
-import { getDisplayedSeasonPoints } from "../../utils/leagueDetailCalculations";
+import { getDisplayedSeasonPoints, getLeagueRank } from "../../utils/leagueDetailCalculations";
 import {
   mapLeagueFromResponse,
   normalizeLeaguesResponse,
@@ -474,6 +474,20 @@ const LeagueDetailPage = () => {
     );
   }, [scoreboard, currentMemberId]);
 
+  const currentLeagueRank = useMemo(() => {
+    const rowsByMember = new Map(scoreboardRows.rows.map((row) => [row.memberId, row]));
+    const scoredMembers = new Set(Object.values(scoreboard).flatMap((scores) => scores.map((score) => score.memberId)));
+    return getLeagueRank(members.map((member) => ({
+      memberId: member.id,
+      points: getDisplayedSeasonPoints({
+        scoreboardTotalPoints: rowsByMember.get(member.id)?.totalPoints,
+        hasScoreboardScores: scoredMembers.has(member.id),
+        memberSeasonPoints: member.seasonPoints,
+        leagueSeasonPoints: member.id === currentMemberId ? league?.seasonPoints : null,
+      }),
+    })), currentMemberId);
+  }, [members, scoreboardRows.rows, scoreboard, currentMemberId, league?.seasonPoints]);
+
   const currentWeekDifferential = useMemo(() => {
     const currentWeek = effectiveWeekNumber ?? null;
     if (currentWeek === null || !currentMemberId) {
@@ -689,6 +703,14 @@ const LeagueDetailPage = () => {
                 </span>
               </div>
               <div className="league-detail__team-stat">
+                <span className="label">League Rank</span>
+                <span className="value">
+                  {!loadingMembers && !scoreboardLoading && currentLeagueRank
+                    ? `${currentLeagueRank.tied ? "Tied " : ""}#${currentLeagueRank.rank}`
+                    : "—"}
+                </span>
+              </div>
+              <div className="league-detail__team-stat">
                 <span className="label">
                   Week {currentWeekDifferential.weekNumber ?? "-"} Diff
                 </span>
@@ -751,6 +773,13 @@ const LeagueDetailPage = () => {
                 disabled={rosterActionsLocked}
               >
                 Manage Roster
+              </button>
+              <button
+                className="league-detail__conference-btn"
+                type="button"
+                onClick={() => navigate(`/leagues/${league.leagueId}/rules`)}
+              >
+                View league rules
               </button>
               {canJoinDraft && (
                 <button

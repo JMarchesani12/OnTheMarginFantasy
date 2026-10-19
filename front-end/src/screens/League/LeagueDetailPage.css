@@ -208,6 +208,10 @@
   .league-detail__scoreboard-grid {
     grid-template-columns: minmax(0, 1fr);
   }
+
+  .league-detail__scoreboard-grid .league-detail__week-totals {
+    order: -1;
+  }
 }
 
 .league-detail__week-totals {

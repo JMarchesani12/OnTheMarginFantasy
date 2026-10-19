@@ -98,6 +98,16 @@
 }
 
 /* Cells */
+.league-scoreboard__row > :first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: inherit;
+  margin: -0.7rem 0 -0.7rem -0.75rem;
+  padding: 0.7rem 0 0.7rem 0.75rem;
+  box-shadow: 6px 0 8px -6px #00000099;
+}
+
 .league-scoreboard__team {
   font-weight: 700;
   color: #F4F7FF;

@@ -1,3 +1,4 @@
+import type { LeagueRules } from "../types/leagueRules";
 import type { ApproveRequestResponse, CreateLeaguePayload, GetConferences, GetRequestResponse, League, LeagueSearchResult, RequestResponse, SingleLeague, UpdateLeague } from "../types/league";
 import type { LeagueMember, UpdateLeagueMember } from "../types/leagueMember";
 import { apiFetch, API_BASE_URL } from "./client";
@@ -290,5 +291,14 @@ export async function updateLeagueMember(
     throw new Error(err?.message ?? `Failed to update league member`);
   }
 
+  return res.json();
+}
+
+export async function getLeagueRules(leagueId: number): Promise<LeagueRules> {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/rules`);
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.message ?? `Unable to load league rules (${res.status})`);
+  }
   return res.json();
 }

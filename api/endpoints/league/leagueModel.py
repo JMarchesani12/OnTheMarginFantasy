@@ -9,6 +9,7 @@ from sqlalchemy.engine import Engine
 from zoneinfo import ZoneInfo
 
 from endpoints.schedule.scheduleModel import ScheduleModel
+from rules.leagueRules import settings_for_creation, settings_for_update, describe_rules
 
 ALLOWED_LEAGUE_MEMBER_FIELDS = {
     "teamName": '"teamName"',
@@ -161,7 +162,28 @@ class LeagueModel:
                 {"leagueId": leagueId}
             ).fetchone()
 
-        return dict(league._mapping)
+        return dict(league._mapping) if league else None
+
+    def get_league_rules(self, league_id):
+        with self.db.connect() as conn:
+            row = conn.execute(text('SELECT id, name, sport, "seasonYear", settings, "tradeDeadline", "freeAgentDeadline", "draftDate" FROM "League" WHERE id = :leagueId'),
+                               {'leagueId': league_id}).fetchone()
+            if not row:
+                return None
+            league = dict(row._mapping)
+            teams = conn.execute(text("""
+                SELECT st.id AS "teamId", st."displayName" AS "teamName",
+                    COALESCE(st.tier, (SELECT COALESCE(MAX(t.tier), 0) + 1
+                        FROM "SportTeam" t WHERE t."sportId" = :sportId)) AS tier
+                FROM "SportTeam" st WHERE st."sportId" = :sportId
+                ORDER BY tier, st."displayName"
+            """), {'sportId': league['sport']}).fetchall()
+        payload = describe_rules(league['sport'], league.get('settings'), [dict(t._mapping) for t in teams])
+        payload.update(leagueId=league_id, leagueName=league['name'], seasonYear=league['seasonYear'])
+        for key in ('tradeDeadline', 'freeAgentDeadline', 'draftDate'):
+            value = league.get(key)
+            payload['settings'][key] = value.isoformat() if hasattr(value, 'isoformat') else value
+        return payload
 
     def create_league(self, league: Dict[str, Any]) -> Dict[str, Any]:
         # Make a copy so we don't mutate the original dict
@@ -169,14 +191,8 @@ class LeagueModel:
 
         print(league)
 
-        # JSON-encode the settings dict so Postgres can cast it to jsonb
-        if isinstance(league.get("settings"), dict):
-            league["settings"] = self._ensure_timezone_in_settings(league["settings"])
-            league["settings"] = json.dumps(league["settings"])
-        elif isinstance(league.get("settings"), list):
-            league["settings"] = json.dumps(league["settings"])
-        elif league.get("settings") is None:
-            league["settings"] = json.dumps(self._ensure_timezone_in_settings({}))
+        settings = settings_for_creation(league['sport'], league.get('settings'))
+        league['settings'] = json.dumps(self._ensure_timezone_in_settings(settings))
 
         sql = text("""
             WITH created AS (
@@ -239,7 +255,7 @@ class LeagueModel:
         with self.db.begin() as conn:
             league_row = conn.execute(
                 text("""
-                    SELECT id
+                    SELECT id, sport, settings
                     FROM "League"
                     WHERE id = :leagueId
                 """),
@@ -259,6 +275,13 @@ class LeagueModel:
             "tradeDeadline",
             "freeAgentDeadline"
         }
+
+        patch = dict(patch)
+        if "settings" in patch:
+            if not isinstance(patch['settings'], dict):
+                raise ValueError('League settings must be an object')
+            current = dict(league_row._mapping)
+            patch['settings'] = settings_for_update(current['sport'], current.get('settings'), patch['settings'])
 
         if "settings" in patch and isinstance(patch.get("settings"), dict):
             tz_name = self._get_timezone_name_from_settings(patch["settings"])

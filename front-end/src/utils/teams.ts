@@ -21,6 +21,7 @@ export const normalizeOwnedTeams = (teams: RawOwnedTeam[]): OwnedTeam[] =>
         team.displayName ??
         team.name ??
         `Team ${Number.isFinite(numericId) ? numericId : index + 1}`,
+      tier: team.tier ?? null,
       conferenceName: team.conferenceName ?? team.conferenceDisplayName ?? null,
     };
   });

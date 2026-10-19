@@ -4,6 +4,8 @@ def setup_routes(app, engine):
 
     leagueEndpoints = LeagueEndpoints(engine)
 
+    app.add_url_rule("/api/league/<int:league_id>/rules", view_func=leagueEndpoints.get_league_rules, methods=["GET"])
+
     app.add_url_rule("/api/league/<int:league_id>", view_func=leagueEndpoints.get_league, methods=["GET"])
 
     app.add_url_rule("/api/league/create", view_func=leagueEndpoints.create_league, methods=["POST"])

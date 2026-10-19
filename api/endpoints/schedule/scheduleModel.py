@@ -3,6 +3,7 @@ import json
 import re
 from typing import Any, Dict, List, Optional
 
+from rules.leagueRules import resolve_rules, adjust_margin
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 from zoneinfo import ZoneInfo
@@ -48,32 +49,8 @@ class ScheduleModel:
         opponent_team_tier: Optional[int],
         sport_id: Optional[int] = None,
     ) -> int:
-        if owned_team_tier is None or opponent_team_tier is None:
-            return raw_point_diff
-
-        owned_tier = int(owned_team_tier)
-        opponent_tier = int(opponent_team_tier)
-        tier_gap = abs(owned_tier - opponent_tier)
-
-        adjustment_threshold = 2 if sport_id == 1 else 1
-        if tier_gap < adjustment_threshold:
-            return raw_point_diff
-
-        owned_team_is_higher_tier = owned_tier < opponent_tier
-
-        if raw_point_diff > 0 and owned_team_is_higher_tier:
-            return (raw_point_diff + 1) // 2
-
-        if raw_point_diff > 0:
-            return raw_point_diff * 2
-
-        if raw_point_diff < 0 and owned_team_is_higher_tier:
-            return raw_point_diff * 2
-
-        if raw_point_diff < 0:
-            return -((-raw_point_diff + 1) // 2)
-
-        return raw_point_diff
+        return adjust_margin(raw_point_diff, owned_team_tier, opponent_team_tier,
+                             resolve_rules(sport_id, {}))['adjustedMargin']
 
     # -------------------------------------------------------------------------
     # Basic lookups
@@ -850,11 +827,15 @@ class ScheduleModel:
         league_id: int,
         member_id: int,
         week_number: int,
+        resolved_rules: Optional[dict] = None,
     ) -> list[dict]:
         """
         Return all games that count for this member in this week, with memberPointDiff
         already computed (everyone-vs-everyone, single-owner perspective).
         """
+        if resolved_rules is None:
+            league = self._get_league(league_id)
+            resolved_rules = resolve_rules(league['sport'], league.get('settings'))
         sql = text("""
             WITH target_week AS (
             SELECT
@@ -945,30 +926,18 @@ class ScheduleModel:
             ).fetchall()
 
         games = []
+        rules = resolved_rules
         for row in rows:
             game = dict(row._mapping)
-            raw_point_diff = int(game["rawMemberPointDiff"])
-
-            if game["ownsHome"] and game["ownsAway"]:
-                member_point_diff = 0
-            elif game["ownsHome"]:
-                member_point_diff = self._apply_tier_adjustment(
-                    raw_point_diff=raw_point_diff,
-                    owned_team_tier=game.get("homeTeamTier"),
-                    opponent_team_tier=game.get("awayTeamTier"),
-                    sport_id=game.get("sportId"),
-                )
-            elif game["ownsAway"]:
-                member_point_diff = self._apply_tier_adjustment(
-                    raw_point_diff=raw_point_diff,
-                    owned_team_tier=game.get("awayTeamTier"),
-                    opponent_team_tier=game.get("homeTeamTier"),
-                    sport_id=game.get("sportId"),
-                )
-            else:
-                member_point_diff = 0
-
-            game["memberPointDiff"] = member_point_diff
+            owns_home, owns_away = game['ownsHome'], game['ownsAway']
+            owned_tier = game.get('homeTeamTier') if owns_home else game.get('awayTeamTier')
+            opponent_tier = game.get('awayTeamTier') if owns_home else game.get('homeTeamTier')
+            adjustment = adjust_margin(game['rawMemberPointDiff'], owned_tier, opponent_tier,
+                                       rules, double_owned=owns_home and owns_away)
+            if not owns_home and not owns_away:
+                adjustment = adjust_margin(0, None, None, rules)
+            game['memberPointDiff'] = adjustment['adjustedMargin']
+            game['tierAdjustment'] = adjustment
             games.append(game)
 
         return games
@@ -1156,6 +1125,11 @@ class ScheduleModel:
             SELECT
                 st.id              AS "teamId",
                 st."displayName"   AS "teamName",
+                COALESCE(st.tier, (
+                  SELECT COALESCE(MAX(tier_team.tier), 0) + 1
+                  FROM "SportTeam" tier_team
+                  WHERE tier_team."sportId" = st."sportId"
+                )) AS "tier",
                 sc.id              AS "sportConferenceId",
                 c.name             AS "conferenceName"
             FROM member_teams mt

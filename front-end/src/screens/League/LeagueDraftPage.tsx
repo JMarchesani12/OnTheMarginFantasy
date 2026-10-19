@@ -28,6 +28,7 @@ import {
   mapLeagueFromResponse,
   normalizeLeaguesResponse,
 } from "../../utils/leagueMapping";
+import { groupTeamsByTier } from "../../utils/teamTierGroups";
 import { teamSearchMatches } from "../../utils/teamSearch";
 import "./LeagueDraftPage.css";
 
@@ -444,7 +445,14 @@ const LeagueDraftPage = () => {
     });
 
   const groupedAvailable = useMemo(
-    () => groupTeams(applyFilters(availableTeams)),
+    () => {
+      const filtered = applyFilters(availableTeams);
+      if (groupTeamsByTier(availableTeams).length <= 1) return groupTeams(filtered);
+      return groupTeamsByTier(filtered).map((group): [string, OwnedTeam[]] => [
+        group.tier == null ? "Unassigned tier" : `Tier ${group.tier}`,
+        group.teams,
+      ]);
+    },
     [availableTeams, searchTerm, conferenceFilter]
   );
   const isCommissioner =

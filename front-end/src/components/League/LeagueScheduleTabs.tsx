@@ -11,11 +11,12 @@ import {
 } from "../../utils/scheduleTable";
 import { safeLocalStorage } from "../../utils/safeStorage";
 import { MIN_SCHEDULE_WEEK_NUMBER } from "../../utils/weekCutoff";
-import { selectDailyTotals } from "../../utils/leagueScheduleDailyTotals";
+import { selectDailyTotals, getTeamGamePointDiff } from "../../utils/leagueScheduleDailyTotals";
 import {
   getOpponentTierDisplayTone,
   type TierDisplayTone,
 } from "../../utils/scheduleTierDisplay";
+import { groupTeamsByTier } from "../../utils/teamTierGroups";
 import "./LeagueScheduleTabs.css";
 
 type LeagueScheduleTabsProps = {
@@ -28,6 +29,7 @@ type LeagueScheduleTabsProps = {
 };
 
 type ScheduleCell = {
+  explanation: string | null;
   opponentName: string;
   opponentTierDisplayTone: TierDisplayTone;
   isHome: boolean;
@@ -39,6 +41,7 @@ type ScheduleCell = {
 };
 
 type TeamRow = {
+  tier?: number | null;
   teamId: number;
   teamName: string;
   conferenceName: string | null;
@@ -124,12 +127,13 @@ export const LeagueScheduleTabs = ({
     // Map from teamId -> { teamName, cellsByDate }
     const teamMap = new Map<
       number,
-      { teamName: string; conferenceName: string | null; cellsByDate: Record<string, ScheduleCell[]> }
+      { tier?: number | null; teamName: string; conferenceName: string | null; cellsByDate: Record<string, ScheduleCell[]> }
     >();
 
     // 1) Seed map with ALL owned teams so they always get a row
     for (const t of ownedTeams) {
       teamMap.set(t.teamId, {
+        tier: t.tier,
         teamName: t.teamName,
         conferenceName: t.conferenceName ?? null,
         cellsByDate: {},
@@ -149,6 +153,7 @@ export const LeagueScheduleTabs = ({
       memberPointDiff: number,
       broadcast: string | null,
       time: string | null,
+      explanation: string | null,
     ) => {
       let row = teamMap.get(teamId);
       if (!row) {
@@ -167,6 +172,7 @@ export const LeagueScheduleTabs = ({
       }
 
       cellsByDate[dateKey].push({
+        explanation,
         opponentName,
         opponentTierDisplayTone,
         isHome,
@@ -189,17 +195,14 @@ export const LeagueScheduleTabs = ({
           g.homeTeamName,
           dateKey,
           g.awayTeamName,
-          getOpponentTierDisplayTone({
-            sportId: g.sportId,
-            ownedTeamTier: g.homeTeamTier,
-            opponentTeamTier: g.awayTeamTier,
-          }),
+          getOpponentTierDisplayTone(g.tierAdjustment),
           true,
           g.homeScore,
           g.awayScore,
-          g.memberPointDiff,
+          getTeamGamePointDiff(g, true),
           g.broadcast,
           time,
+          g.tierAdjustment?.applied ? g.tierAdjustment.explanation : null,
         );
       }
 
@@ -209,17 +212,14 @@ export const LeagueScheduleTabs = ({
           g.awayTeamName,
           dateKey,
           g.homeTeamName,
-          getOpponentTierDisplayTone({
-            sportId: g.sportId,
-            ownedTeamTier: g.awayTeamTier,
-            opponentTeamTier: g.homeTeamTier,
-          }),
+          getOpponentTierDisplayTone(g.tierAdjustment),
           false,
           g.awayScore,
           g.homeScore,
-          g.memberPointDiff,
+          getTeamGamePointDiff(g, false),
           g.broadcast,
           time,
+          g.tierAdjustment?.applied ? g.tierAdjustment.explanation : null,
         );
       }
     }
@@ -232,7 +232,8 @@ export const LeagueScheduleTabs = ({
 
     // 4) Convert map to sorted array of TeamRow
     const teamRows: TeamRow[] = Array.from(teamMap.entries())
-      .map(([teamId, { teamName, conferenceName, cellsByDate }]) => ({
+      .map(([teamId, { tier, teamName, conferenceName, cellsByDate }]) => ({
+        tier,
         teamId,
         teamName,
         conferenceName,
@@ -248,7 +249,10 @@ export const LeagueScheduleTabs = ({
         return a.teamName.localeCompare(b.teamName);
       });
 
-    return { dateHeaders, teamRows };
+    const tierGroups = groupTeamsByTier(teamRows);
+    return { dateHeaders, teamRows: tierGroups.length > 1
+      ? tierGroups.flatMap((group) => group.teams)
+      : teamRows };
   }, [schedule]);
 
   const todayKey = useMemo(() => {
@@ -286,6 +290,12 @@ export const LeagueScheduleTabs = ({
       teamRows,
     });
   }, [dateHeaders, teamRows, activeMemberDailyTotals, todayKey, weekNumber, initialWeekNumber]);
+
+  const tierSections = useMemo(() => {
+    const groups = groupTeamsByTier(teamRows);
+    return groups.length > 1 ? groups : [{ tier: null, label: null, teams: teamRows }];
+  }, [teamRows]);
+  const hasMultipleTiers = tierSections.length > 1;
 
   const sortedMembers = useMemo(
     () =>
@@ -343,6 +353,10 @@ export const LeagueScheduleTabs = ({
 
   return (
     <div className="league-schedule">
+      <h2 className="league-schedule__title">Weekly Performance</h2>
+      <div className="league-schedule__rules-summary">
+        {schedule?.rules && <p>{schedule.rules.summary}</p>}
+      </div>
       {/* Tabs + week controls header */}
       <div className="league-schedule__header">
         <div className="league-schedule__tabs">
@@ -411,8 +425,16 @@ export const LeagueScheduleTabs = ({
         )}
 
         {!loading && !error && dateHeaders.length > 0 && (
-          <div className="league-schedule__table-wrapper">
-            <table className="league-schedule__table">
+          <>
+            {tierSections.map((section) => (
+              <section
+                className={hasMultipleTiers ? "league-schedule__tier-card" : undefined}
+                key={section.tier ?? "all"}
+                aria-label={section.label ?? "Team schedule"}
+              >
+                {section.label && <h3 className="league-schedule__tier-title">{section.label}</h3>}
+                <div className="league-schedule__table-wrapper">
+                  <table className="league-schedule__table">
               <thead>
                 <tr>
                   <th className="league-schedule__team-col">Team</th>
@@ -422,7 +444,7 @@ export const LeagueScheduleTabs = ({
                 </tr>
               </thead>
               <tbody>
-                {teamRows.map((row) => (
+                {section.teams.map((row) => (
                   <tr key={row.teamId}>
                     <td className="league-schedule__team-col">
                       <div className="league-schedule__team-col-content">
@@ -476,6 +498,9 @@ export const LeagueScheduleTabs = ({
                                     </div>
                                   </>
                                 )}
+                                {c.explanation && (
+                                  <p className="league-schedule__adjustment">{c.explanation}</p>
+                                )}
                                 {(c.time != null || c.broadcast != null) && (
                                   <div className="league-schedule__cell-meta">
                                     {c.time != null && (
@@ -499,6 +524,56 @@ export const LeagueScheduleTabs = ({
                     })}
                   </tr>
                 ))}
+                {!hasMultipleTiers && (
+                <tr className="league-schedule__summary-row">
+                  <td className="league-schedule__team-col">
+                    <span className="league-schedule__summary-label">
+                      Daily diff
+                    </span>
+                  </td>
+                  {dateHeaders.map((d) => {
+                    const total = dailyTotals[d.key];
+                    const className =
+                      typeof total !== "number"
+                        ? "is-neutral"
+                        : total > 0
+                        ? "is-positive"
+                        : total < 0
+                        ? "is-negative"
+                        : "is-neutral";
+                    return (
+                      <td key={`summary-open-${d.key}`}>
+                        <span
+                          className={`league-schedule__summary-value ${className}`}
+                        >
+                          {typeof total === "number"
+                            ? `${total > 0 ? "+" : ""}${total}`
+                            : "--"}
+                        </span>
+                      </td>
+                    );
+                  })}
+                </tr>
+                )}
+              </tbody>
+                  </table>
+                </div>
+              </section>
+            ))}
+            {hasMultipleTiers && (
+              <section className="league-schedule__tier-card" aria-label="Overall daily totals">
+                <h3 className="league-schedule__tier-title">Overall daily totals</h3>
+                <div className="league-schedule__table-wrapper">
+                  <table className="league-schedule__table">
+              <thead>
+                <tr>
+                  <th className="league-schedule__team-col">Date</th>
+                  {dateHeaders.map((d) => (
+                    <th key={d.key}>{d.label}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
                 <tr className="league-schedule__summary-row">
                   <td className="league-schedule__team-col">
                     <span className="league-schedule__summary-label">
@@ -529,8 +604,11 @@ export const LeagueScheduleTabs = ({
                   })}
                 </tr>
               </tbody>
-            </table>
-          </div>
+                  </table>
+                </div>
+              </section>
+            )}
+          </>
         )}
         </div>
       )}

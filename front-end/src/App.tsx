@@ -1,6 +1,8 @@
 import React, { Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+const LeagueRulesPage = React.lazy(() => import("./screens/League/LeagueRulesPage"));
+
 const Home = React.lazy(() => import("./screens/Home/Home"));
 const CreateLeague = React.lazy(() => import("./screens/CreateLeague/CreateLeague"));
 const LeagueDetailPage = React.lazy(() => import("./screens/League/LeagueDetailPage"));
@@ -39,6 +41,7 @@ const App: React.FC = () => {
           <Route path="/leagues" element={<Home />} />
           <Route path="/leagues/new" element={<CreateLeague />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/leagues/:league_id/rules" element={<LeagueRulesPage />} />
           <Route path="/leagues/:league_id" element={<LeagueDetailPage />} />
           <Route
             path="/leagues/discover/:league_id"

@@ -16,6 +16,18 @@ class LeagueEndpoints:
 
         return jsonify(league), 200
 
+    def get_league_rules(self, league_id):
+        try:
+            rules = self.leagueModel.get_league_rules(league_id)
+            if rules is None:
+                return jsonify({'message': 'League not found'}), 404
+            return jsonify(rules), 200
+        except ValueError as exc:
+            return jsonify({'message': str(exc)}), 400
+        except Exception:
+            logger.exception('Failed to load league rules')
+            return jsonify({'message': 'Failed to load league rules'}), 500
+
     def create_league(self):
         data = request.get_json() or {}
 
@@ -39,7 +51,10 @@ class LeagueEndpoints:
         }
 
         # Insert league + optionally initial member
-        created = self.leagueModel.create_league(league=league_data)
+        try:
+            created = self.leagueModel.create_league(league=league_data)
+        except ValueError as exc:
+            return jsonify({'message': str(exc)}), 400
 
         return jsonify(created), 201
     

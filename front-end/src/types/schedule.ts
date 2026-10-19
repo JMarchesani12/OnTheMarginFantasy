@@ -1,7 +1,9 @@
+import type { RuleSummary } from "./leagueRules";
 import type { GameResult } from "./gameResult";
 import type { WeekInfo } from "./week";
 
 export type OwnedTeam = {
+  tier?: number | null;
   teamId: number;
   teamName: string;
   conferenceName: string | null
@@ -23,6 +25,7 @@ export type TeamSearchResponse = {
 };
 
 export type MemberWeekSchedule = {
+  rules?: RuleSummary;
   ownedTeams: OwnedTeam[];
   week: WeekInfo | null;
   games: GameResult[];

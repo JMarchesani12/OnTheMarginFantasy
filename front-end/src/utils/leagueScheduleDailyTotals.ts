@@ -1,3 +1,4 @@
+import type { GameResult } from "../types/gameResult";
 import type { DateHeader } from "./scheduleTable";
 
 export type DailyTotalsTeamRow = {
@@ -55,4 +56,16 @@ export function selectDailyTotals({
   });
 
   return totals;
+}
+
+// Show each team's raw margin when both sides are owned; their rows cancel out.
+// Single-owned games keep the backend's tier-adjusted scoring contribution.
+export function getTeamGamePointDiff(
+  game: Pick<GameResult, "ownsHome" | "ownsAway" | "homeScore" | "awayScore" | "memberPointDiff">,
+  isHome: boolean,
+): number {
+  if (game.ownsHome && game.ownsAway) {
+    return isHome ? game.homeScore - game.awayScore : game.awayScore - game.homeScore;
+  }
+  return game.memberPointDiff;
 }

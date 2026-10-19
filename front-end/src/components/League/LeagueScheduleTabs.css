@@ -201,7 +201,7 @@
 
 .league-schedule__table-wrapper {
   width: 100%;
-  overflow-x: visible;
+  overflow-x: auto;
   border-radius: 0.6rem;
 }
 
@@ -408,3 +408,39 @@
     align-self: flex-end;
   }
 }
+
+.league-schedule__title {
+  margin: 0;
+  font-size: 1.35rem;
+  color: #F4F7FF;
+}
+
+.league-schedule__tier-card {
+  min-width: 0;
+  border: 1px solid #334277;
+  border-radius: 1rem;
+  background: #0B0E1A;
+  padding: 0.9rem;
+}
+
+.league-schedule__tier-card + .league-schedule__tier-card {
+  margin-top: 0.5rem;
+}
+
+.league-schedule__tier-title {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  color: #F4F7FF;
+}
+
+.league-schedule__table .league-schedule__team-col {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  box-shadow: 6px 0 8px -6px #00000099;
+}
+
+.league-schedule__rules-summary { color: #B7C2E6; font-size: 0.85rem; }
+.league-schedule__rules-summary p { margin: 0 0 0.4rem; }
+.league-schedule__rules-summary a { color: #67E8F9; }
+.league-schedule__adjustment { color: #FFD166; font-size: 0.75rem; line-height: 1.4; margin: 0.4rem 0; }

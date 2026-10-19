@@ -1,5 +1,6 @@
 # endpoints/schedule/scheduleEndpoints.py
 
+from rules.leagueRules import resolve_rules, rule_summary
 from flask import request, jsonify
 from sqlalchemy.engine import Engine
 import datetime as dt
@@ -40,10 +41,13 @@ class ScheduleEndpoints:
             member_id_int = int(member_id)
             week_number_int = int(week_number)
 
+            league = self.model._get_league(league_id_int)
+            rules = resolve_rules(league['sport'], league.get('settings'))
             games = self.model.get_member_games_for_week(
                 league_id_int,
                 member_id_int,
                 week_number_int,
+                resolved_rules=rules,
             )
             week = self.model.get_week_for_league(
                 league_id_int,
@@ -57,6 +61,7 @@ class ScheduleEndpoints:
 
             # New response shape: include both week + games
             return jsonify({
+                "rules": {"version": rules["version"], "summary": rule_summary(rules), "tierAdjustment": rules},
                 "ownedTeams": owned_teams,
                 "week": week,      # can be None if not found
                 "games": games,    # list[dict]

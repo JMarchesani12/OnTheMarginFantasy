@@ -68,6 +68,11 @@ class RosterModel:
             lts."droppedWeek",
             lts."acquiredVia",
             st."displayName",
+            COALESCE(st.tier, (
+                  SELECT COALESCE(MAX(tier_team.tier), 0) + 1
+                  FROM "SportTeam" tier_team
+                  WHERE tier_team."sportId" = st."sportId"
+                )) AS "tier",
             st."externalId",
             sc.id                 AS "sportConferenceId",
             c.name                AS "conferenceName"
@@ -163,6 +168,11 @@ class RosterModel:
             SELECT
               st.id,
               st."displayName",
+              COALESCE(st.tier, (
+                  SELECT COALESCE(MAX(tier_team.tier), 0) + 1
+                  FROM "SportTeam" tier_team
+                  WHERE tier_team."sportId" = st."sportId"
+                )) AS "tier",
               st."externalId",
               st."schoolId",
               st."sportId",
