@@ -865,6 +865,7 @@ const LeagueDetailPage = () => {
       )}
       {members.length > 0 && (
         <LeagueScheduleTabs
+          sport={league.sport}
           leagueId={league.leagueId}
           members={members}
           currentMemberId={league.memberId}

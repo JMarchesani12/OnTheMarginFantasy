@@ -20,6 +20,7 @@ import { groupTeamsByTier } from "../../utils/teamTierGroups";
 import "./LeagueScheduleTabs.css";
 
 type LeagueScheduleTabsProps = {
+  sport?: string | number;
   leagueId: number;
   members: LeagueMember[];
   currentMemberId: number;      // league.memberId
@@ -49,6 +50,7 @@ type TeamRow = {
 };
 
 export const LeagueScheduleTabs = ({
+  sport,
   leagueId,
   members,
   currentMemberId,
@@ -292,9 +294,9 @@ export const LeagueScheduleTabs = ({
   }, [dateHeaders, teamRows, activeMemberDailyTotals, todayKey, weekNumber, initialWeekNumber]);
 
   const tierSections = useMemo(() => {
-    const groups = groupTeamsByTier(teamRows);
+    const groups = groupTeamsByTier(teamRows, sport);
     return groups.length > 1 ? groups : [{ tier: null, label: null, teams: teamRows }];
-  }, [teamRows]);
+  }, [teamRows, sport]);
   const hasMultipleTiers = tierSections.length > 1;
 
   const sortedMembers = useMemo(

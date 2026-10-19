@@ -1,3 +1,4 @@
+import { getTierLabel } from "../../utils/teamTierGroups";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getLeagueRules } from "../../api/leagues";
@@ -61,7 +62,7 @@ function LeagueRulesContent({ leagueId }: { leagueId: number }) {
         <p>These are current assignments, not a historical record of earlier seasons.</p>
         {rules.tiers.length === 0 && <p>No team tiers are available yet.</p>}
         <div className="league-rules__tiers">{rules.tiers.map(group => <section key={group.tier}>
-          <h3>Tier {group.tier}</h3><ul>{group.teams.map(team => <li key={team.teamId}>{team.teamName}</li>)}</ul>
+          <h3>{getTierLabel(group.tier, rules.sportId)}</h3><ul>{group.teams.map(team => <li key={team.teamId}>{team.teamName}</li>)}</ul>
         </section>)}</div>
       </section>
     </>}

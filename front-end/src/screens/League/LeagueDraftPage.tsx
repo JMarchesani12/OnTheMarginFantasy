@@ -28,7 +28,7 @@ import {
   mapLeagueFromResponse,
   normalizeLeaguesResponse,
 } from "../../utils/leagueMapping";
-import { groupTeamsByTier } from "../../utils/teamTierGroups";
+import { groupTeamsByTier, getTierLabel } from "../../utils/teamTierGroups";
 import { teamSearchMatches } from "../../utils/teamSearch";
 import "./LeagueDraftPage.css";
 
@@ -449,11 +449,11 @@ const LeagueDraftPage = () => {
       const filtered = applyFilters(availableTeams);
       if (groupTeamsByTier(availableTeams).length <= 1) return groupTeams(filtered);
       return groupTeamsByTier(filtered).map((group): [string, OwnedTeam[]] => [
-        group.tier == null ? "Unassigned tier" : `Tier ${group.tier}`,
+        getTierLabel(group.tier, league?.sport),
         group.teams,
       ]);
     },
-    [availableTeams, searchTerm, conferenceFilter]
+    [availableTeams, searchTerm, conferenceFilter, league?.sport]
   );
   const isCommissioner =
     currentUserId != null && league?.commissionerId === currentUserId;
