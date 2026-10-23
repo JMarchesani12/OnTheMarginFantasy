@@ -7,6 +7,7 @@ const Home = React.lazy(() => import("./screens/Home/Home"));
 const CreateLeague = React.lazy(() => import("./screens/CreateLeague/CreateLeague"));
 const LeagueDetailPage = React.lazy(() => import("./screens/League/LeagueDetailPage"));
 const LeagueRosterPage = React.lazy(() => import("./screens/League/LeagueRosterPage"));
+const LeagueDraftResultsPage = React.lazy(() => import("./screens/League/LeagueDraftResultsPage"));
 const LeagueDraftPage = React.lazy(() => import("./screens/League/LeagueDraftPage"));
 const SignIn = React.lazy(() => import("./screens/Auth/SignIn"));
 const ResetPassword = React.lazy(() => import("./screens/Auth/ResetPassword"));
@@ -51,6 +52,7 @@ const App: React.FC = () => {
             path="/leagues/:league_id/roster"
             element={<LeagueRosterPage />}
           />
+          <Route path="/leagues/:league_id/draft-results" element={<LeagueDraftResultsPage />} />
           <Route path="/leagues/:league_id/draft" element={<LeagueDraftPage />} />
           <Route
             path="/leagues/:league_id/manage"

@@ -40,6 +40,7 @@ export type DraftSummaryPick = {
   memberTeamName?: string | null;
   sportTeamId: number;
   sportTeamName?: string | null;
+  conferenceName?: string | null;
 };
 
 export type DraftSnapshot = {

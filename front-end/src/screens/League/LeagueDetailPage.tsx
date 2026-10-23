@@ -624,7 +624,7 @@ const LeagueDetailPage = () => {
       </section>
 
       <section className="league-detail__card league-detail__tools-card">
-        <h2>Scores and Schedules</h2>
+        <h2>League Tools</h2>
         <div className="league-detail__primary-actions">
           <button
             className="league-detail__conference-btn"
@@ -639,6 +639,13 @@ const LeagueDetailPage = () => {
             onClick={openTeamLookupPage}
           >
             Find Team
+          </button>
+          <button
+            className="league-detail__conference-btn"
+            type="button"
+            onClick={() => navigate(`/leagues/${league.leagueId}/draft-results`)}
+          >
+            View Draft
           </button>
         </div>
       </section>

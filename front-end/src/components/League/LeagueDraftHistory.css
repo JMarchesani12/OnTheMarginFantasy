@@ -1,0 +1,58 @@
+.league-draft-history {
+  margin-top: 1rem;
+}
+
+.league-draft-history__panel {
+  margin-top: 1rem;
+}
+
+.league-draft-history__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 1rem;
+}
+
+.league-draft-history__member {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid #334277;
+  border-radius: 12px;
+  background: #0B0E1A;
+}
+
+.league-draft-history__member h4 {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.league-draft-history__order {
+  color: #8EA0D6;
+  font-size: 0.85rem;
+  margin: 0.4rem 0 1rem;
+}
+
+.league-draft-history__picks {
+  list-style: none;
+  padding: 0;
+}
+
+.league-draft-history__picks li {
+  display: grid;
+  grid-template-columns: 1.5rem minmax(0, 1fr) auto;
+  gap: 0.65rem;
+  margin-bottom: 0.65rem;
+  overflow-wrap: anywhere;
+}
+
+.league-draft-history__number {
+  color: #22D3EE;
+  font-variant-numeric: tabular-nums;
+}
+
+.league-draft-history__overall {
+  color: #8EA0D6;
+  font-size: 0.8rem;
+  padding-top: 0.15rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
