@@ -194,6 +194,17 @@ class ESPNClient:
                 "homeScore": home_score,
                 "awayScore": away_score,
                 "broadcast": broadcast,
+                "seasonType": (event.get("season") or {}).get("type"),
+                "tournamentLabels": [
+                    str(note["headline"]) for note in
+                    ((comp.get("notes") or []) + (event.get("notes") or []))
+                    if note.get("headline")
+                ] + [str(value["name"]) for value in
+                     [comp.get("tournament") or {}, event.get("tournament") or {}]
+                     if value.get("name")],
+                "tournamentIds": [str(value["id"]) for value in
+                                  [comp.get("tournament") or {}, event.get("tournament") or {}]
+                                  if value.get("id")],
             }
         except Exception:
             print("extract_game_from_event FAILED for event.id =", event.get("id"))

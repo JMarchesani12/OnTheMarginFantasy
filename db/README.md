@@ -371,3 +371,7 @@ WHERE cm."sportId" IS DISTINCT FROM st."sportId"
 
 `SUPABASE_DB_URL` is the Postgres connection string used by the backend and by
 schema inspection scripts. Do not expose it in frontend code.
+
+## Basketball postseason configuration
+
+`SeasonPhase.rules` stores per-game margin rules, source matchers, and the shared final scoring period. Apply `api/migrations/20261023_basketball_tournament_rules.sql` before using the updated API. See [season setup documentation](../api/startSeasonJobs/README.md) for tournament JSON examples, phase classification, and existing-league rebuild requirements.

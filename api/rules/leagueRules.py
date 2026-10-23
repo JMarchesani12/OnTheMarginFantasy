@@ -113,6 +113,11 @@ def describe_rules(sport_id, settings, teams):
             'Draft and transaction settings below show the saved configuration for this league. Missing settings are not assigned new defaults here.',
             'This rules version preserves scoring definitions. Team tier assignments shown below are current; tier assignments and editable league bonus settings are not historical snapshots.']},
     ]
+    if int(sport_id) == 1:
+        sections.insert(2, {'heading': 'Basketball tournaments', 'paragraphs': [
+            'Conference tournament games add only positive adjusted margins to the normal weekly total. Losses contribute zero.',
+            'NCAA tournament, NIT, Crown, and CBI games share one final scoring period. After tier adjustments, positive game margins are multiplied by 2 for the NCAA tournament, 1 for NIT and Crown, and 0.5 for CBI. Losses contribute zero; halved odd margins round upward.',
+            'Final-period ranking points are awarded once the entire period ends, using the normal N-to-1 ranking points. Owning both teams still contributes zero.']})
     groups = {}
     for team in teams:
         groups.setdefault(team['tier'], []).append(team)

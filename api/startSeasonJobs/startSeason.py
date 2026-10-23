@@ -11,11 +11,12 @@ season again after it has already been marked as bootstrapped.
 
 import argparse
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime, time, timedelta
 import json
 import os
 from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from dotenv import load_dotenv
 from sqlalchemy import text
@@ -29,6 +30,7 @@ class SportConfig:
     has_conference_tournaments: bool = False
     national_tournament_codes: tuple[str, ...] = ()
     required_subdivision_codes: tuple[str, ...] = ()
+    uses_tournament_manifest: bool = False
 
 
 @dataclass(frozen=True)
@@ -52,14 +54,17 @@ class SeasonManifest:
     season_start: date
     season_end: date
     subdivisions: tuple[SubdivisionSeasonConfig, ...]
+    tournaments: tuple[dict[str, Any], ...] = ()
+    timezone: str = "UTC"
 
 
 SPORT_CONFIGS = {
-    # Basketball discovers all conference tournaments from TournamentDefinition.
+    # Basketball uses explicit dated tournaments in its manifest.
     "ncaa-mens-basketball": SportConfig(
         sport_id=1,
         has_conference_tournaments=True,
-        national_tournament_codes=("NCAA_TOURNEY",),
+        national_tournament_codes=("NCAA_TOURNEY", "NIT", "CBI", "CROWN"),
+        uses_tournament_manifest=True,
         required_subdivision_codes=("D1",),
     ),
     "college-football": SportConfig(
@@ -266,12 +271,66 @@ def load_manifest(path: Path) -> SeasonManifest:
             )
         )
 
+    timezone_name = raw.get("timezone", "UTC")
+    try:
+        if not isinstance(timezone_name, str):
+            raise ValueError("timezone must be a string")
+        ZoneInfo(timezone_name)
+    except (ValueError, ZoneInfoNotFoundError) as exc:
+        raise ValueError("config.timezone must be an IANA timezone name") from exc
+    tournaments = raw.get("tournaments", [])
+    if not isinstance(tournaments, list):
+        raise ValueError("config.tournaments must be an array")
+    seen_tournaments = set()
+    for i, tournament in enumerate(tournaments):
+        context = f"config.tournaments[{i}]"
+        if not isinstance(tournament, dict):
+            raise ValueError(f"{context} must be an object")
+        code = required_string(tournament, "code", context)
+        if code in seen_tournaments:
+            raise ValueError(f"Duplicate tournament code: {code}")
+        seen_tournaments.add(code)
+        required_string(tournament, "name", context)
+        if tournament.get("scope") not in ("Conference", "National"):
+            raise ValueError(f"{context}.scope must be Conference or National")
+        conference_id = tournament.get("sportConferenceId")
+        if tournament["scope"] == "Conference":
+            if not isinstance(conference_id, int) or isinstance(conference_id, bool) or conference_id <= 0:
+                raise ValueError(f"{context}.sportConferenceId must be a positive integer")
+        elif conference_id is not None:
+            raise ValueError(f"{context}: national tournaments cannot have sportConferenceId")
+        start = parse_date(required_string(tournament, "startDate", context))
+        end = parse_date(required_string(tournament, "endDate", context))
+        if not season_start <= start <= end <= season_end:
+            raise ValueError(f"{context} dates must be ordered and inside the season")
+        rules = tournament.setdefault("rules", {})
+        if not isinstance(rules, dict):
+            raise ValueError(f"{context}.rules must be an object")
+        if set(rules) - {"positiveOnly", "marginMultiplier", "scoringPeriod", "primaryPostseason", "sourceLabels", "sourceIds", "eventIds"}:
+            raise ValueError(f"{context}.rules contains unknown keys")
+        for key in ("positiveOnly", "primaryPostseason"):
+            if key in rules and not isinstance(rules[key], bool):
+                raise ValueError(f"{context}.rules.{key} must be boolean")
+        multiplier = rules.get("marginMultiplier", 1)
+        if isinstance(multiplier, bool) or not isinstance(multiplier, (int, float)) or multiplier not in (0.5, 1, 2):
+            raise ValueError(f"{context}.rules.marginMultiplier must be 0.5, 1 or 2")
+        if rules.get("scoringPeriod") not in (None, "BASKETBALL_FINAL"):
+            raise ValueError(f"{context}.rules.scoringPeriod must be BASKETBALL_FINAL or null")
+        for key in ("sourceLabels", "sourceIds", "eventIds"):
+            values = rules.get(key, [])
+            if not isinstance(values, list) or any(not isinstance(v, str) or not v.strip() for v in values):
+                raise ValueError(f"{context}.rules.{key} must be an array of nonempty strings")
+        if not any(rules.get(key) for key in ("sourceLabels", "sourceIds", "eventIds")):
+            raise ValueError(f"{context} requires sourceLabels, sourceIds or eventIds")
+
     return SeasonManifest(
         sport=sport,
         season_year=season_year,
         season_start=season_start,
         season_end=season_end,
         subdivisions=tuple(subdivisions),
+        tournaments=tuple(tournaments),
+        timezone=timezone_name,
     )
 
 
@@ -337,6 +396,80 @@ def configure_season_phases(conn, sport_season_id: int, config: SportConfig) -> 
                 "sportSeasonId": sport_season_id,
             },
         )
+
+
+def configure_manifest_phases(conn, sport_season_id, config, manifest):
+    """Upsert explicit dated tournament instances; no blanket conference discovery."""
+    required = set(config.national_tournament_codes)
+    if not required.issubset({t["code"] for t in manifest.tournaments}):
+        raise ValueError("Basketball config requires NCAA_TOURNEY, NIT, CBI and CROWN tournaments")
+    configured_conferences = {t.get("sportConferenceId") for t in manifest.tournaments}
+    conferences = conn.execute(text('''
+        SELECT id FROM "SportConference" WHERE "sportId"=:sport
+    '''), {"sport": config.sport_id}).fetchall()
+    missing = {int(row[0]) for row in conferences} - configured_conferences
+    if missing:
+        raise ValueError("Add dated conference tournament config entries for basketball SportConference IDs: "
+                         + ", ".join(map(str, sorted(missing))))
+    season_tz = ZoneInfo(manifest.timezone)
+    start = datetime.combine(manifest.season_start, time.min, season_tz)
+    end = datetime.combine(manifest.season_end + timedelta(days=1), time.min, season_tz)
+    regular_params = {"start": start, "end": end, "season": sport_season_id}
+    regular = conn.execute(text('''
+        UPDATE "SeasonPhase" SET "startDate"=:start, "endDate"=:end
+        WHERE "sportSeasonId"=:season AND type='RegularSeason' RETURNING id
+    '''), regular_params).first()
+    if not regular:
+        conn.execute(text('''
+            INSERT INTO "SeasonPhase" ("sportSeasonId", "tournamentId", type, name,
+                "startDate", "endDate", priority)
+            VALUES (:season, NULL, 'RegularSeason', 'Regular Season', :start, :end, 1)
+        '''), regular_params)
+    for tournament in manifest.tournaments:
+        conference_id = tournament.get("sportConferenceId")
+        if conference_id is not None and conn.execute(text('''
+            SELECT id FROM "SportConference" WHERE id=:id AND "sportId"=:sport
+        '''), {"id": conference_id, "sport": config.sport_id}).first() is None:
+            raise ValueError(f"Invalid basketball sportConferenceId: {conference_id}")
+        params = {"sport": config.sport_id, "code": tournament["code"],
+                  "name": tournament["name"], "scope": tournament["scope"], "conference": conference_id}
+        existing = conn.execute(text('''
+            SELECT id, scope, "sportConferenceId" FROM "TournamentDefinition"
+            WHERE "sportId"=:sport AND code=:code
+        '''), params).mappings().first()
+        if existing:
+            if existing['scope'] != params['scope'] or existing['sportConferenceId'] != conference_id:
+                raise ValueError(f"Tournament identity conflicts for {tournament['code']}")
+            tournament_id = existing['id']
+            conn.execute(text('UPDATE "TournamentDefinition" SET name=:name WHERE id=:id'),
+                         {"name": tournament["name"], "id": tournament_id})
+        else:
+            tournament_id = conn.execute(text('''
+                INSERT INTO "TournamentDefinition" ("sportId", code, name, scope, "sportConferenceId")
+                VALUES (:sport, :code, :name, :scope, :conference) RETURNING id
+            '''), params).scalar_one()
+        rules = {"positiveOnly": True, "marginMultiplier": 1, "primaryPostseason": False}
+        rules.update(tournament.get("rules", {}))
+        rules["timezone"] = manifest.timezone
+        phase_params = {
+            "season": sport_season_id, "tournament": tournament_id,
+            "type": "ConferenceTournament" if conference_id is not None else "NationalTournament",
+            "name": tournament["name"], "rules": json.dumps(rules),
+            "start": datetime.combine(parse_date(tournament["startDate"]), time.min, season_tz),
+            "end": datetime.combine(parse_date(tournament["endDate"]) + timedelta(days=1), time.min, season_tz),
+        }
+        # Update before insert so reruns repair existing NULL dates and rules.
+        found = conn.execute(text('''
+            UPDATE "SeasonPhase" SET "startDate"=:start, "endDate"=:end,
+                name=:name, type=:type, rules=CAST(:rules AS jsonb)
+            WHERE "sportSeasonId"=:season AND "tournamentId"=:tournament RETURNING id
+        '''), phase_params).first()
+        if not found:
+            conn.execute(text('''
+                INSERT INTO "SeasonPhase" ("sportSeasonId", "tournamentId", type, name,
+                    "startDate", "endDate", priority, rules)
+                VALUES (:season, :tournament, :type, :name, :start, :end, 2, CAST(:rules AS jsonb))
+            '''), phase_params)
 
 
 def upsert_subdivision_seasons(
@@ -423,7 +556,10 @@ def main() -> None:
             sport_season_id,
             manifest.subdivisions,
         )
-        configure_season_phases(conn, sport_season_id, config)
+        if config.uses_tournament_manifest:
+            configure_manifest_phases(conn, sport_season_id, config, manifest)
+        else:
+            configure_season_phases(conn, sport_season_id, config)
 
     # ESPN calls happen after the metadata transaction so a long bootstrap does
     # not hold database locks for the full ingestion window.
@@ -434,10 +570,9 @@ def main() -> None:
     )
     summary["subdivisionSeasonIds"] = subdivision_ids
     print(summary)
+    if summary.get("failedDays", 0):
+        raise RuntimeError("Schedule ingestion was incomplete; fix reported errors and rerun")
 
 
 if __name__ == "__main__":
     main()
-
-
-# For Casey: During the playoff season, only give points to the winner, do not subtract points for the loser

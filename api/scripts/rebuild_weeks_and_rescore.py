@@ -1,15 +1,11 @@
 import os
+import argparse
 import datetime as dt
 
 from sqlalchemy import text
 
-from db import engine
 from endpoints.schedule.scheduleModel import ScheduleModel
 from endpoints.scoring.scoringModel import ScoringModel
-from endpoints.schedule.helpers.weekHelper import (
-    compute_weeks_from_start,
-    partition_initial_partial_week,
-)
 
 
 GET_ALL_LEAGUES = text("""
@@ -115,67 +111,16 @@ def _compute_week_boundaries(
             f"League {league_id} belongs to seasonYear={season['seasonYear']}, "
             f"not requested seasonYear={season_year}"
         )
-    local_tz = schedule_model._get_league_timezone(league_id)
-    week_start_weekday = schedule_model._get_week_start_weekday(league_id)
-
-    reg_start_date = season["regularSeasonStart"]
-    reg_end_date = season["regularSeasonEnd"]
-    if season["allSubdivisions"] and season.get("postseasonEnd"):
-        reg_end_date = max(reg_end_date, season["postseasonEnd"])
-
-    all_regular_week_ranges = compute_weeks_from_start(
-        reg_start_date,
-        reg_end_date,
-        week_start_weekday=week_start_weekday,
-    )
-    opening_partial_week, regular_week_ranges = partition_initial_partial_week(
-        all_regular_week_ranges,
-        week_start_weekday,
-    )
-
-    week_boundaries = []
-    week0_end_date = (
-        opening_partial_week[1]
-        if opening_partial_week
-        else reg_start_date - dt.timedelta(days=1)
-    )
-    week0_end_local = dt.datetime.combine(week0_end_date, dt.time.max, tzinfo=local_tz)
-    week_boundaries.append((0, None, week0_end_local.astimezone(dt.timezone.utc)))
-
-    for idx, (start_d, end_d) in enumerate(regular_week_ranges, start=1):
-        start_local = dt.datetime.combine(start_d, dt.time.min, tzinfo=local_tz)
-        end_local = dt.datetime.combine(end_d, dt.time.max, tzinfo=local_tz)
-        week_boundaries.append(
-            (idx, start_local.astimezone(dt.timezone.utc), end_local.astimezone(dt.timezone.utc))
-        )
-
-    if (
-        not season["allSubdivisions"]
-        and season.get("postseasonStart")
-        and season.get("postseasonEnd")
-    ):
-        playoff_start_date = season["postseasonStart"]
-        playoff_end_date = season["postseasonEnd"]
-
-        playoff_ranges = compute_weeks_from_start(
-            playoff_start_date,
-            playoff_end_date,
-            week_start_weekday=week_start_weekday,
-        )
-        starting_week_number = len(regular_week_ranges) + 1
-        for offset, (start_d, end_d) in enumerate(playoff_ranges):
-            week_number = starting_week_number + offset
-            start_local = dt.datetime.combine(start_d, dt.time.min, tzinfo=local_tz)
-            end_local = dt.datetime.combine(end_d, dt.time.max, tzinfo=local_tz)
-            week_boundaries.append(
-                (week_number, start_local.astimezone(dt.timezone.utc), end_local.astimezone(dt.timezone.utc))
-            )
-
-    return week_boundaries
+    return schedule_model.get_week_boundaries(league_id)
 
 
 def main():
-    season_year = 2025
+    parser = argparse.ArgumentParser(description="Deliberately rebuild league weeks and rescore ended periods.")
+    parser.add_argument("--season-year", type=int, required=True)
+    parser.add_argument("--league-id", type=int, action="append", help="Limit to specific league IDs")
+    args = parser.parse_args()
+    from db import engine
+    season_year = args.season_year
     schedule_model = ScheduleModel(engine, os.getenv("ESPN_BASE_URL", ""))
     scoring_model = ScoringModel(engine, schedule_model)
 
@@ -186,7 +131,7 @@ def main():
             {"seasonYear": season_year},
         ).fetchall()
 
-    league_ids = [int(r[0]) for r in league_rows]
+    league_ids = [int(r[0]) for r in league_rows if not args.league_id or int(r[0]) in args.league_id]
     if not league_ids:
         print("No leagues found.")
         return

@@ -1,4 +1,5 @@
 import json
+import datetime as dt
 from typing import Any, Dict, List
 
 from sqlalchemy import bindparam, text
@@ -68,8 +69,25 @@ class ScoringModel:
 
     def _get_week_by_number(self, league_id: int, week_number: int) -> Dict[str, Any]:
         sql = text("""
-            SELECT id, "weekNumber", "startDate", "endDate"
-            FROM "Week"
+            SELECT w.id, w."weekNumber", w."startDate", w."endDate",
+                EXISTS (
+                    SELECT 1 FROM "League" l
+                    JOIN "SportSeason" ss ON ss."sportId"=l.sport AND ss."seasonYear"=l."seasonYear"
+                    JOIN "SeasonPhase" sp ON sp."sportSeasonId"=ss.id
+                    WHERE l.id=w."leagueId" AND sp.rules->>'scoringPeriod'='BASKETBALL_FINAL'
+                      AND sp."startDate" <= w."endDate" AND sp."endDate" > w."startDate"
+                ) AS "isFinalPeriod",
+                (SELECT MAX(sp."endDate") FROM "League" l
+                 JOIN "SportSeason" ss ON ss."sportId"=l.sport AND ss."seasonYear"=l."seasonYear"
+                 JOIN "SeasonPhase" sp ON sp."sportSeasonId"=ss.id
+                 WHERE l.id=w."leagueId" AND sp.rules->>'scoringPeriod'='BASKETBALL_FINAL'
+                ) AS "finalPeriodEnd",
+                (SELECT MIN(sp."startDate") FROM "League" l
+                 JOIN "SportSeason" ss ON ss."sportId"=l.sport AND ss."seasonYear"=l."seasonYear"
+                 JOIN "SeasonPhase" sp ON sp."sportSeasonId"=ss.id
+                 WHERE l.id=w."leagueId" AND sp.rules->>'scoringPeriod'='BASKETBALL_FINAL'
+                ) AS "finalPeriodStart"
+            FROM "Week" w
             WHERE "leagueId" = :leagueId
               AND "weekNumber" = :weekNumber
         """)
@@ -194,6 +212,13 @@ class ScoringModel:
 
         week = self._get_week_by_number(league_id, week_number)
         week_id = int(week["id"])
+        split_final = (
+            week.get("finalPeriodEnd") and week["endDate"] < week["finalPeriodEnd"] - dt.timedelta(microseconds=1)
+        ) or (week.get("finalPeriodStart") and week["startDate"] > week["finalPeriodStart"])
+        if week.get("isFinalPeriod") and split_final:
+            raise ValueError("Rebuild weeks before scoring: final scoring period is split across weeks")
+        if week.get("isFinalPeriod") and week["endDate"] >= dt.datetime.now(dt.timezone.utc):
+            raise ValueError("Cannot award points until the final scoring period ends")
 
         members = self._get_league_members(league_id)
         if not members:
@@ -581,6 +606,7 @@ class ScoringModel:
             FROM "SeasonPhase"
             WHERE "sportSeasonId" = :sportSeasonId
               AND type = ANY(:primaryTypes)
+              AND COALESCE((rules->>'primaryPostseason')::boolean, true)
         """)
         with self.db.begin() as conn:
             phase_rows = conn.execute(
@@ -742,11 +768,12 @@ class ScoringModel:
             FROM "SeasonPhase"
             WHERE "sportSeasonId" = :sportSeasonId
               AND type = ANY(:types)
+              AND (:primaryOnly = false OR COALESCE((rules->>'primaryPostseason')::boolean, true))
         """)
         with self.db.begin() as conn:
             phase_rows = conn.execute(
                 sql_phases,
-                {"sportSeasonId": sport_season_id, "types": phase_types},
+                {"sportSeasonId": sport_season_id, "types": phase_types, "primaryOnly": phase_types == self.PRIMARY_POSTSEASON_PHASE_TYPES},
             ).fetchall()
 
         if not phase_rows:
@@ -990,6 +1017,7 @@ class ScoringModel:
             FROM "SeasonPhase"
             WHERE "sportSeasonId" = :sportSeasonId
               AND type = ANY(:primaryTypes)
+              AND COALESCE((rules->>'primaryPostseason')::boolean, true)
         """)
 
         with self.db.begin() as conn:

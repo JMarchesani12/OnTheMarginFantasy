@@ -1,5 +1,5 @@
 {
-  "_comment": "Confirm all dates before running this manifest.",
+  "_comment": "ILLUSTRATIVE ONLY: replace sportConferenceId 101/102 with your basketball SportConference IDs, confirm dates, source labels and tournament codes, and list every actual conference tournament. These are not verified 2027 dates.",
   "sport": "ncaa-mens-basketball",
   "seasonYear": 2026,
   "seasonStart": "2026-11-02",
@@ -10,8 +10,114 @@
       "name": "NCAA Division I",
       "regularSeasonStart": "2026-11-02",
       "regularSeasonEnd": "2027-03-07",
-      "postseasonStart": "2027-03-08",
+      "postseasonStart": "2027-03-16",
       "postseasonEnd": "2027-04-06"
     }
-  ]
+  ],
+  "tournaments": [
+    {
+      "code": "ACC_TOURNEY",
+      "name": "ACC Tournament",
+      "scope": "Conference",
+      "sportConferenceId": "PLACEHOLDER",
+      "startDate": "2027-03-09",
+      "endDate": "2027-03-13",
+      "rules": {
+        "positiveOnly": true,
+        "marginMultiplier": 1,
+        "primaryPostseason": false,
+        "sourceLabels": [
+          "ACC Tournament",
+          "ACC Championship"
+        ]
+      }
+    },
+    {
+      "code": "BIG_TEN_TOURNEY",
+      "name": "Big Ten Tournament",
+      "scope": "Conference",
+      "sportConferenceId": "PLACEHOLDER",
+      "startDate": "2027-03-10",
+      "endDate": "2027-03-14",
+      "rules": {
+        "positiveOnly": true,
+        "marginMultiplier": 1,
+        "primaryPostseason": false,
+        "sourceLabels": [
+          "Big Ten Tournament",
+          "Big Ten Championship"
+        ]
+      }
+    },
+    {
+      "code": "NCAA_TOURNEY",
+      "name": "NCAA Tournament",
+      "scope": "National",
+      "startDate": "2027-03-16",
+      "endDate": "2027-04-05",
+      "rules": {
+        "positiveOnly": true,
+        "marginMultiplier": 2,
+        "scoringPeriod": "BASKETBALL_FINAL",
+        "primaryPostseason": true,
+        "sourceLabels": [
+          "NCAA Tournament",
+          "March Madness",
+          "NCAA Men\u2019s Basketball Championship"
+        ]
+      }
+    },
+    {
+      "code": "NIT",
+      "name": "National Invitation Tournament",
+      "scope": "National",
+      "startDate": "2027-03-16",
+      "endDate": "2027-04-04",
+      "rules": {
+        "positiveOnly": true,
+        "marginMultiplier": 1,
+        "scoringPeriod": "BASKETBALL_FINAL",
+        "primaryPostseason": false,
+        "sourceLabels": [
+          "NIT",
+          "National Invitation Tournament"
+        ]
+      }
+    },
+    {
+      "code": "CBI",
+      "name": "College Basketball Invitational",
+      "scope": "National",
+      "startDate": "2027-03-16",
+      "endDate": "2027-04-04",
+      "rules": {
+        "positiveOnly": true,
+        "marginMultiplier": 0.5,
+        "scoringPeriod": "BASKETBALL_FINAL",
+        "primaryPostseason": false,
+        "sourceLabels": [
+          "CBI",
+          "College Basketball Invitational"
+        ]
+      }
+    },
+    {
+      "code": "CROWN",
+      "name": "College Basketball Crown",
+      "scope": "National",
+      "startDate": "2027-03-16",
+      "endDate": "2027-04-04",
+      "rules": {
+        "positiveOnly": true,
+        "marginMultiplier": 1,
+        "scoringPeriod": "BASKETBALL_FINAL",
+        "primaryPostseason": false,
+        "sourceLabels": [
+          "College Basketball Crown",
+          "Crown"
+        ]
+      }
+    }
+  ],
+  "timezone": "America/New_York"
 }

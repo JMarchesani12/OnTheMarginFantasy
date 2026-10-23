@@ -4,6 +4,7 @@ import re
 from typing import Any, Dict, List, Optional
 
 from rules.leagueRules import resolve_rules, adjust_margin
+from rules.tournamentRules import score_margin, select_phase, final_period
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 from zoneinfo import ZoneInfo
@@ -354,16 +355,25 @@ class ScheduleModel:
         existing = self._get_existing_weeks(league_id)
         if existing:
             return existing
+        local_tz, week0_start, week0_end, ranges = self._get_league_week_ranges(league_id)
+        created = [self._insert_week0(league_id, week0_start, week0_end)]
+        created.extend(self._insert_weeks(league_id, ranges, starting_week_number=1, tzinfo=local_tz))
+        return created
 
+    def _get_league_week_ranges(self, league_id):
         season = self._get_sport_season_for_league(league_id)
         local_tz = self._get_league_timezone(league_id)
         week_start_weekday = self._get_week_start_weekday(league_id)
 
+        merged_final = final_period(self._get_season_phases(season['sportSeasonId']), local_tz)
         # Regular season weeks (season dates are timezone-agnostic)
         reg_start_date = season["regularSeasonStart"]
         reg_end_date = season["regularSeasonEnd"]
         if season["allSubdivisions"] and season.get("postseasonEnd"):
             reg_end_date = max(reg_end_date, season["postseasonEnd"])
+
+        if merged_final:
+            reg_end_date = merged_final[0] - dt.timedelta(days=1)
 
         all_regular_week_ranges = compute_weeks_from_start(
             reg_start_date,
@@ -375,59 +385,26 @@ class ScheduleModel:
             week_start_weekday,
         )
 
-        created_all: List[Dict[str, Any]] = []
-        week0_end_date = (
-            opening_partial_week[1]
-            if opening_partial_week
-            else reg_start_date - dt.timedelta(days=1)
-        )
-        week0_end_local = dt.datetime.combine(week0_end_date, dt.time.max, tzinfo=local_tz)
-        week0_start_local = (week0_end_local + dt.timedelta(microseconds=1)) - dt.timedelta(days=7)
-        created_all.append(
-            self._insert_week0(
-                league_id,
-                week0_start_local.astimezone(dt.timezone.utc),
-                week0_end_local.astimezone(dt.timezone.utc),
-            )
-        )
+        week0_end_date = opening_partial_week[1] if opening_partial_week else reg_start_date - dt.timedelta(days=1)
+        week0_end = dt.datetime.combine(week0_end_date, dt.time.max, tzinfo=local_tz)
+        week0_start = week0_end + dt.timedelta(microseconds=1) - dt.timedelta(days=7)
+        ranges = list(regular_week_ranges)
+        if merged_final:
+            ranges.append(merged_final)
+        elif not season['allSubdivisions'] and season.get('postseasonStart') and season.get('postseasonEnd'):
+            ranges.extend(compute_weeks_from_start(
+                season['postseasonStart'], season['postseasonEnd'], week_start_weekday=week_start_weekday))
+        return local_tz, week0_start.astimezone(dt.timezone.utc), week0_end.astimezone(dt.timezone.utc), ranges
 
-        created_regular = self._insert_weeks(
-            league_id,
-            regular_week_ranges,
-            starting_week_number=1,
-            tzinfo=local_tz,
-        )
-        created_all.extend(created_regular)
-
-        # Postseason weeks
-        if (
-            not season["allSubdivisions"]
-            and season.get("postseasonStart")
-            and season.get("postseasonEnd")
-        ):
-            playoff_start_date = season["postseasonStart"]
-            playoff_end_date = season["postseasonEnd"]
-
-            playoff_ranges = compute_weeks_from_start(
-                playoff_start_date,
-                playoff_end_date,
-                week_start_weekday=week_start_weekday,
-            )
-            last_regular_week = created_regular[-1]["weekNumber"] if created_regular else 0
-
-            created_playoff = self._insert_weeks(
-                league_id,
-                playoff_ranges,
-                starting_week_number=last_regular_week + 1,
-                tzinfo=local_tz,
-            )
-            created_all.extend(created_playoff)
-
-        print(f"ensure_weeks_for_league created {len(created_all)} weeks for league {league_id}")
-        return created_all
-
-    def get_weeks_for_league(self, league_id: int) -> List[Dict[str, Any]]:
-        return self._get_existing_weeks(league_id)
+    def get_week_boundaries(self, league_id):
+        """Shared, read-only week plan for new leagues and deliberate rebuilds."""
+        local_tz, week0_start, week0_end, ranges = self._get_league_week_ranges(league_id)
+        return [(0, week0_start, week0_end)] + [
+            (number,
+             dt.datetime.combine(start, dt.time.min, tzinfo=local_tz).astimezone(dt.timezone.utc),
+             dt.datetime.combine(end, dt.time.max, tzinfo=local_tz).astimezone(dt.timezone.utc))
+            for number, (start, end) in enumerate(ranges, start=1)
+        ]
 
     # -------------------------------------------------------------------------
     # Global GameResult helpers
@@ -460,6 +437,7 @@ class ScheduleModel:
         season_phase_id = self._lookup_season_phase_id_for_game(
             sport_season_id,
             event_dt,
+            game=game, home_team_id=home_team_id, away_team_id=away_team_id,
         )
 
         upsert_sql = text("""
@@ -651,8 +629,7 @@ class ScheduleModel:
                     group_id=group_id,
                 )
             except Exception as e:
-                print(f"[scoreboard] ERROR sportId={sport_id} date={datestr} group={group_id}: {e}")
-                continue
+                raise RuntimeError(f"Scoreboard fetch failed for sport={sport_id}, date={datestr}, group={group_id}") from e
 
             for event in client.iter_scoreboard_events(scoreboard_json):
                 game = client.extract_game_from_event(event)
@@ -754,15 +731,16 @@ class ScheduleModel:
                 days_processed += 1
                 d = d + dt.timedelta(days=1)
 
+        complete = failed_days == 0 and days_processed == (end_date - start_date).days + 1
         with self.db.begin() as conn:
             conn.execute(
                 text("""
                     UPDATE "SportSeason"
-                    SET "scheduleBootstrapped" = true,
-                        "scheduleBootstrappedAt" = now()
+                    SET "scheduleBootstrapped" = :complete,
+                        "scheduleBootstrappedAt" = CASE WHEN :complete THEN now() ELSE NULL END
                     WHERE id = :id
                 """),
-                {"id": sport_season_id},
+                {"id": sport_season_id, "complete": complete},
             )
 
         return {
@@ -772,6 +750,7 @@ class ScheduleModel:
             "endDate": str(end_date),
             "daysProcessed": days_processed,
             "failedDays": failed_days,
+            "complete": complete,
             "eventsSeenTotal": events_seen_total,
             "gamesUpsertedTotal": games_upserted_total,
         }
@@ -877,6 +856,7 @@ class ScheduleModel:
             gr.date,
             tw."sportId",
             gr.broadcast,
+            COALESCE(sp.rules, '{}'::jsonb) AS "phaseRules",
             gr."homeTeamId",
             gr."awayTeamId",
             gr."homeTeamName",
@@ -898,6 +878,7 @@ class ScheduleModel:
                 ELSE 0
             END AS "rawMemberPointDiff"
             FROM "GameResult" gr
+            LEFT JOIN "SeasonPhase" sp ON sp.id=gr."seasonPhaseId"
             CROSS JOIN target_week tw
             CROSS JOIN max_tier mt
             LEFT JOIN "SportTeam" home_st
@@ -936,7 +917,12 @@ class ScheduleModel:
                                        rules, double_owned=owns_home and owns_away)
             if not owns_home and not owns_away:
                 adjustment = adjust_margin(0, None, None, rules)
-            game['memberPointDiff'] = adjustment['adjustedMargin']
+            game['memberPointDiff'] = score_margin(adjustment['adjustedMargin'], game.get('phaseRules') or {})
+            game['tournamentAdjustment'] = {
+                'positiveOnly': (game.get('phaseRules') or {}).get('positiveOnly', False),
+                'multiplier': (game.get('phaseRules') or {}).get('marginMultiplier', 1),
+                'scoringMargin': game['memberPointDiff'],
+            }
             game['tierAdjustment'] = adjustment
             games.append(game)
 
@@ -1029,15 +1015,48 @@ class ScheduleModel:
 
         return [dict(r._mapping) for r in rows]
 
+    def _get_season_phases(self, sport_season_id):
+        with self.db.begin() as conn:
+            return [dict(r) for r in conn.execute(text('''
+                SELECT sp.*, td."sportConferenceId"
+                FROM "SeasonPhase" sp
+                LEFT JOIN "TournamentDefinition" td ON td.id=sp."tournamentId"
+                WHERE sp."sportSeasonId"=:season
+            '''), {"season": sport_season_id}).mappings().all()]
+
     def _lookup_season_phase_id_for_game(
         self,
         sport_season_id: int,
         event_dt: dt.datetime,
+        game=None, home_team_id=None, away_team_id=None,
         ) -> Optional[int]:
         """
         Given a sportSeason + game datetime, find the matching SeasonPhase (if any).
         Assumes SeasonPhase has a date range for the phase.
         """
+
+        phases = self._get_season_phases(sport_season_id)
+        if any(p.get('rules') for p in phases):
+            conference_ids = set()
+            if home_team_id is not None and away_team_id is not None:
+                with self.db.begin() as conn:
+                    rows = conn.execute(text('''
+                        SELECT DISTINCT a."sportConferenceId"
+                        FROM "ConferenceMembership" a
+                        JOIN "ConferenceMembership" b
+                          ON b."sportConferenceId"=a."sportConferenceId" AND b."sportId"=a."sportId"
+                        JOIN "SportSeason" ss ON ss.id=:season AND ss."sportId"=a."sportId"
+                        WHERE a."sportTeamId"=:home AND b."sportTeamId"=:away
+                          AND (a."seasonYear"=ss."seasonYear" OR (a."seasonYear" IS NULL AND NOT EXISTS (
+                              SELECT 1 FROM "ConferenceMembership" x WHERE x."sportTeamId"=a."sportTeamId"
+                              AND x."sportId"=a."sportId" AND x."seasonYear"=ss."seasonYear")))
+                          AND (b."seasonYear"=ss."seasonYear" OR (b."seasonYear" IS NULL AND NOT EXISTS (
+                              SELECT 1 FROM "ConferenceMembership" x WHERE x."sportTeamId"=b."sportTeamId"
+                              AND x."sportId"=b."sportId" AND x."seasonYear"=ss."seasonYear")))
+                    '''), {"season": sport_season_id, "home": home_team_id, "away": away_team_id}).fetchall()
+                conference_ids = {int(row[0]) for row in rows}
+            dated = [p for p in phases if p['startDate'] is not None and p['endDate'] is not None]
+            return select_phase(dated, game or {}, event_dt, conference_ids)
 
         sql = text("""
             SELECT sp.id
