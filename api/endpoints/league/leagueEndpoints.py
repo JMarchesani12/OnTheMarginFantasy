@@ -31,7 +31,7 @@ class LeagueEndpoints:
     def create_league(self):
         data = request.get_json() or {}
 
-        required = ["name", "sport", "numPlayers", "status", "settings", "draftDate", "commissioner", "seasonYear", "isDiscoverable"]
+        required = ["name", "teamName", "sport", "numPlayers", "status", "settings", "draftDate", "commissioner", "seasonYear", "isDiscoverable"]
         missing = [field for field in required if field not in data]
 
         if missing:
@@ -40,6 +40,7 @@ class LeagueEndpoints:
 
         league_data = {
             "name": data["name"],
+            "teamName": data["teamName"],
             "sport": data["sport"],
             "numPlayers": data["numPlayers"],
             "status": data["status"],
@@ -126,7 +127,7 @@ class LeagueEndpoints:
             if not user_id:
                 return jsonify({"message": "Missing userId"}), 400
 
-            created = self.leagueModel.create_join_request(league_id=league_id, user_id=int(user_id), message=message)
+            created = self.leagueModel.create_join_request(league_id=league_id, user_id=int(user_id), message=message, team_name=body.get("teamName"))
             return jsonify(created), 201
 
         except ValueError as e:

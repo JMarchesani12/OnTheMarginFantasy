@@ -521,7 +521,7 @@ const LeagueDetailPage = () => {
         <button
           className="league-detail__back"
           type="button"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate("/leagues")}
         >
           ← Back
         </button>
@@ -551,6 +551,8 @@ const LeagueDetailPage = () => {
   const canJoinDraft =
     (league.status === "Pre-Draft" || league.status === "Drafting") &&
     league.commissionerId !== currentUserId;
+  const isDraftCompleted =
+    league.status === "Post-Draft" || league.status === "In-Season" || league.status === "Completed";
   const rosterActionsLocked = tradeDeadlinePassed && freeAgentDeadlinePassed;
 
   const handleStartDraft = () => {
@@ -568,7 +570,7 @@ const LeagueDetailPage = () => {
       <button
         className="league-detail__back"
         type="button"
-        onClick={() => navigate(-1)}
+        onClick={() => navigate("/leagues")}
       >
         ← Back to Leagues
       </button>
@@ -640,13 +642,15 @@ const LeagueDetailPage = () => {
           >
             Find Team
           </button>
-          <button
-            className="league-detail__conference-btn"
-            type="button"
-            onClick={() => navigate(`/leagues/${league.leagueId}/draft-results`)}
-          >
-            View Draft
-          </button>
+          {isDraftCompleted && (
+            <button
+              className="league-detail__conference-btn"
+              type="button"
+              onClick={() => navigate(`/leagues/${league.leagueId}/draft-results`)}
+            >
+              View Draft
+            </button>
+          )}
         </div>
       </section>
 
@@ -773,14 +777,16 @@ const LeagueDetailPage = () => {
           ) : null}
           <div className="league-detail__add-drop">
             <div className="league-detail__primary-actions">
-              <button
-                className="league-detail__add-drop-btn"
-                type="button"
-                onClick={openRosterManagement}
-                disabled={rosterActionsLocked}
-              >
-                Manage Roster
-              </button>
+              {isDraftCompleted && (
+                <button
+                  className="league-detail__add-drop-btn"
+                  type="button"
+                  onClick={openRosterManagement}
+                  disabled={rosterActionsLocked}
+                >
+                  Manage Roster
+                </button>
+              )}
               <button
                 className="league-detail__conference-btn"
                 type="button"
@@ -843,7 +849,7 @@ const LeagueDetailPage = () => {
                   onClick={handleStartDraft}
                   disabled={startDraftLoading}
                 >
-                  Join Draft Lobby
+                  Start Draft
                 </button>
               )}
               {startDraftError && (

@@ -48,6 +48,7 @@ export interface LeagueSettings {
 }
 
 export interface CreateLeaguePayload {
+  teamName: string;
   name: string;
   sport: number;
   numPlayers: number;

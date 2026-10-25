@@ -1,5 +1,4 @@
 {
-  "_comment": "ILLUSTRATIVE ONLY: replace sportConferenceId 101/102 with your basketball SportConference IDs, confirm dates, source labels and tournament codes, and list every actual conference tournament. These are not verified 2027 dates.",
   "sport": "ncaa-mens-basketball",
   "seasonYear": 2026,
   "seasonStart": "2026-11-02",
@@ -19,7 +18,7 @@
       "code": "ACC_TOURNEY",
       "name": "ACC Tournament",
       "scope": "Conference",
-      "sportConferenceId": "3",
+      "sportConferenceId": 3,
       "startDate": "2027-03-09",
       "endDate": "2027-03-13",
       "rules": {
@@ -36,7 +35,7 @@
       "code": "AMER_EAST_PLAYOFF",
       "name": "America East Playoff",
       "scope": "Conference",
-      "sportConferenceId": "1",
+      "sportConferenceId": 1,
       "startDate": "2027-03-06",
       "endDate": "2027-03-14",
       "rules": {
@@ -53,7 +52,7 @@
       "code": "AMER_CHAMPIONSHIP",
       "name": "American Championship",
       "scope": "Conference",
-      "sportConferenceId": "2",
+      "sportConferenceId": 2,
       "startDate": "2027-03-10",
       "endDate": "2027-03-15",
       "rules": {
@@ -70,7 +69,7 @@
       "code": "ASUN_BBALL_TOURNEY",
       "name": "ASUN Conference Men's Basketball Tournament",
       "scope": "Conference",
-      "sportConferenceId": "4",
+      "sportConferenceId": 4,
       "startDate": "2027-03-05",
       "endDate": "2027-03-08",
       "rules": {
@@ -87,7 +86,7 @@
       "code": "ATLANTIC10_CONF_TOURNEY",
       "name": "Atlantic 10 Conference Tournament",
       "scope": "Conference",
-      "sportConferenceId": "5",
+      "sportConferenceId": 5,
       "startDate": "2027-03-10",
       "endDate": "2027-03-15",
       "rules": {
@@ -104,7 +103,7 @@
       "code": "BIG_EAST_BBALL_TOURNEY",
       "name": "Big East Men's Basketball Tournament",
       "scope": "Conference",
-      "sportConferenceId": "6",
+      "sportConferenceId": 6,
       "startDate": "2027-03-10",
       "endDate": "2027-03-14",
       "rules": {
@@ -121,7 +120,7 @@
       "code": "STARCH_MADNESS",
       "name": "Starch Madness",
       "scope": "Conference",
-      "sportConferenceId": "7",
+      "sportConferenceId": 7,
       "startDate": "2027-03-05",
       "endDate": "2027-03-11",
       "rules": {
@@ -138,7 +137,7 @@
       "code": "BIG_SOUTH_CONF_TOURNEY",
       "name": "Big South Conference Tournament",
       "scope": "Conference",
-      "sportConferenceId": "8",
+      "sportConferenceId": 8,
       "startDate": "2027-03-03",
       "endDate": "2027-03-08",
       "rules": {
@@ -155,7 +154,7 @@
       "code": "BIG10_TOURNEY",
       "name": "Big Ten Men's Tournament",
       "scope": "Conference",
-      "sportConferenceId": "9",
+      "sportConferenceId": 9,
       "startDate": "2027-03-09",
       "endDate": "2027-03-15",
       "rules": {
@@ -172,16 +171,16 @@
       "code": "BIG12_CONF_TOURNEY",
       "name": "Big 12 Tournament",
       "scope": "Conference",
-      "sportConferenceId": "10",
+      "sportConferenceId": 10,
       "startDate": "2027-03-09",
-      "endDate": "2027-03-014",
+      "endDate": "2027-03-14",
       "rules": {
         "positiveOnly": true,
         "marginMultiplier": 1,
         "primaryPostseason": false,
         "sourceLabels": [
-          "Big South Tournament",
-          "Big South Championship"
+          "Big 12 Tournament",
+          "Big 12 Championship"
         ]
       }
     },
@@ -189,7 +188,7 @@
       "code": "BIG_WEST_CHAMPIONSHIP",
       "name": "Big West Men's Championship",
       "scope": "Conference",
-      "sportConferenceId": "11",
+      "sportConferenceId": 11,
       "startDate": "2027-03-10",
       "endDate": "2027-03-14",
       "rules": {
@@ -206,7 +205,7 @@
       "code": "CAA_CHAMPIONSHIP",
       "name": "CAA Men's Championship",
       "scope": "Conference",
-      "sportConferenceId": "12",
+      "sportConferenceId": 12,
       "startDate": "2027-03-05",
       "endDate": "2027-03-10",
       "rules": {
@@ -223,7 +222,7 @@
       "code": "CONF_USA_TOURNEY",
       "name": "Conference USA Men's Tournament",
       "scope": "Conference",
-      "sportConferenceId": "13",
+      "sportConferenceId": 13,
       "startDate": "2027-03-09",
       "endDate": "2027-03-14",
       "rules": {
@@ -237,10 +236,10 @@
       }
     },
     {
-      "code": "HORIZON_LEAGUE_CHAMPIONSHIP",
+      "code": "HORIZON_LEAGUE_CAMPIONSHIP",
       "name": "Horizon League Men's Championship",
       "scope": "Conference",
-      "sportConferenceId": "14",
+      "sportConferenceId": 14,
       "startDate": "2027-03-01",
       "endDate": "2027-03-10",
       "rules": {
@@ -257,7 +256,7 @@
       "code": "IVY_LEAGUE_TOURNEY",
       "name": "Ivy League Men's Tournament",
       "scope": "Conference",
-      "sportConferenceId": "15",
+      "sportConferenceId": 15,
       "startDate": "2027-03-13",
       "endDate": "2027-03-15",
       "rules": {
@@ -265,7 +264,7 @@
         "marginMultiplier": 1,
         "primaryPostseason": false,
         "sourceLabels": [
-          "Ivy Leauge Tournament",
+          "Ivy League Tournament",
           "Ivy League Championship"
         ]
       }
@@ -274,7 +273,7 @@
       "code": "METRO_TOURNEY",
       "name": "Metro Men's Tournament",
       "scope": "Conference",
-      "sportConferenceId": "16",
+      "sportConferenceId": 16,
       "startDate": "2027-03-04",
       "endDate": "2027-03-10",
       "rules": {
@@ -291,7 +290,7 @@
       "code": "MID_AMER_TOURNEY",
       "name": "Mid American Conference Men's Tournament",
       "scope": "Conference",
-      "sportConferenceId": "17",
+      "sportConferenceId": 17,
       "startDate": "2027-03-10",
       "endDate": "2027-03-14",
       "rules": {
@@ -308,7 +307,7 @@
       "code": "MEAC_TOURNEY",
       "name": "MEAC Tournament",
       "scope": "Conference",
-      "sportConferenceId": "18",
+      "sportConferenceId": 18,
       "startDate": "2027-03-10",
       "endDate": "2027-03-14",
       "rules": {
@@ -322,10 +321,10 @@
       }
     },
     {
-      "code": "ARCH_MADNESS",
+      "code": "MVC_CONF_TOURNEY",
       "name": "Arch Madness",
       "scope": "Conference",
-      "sportConferenceId": "19",
+      "sportConferenceId": 19,
       "startDate": "2027-03-04",
       "endDate": "2027-03-08",
       "rules": {
@@ -342,7 +341,7 @@
       "code": "MTN_WEST_TOURNEY",
       "name": "Mountain West Conference Men's Tournament",
       "scope": "Conference",
-      "sportConferenceId": "20",
+      "sportConferenceId": 20,
       "startDate": "2027-03-10",
       "endDate": "2027-03-14",
       "rules": {
@@ -359,7 +358,7 @@
       "code": "NEC_TOURNEY",
       "name": "NEC Conference Tournament",
       "scope": "Conference",
-      "sportConferenceId": "21",
+      "sportConferenceId": 21,
       "startDate": "2027-03-03",
       "endDate": "2027-03-10",
       "rules": {
@@ -376,7 +375,7 @@
       "code": "OHIO_VALLEY_TOURNEY",
       "name": "Ohio Valley Conference Men's Tournament",
       "scope": "Conference",
-      "sportConferenceId": "22",
+      "sportConferenceId": 22,
       "startDate": "2027-03-03",
       "endDate": "2027-03-07",
       "rules": {
@@ -393,7 +392,7 @@
       "code": "PATRIOT_LEAGUE_CHAMPIONSHIP",
       "name": "Patriot League Men's Championship",
       "scope": "Conference",
-      "sportConferenceId": "23",
+      "sportConferenceId": 23,
       "startDate": "2027-03-02",
       "endDate": "2027-03-11",
       "rules": {
@@ -401,7 +400,7 @@
         "marginMultiplier": 1,
         "primaryPostseason": false,
         "sourceLabels": [
-          "Patroit League Tournament",
+          "Patriot League Tournament",
           "Patriot League Championship"
         ]
       }
@@ -410,7 +409,7 @@
       "code": "SEC_TOURNEY",
       "name": "SEC Men's Tournament",
       "scope": "Conference",
-      "sportConferenceId": "24",
+      "sportConferenceId": 24,
       "startDate": "2027-03-10",
       "endDate": "2027-03-15",
       "rules": {
@@ -427,7 +426,7 @@
       "code": "SOUTH_CONF_TOURNEY",
       "name": "Southern Conference Men's Tournament",
       "scope": "Conference",
-      "sportConferenceId": "25",
+      "sportConferenceId": 25,
       "startDate": "2027-03-05",
       "endDate": "2027-03-09",
       "rules": {
@@ -444,7 +443,7 @@
       "code": "SOUTHLAND_CONF_TOURNEY",
       "name": "Southland Conference Men's Tournament",
       "scope": "Conference",
-      "sportConferenceId": "26",
+      "sportConferenceId": 26,
       "startDate": "2027-03-07",
       "endDate": "2027-03-11",
       "rules": {
@@ -461,7 +460,7 @@
       "code": "SWAC_TOURNEY",
       "name": "SWAC Men's Tournament",
       "scope": "Conference",
-      "sportConferenceId": "27",
+      "sportConferenceId": 27,
       "startDate": "2027-03-09",
       "endDate": "2027-03-14",
       "rules": {
@@ -478,7 +477,7 @@
       "code": "SUMMIT_LEAGUE_FALLS",
       "name": "The Summit League at the Falls",
       "scope": "Conference",
-      "sportConferenceId": "28",
+      "sportConferenceId": 28,
       "startDate": "2027-03-04",
       "endDate": "2027-03-08",
       "rules": {
@@ -495,7 +494,7 @@
       "code": "SUN_BELT_TOURNEY",
       "name": "Sun Belt Conference Tournament",
       "scope": "Conference",
-      "sportConferenceId": "29",
+      "sportConferenceId": 29,
       "startDate": "2027-03-02",
       "endDate": "2027-03-09",
       "rules": {
@@ -512,7 +511,7 @@
       "code": "WEST_COAST_TOURNEY",
       "name": "West Coast Conference Men's Tournament",
       "scope": "Conference",
-      "sportConferenceId": "30",
+      "sportConferenceId": 30,
       "startDate": "2027-03-05",
       "endDate": "2027-03-10",
       "rules": {
@@ -529,7 +528,7 @@
       "code": "PAC_12_TOURNEY",
       "name": "PAC 12 Men's Conference Tournament",
       "scope": "Conference",
-      "sportConferenceId": "33",
+      "sportConferenceId": 33,
       "startDate": "2027-03-09",
       "endDate": "2027-03-14",
       "rules": {
@@ -546,7 +545,7 @@
       "code": "UAC_TOURNEY",
       "name": "UAC Men's Basketball Tournament",
       "scope": "Conference",
-      "sportConferenceId": "56",
+      "sportConferenceId": 31,
       "startDate": "2027-03-10",
       "endDate": "2027-03-14",
       "rules": {
@@ -567,7 +566,7 @@
       "endDate": "2027-04-05",
       "rules": {
         "positiveOnly": true,
-        "marginMultiplier": 1,
+        "marginMultiplier": 2,
         "scoringPeriod": "BASKETBALL_FINAL",
         "primaryPostseason": true,
         "sourceLabels": [
@@ -585,7 +584,7 @@
       "endDate": "2027-04-04",
       "rules": {
         "positiveOnly": true,
-        "marginMultiplier": 0.5,
+        "marginMultiplier": 1,
         "scoringPeriod": "BASKETBALL_FINAL",
         "primaryPostseason": false,
         "sourceLabels": [
@@ -619,7 +618,7 @@
       "endDate": "2027-04-04",
       "rules": {
         "positiveOnly": true,
-        "marginMultiplier": 0.5,
+        "marginMultiplier": 1,
         "scoringPeriod": "BASKETBALL_FINAL",
         "primaryPostseason": false,
         "sourceLabels": [

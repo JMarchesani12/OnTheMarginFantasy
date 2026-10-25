@@ -506,12 +506,16 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--force",
         action="store_true",
-        help="Bootstrap the schedule even if the season was already bootstrapped.",
+        help="Discard resume checkpoints and refresh all dates, even for a completed season.",
     )
     parser.add_argument(
         "--max-days",
         type=int,
-        help="Limit schedule bootstrapping to this many days.",
+        help="Process at most this many pending dates; later runs resume the next batch.",
+    )
+    parser.add_argument(
+        "--checkpoint-file",
+        help="Override the local resume checkpoint file (defaults to api/.cache/season-bootstrap/).",
     )
     return parser
 
@@ -567,6 +571,7 @@ def main() -> None:
         sport_season_id,
         force=args.force,
         max_days=args.max_days,
+        checkpoint_path=args.checkpoint_file,
     )
     summary["subdivisionSeasonIds"] = subdivision_ids
     print(summary)

@@ -189,7 +189,10 @@ class LeagueModel:
         # Make a copy so we don't mutate the original dict
         league = dict(league)
 
-        print(league)
+        team_name = league.get("teamName")
+        if not isinstance(team_name, str) or not team_name.strip():
+            raise ValueError("Team name is required.")
+        team_name = team_name.strip()
 
         settings = settings_for_creation(league['sport'], league.get('settings'))
         league['settings'] = json.dumps(self._ensure_timezone_in_settings(settings))
@@ -232,7 +235,7 @@ class LeagueModel:
                 {
                     "leagueId": created["id"],
                     "userId": created["commissioner"],
-                    "teamName": "My Team",
+                    "teamName": team_name,
                 },
             ).fetchone()
 
@@ -649,7 +652,10 @@ class LeagueModel:
             raise PermissionError("Only the commissioner can perform this action")
         
 
-    def create_join_request(self, league_id: int, user_id: int, message: Optional[str] = None) -> Dict[str, Any]:
+    def create_join_request(self, league_id: int, user_id: int, message: Optional[str] = None, team_name: Optional[str] = None) -> Dict[str, Any]:
+        if not isinstance(team_name, str) or not team_name.strip():
+            raise ValueError("Team name is required.")
+        team_name = team_name.strip()
         with self.db.begin() as conn:
             # Already a member?
             member = conn.execute(
@@ -680,14 +686,14 @@ class LeagueModel:
             row = conn.execute(
                 text("""
                     INSERT INTO "LeagueJoinRequest"
-                        ("leagueId", "userId", status, "message")
+                        ("leagueId", "userId", status, "message", "teamName")
                     VALUES
-                        (:leagueId, :userId, 'PENDING', :message)
+                        (:leagueId, :userId, 'PENDING', :message, :teamName)
                     RETURNING
                         id, "createdAt", "leagueId", "userId", status, "message",
                         "resolvedAt", "resolvedByUserId"
                 """),
-                {"leagueId": league_id, "userId": user_id, "message": message},
+                {"leagueId": league_id, "userId": user_id, "message": message, "teamName": team_name},
             ).mappings().first()
 
             if not row:
@@ -726,7 +732,7 @@ class LeagueModel:
             # lock the request row to prevent double-approval races
             req = conn.execute(
                 text("""
-                    SELECT id, "leagueId", "userId", status
+                    SELECT id, "leagueId", "userId", status, "teamName"
                     FROM "LeagueJoinRequest"
                     WHERE id = :requestId AND "leagueId" = :leagueId
                     FOR UPDATE
@@ -747,7 +753,7 @@ class LeagueModel:
                     SELECT
                         :leagueId,
                         :userId,
-                        'My Team',
+                        :teamName,
                         COALESCE(MAX(lm."draftOrder"), 0) + 1,
                         0
                     FROM "LeagueMember" lm
@@ -756,6 +762,7 @@ class LeagueModel:
                 {
                     "leagueId": league_id,
                     "userId": req["userId"],
+                    "teamName": req.get("teamName") or "My Team",
                 },
             )
 

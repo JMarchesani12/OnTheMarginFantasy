@@ -73,6 +73,23 @@ class TournamentRulesTests(unittest.TestCase):
                 load_manifest(p)
 
 class BasketballIntegrationTests(unittest.TestCase):
+    @staticmethod
+    def _national_manifest():
+        from startSeasonJobs.startSeason import SeasonManifest
+        tournaments = tuple(dict(
+            code=code, name=name, scope='National', startDate='2027-03-16',
+            endDate='2027-04-05', rules=dict(
+                positiveOnly=True, marginMultiplier=multiplier,
+                scoringPeriod='BASKETBALL_FINAL', primaryPostseason=code == 'NCAA_TOURNEY',
+                sourceLabels=[name]))
+            for code, name, multiplier in [
+                ('NCAA_TOURNEY', 'NCAA Tournament', 2), ('NIT', 'NIT', 1),
+                ('CBI', 'CBI', .5), ('CROWN', 'Crown', 1)])
+        return SeasonManifest(
+            sport='ncaa-mens-basketball', season_year=2026,
+            season_start=dt.date(2026, 11, 2), season_end=dt.date(2027, 4, 6),
+            subdivisions=(), tournaments=tournaments, timezone='America/New_York')
+
     def test_schedule_scoring_applies_phase_after_tiers_and_keeps_double_owned_zero(self):
         from endpoints.schedule.scheduleModel import ScheduleModel
         from rules.leagueRules import resolve_rules
@@ -143,12 +160,15 @@ class BasketballIntegrationTests(unittest.TestCase):
                 id=1, sportId=1, scheduleBootstrapped=False,
                 seasonStart=dt.date(2027, 3, 1), seasonEnd=dt.date(2027, 3, 2))
             model = ScheduleModel(db, 'https://example.test')
+            model._get_sport_api_config = lambda _: ('basketball', [50], 'basketball')
             def ingest(*_):
                 if fail:
                     raise ValueError('Unmatched tournament')
                 return dict(eventsSeen=1, gamesUpserted=1)
             model.ingest_scoreboard_for_date_for_sport_season = ingest
-            result = model.bootstrap_sport_season_schedule_by_scoreboard(1, max_days=limit)
+            with tempfile.TemporaryDirectory() as folder:
+                result = model.bootstrap_sport_season_schedule_by_scoreboard(
+                    1, max_days=limit, checkpoint_path=Path(folder) / 'checkpoint.json')
             self.assertEqual(result['complete'], expected)
             updates = [call for call in conn.execute.call_args_list if 'UPDATE' in str(call.args[0])]
             self.assertEqual(updates[-1].args[1]['complete'], expected)
@@ -186,7 +206,7 @@ class BasketballIntegrationTests(unittest.TestCase):
 
     def test_phase_setup_repairs_dates_rules_and_definition_names(self):
         from startSeasonJobs.startSeason import load_manifest, configure_manifest_phases, SPORT_CONFIGS
-        manifest = load_manifest(Path(__file__).parents[1] / 'startSeasonJobs/configs/ncaa-mens-basketball-2026.json')
+        manifest = self._national_manifest()
         conn = MagicMock()
         calls = []
         def execute(sql, params=None):
@@ -226,7 +246,7 @@ class BasketballIntegrationTests(unittest.TestCase):
 
     def test_conference_config_coverage_is_required_before_phase_writes(self):
         from startSeasonJobs.startSeason import configure_manifest_phases, SPORT_CONFIGS
-        manifest = load_manifest(Path(__file__).parents[1] / 'startSeasonJobs/configs/ncaa-mens-basketball-2026.json')
+        manifest = self._national_manifest()
         conn = MagicMock()
         conn.execute.return_value.fetchall.return_value = [(7,)]
         with self.assertRaisesRegex(ValueError, 'SportConference IDs: 7'):

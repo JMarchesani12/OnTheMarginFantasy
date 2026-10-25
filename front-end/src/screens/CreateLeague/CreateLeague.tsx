@@ -13,6 +13,7 @@ import { useCurrentUser } from "../../context/currentUserContext";
 
 interface CreateLeagueFormState {
   leagueName: string;
+  teamName: string;
   sportId: string;          // string in form, converted to number on submit
   numPlayers: string;
 
@@ -42,6 +43,7 @@ const initialSeasonYear = new Date().getFullYear().toString();
 
 const makeInitialState = (): CreateLeagueFormState => ({
   leagueName: "",
+  teamName: "",
   sportId: "",
   numPlayers: "1",
 
@@ -128,6 +130,10 @@ const CreateLeague: React.FC = () => {
       setError("League name is required.");
       return;
     }
+    if (!form.teamName.trim()) {
+      setError("Team name is required.");
+      return;
+    }
     if (!form.sportId) {
       setError("Sport is required.");
       return;
@@ -166,6 +172,7 @@ const CreateLeague: React.FC = () => {
 
     const payload: CreateLeaguePayload = {
       name: form.leagueName.trim(),
+      teamName: form.teamName.trim(),
       sport: Number(form.sportId),
       numPlayers: 1,
       status: "Pre-Draft",
@@ -228,6 +235,12 @@ const CreateLeague: React.FC = () => {
               value={form.leagueName}
               onChange={(e) => update({ leagueName: e.target.value })}
             />
+          </div>
+
+          <div className="cl-field-group">
+            <label className="cl-field-label" htmlFor="creator-team-name">Your Team Name <span className="cl-required">*</span></label>
+            <input id="creator-team-name" type="text" required placeholder="My Team"
+              value={form.teamName} onChange={(e) => update({ teamName: e.target.value })} />
           </div>
 
           <div className="cl-form-grid">

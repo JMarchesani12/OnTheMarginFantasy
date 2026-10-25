@@ -10,6 +10,9 @@ from sqlalchemy.engine import Engine
 from zoneinfo import ZoneInfo
 
 from endpoints.schedule.helpers.espn.espnClient import ESPNClient
+from endpoints.schedule.helpers.bootstrapCheckpoint import (
+    BootstrapCheckpoint, default_checkpoint_path, fingerprint,
+)
 from endpoints.schedule.helpers.weekHelper import (
     compute_weeks_from_start,
     partition_initial_partial_week,
@@ -668,10 +671,11 @@ class ScheduleModel:
         *,
         force: bool = False,
         max_days: Optional[int] = None,
+        checkpoint_path=None,
     ) -> Dict[str, Any]:
         """
-        Bootstraps all games for a SportSeason by iterating from seasonStart to
-        seasonEnd and ingesting the ESPN scoreboard each day.
+        Ingest pending dates, checkpointing each successful day. Reruns resume;
+        force discards checkpoints and refreshes the full date range.
         """
 
         with self.db.begin() as conn:
@@ -692,14 +696,6 @@ class ScheduleModel:
         if not ss:
             raise ValueError(f"SportSeason {sport_season_id} not found")
 
-        if ss["scheduleBootstrapped"] and not force:
-            return {
-                "sportId": int(ss["sportId"]),
-                "sportSeasonId": sport_season_id,
-                "skipped": True,
-                "reason": "already scheduleBootstrapped (use force=True to re-run)",
-            }
-
         start_date = ss["seasonStart"]
         end_date = ss["seasonEnd"]
 
@@ -709,29 +705,58 @@ class ScheduleModel:
         if end_date < start_date:
             raise ValueError(f"Invalid season window: {start_date} -> {end_date}")
 
-        days_total = (end_date - start_date).days + 1
+        if max_days is not None and (isinstance(max_days, bool) or max_days <= 0):
+            raise ValueError("max_days must be a positive integer")
+        api_keyword, api_groups, _ = self._get_sport_api_config(int(ss["sportId"]))
+        identity = fingerprint({
+            "database": str(self.db.url), "season": sport_season_id,
+            "sport": ss["sportId"], "start": start_date, "end": end_date,
+            "source": self.espn_base_url, "apiKeyword": api_keyword,
+            "apiGroups": sorted(set(api_groups)),
+            "phases": sorted([
+                {key: phase.get(key) for key in
+                 ('id', 'type', 'tournamentId', 'sportConferenceId', 'startDate', 'endDate', 'rules')}
+                for phase in self._get_season_phases(sport_season_id)
+            ], key=lambda phase: phase['id']),
+        })
+        checkpoint = BootstrapCheckpoint(
+            checkpoint_path or default_checkpoint_path(self.db.url, sport_season_id), identity, reset=force)
+        if ss["scheduleBootstrapped"] and not force and not (checkpoint.resuming and not checkpoint.complete):
+            return {
+                "sportId": int(ss["sportId"]), "sportSeasonId": sport_season_id,
+                "skipped": True, "reason": "already scheduleBootstrapped (use force=True to re-run)",
+            }
+        all_dates = [start_date + dt.timedelta(days=n) for n in range((end_date - start_date).days + 1)]
+        pending = [d for d in all_dates if d not in checkpoint.completed]
+        days_skipped = len(all_dates) - len(pending)
         if max_days is not None:
-            days_total = min(days_total, max_days)
-
-        days_processed = 0
-        failed_days = 0
-        events_seen_total = 0
-        games_upserted_total = 0
-
-        d = start_date
-        for _ in range(days_total):
+            pending = pending[:max_days]
+        checkpoint.complete = False
+        checkpoint.save()
+        with self.db.begin() as conn:
+            conn.execute(text('''
+                UPDATE "SportSeason" SET "scheduleBootstrapped"=false, "scheduleBootstrappedAt"=NULL
+                WHERE id=:id
+            '''), {"id": sport_season_id})
+        print(f"[bootstrap] Checkpoint: {checkpoint.path}")
+        print(f"[bootstrap] Skipping {days_skipped} completed dates; processing {len(pending)} dates")
+        days_processed = failed_days = events_seen_total = games_upserted_total = 0
+        for d in pending:
             try:
                 summary = self.ingest_scoreboard_for_date_for_sport_season(sport_season_id, d)
-                events_seen_total += int(summary.get("eventsSeen", 0))
-                games_upserted_total += int(summary.get("gamesUpserted", 0))
             except Exception as e:
                 failed_days += 1
                 print(f"[bootstrap-by-date] ERROR sportSeasonId={sport_season_id} date={d}: {e}")
-            finally:
-                days_processed += 1
-                d = d + dt.timedelta(days=1)
-
-        complete = failed_days == 0 and days_processed == (end_date - start_date).days + 1
+            else:
+                events_seen_total += int(summary.get("eventsSeen", 0))
+                games_upserted_total += int(summary.get("gamesUpserted", 0))
+                checkpoint.completed.add(d)
+                checkpoint.save()
+                print(f"[bootstrap] Completed {d}: {summary.get('gamesUpserted', 0)} games")
+            days_processed += 1
+        complete = all(d in checkpoint.completed for d in all_dates)
+        checkpoint.complete = complete
+        checkpoint.save()
         with self.db.begin() as conn:
             conn.execute(
                 text("""
@@ -749,6 +774,8 @@ class ScheduleModel:
             "startDate": str(start_date),
             "endDate": str(end_date),
             "daysProcessed": days_processed,
+            "daysSkipped": days_skipped,
+            "checkpointPath": str(checkpoint.path),
             "failedDays": failed_days,
             "complete": complete,
             "eventsSeenTotal": events_seen_total,

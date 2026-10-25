@@ -73,6 +73,16 @@ PYTHONPATH=. python3 startSeasonJobs/startSeason.py --config startSeasonJobs/con
 
 Use `--max-days 3` for limited ingestion; partial ingestion is not marked fully bootstrapped. A failed fetch or unclassified tournament leaves the bootstrap incomplete and the command exits with an error after printing its summary. Fix the dates/matchers and rerun. Use `--force` to reingest an already bootstrapped season, including updating existing GameResult phase assignments after changing rules/matchers.
 
+## Interruptions and resume
+
+Bootstrap saves a local checkpoint after each fully successful date, including dates with no games. If interrupted, rerun the same command **without `--force`** to skip completed dates and retry unfinished or failed dates. At most the interrupted date is replayed; existing games are updated rather than duplicated. `--max-days N` now processes the next N pending dates, so repeated limited runs advance through the season.
+
+Checkpoints live under `api/.cache/season-bootstrap/` (already ignored by Git), independently for each database/season. The script prints the checkpoint path and progress after each successful date; its final summary includes `daysSkipped`. Use `--checkpoint-file /path/to/progress.json` to choose a durable location. Keep that file on the machine running the script, and run one bootstrap per season at a time. No database migration is required for checkpoints.
+
+Files are saved with atomic replacement. A corrupt file produces an explicit error rather than silently restarting. `--force` deliberately discards checkpoints and refreshes all dates; if that forced run is interrupted, resume it **without `--force`**. Relevant phase rules/dates or ESPN API keyword/group changes invalidate a partial checkpoint so stale assignments are reprocessed. Routine metadata timestamps/names do not invalidate it. After a fully completed season, use `--force` when changing configuration or refreshing schedules. Force a refresh after changing team/conference membership mappings, too.
+
+This only tracks dates processed by the updated script. Work from a run started before checkpoint support has no reliable day-level checkpoint and cannot automatically be skipped. An already-running Python process does not pick up this code change; finish that run or restart with the updated script.
+
 ## Existing leagues
 
 Season setup changes global metadata, not existing Week rows. New leagues use the new merged final period. Existing leagues must deliberately rebuild periods and rescore after reclassifying their games; split final periods are rejected by the scorer. The existing rebuild utility now shares ScheduleModel's week builder and requires an explicit season year:

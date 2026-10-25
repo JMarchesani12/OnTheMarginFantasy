@@ -20,7 +20,7 @@ const DiscoverLeaguePage = () => {
   const location = useLocation();
   const state = location.state as LocationState | null;
   const league = state?.league;
-  const { userId, displayName, email } = useCurrentUser();
+  const { userId } = useCurrentUser();
 
   const [sports, setSports] = useState<Sport[]>([]);
   const [sportsLoading, setSportsLoading] = useState(false);
@@ -31,6 +31,7 @@ const DiscoverLeaguePage = () => {
   const [requestStatus, setRequestStatus] = useState<
     "idle" | "submitting" | "success" | "error"
   >("idle");
+  const [teamName, setTeamName] = useState("");
   const [requestError, setRequestError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -130,17 +131,17 @@ const DiscoverLeaguePage = () => {
       return;
     }
 
-    const fallbackName =
-      displayName?.trim() ||
-      email?.split("@")[0] ||
-      "My";
-    const teamName = `${fallbackName}'s Team`;
+    if (!teamName.trim()) {
+      setRequestStatus("error");
+      setRequestError("Team name is required.");
+      return;
+    }
 
     setRequestStatus("submitting");
     setRequestError(null);
 
     try {
-      await requestToJoinLeague(league.id, userId, undefined, teamName);
+      await requestToJoinLeague(league.id, userId, undefined, teamName.trim());
       setRequestStatus("success");
     } catch (error: any) {
       setRequestStatus("error");
@@ -168,10 +169,16 @@ const DiscoverLeaguePage = () => {
             <p className="discover-league__error">{sportsError}</p>
           )}
         </div>
-        <div className="discover-league__cta">
+        <form className="discover-league__cta" onSubmit={(event) => {
+          event.preventDefault();
+          void handleRequestJoin();
+        }}>
+          <label htmlFor="join-team-name">Your Team Name</label>
+          <input id="join-team-name" type="text" required placeholder="My Team"
+            value={teamName} onChange={(event) => setTeamName(event.target.value)}
+            disabled={requestStatus === "submitting" || requestStatus === "success"} />
           <button
-            type="button"
-            onClick={handleRequestJoin}
+            type="submit"
             disabled={requestStatus === "submitting" || requestStatus === "success"}
           >
             {requestStatus === "success" ? "Request Sent" : "Request to Join"}
@@ -184,7 +191,7 @@ const DiscoverLeaguePage = () => {
               Request submitted. The commissioner will review it shortly.
             </p>
           )}
-        </div>
+        </form>
       </section>
 
       <section className="discover-league__members">
