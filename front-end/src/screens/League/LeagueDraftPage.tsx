@@ -29,7 +29,7 @@ import {
   normalizeLeaguesResponse,
 } from "../../utils/leagueMapping";
 import { groupTeamsByTier, getTierLabel } from "../../utils/teamTierGroups";
-import { countConferenceDrafters, groupDraftedTeams } from "../../utils/draftedTeamGroups";
+import { countConferenceDrafters, getFilledConferences, groupDraftedTeams } from "../../utils/draftedTeamGroups";
 import { teamSearchMatches } from "../../utils/teamSearch";
 import "./LeagueDraftPage.css";
 
@@ -442,17 +442,38 @@ const LeagueDraftPage = () => {
     }))),
     [draftSummaryPicks, resolveConferenceName],
   );
+  const conferenceFullDrafterCounts = useMemo(
+    () => countConferenceDrafters(draftSummaryPicks.map((pick) => ({
+      memberId: pick.memberId,
+      conferenceName: resolveConferenceName(pick.conferenceName ?? null),
+    })), 2),
+    [draftSummaryPicks, resolveConferenceName],
+  );
   const conferencePickCountLabel = (conference: string) => {
     const count = conferenceDrafterCounts.get(conference) ?? 0;
-    return `${count} ${count === 1 ? "person has" : "people have"} picked`;
+    const pickedLabel = `${count} ${count === 1 ? "person" : "people"} picked`;
+    if (conferenceLimits.get(conference) === 2) {
+      return `${pickedLabel} · ${conferenceFullDrafterCounts.get(conference) ?? 0} filled both picks`;
+    }
+    return pickedLabel;
   };
+
+  const filledConferences = useMemo(() => getFilledConferences(
+    draftSummaryPicks.map((pick) => ({
+      memberId: pick.memberId,
+      conferenceName: resolveConferenceName(pick.conferenceName ?? null),
+    })),
+    draftMembers.map((member) => member.memberId),
+    conferenceLimits,
+  ), [draftSummaryPicks, draftMembers, conferenceLimits, resolveConferenceName]);
+  const activeConferenceFilter = filledConferences.has(conferenceFilter) ? "all" : conferenceFilter;
 
   const uniqueConferences = useMemo(() => {
     const all = availableTeams
       .map((team) => resolveConferenceName(team.conferenceName))
-      .filter(Boolean);
+      .filter((conference) => Boolean(conference) && !filledConferences.has(conference));
     return Array.from(new Set(all)).sort((a, b) => a.localeCompare(b));
-  }, [availableTeams, resolveConferenceName]);
+  }, [availableTeams, resolveConferenceName, filledConferences]);
 
   const availableTiers = useMemo(() => groupTeamsByTier(availableTeams), [availableTeams]);
 
@@ -460,10 +481,10 @@ const LeagueDraftPage = () => {
     teams.filter((team) => {
       const matchesSearch = teamSearchMatches(team.teamName, searchTerm);
       const matchesConference =
-        conferenceFilter === "all" ||
-        resolveConferenceName(team.conferenceName) === conferenceFilter;
+        activeConferenceFilter === "all" ||
+        resolveConferenceName(team.conferenceName) === activeConferenceFilter;
       const matchesTier = tierFilter === "all" || String(team.tier ?? "unassigned") === tierFilter;
-      return matchesSearch && matchesConference && matchesTier;
+      return matchesSearch && matchesConference && matchesTier && !filledConferences.has(resolveConferenceName(team.conferenceName));
     });
 
   const groupedAvailable = useMemo(
@@ -476,7 +497,7 @@ const LeagueDraftPage = () => {
         conferences: groupTeams(group.teams),
       }));
     },
-    [availableTeams, searchTerm, conferenceFilter, tierFilter, league?.sport]
+    [availableTeams, searchTerm, activeConferenceFilter, tierFilter, league?.sport, filledConferences, resolveConferenceName]
   );
   const isCommissioner =
     currentUserId != null && league?.commissionerId === currentUserId;
@@ -1085,7 +1106,7 @@ const LeagueDraftPage = () => {
           <label htmlFor="draft-conference">Conference</label>
           <select
             id="draft-conference"
-            value={conferenceFilter}
+            value={activeConferenceFilter}
             onChange={(evt) => setConferenceFilter(evt.target.value)}
           >
             <option value="all">All conferences</option>
