@@ -449,11 +449,12 @@ const LeagueDraftPage = () => {
   const groupedAvailable = useMemo(
     () => {
       const filtered = applyFilters(availableTeams);
-      if (groupTeamsByTier(availableTeams).length <= 1) return groupTeams(filtered);
-      return groupTeamsByTier(filtered).map((group): [string, OwnedTeam[]] => [
-        getTierLabel(group.tier, league?.sport),
-        group.teams,
-      ]);
+      const hasMultipleTiers = groupTeamsByTier(availableTeams).length > 1;
+      return groupTeamsByTier(filtered).map((group) => ({
+        tier: group.tier,
+        label: hasMultipleTiers ? getTierLabel(group.tier, league?.sport) : null,
+        conferences: groupTeams(group.teams),
+      }));
     },
     [availableTeams, searchTerm, conferenceFilter, league?.sport]
   );
@@ -1031,27 +1032,32 @@ const LeagueDraftPage = () => {
         {groupedAvailable.length === 0 && !loading ? (
           <p className="draft-page__empty">No teams available.</p>
         ) : (
-          groupedAvailable.map(([conference, teams]) => (
-            <div className="draft-page__group" key={conference}>
-              <p className="draft-page__group-label">{conference}</p>
-              <div className="draft-page__team-grid">
-                {teams.map((team) => {
-                  const isSelected = selectedTeam?.teamId === team.teamId;
-                  return (
-                    <button
-                      key={team.teamId}
-                      type="button"
-                      className={`draft-page__team-btn ${
-                        isSelected ? "is-selected" : ""
-                      }`}
-                      onClick={() => toggleTeam(team)}
-                      aria-pressed={isSelected}
-                    >
-                      {team.teamName}
-                    </button>
-                  );
-                })}
-              </div>
+          groupedAvailable.map((tierGroup) => (
+            <div className="draft-page__tier-group" key={tierGroup.tier ?? "unassigned"}>
+              {tierGroup.label && <h2 className="draft-page__tier-label">{tierGroup.label}</h2>}
+              {tierGroup.conferences.map(([conference, teams]) => (
+                <div className="draft-page__group" key={conference}>
+                  <h3 className="draft-page__group-label">{conference}</h3>
+                  <div className="draft-page__team-grid">
+                    {teams.map((team) => {
+                      const isSelected = selectedTeam?.teamId === team.teamId;
+                      return (
+                        <button
+                          key={team.teamId}
+                          type="button"
+                          className={`draft-page__team-btn ${
+                            isSelected ? "is-selected" : ""
+                          }`}
+                          onClick={() => toggleTeam(team)}
+                          aria-pressed={isSelected}
+                        >
+                          {team.teamName}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </div>
           ))
         )}
