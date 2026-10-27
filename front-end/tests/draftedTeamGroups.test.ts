@@ -19,3 +19,18 @@ test("rounds sort numerically and preserve overall pick numbers", () => {
   assert.deepEqual(groups[0].picks.map((p) => p.overallPickNumber), [1, 2, 3]);
   assert.deepEqual(groupDraftedTeams([], "round"), []);
 });
+
+test("conference counts include each member once per conference", async () => {
+  const { countConferenceDrafters } = await import("../src/utils/draftedTeamGroups.ts");
+  const counts = countConferenceDrafters([
+    { memberId: 1, conferenceName: "SEC" },
+    { memberId: 1, conferenceName: "SEC" },
+    { memberId: 2, conferenceName: "SEC" },
+    { memberId: 1, conferenceName: "ACC" },
+    { memberId: 3, conferenceName: null },
+  ]);
+  assert.equal(counts.get("SEC"), 2);
+  assert.equal(counts.get("ACC"), 1);
+  assert.equal(counts.get("Independent"), 1);
+  assert.equal(countConferenceDrafters([]).size, 0);
+});

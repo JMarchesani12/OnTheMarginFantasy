@@ -29,7 +29,7 @@ import {
   normalizeLeaguesResponse,
 } from "../../utils/leagueMapping";
 import { groupTeamsByTier, getTierLabel } from "../../utils/teamTierGroups";
-import { groupDraftedTeams } from "../../utils/draftedTeamGroups";
+import { countConferenceDrafters, groupDraftedTeams } from "../../utils/draftedTeamGroups";
 import { teamSearchMatches } from "../../utils/teamSearch";
 import "./LeagueDraftPage.css";
 
@@ -433,6 +433,18 @@ const LeagueDraftPage = () => {
     return Array.from(map.entries())
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([conference, members]) => [conference, [...members].sort((a, b) => a.teamName.localeCompare(b.teamName))]);
+  };
+
+  const conferenceDrafterCounts = useMemo(
+    () => countConferenceDrafters(draftSummaryPicks.map((pick) => ({
+      memberId: pick.memberId,
+      conferenceName: resolveConferenceName(pick.conferenceName ?? null),
+    }))),
+    [draftSummaryPicks, resolveConferenceName],
+  );
+  const conferencePickCountLabel = (conference: string) => {
+    const count = conferenceDrafterCounts.get(conference) ?? 0;
+    return `${count} ${count === 1 ? "person has" : "people have"} picked`;
   };
 
   const uniqueConferences = useMemo(() => {
@@ -1027,7 +1039,9 @@ const LeagueDraftPage = () => {
               draftSummaryPicks.length === 0 ? <p>No teams have been drafted yet.</p> : (
               groupDraftedTeams(draftSummaryPicks, draftedTeamsView).map((group) => (
                 <section key={group.label} aria-label={group.label}>
-                  <h3>{group.label}</h3>
+                  <h3>{group.label}{draftedTeamsView === "conference" && (
+                    <span className="draft-page__conference-count"> · {conferencePickCountLabel(resolveConferenceName(group.label === "Independent" ? null : group.label))}</span>
+                  )}</h3>
                   <ul className="draft-page__drafted-picks">
                     {group.picks.map((pick) => (
                       <li key={pick.id}>
@@ -1096,7 +1110,9 @@ const LeagueDraftPage = () => {
               {tierGroup.label && <h2 className="draft-page__tier-label">{tierGroup.label}</h2>}
               {tierGroup.conferences.map(([conference, teams]) => (
                 <div className="draft-page__group" key={conference}>
-                  <h3 className="draft-page__group-label">{conference}</h3>
+                  <h3 className="draft-page__group-label">{conference}
+                    <span className="draft-page__conference-count"> · {conferencePickCountLabel(conference)}</span>
+                  </h3>
                   <div className="draft-page__team-grid">
                     {teams.map((team) => {
                       const isSelected = selectedTeam?.teamId === team.teamId;

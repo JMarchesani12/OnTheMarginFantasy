@@ -722,3 +722,11 @@
   color: #8EA0D6;
   font-size: 0.8rem;
 }
+
+.draft-page__conference-count {
+  color: #8EA0D6;
+  font-size: 0.8rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+}
