@@ -26,7 +26,12 @@ export async function createDraftPick(
   });
 
   if (!res.ok) {
-    throw new Error(`Failed to submit draft pick: ${res.status}`);
+    const error = await res.json().catch(() => null);
+    throw new Error(
+      typeof error?.message === "string" && error.message.trim()
+        ? error.message
+        : `Failed to submit draft pick: ${res.status}`,
+    );
   }
 
   const data = (await res.json()) as DraftPickResponse;

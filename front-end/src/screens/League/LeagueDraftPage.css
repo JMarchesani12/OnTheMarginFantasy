@@ -712,3 +712,13 @@
   color: #8EA0D6;
   font-size: 0.85rem;
 }
+
+.draft-page__drafted-picks {
+  list-style: none;
+  padding: 0;
+}
+
+.draft-page__drafted-overall {
+  color: #8EA0D6;
+  font-size: 0.8rem;
+}

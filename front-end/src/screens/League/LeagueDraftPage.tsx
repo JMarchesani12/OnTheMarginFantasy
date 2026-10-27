@@ -29,6 +29,7 @@ import {
   normalizeLeaguesResponse,
 } from "../../utils/leagueMapping";
 import { groupTeamsByTier, getTierLabel } from "../../utils/teamTierGroups";
+import { groupDraftedTeams } from "../../utils/draftedTeamGroups";
 import { teamSearchMatches } from "../../utils/teamSearch";
 import "./LeagueDraftPage.css";
 
@@ -102,12 +103,14 @@ const LeagueDraftPage = () => {
   }, [league, league_id, currentUserId]);
 
   const [availableTeams, setAvailableTeams] = useState<OwnedTeam[]>([]);
+  const [pickError, setPickError] = useState<string | null>(null);
   const [selectedTeam, setSelectedTeam] = useState<OwnedTeam | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [conferenceFilter, setConferenceFilter] = useState("all");
   const [tierFilter, setTierFilter] = useState("all");
+  const [draftedTeamsView, setDraftedTeamsView] = useState<"conference" | "round">("conference");
   const [showDraftedTeams, setShowDraftedTeams] = useState(false);
   const [draftSelections, setDraftSelections] = useState<OwnedTeam[]>([]);
   const [draftState, setDraftState] = useState<DraftState | null>(null);
@@ -565,6 +568,7 @@ const LeagueDraftPage = () => {
   }
 
   const toggleTeam = (team: OwnedTeam) => {
+    setPickError(null);
     setSelectedTeam((current) =>
       current?.teamId === team.teamId ? null : team
     );
@@ -575,6 +579,7 @@ const LeagueDraftPage = () => {
       return;
     }
 
+    setPickError(null);
     try {
       const response = await createDraftPick(
         league.memberId,
@@ -596,7 +601,7 @@ const LeagueDraftPage = () => {
         void loadDraftSummary();
       }
     } catch (err: any) {
-      setError(err?.message ?? "Failed to submit draft pick");
+      setPickError(err?.message ?? "Failed to submit draft pick");
     }
   };
 
@@ -1010,19 +1015,31 @@ const LeagueDraftPage = () => {
         {showDraftedTeams && (
           <div id="drafted-teams-list" className="draft-page__drafted-list">
             <h2>Drafted Teams</h2>
+            <div className="draft-page__control">
+              <label htmlFor="drafted-teams-view">Group by</label>
+              <select id="drafted-teams-view" value={draftedTeamsView}
+                onChange={(event) => setDraftedTeamsView(event.target.value as "conference" | "round")}>
+                <option value="conference">By Conference</option>
+                <option value="round">By Round</option>
+              </select>
+            </div>
             {draftSummaryLoading && draftSummaryPicks.length === 0 ? <p>Loading drafted teams…</p> :
               draftSummaryPicks.length === 0 ? <p>No teams have been drafted yet.</p> : (
-              <ol>
-                {[...draftSummaryPicks].sort((a, b) => a.overallPickNumber - b.overallPickNumber).map((pick) => (
-                  <li key={pick.id} value={pick.overallPickNumber}>
-                    <span className="draft-page__drafted-team">
-                      {pick.sportTeamName ?? `Team ${pick.sportTeamId}`}
-                      {pick.conferenceName && <span className="draft-page__drafted-owner"> ({pick.conferenceName})</span>}
-                    </span>
-                    <span className="draft-page__drafted-owner">Drafted by: {pick.memberTeamName ?? draftMembers.find((member) => member.memberId === pick.memberId)?.teamName ?? `Member ${pick.memberId}`}</span>
-                  </li>
-                ))}
-              </ol>
+              groupDraftedTeams(draftSummaryPicks, draftedTeamsView).map((group) => (
+                <section key={group.label} aria-label={group.label}>
+                  <h3>{group.label}</h3>
+                  <ul className="draft-page__drafted-picks">
+                    {group.picks.map((pick) => (
+                      <li key={pick.id}>
+                        <span className="draft-page__drafted-team">
+                          {pick.sportTeamName ?? `Team ${pick.sportTeamId}`} <span className="draft-page__drafted-overall" aria-label={`Overall pick ${pick.overallPickNumber}`}>(#{pick.overallPickNumber})</span>
+                        </span>
+                        <span className="draft-page__drafted-owner">Drafted by: {pick.memberTeamName ?? draftMembers.find((member) => member.memberId === pick.memberId)?.teamName ?? `Member ${pick.memberId}`}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ))
             )}
           </div>
         )}
@@ -1124,6 +1141,7 @@ const LeagueDraftPage = () => {
         )}
       </section>
 
+      {pickError && <p className="draft-page__error" role="alert">{pickError}</p>}
       <footer className="draft-page__footer">
         <button
           type="button"
