@@ -258,6 +258,48 @@
 }
 
 /* Multiple games */
+.league-schedule__cell-game {
+  position: relative;
+}
+
+.league-schedule__cell-game[aria-describedby] {
+  cursor: help;
+}
+
+.league-schedule__matchup-tooltip {
+  display: none;
+  margin: 0.35rem 0;
+  padding: 0.45rem;
+  border: 1px solid #AE85EB;
+  border-radius: 0.35rem;
+  background: #201638;
+  color: #E8DCFF;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.league-schedule__matchup-tooltip--red {
+  border-color: #FF4D6D;
+  background: #321925;
+  color: #FFD5DD;
+}
+
+.league-schedule__matchup-tooltip--green {
+  border-color: #6AFFBE;
+  background: #132E26;
+  color: #CEFFE8;
+}
+
+.league-schedule__cell-game:hover > .league-schedule__matchup-tooltip,
+.league-schedule__cell-game:focus-within > .league-schedule__matchup-tooltip {
+  display: block;
+}
+
+.league-schedule__cell-game[aria-describedby]:focus-visible {
+  outline: 2px solid #AE85EB;
+  outline-offset: 2px;
+}
+
 .league-schedule__cell-game + .league-schedule__cell-game {
   margin-top: 0.3rem;
   border-top: 1px dashed #334277;
@@ -276,6 +318,10 @@
 
 .league-schedule__cell-opponent--green {
   color: #6AFFBE;
+}
+
+.league-schedule__cell-opponent--purple {
+  color: #AE85EB;
 }
 
 .league-schedule__cell-score {

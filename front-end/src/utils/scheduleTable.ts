@@ -15,10 +15,11 @@ export type DateHeader = {
   label: string;
 };
 
-export function getLocalYMD(dateStr: string): LocalDateParts {
+export function getLocalYMD(dateStr: string, timeZone?: string): LocalDateParts {
   const d = new Date(dateStr);
 
   const fmt = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -43,19 +44,14 @@ export function getWeekYMD(dateStr: string): LocalDateParts {
 
 export function buildDateHeadersFromWeek(
   startDateStr: string,
-  endDateStr: string
+  endDateStr: string,
+  timeZone?: string,
 ): DateHeader[] {
-  const startParts = getWeekYMD(startDateStr);
-  const endParts = getWeekYMD(endDateStr);
+  const startParts = timeZone ? getLocalYMD(startDateStr, timeZone) : getWeekYMD(startDateStr);
+  const endParts = timeZone ? getLocalYMD(endDateStr, timeZone) : getWeekYMD(endDateStr);
 
   const start = new Date(startParts.year, startParts.month - 1, startParts.day);
-  let end = new Date(endParts.year, endParts.month - 1, endParts.day);
-  const dayMs = 24 * 60 * 60 * 1000;
-  const diffDays = Math.round((end.getTime() - start.getTime()) / dayMs);
-  if (diffDays >= 7) {
-    end = new Date(start);
-    end.setDate(end.getDate() + 6);
-  }
+  const end = new Date(endParts.year, endParts.month - 1, endParts.day);
 
   const headers: DateHeader[] = [];
   const cursor = new Date(start);
@@ -87,8 +83,8 @@ export function buildDateHeadersFromWeek(
   return headers;
 }
 
-export function getLocalDateKeyForGame(dateStr: string): string {
-  const { year, month, day } = getLocalYMD(dateStr);
+export function getLocalDateKeyForGame(dateStr: string, timeZone?: string): string {
+  const { year, month, day } = getLocalYMD(dateStr, timeZone);
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 

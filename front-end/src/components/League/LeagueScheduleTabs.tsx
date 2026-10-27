@@ -5,15 +5,18 @@ import type { MemberWeekSchedule } from "../../types/schedule";
 import { getScheduleForMemberForWeek } from "../../api/schedule";
 import {
   buildDateHeadersFromWeek,
+  LEAGUE_TIME_ZONE,
   getLocalDateKeyForGame,
   formatLocalTime,
   type DateHeader,
 } from "../../utils/scheduleTable";
+import { buildSchedulePages, getSchedulePageIndex, moveSchedulePage } from "../../utils/schedulePagination";
 import { safeLocalStorage } from "../../utils/safeStorage";
 import { MIN_SCHEDULE_WEEK_NUMBER } from "../../utils/weekCutoff";
 import { selectDailyTotals, getTeamGamePointDiff } from "../../utils/leagueScheduleDailyTotals";
 import {
   getOpponentTierDisplayTone,
+  getMatchupHoverExplanation,
   type TierDisplayTone,
 } from "../../utils/scheduleTierDisplay";
 import { groupTeamsByTier } from "../../utils/teamTierGroups";
@@ -30,6 +33,7 @@ type LeagueScheduleTabsProps = {
 };
 
 type ScheduleCell = {
+  hoverExplanation: string | null;
   explanation: string | null;
   opponentName: string;
   opponentTierDisplayTone: TierDisplayTone;
@@ -58,11 +62,16 @@ export const LeagueScheduleTabs = ({
   maxWeekNumber,
   timeZone
 }: LeagueScheduleTabsProps) => {
+  const sportName = String(sport ?? "").toLowerCase();
+  const minWeekNumber = sportName === "1" || sportName.includes("basketball") ? 1 : MIN_SCHEDULE_WEEK_NUMBER;
+  const startingWeekNumber = Math.max(minWeekNumber, initialWeekNumber);
   const [activeMemberId, setActiveMemberId] = useState<number | null>(
     currentMemberId || (members[0]?.id ?? null)
   );
-  const [weekNumber, setWeekNumber] = useState(initialWeekNumber);
-  const [weekInputValue, setWeekInputValue] = useState(String(initialWeekNumber));
+  const [weekNumber, setWeekNumber] = useState(startingWeekNumber);
+  const [weekInputValue, setWeekInputValue] = useState(String(startingWeekNumber));
+  const [requestedPageIndex, setRequestedPageIndex] = useState<number | null>(null);
+  const scheduleTimeZone = timeZone ?? LEAGUE_TIME_ZONE;
   const storageKey = `league-schedule-collapsed:${leagueId}:${currentMemberId}`;
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -74,6 +83,7 @@ export const LeagueScheduleTabs = ({
   useEffect(() => {
     if (!activeMemberId) return;
 
+    let cancelled = false;
     const loadSchedule = async () => {
       try {
         setLoading(true);
@@ -85,15 +95,16 @@ export const LeagueScheduleTabs = ({
           leagueId
         );
 
-        setSchedule(data);
+        if (!cancelled) setSchedule(data);
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "Failed to load schedule");
+        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load schedule");
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     loadSchedule();
+    return () => { cancelled = true; };
   }, [activeMemberId, weekNumber, leagueId]);
 
   useEffect(() => {
@@ -117,7 +128,7 @@ export const LeagueScheduleTabs = ({
   }, [storageKey, currentMemberId, isCollapsed]);
 
   // Build headers + rows from schedule
-  const { dateHeaders, teamRows } = useMemo(() => {
+  const { dateHeaders: periodDateHeaders, teamRows } = useMemo(() => {
     if (!schedule) {
       return { dateHeaders: [] as DateHeader[], teamRows: [] as TeamRow[] };
     }
@@ -156,6 +167,7 @@ export const LeagueScheduleTabs = ({
       broadcast: string | null,
       time: string | null,
       explanation: string | null,
+      tierAdjustment: Parameters<typeof getMatchupHoverExplanation>[1],
     ) => {
       let row = teamMap.get(teamId);
       if (!row) {
@@ -174,6 +186,7 @@ export const LeagueScheduleTabs = ({
       }
 
       cellsByDate[dateKey].push({
+        hoverExplanation: getMatchupHoverExplanation(opponentTierDisplayTone, tierAdjustment),
         explanation,
         opponentName,
         opponentTierDisplayTone,
@@ -188,7 +201,7 @@ export const LeagueScheduleTabs = ({
 
     // 2) Group games into rows by league-local calendar date
     for (const g of games) {
-      const dateKey = getLocalDateKeyForGame(g.date);
+      const dateKey = getLocalDateKeyForGame(g.date, scheduleTimeZone);
       const time = formatLocalTime(g.date);
 
       if (g.ownsHome) {
@@ -197,7 +210,9 @@ export const LeagueScheduleTabs = ({
           g.homeTeamName,
           dateKey,
           g.awayTeamName,
-          getOpponentTierDisplayTone(g.tierAdjustment, g.homeTeamTier, g.awayTeamTier),
+          getOpponentTierDisplayTone(g.tierAdjustment, g.homeTeamTier, g.awayTeamTier,
+            g.sportId === 1 && !g.ownsAway && g.awayTeamUnranked === true,
+            g.ownsHome && g.ownsAway),
           true,
           g.homeScore,
           g.awayScore,
@@ -205,6 +220,7 @@ export const LeagueScheduleTabs = ({
           g.broadcast,
           time,
           g.tierAdjustment?.applied ? g.tierAdjustment.explanation : null,
+          g.tierAdjustment,
         );
       }
 
@@ -214,7 +230,9 @@ export const LeagueScheduleTabs = ({
           g.awayTeamName,
           dateKey,
           g.homeTeamName,
-          getOpponentTierDisplayTone(g.tierAdjustment, g.awayTeamTier, g.homeTeamTier),
+          getOpponentTierDisplayTone(g.tierAdjustment, g.awayTeamTier, g.homeTeamTier,
+            g.sportId === 1 && !g.ownsHome && g.homeTeamUnranked === true,
+            g.ownsHome && g.ownsAway),
           false,
           g.awayScore,
           g.homeScore,
@@ -222,6 +240,7 @@ export const LeagueScheduleTabs = ({
           g.broadcast,
           time,
           g.tierAdjustment?.applied ? g.tierAdjustment.explanation : null,
+          g.tierAdjustment,
         );
       }
     }
@@ -229,7 +248,7 @@ export const LeagueScheduleTabs = ({
     // 3) Build headers from the league's Week row so sport-specific windows apply.
     const dateHeaders: DateHeader[] =
       week != null
-        ? buildDateHeadersFromWeek(week.startDate, week.endDate)
+        ? buildDateHeadersFromWeek(week.startDate, week.endDate, scheduleTimeZone)
         : [];
 
     // 4) Convert map to sorted array of TeamRow
@@ -255,11 +274,11 @@ export const LeagueScheduleTabs = ({
     return { dateHeaders, teamRows: tierGroups.length > 1
       ? tierGroups.flatMap((group) => group.teams)
       : teamRows };
-  }, [schedule]);
+  }, [schedule, scheduleTimeZone]);
 
   const todayKey = useMemo(() => {
     const formatter = new Intl.DateTimeFormat("en-CA", {
-      timeZone: timeZone ?? undefined,
+      timeZone: scheduleTimeZone,
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
@@ -269,7 +288,12 @@ export const LeagueScheduleTabs = ({
     const month = parts.find((p) => p.type === "month")?.value ?? "00";
     const day = parts.find((p) => p.type === "day")?.value ?? "00";
     return `${year}-${month}-${day}`;
-  }, [timeZone]);
+  }, [scheduleTimeZone]);
+
+  const datePages = useMemo(() => buildSchedulePages(periodDateHeaders), [periodDateHeaders]);
+  const pageIndex = getSchedulePageIndex(datePages, requestedPageIndex, todayKey);
+  const dateHeaders = datePages[pageIndex] ?? [];
+  const navigationLoading = loading || schedule?.week?.weekNumber !== weekNumber;
 
   const activeMemberDailyTotals = useMemo(() => {
     const totals: Record<string, number> = {};
@@ -312,19 +336,12 @@ export const LeagueScheduleTabs = ({
     [members]
   );
 
-  const handlePrevWeek = () => {
-    const next = Math.max(MIN_SCHEDULE_WEEK_NUMBER, weekNumber - 1);
-    setWeekNumber(next);
-    setWeekInputValue(String(next));
-  };
-
-  const handleNextWeek = () => {
-    const next = maxWeekNumber != null
-      ? Math.min(maxWeekNumber, weekNumber + 1)
-      : weekNumber + 1;
-
-    setWeekNumber(next);
-    setWeekInputValue(String(next));
+  const navigateDates = (direction: -1 | 1) => {
+    const next = moveSchedulePage(weekNumber, pageIndex, datePages.length,
+      direction, minWeekNumber, maxWeekNumber);
+    setRequestedPageIndex(next.pageIndex);
+    setWeekNumber(next.weekNumber);
+    setWeekInputValue(String(next.weekNumber));
   };
 
   const handleWeekInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -344,11 +361,12 @@ export const LeagueScheduleTabs = ({
 
     // Clamp to valid range
     let next = parsed;
-    if (next < MIN_SCHEDULE_WEEK_NUMBER) next = MIN_SCHEDULE_WEEK_NUMBER;
+    if (next < minWeekNumber) next = minWeekNumber;
     if (maxWeekNumber != null && next > maxWeekNumber) {
       next = maxWeekNumber;
     }
 
+    setRequestedPageIndex(0);
     setWeekNumber(next);
   };
 
@@ -388,8 +406,9 @@ export const LeagueScheduleTabs = ({
           </button>
           <button
             type="button"
-            onClick={handlePrevWeek}
-            disabled={weekNumber <= MIN_SCHEDULE_WEEK_NUMBER}
+            onClick={() => navigateDates(-1)}
+            aria-label="Previous calendar week"
+            disabled={navigationLoading || (weekNumber <= minWeekNumber && pageIndex === 0)}
           >
             ‹
           </button>
@@ -398,7 +417,7 @@ export const LeagueScheduleTabs = ({
             Week
             <input
               type="number"
-              min={MIN_SCHEDULE_WEEK_NUMBER}
+              min={minWeekNumber}
               max={maxWeekNumber ?? undefined}
               value={weekInputValue}
               onChange={handleWeekInputChange}
@@ -408,8 +427,9 @@ export const LeagueScheduleTabs = ({
 
           <button
             type="button"
-            onClick={handleNextWeek}
-            disabled={maxWeekNumber != null && weekNumber >= maxWeekNumber}
+            onClick={() => navigateDates(1)}
+            aria-label="Next calendar week"
+            disabled={navigationLoading || (maxWeekNumber != null && weekNumber >= maxWeekNumber && pageIndex >= datePages.length - 1)}
           >
             ›
           </button>
@@ -476,11 +496,14 @@ export const LeagueScheduleTabs = ({
                           {cells.map((c, idx) => {
                             const showScore =
                               !(c.teamScore === 0 && c.opponentScore === 0);
+                            const tooltipId = `matchup-game-${leagueId}-${row.teamId}-${d.key}-${idx}`;
 
                             return (
                               <div
                                 key={idx}
                                 className="league-schedule__cell-game"
+                                tabIndex={c.hoverExplanation ? 0 : undefined}
+                                aria-describedby={c.hoverExplanation ? tooltipId : undefined}
                               >
                                 <div
                                   className={`league-schedule__cell-opponent league-schedule__cell-opponent--${c.opponentTierDisplayTone}`}
@@ -488,6 +511,11 @@ export const LeagueScheduleTabs = ({
                                   {c.isHome ? "vs " : "@ "}
                                   {c.opponentName}
                                 </div>
+                                {c.hoverExplanation && (
+                                  <span id={tooltipId} role="tooltip" className={`league-schedule__matchup-tooltip league-schedule__matchup-tooltip--${c.opponentTierDisplayTone}`}>
+                                    {c.hoverExplanation}
+                                  </span>
+                                )}
                                 {showScore && (
                                   <>
                                     <div className="league-schedule__cell-score">

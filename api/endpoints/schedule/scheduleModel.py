@@ -907,6 +907,8 @@ class ScheduleModel:
             (gr."awayTeamId" IN (SELECT "sportTeamId" FROM member_teams)) AS "ownsAway",
             COALESCE(home_st.tier, mt."maxTier" + 1) AS "homeTeamTier",
             COALESCE(away_st.tier, mt."maxTier" + 1) AS "awayTeamTier",
+            (home_st.tier IS NULL) AS "homeTeamUnranked",
+            (away_st.tier IS NULL) AS "awayTeamUnranked",
             CASE
                 WHEN gr."homeTeamId" IN (SELECT "sportTeamId" FROM member_teams)
                     AND gr."awayTeamId" IN (SELECT "sportTeamId" FROM member_teams)
