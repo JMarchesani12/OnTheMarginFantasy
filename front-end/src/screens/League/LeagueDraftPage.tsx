@@ -107,6 +107,7 @@ const LeagueDraftPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [conferenceFilter, setConferenceFilter] = useState("all");
+  const [tierFilter, setTierFilter] = useState("all");
   const [draftSelections, setDraftSelections] = useState<OwnedTeam[]>([]);
   const [draftState, setDraftState] = useState<DraftState | null>(null);
   const [draftMembers, setDraftMembers] = useState<DraftMember[]>([]);
@@ -437,13 +438,16 @@ const LeagueDraftPage = () => {
     return Array.from(new Set(all)).sort((a, b) => a.localeCompare(b));
   }, [availableTeams, resolveConferenceName]);
 
+  const availableTiers = useMemo(() => groupTeamsByTier(availableTeams), [availableTeams]);
+
   const applyFilters = (teams: OwnedTeam[]) =>
     teams.filter((team) => {
       const matchesSearch = teamSearchMatches(team.teamName, searchTerm);
       const matchesConference =
         conferenceFilter === "all" ||
         resolveConferenceName(team.conferenceName) === conferenceFilter;
-      return matchesSearch && matchesConference;
+      const matchesTier = tierFilter === "all" || String(team.tier ?? "unassigned") === tierFilter;
+      return matchesSearch && matchesConference && matchesTier;
     });
 
   const groupedAvailable = useMemo(
@@ -456,7 +460,7 @@ const LeagueDraftPage = () => {
         conferences: groupTeams(group.teams),
       }));
     },
-    [availableTeams, searchTerm, conferenceFilter, league?.sport]
+    [availableTeams, searchTerm, conferenceFilter, tierFilter, league?.sport]
   );
   const isCommissioner =
     currentUserId != null && league?.commissionerId === currentUserId;
@@ -1007,6 +1011,17 @@ const LeagueDraftPage = () => {
             value={searchTerm}
             onChange={(evt) => setSearchTerm(evt.target.value)}
           />
+        </div>
+        <div className="draft-page__control">
+          <label htmlFor="draft-tier">Tier</label>
+          <select id="draft-tier" value={tierFilter} onChange={(evt) => setTierFilter(evt.target.value)}>
+            <option value="all">All tiers</option>
+            {availableTiers.map((group) => (
+              <option key={group.tier ?? "unassigned"} value={String(group.tier ?? "unassigned")}>
+                {getTierLabel(group.tier, league?.sport)}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="draft-page__control">
           <label htmlFor="draft-conference">Conference</label>
