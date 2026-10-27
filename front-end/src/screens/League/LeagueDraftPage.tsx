@@ -108,6 +108,7 @@ const LeagueDraftPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [conferenceFilter, setConferenceFilter] = useState("all");
   const [tierFilter, setTierFilter] = useState("all");
+  const [showDraftedTeams, setShowDraftedTeams] = useState(false);
   const [draftSelections, setDraftSelections] = useState<OwnedTeam[]>([]);
   const [draftState, setDraftState] = useState<DraftState | null>(null);
   const [draftMembers, setDraftMembers] = useState<DraftMember[]>([]);
@@ -1000,6 +1001,32 @@ const LeagueDraftPage = () => {
           )}
         </div>
       </header>
+
+      <section className="draft-page__drafted" aria-label="League drafted teams">
+        <button type="button" aria-expanded={showDraftedTeams} aria-controls="drafted-teams-list"
+          onClick={() => setShowDraftedTeams((shown) => !shown)}>
+          {showDraftedTeams ? "Hide Drafted Teams" : "View Drafted Teams"}
+        </button>
+        {showDraftedTeams && (
+          <div id="drafted-teams-list" className="draft-page__drafted-list">
+            <h2>Drafted Teams</h2>
+            {draftSummaryLoading && draftSummaryPicks.length === 0 ? <p>Loading drafted teams…</p> :
+              draftSummaryPicks.length === 0 ? <p>No teams have been drafted yet.</p> : (
+              <ol>
+                {[...draftSummaryPicks].sort((a, b) => a.overallPickNumber - b.overallPickNumber).map((pick) => (
+                  <li key={pick.id} value={pick.overallPickNumber}>
+                    <span className="draft-page__drafted-team">
+                      {pick.sportTeamName ?? `Team ${pick.sportTeamId}`}
+                      {pick.conferenceName && <span className="draft-page__drafted-owner"> ({pick.conferenceName})</span>}
+                    </span>
+                    <span className="draft-page__drafted-owner">Drafted by: {pick.memberTeamName ?? draftMembers.find((member) => member.memberId === pick.memberId)?.teamName ?? `Member ${pick.memberId}`}</span>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+        )}
+      </section>
 
       <section className="draft-page__controls" aria-label="Draft filters">
         <div className="draft-page__control">

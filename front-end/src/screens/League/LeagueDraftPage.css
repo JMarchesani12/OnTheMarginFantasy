@@ -679,3 +679,36 @@
 .draft-page__group + .draft-page__group {
   margin-top: 1.25rem;
 }
+
+.draft-page__drafted {
+  margin-bottom: 1rem;
+}
+
+.draft-page__drafted-list {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid #334277;
+  border-radius: 12px;
+  background: #0B0E1A;
+  max-height: 28rem;
+  overflow: auto;
+}
+
+.draft-page__drafted-list ol {
+  padding-left: 2.5rem;
+}
+
+.draft-page__drafted-list li {
+  padding: 0.5rem 0;
+  overflow-wrap: anywhere;
+}
+
+.draft-page__drafted-team,
+.draft-page__drafted-owner {
+  display: block;
+}
+
+.draft-page__drafted-owner {
+  color: #8EA0D6;
+  font-size: 0.85rem;
+}
