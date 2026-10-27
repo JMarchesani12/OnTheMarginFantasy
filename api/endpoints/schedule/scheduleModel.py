@@ -349,7 +349,8 @@ class ScheduleModel:
 
         Otherwise:
           - Uses the league's subdivision window(s) to build weeks:
-              Week 0 includes any partial opening week
+              Basketball folds the opening window into Week 1; other sports
+              keep Week 0 for any partial opening week.
               Week 1+ use the sport's full week boundary through regEnd
           - A single subdivision appends its postseason range.
           - Multiple subdivisions use one continuous window through the latest
@@ -359,7 +360,9 @@ class ScheduleModel:
         if existing:
             return existing
         local_tz, week0_start, week0_end, ranges = self._get_league_week_ranges(league_id)
-        created = [self._insert_week0(league_id, week0_start, week0_end)]
+        created = []
+        if week0_start is not None:
+            created.append(self._insert_week0(league_id, week0_start, week0_end))
         created.extend(self._insert_weeks(league_id, ranges, starting_week_number=1, tzinfo=local_tz))
         return created
 
@@ -397,12 +400,22 @@ class ScheduleModel:
         elif not season['allSubdivisions'] and season.get('postseasonStart') and season.get('postseasonEnd'):
             ranges.extend(compute_weeks_from_start(
                 season['postseasonStart'], season['postseasonEnd'], week_start_weekday=week_start_weekday))
+        if season.get('sportId') == 1:
+            # Include early games in Week 1 without shifting any later weeks.
+            # Retain the former opening window, including when the configured
+            # season begins on a full week boundary.
+            if ranges:
+                ranges[0] = (week0_start.date(), ranges[0][1])
+            elif opening_partial_week:
+                ranges = [(week0_start.date(), opening_partial_week[1])]
+            return local_tz, None, None, ranges
         return local_tz, week0_start.astimezone(dt.timezone.utc), week0_end.astimezone(dt.timezone.utc), ranges
 
     def get_week_boundaries(self, league_id):
         """Shared, read-only week plan for new leagues and deliberate rebuilds."""
         local_tz, week0_start, week0_end, ranges = self._get_league_week_ranges(league_id)
-        return [(0, week0_start, week0_end)] + [
+        opening = [(0, week0_start, week0_end)] if week0_start is not None else []
+        return opening + [
             (number,
              dt.datetime.combine(start, dt.time.min, tzinfo=local_tz).astimezone(dt.timezone.utc),
              dt.datetime.combine(end, dt.time.max, tzinfo=local_tz).astimezone(dt.timezone.utc))

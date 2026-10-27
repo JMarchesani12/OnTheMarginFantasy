@@ -65,3 +65,18 @@ test("hides a conference only after every member fills their allocation", async 
   assert.equal(getFilledConferences(picks, [], limits).size, 0);
   assert.equal(getFilledConferences(picks, [1, 2, 3], limits).size, 0);
 });
+
+
+test("personal conference availability depends only on your own picks", async () => {
+  const { getFilledConferences } = await import("../src/utils/draftedTeamGroups.ts");
+  const limits = new Map([["SEC", 2], ["ACC", 1]]);
+  const picks = [
+    { memberId: 1, conferenceName: "SEC" },
+    { memberId: 1, conferenceName: "SEC" },
+    { memberId: 2, conferenceName: "SEC" },
+    { memberId: 2, conferenceName: "ACC" },
+  ];
+  assert.deepEqual([...getFilledConferences(picks, [1], limits)], ["SEC"]);
+  assert.deepEqual([...getFilledConferences(picks, [2], limits)], ["ACC"]);
+  assert.equal(getFilledConferences(picks, [3], limits).size, 0);
+});

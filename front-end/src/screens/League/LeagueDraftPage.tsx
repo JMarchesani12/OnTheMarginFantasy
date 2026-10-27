@@ -463,9 +463,9 @@ const LeagueDraftPage = () => {
       memberId: pick.memberId,
       conferenceName: resolveConferenceName(pick.conferenceName ?? null),
     })),
-    draftMembers.map((member) => member.memberId),
+    league?.memberId != null ? [league.memberId] : [],
     conferenceLimits,
-  ), [draftSummaryPicks, draftMembers, conferenceLimits, resolveConferenceName]);
+  ), [draftSummaryPicks, league?.memberId, conferenceLimits, resolveConferenceName]);
   const activeConferenceFilter = filledConferences.has(conferenceFilter) ? "all" : conferenceFilter;
 
   const uniqueConferences = useMemo(() => {
