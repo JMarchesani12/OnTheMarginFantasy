@@ -23,7 +23,7 @@ export async function apiFetch(
   const shouldRetry = retryOnAuthError !== false;
   const headers = new Headers(fetchInit.headers ?? {});
 
-  if (!skipAuth) {
+  if (!skipAuth && !headers.has("Authorization")) {
     const authHeader = await getAuthHeader();
     if (!headers.has("Authorization") && authHeader.Authorization) {
       headers.set("Authorization", authHeader.Authorization);

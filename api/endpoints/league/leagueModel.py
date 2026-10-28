@@ -1055,7 +1055,6 @@ class LeagueModel:
             l."draftDate",
             l."isDiscoverable",
             l.commissioner,
-            u.email AS "commissionerEmail",
             u."displayName" AS "commissionerDisplayName"
             FROM "League" l
             JOIN "User" u ON u.id = l.commissioner

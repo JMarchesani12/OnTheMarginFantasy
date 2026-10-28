@@ -123,7 +123,6 @@ export interface LeagueSearchResult {
   draftDate: string | null;
   isDiscoverable: boolean;
   commissioner: number;
-  commissionerEmail: string;
   commissionerDisplayName: string | null;
 }
 

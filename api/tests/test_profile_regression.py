@@ -1,7 +1,7 @@
 """J1/K0/K1 baseline using real routes, JWT verification and profile SQL.
 
 SQLite is a disposable executor for this compatible SQL subset, not a
-Postgres/RLS substitute. The two isolation tests intentionally expose MOD-002.
+Postgres/RLS substitute. Numeric-ID isolation assertions protect MOD-002 stage 1.
 """
 import sqlite3
 import sys
@@ -51,8 +51,16 @@ class ProfileDatabase:
         cursor = self.connection.execute(str(statement), params)
 
         class Result:
+            def fetchone(self):
+                from types import SimpleNamespace
+                row = cursor.fetchone()
+                return SimpleNamespace(_mapping=dict(row)) if row else None
+
             def mappings(self):
                 return self
+
+            def fetchmany(self, size):
+                return [dict(row) for row in cursor.fetchmany(size)]
 
             def first(self):
                 row = cursor.fetchone()
@@ -150,3 +158,51 @@ class ProfileRegressionTests(unittest.TestCase):
         self.assertEqual(self.db.profile(2)["displayName"], "Bob",
                          "MOD-002: Alice's token changed Bob's persisted profile")
         self.assertIn(response.status_code, (403, 404))
+
+
+    def test_numeric_profile_access_is_bound_to_each_subject(self):
+        for subject, own, foreign in ((ALICE, 1, 2), (BOB, 2, 1)):
+            with self.subTest(subject=subject):
+                headers = {**self.headers(subject), "X-User-Id": str(foreign)}
+                own_read = self.client.get(f'/api/user/{own}?userId={foreign}', headers=headers)
+                self.assertEqual(own_read.status_code, 200)
+                self.assertEqual(own_read.json['id'], own)
+                response = self.client.patch(f'/api/user/{foreign}', headers=headers,
+                    json={"displayName": "Forged", "userId": foreign, "actingUserId": foreign,
+                          "uuid": subject, "id": own})
+                self.assertEqual(response.status_code, 404)
+                self.assertEqual(response.json, {"message": "User not found"})
+                foreign_read = self.client.get(f'/api/user/{foreign}', headers=headers)
+                self.assertEqual(foreign_read.status_code, 404)
+                self.assertEqual(foreign_read.json, {"message": "User not found"})
+        self.assertEqual(self.db.profile(1)['displayName'], 'Alice')
+        self.assertEqual(self.db.profile(2)['displayName'], 'Bob')
+
+    def assert_identity_denial(self, headers, status, code):
+        for method in ('get', 'patch'):
+            with self.subTest(method=method):
+                response = getattr(self.client, method)('/api/user/1', headers=headers,
+                    json={"displayName": "Forbidden", "userId": 1})
+                self.assertEqual(response.status_code, status)
+                self.assertEqual(response.json, {"error": code})
+        self.assertEqual(self.db.profile(1)['displayName'], 'Alice')
+
+    def test_numeric_routes_reject_missing_application_identity(self):
+        self.assert_identity_denial(self.headers('00000000-0000-4000-8000-000000000099'),
+                                    403, 'application_identity_not_found')
+
+    def test_numeric_routes_reject_ambiguous_application_identity(self):
+        self.db.connection.execute('ALTER TABLE "User" RENAME TO original_user')
+        self.db.connection.execute('CREATE TABLE "User" AS SELECT * FROM original_user')
+        self.db.connection.execute('INSERT INTO "User" (id, uuid) VALUES (?, ?)', (3, ALICE))
+        self.db.connection.commit()
+        self.assert_identity_denial(self.headers(), 403, 'application_identity_ambiguous')
+
+    def test_numeric_routes_reject_empty_subject(self):
+        self.assert_identity_denial(self.headers(''), 401, 'missing_authenticated_subject')
+
+    def test_expired_session_cannot_patch_even_own_profile(self):
+        response = self.client.patch('/api/user/1', headers=self.headers(exp=1),
+                                     json={"displayName": "Forbidden"})
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(self.db.profile(1)['displayName'], 'Alice')

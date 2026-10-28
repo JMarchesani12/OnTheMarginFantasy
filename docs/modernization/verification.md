@@ -1,5 +1,7 @@
 # Regression verification baseline
 
+Latest result: MOD-002 is complete for its bounded application/API scope. Final stage below records **106/106 isolated backend tests and 42/42 frontend tests passing**, plus passing app TypeScript and changed-type lint. Earlier partial/red results are historical; broader existing lint failures and deployed/concurrency limits remain.
+
 2026-10-28. Read with [behavior checklist](behavior-checklist.md), [backlog](backlog.md), [database audit](database-audit.md), and [progress](progress.md). Baseline is checkout `162f89a` plus the pre-existing modification to `api/startSeasonJobs/configs/ncaa-mens-basketball-2026.json` and untracked modernization docs. This is not a clean-HEAD or deployed-production result.
 
 **Result:** original suites passed (66 backend + 34 frontend utility + 9 tier-tool tests). Added 12 backend tests: 10 pass and **two fail on known profile-isolation defects**. Final backend suite is **76 passing / 78 total, exit 1**. Frontend build and tier type check pass; frontend lint has **63 pre-existing errors and 11 warnings, exit 1**. There is no all-green regression gate yet. No failure was fixed, skipped, marked expected-failure, or converted into a compatibility requirement.
@@ -163,3 +165,63 @@ New tests cover verified A/B subject mapping despite conflicting URL/body/query/
 The preserved failures remain exactly `test_mod_002_foreign_profile_read_is_denied` (Alice GET of Bob returns 200) and `test_mod_002_foreign_profile_update_is_denied_without_changing_data` (Bob's stored name becomes Tampered). The full suite remains red; this is expected deferred MOD-002 work, not a passing authorization gate.
 
 Limits: no PostgreSQL/RLS/live-schema/browser verification; the resolver trusts the middleware-owned `g.user` after authentication and must be called after middleware. Trusted jobs do not receive a fallback principal or HTTP bypass. No frontend recheck, production connection/modification, listener/app startup, schema change or job execution. MOD-001 complete; next is MOD-002 adoption/public-data repair, not performed here.
+
+
+## MOD-002 stage 1 verification — 2026-10-28
+
+Selected stage: authenticated numeric-ID profile GET/PATCH only. Actual dependency inspection confirmed MOD-001 exists and uses middleware-owned `g.user.sub`; no assumption of endpoint adoption was made. `UserEndpoints.get_user/update_user` now consume it, deny URL/principal mismatches with 404 and a generic message, and serialize resolver errors (401 missing subject, 403 absent/ambiguous application mapping). Success payloads and display-name-only update behavior remain unchanged. No schema or frontend changes required for this stage.
+
+| Command from root | Actual result |
+| --- | --- |
+| `python3 api/tests/run_isolated.py 'test_profile_regression.py'` before source changes | 12 tests, 14 failing assertions/subtests, exit 1. Original cross-user read/write failures reproduced; new mapping/substitution tests also fail. Expired PATCH already denied by middleware. |
+| Same targeted command after implementation | 12/12 pass, exit 0. |
+| `python3 api/tests/run_isolated.py` | 92/92 pass, exit 0; no errors/skips/expected failures. Includes all nine principal tests. Bootstrap fixture's simulated ERROR output is intentional. |
+| `git diff --check` | Exit 0. |
+
+Five added profile tests exercise both users' own reads and foreign GET/PATCH denial despite URL/body/query/header actor substitution, missing/ambiguous identity denial on both methods, empty subject and expired PATCH. Denial tests inspect persisted names and safe JSON; the original two MOD-002 denial assertions remain unchanged and now pass. Existing own-profile save/reload confirms identity/email cannot be rewritten via PATCH, and success payload/validation/preflight contracts continue to pass. The only fixture adapter addition is real SQLite cursor `fetchmany`, needed by the production resolver's duplicate detection query.
+
+Boundary: this green suite verifies the numeric-ID HTTP slice in isolation, not all account access paths. `/api/user/byUuid/` remains public in the production configuration, POST provisioning still trusts supplied UUID/email, and public commissionerEmail/profile logging remain for later MOD-002 stages. No claim that full MOD-002 is complete. Q1 public projection remains unresolved. Direct browser Supabase/RLS, PostgreSQL constraints/locking and identity-remapping concurrency remain unverified. No app factory/listener, job, production access/mutation, schema/migration, dependency upgrade or frontend check was run. Next: remaining MOD-002 lookup/provisioning plus consumer coordination, then public projection/log minimization; no other task started.
+
+
+## MOD-002 stage 2 verification — 2026-10-28
+
+Bounded scope: authenticated own-subject UUID lookup and claims-bound profile provisioning, including frontend bootstrap coordination and removal of creation's raw profile log. No public search projection decision was made. The bootstrap subject helper is shared with MOD-001's principal validator; missing application identity is accepted only for this subject-bound provisioning flow. No trusted-job HTTP fallback was added.
+
+| Command from root (frontend commands from `front-end`) | Actual result |
+| --- | --- |
+| `python3 api/tests/run_isolated.py 'test_profile_bootstrap.py'` before implementation | Nine tests, 15 failing assertions/subtests; exit 1. Demonstrated public UUID exposure, foreign lookup and provisioning binding gaps. |
+| Same targeted command after implementation and constraint-error test addition | 10/10 pass, exit 0. |
+| `python3 api/tests/run_isolated.py` | 102/102 pass, exit 0; no skips/expected failures. Includes unchanged original numeric cross-user denial assertions. |
+| `node --test --experimental-strip-types tests/profileApi.test.ts` initially | Five request tests: two pass, three fail, exit 1 (skipAuth, body identity fields, SDK lookup despite explicit token). |
+| Same targeted command after implementation and hook tests | 8/8 pass, exit 0. |
+| `node --test --experimental-strip-types tests/*.test.ts` | 42/42 pass, exit 0. |
+| `./node_modules/.bin/tsc -p tsconfig.app.json --noEmit` | Exit 0. |
+| `./node_modules/.bin/eslint src/api/user.ts src/api/client.ts src/context/AuthContext.tsx tests/profileApi.test.ts` | Exit 1: one existing `react-refresh/only-export-components` error at AuthContext.tsx:149; no other lint findings. Tool also emits a baseline-browser-mapping age notice; no package update made. |
+| `git diff --check` | Exit 0. |
+
+Backend tests use real JWT/middleware/routes/model SQL against synthetic SQLite, reusing the existing fixture with added insert-result `_mapping` support. They parse only the real factory's auth allowlist AST, never import/run the factory. Coverage: anonymous/invalid/expired and own/foreign UUID lookup; missing-profile → create → reload; legacy matching fields versus forged UUID/email; existing/ambiguous identity; missing subject/email; object/name validation; no creation-profile debug payload. One constraint-error test injects SQLAlchemy IntegrityError at INSERT to verify generic 400 and unchanged rows. This is error-path injection, not PostgreSQL validation. Bootstrap logs' simulated ERROR lines in the full suite remain intentional fixtures.
+
+Frontend tests transpile actual user API/client/AuthContext modules using installed TypeScript into a VM with isolated SDK/transport/React-hook/storage/document substitutes. They verify authenticated lookup and explicit token, displayName-only creation, 404-only null behavior, SDK session fallback/explicit-token avoidance, and existing/missing/denied bootstrap decisions/storage markers. They do not render React, contact Supabase or exercise browser scheduling/account switching. Type-check covers application sources; tests run via Node TypeScript stripping/transpilation.
+
+Deliberate contracts: UUID lookup is now authenticated/private; own missing/foreign UUID gives 404, ambiguity 403. POST trusts verified sub/email, not body identity: matching legacy fields remain accepted, conflicts 403, missing email claim 403, invalid object/name 400, existing profile 409, ambiguity 403, successful creation 201. Success profile fields remain unchanged. Backend constraint details no longer reach responses and created profile is no longer debug-logged. JWT email freshness/provider state is not checked remotely; no email-change feature added.
+
+Limits/next: full MOD-002 still needs Q1 public league-search field decision and commissionerEmail minimization/consumer verification. UUID snapshot uniqueness/concurrent provisioning, legacy remediation and provider consolidation belong to existing MOD-006/005/026; sequential checks here do not prove race safety. Deployed DB/RLS/direct SDK access, real signup/confirmation, browser lifecycle and historical logs remain unverified. No schema/migration, job, app/listener startup, environment values, network or production mutation used. Stop after this stage.
+
+
+## MOD-002 final public-search privacy verification — 2026-10-28
+
+User decision: keep commissioner email private. Removed only `commissionerEmail` from `LeagueModel.search_leagues` SQL projection and frontend `LeagueSearchResult`; Home search cards consume commissioner display name, not email. Public discovery retains ID, name, sport, capacity, status, draft date, discoverability, commissioner ID and display name. Response shape deliberately loses email; filters/pagination/public access are unchanged. The broader Q1 role matrix remains outside MOD-002.
+
+| Command (root unless specified) | Actual result |
+| --- | --- |
+| `python3 api/tests/run_isolated.py 'test_public_league_search.py'` before implementation | Initial fixture setup: four errors from missing synthetic ESPN URL; supplied test-only URL without changing application code. Corrected baseline: four tests, one ordinary failure (commissioner email exposed), three pass; exit 1. |
+| Same targeted command after implementation | 4/4 pass, exit 0. |
+| `python3 api/tests/run_isolated.py` | 106/106 pass, exit 0, no skips/expected failures. Prior cross-user profile denial assertions remain intact and pass. |
+| `front-end`: `node --test --experimental-strip-types tests/*.test.ts` | 42/42 pass, exit 0. |
+| `front-end`: `./node_modules/.bin/tsc -p tsconfig.app.json --noEmit` | Exit 0; verifies consumers against the reduced search type. |
+| `front-end`: `./node_modules/.bin/eslint src/types/league.ts` | Exit 0; dependency-age notice only. Full lint not rerun; previously documented errors remain. |
+| `git diff --check` | Exit 0. |
+
+Four new tests execute real registered search handlers/middleware/model SQL using SQLite synthetic discoverable/hidden leagues with a commissioner contact value that must not appear in JSON. They assert exact retained fields, no email, anonymous access, hidden-league exclusion, sport filtering, page offset/limit, short/no-match query results and invalid-parameter JSON status. Actual auth allowlist is parsed without running/importing the factory. SQLite adapts ILIKE to LIKE and substitutes constant similarity; these tests do not prove PostgreSQL trigram ranking, collation, deployed privileges or query performance. A synthetic provider URL is set only during route construction; no provider/network call occurs.
+
+MOD-002 is complete within its documented application/API boundary across stages 1–3. No production connection/mutation, schema/migration, dependency upgrade, app/listener startup, job or deployment occurred. Real browser lifecycle, direct Supabase/deployed RLS, historical logs and PostgreSQL concurrency remain unverified. MOD-006 owns concurrent unique provisioning after MOD-005 evidence; no race-safety claim is made here. Recommended next implementation: MOD-003A with its remaining role-policy decisions, not additional MOD-002 work. Stopped after this task.

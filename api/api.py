@@ -51,7 +51,6 @@ def create_app():
         },
         public_prefixes=[
             "/socket.io",           # allow socket.io handshake route through (see note below)
-            "/api/user/byUuid/",
         ],
     )
 

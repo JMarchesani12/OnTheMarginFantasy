@@ -1,5 +1,4 @@
-import logging
-from sqlite3 import IntegrityError
+from sqlalchemy.exc import IntegrityError
 from typing import Any, Dict, Optional
 
 from sqlalchemy import text
@@ -99,13 +98,11 @@ class UserModel:
 
                 user = dict(row._mapping)
 
-            logging.debug("Created user: %s", user)
             return user
 
         except IntegrityError as e:
             # Could be: unique(email) violation OR FK(uuid->auth.users) violation
-            msg = str(getattr(e, "orig", e))
-            raise ValueError(f"User creation failed: {msg}")
+            raise ValueError("User creation failed") from e
         
     def update_user(self, user_id: int, updates: Dict[str, Any]) -> Dict[str, Any]:
         payload = {k: updates[k] for k in updates.keys() if k in ALLOWED_USER_FIELDS}

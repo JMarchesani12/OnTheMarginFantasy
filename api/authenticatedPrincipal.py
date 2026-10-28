@@ -26,6 +26,23 @@ class PrincipalResolutionError(Exception):
         self.status_code = status_code
 
 
+def verified_request_subject() -> str:
+    """Read a verified HTTP subject even before an application profile exists.
+
+    This is the bootstrap primitive, not an application principal or job bypass.
+    Call only after authMiddleware has populated g.user from a verified JWT.
+    """
+    if not has_request_context():
+        raise PrincipalResolutionError('interactive_request_required', 401)
+
+    claims = getattr(g, 'user', None)
+    subject = claims.get('sub') if isinstance(claims, dict) else None
+    if not isinstance(subject, str) or not subject.strip():
+        raise PrincipalResolutionError('missing_authenticated_subject', 401)
+
+    return subject
+
+
 def resolve_authenticated_principal(db: Engine) -> AuthenticatedPrincipal:
     """Map a middleware-verified subject to exactly one application User.
 
@@ -35,13 +52,7 @@ def resolve_authenticated_principal(db: Engine) -> AuthenticatedPrincipal:
     operational errors; they never select a fallback identity. No result is
     cached across requests, so missing/ambiguous mappings fail on each lookup.
     """
-    if not has_request_context():
-        raise PrincipalResolutionError('interactive_request_required', 401)
-
-    claims = getattr(g, 'user', None)
-    subject = claims.get('sub') if isinstance(claims, dict) else None
-    if not isinstance(subject, str) or not subject.strip():
-        raise PrincipalResolutionError('missing_authenticated_subject', 401)
+    subject = verified_request_subject()
 
     with db.begin() as conn:
         rows = conn.execute(text('''
