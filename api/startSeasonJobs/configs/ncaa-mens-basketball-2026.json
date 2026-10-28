@@ -1,13 +1,13 @@
 {
   "sport": "ncaa-mens-basketball",
   "seasonYear": 2026,
-  "seasonStart": "2026-11-02",
+  "seasonStart": "2026-11-01",
   "seasonEnd": "2027-04-06",
   "subdivisions": [
     {
       "code": "D1",
       "name": "NCAA Division I",
-      "regularSeasonStart": "2026-11-02",
+      "regularSeasonStart": "2026-11-01",
       "regularSeasonEnd": "2027-03-07",
       "postseasonStart": "2027-03-16",
       "postseasonEnd": "2027-04-06"
