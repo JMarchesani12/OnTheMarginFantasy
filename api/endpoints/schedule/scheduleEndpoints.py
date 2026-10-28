@@ -184,29 +184,6 @@ class ScheduleEndpoints:
             traceback.print_exc()
             return jsonify({"message": "Failed to search teams"}), 500
         
-    # POST /api/schedule/createWeeks
-    # {
-    #     "leagueId": 2,
-    # }
     def createWeeksForLeague(self):
-        body = request.get_json(silent=True) or {}
-
-        required = ["leagueId"]
-        missing = [k for k in required if body.get(k) is None]
-        if missing:
-            return jsonify({"message": f"Missing required fields: {missing}"}), 400
-
-        try:
-            weeks = self.model.ensure_weeks_for_league(
-                league_id=int(body["leagueId"])
-            )
-            return jsonify({
-                "leagueId": body["leagueId"],
-                "weeksCreated": weeks,
-            }), 201
-        except ValueError as e:
-            return jsonify({"message": str(e)}), 400
-        except Exception:
-            import traceback
-            traceback.print_exc()
-            return jsonify({"message": "Failed to create weeks"}), 500
+        """Standalone HTTP generation is disabled; trusted model calls remain separate."""
+        return jsonify({'error': 'http_week_generation_disabled'}), 410

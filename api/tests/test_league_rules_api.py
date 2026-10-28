@@ -1,4 +1,6 @@
 import sys
+import time
+import jwt
 import unittest
 from pathlib import Path
 from unittest.mock import Mock
@@ -6,6 +8,9 @@ from flask import Flask
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from endpoints.league.leagueEndpoints import LeagueEndpoints
 from endpoints.schedule.scheduleModel import ScheduleModel
+from authMiddleware import install_auth_middleware
+from supabaseAuth import ISSUER, SUPABASE_JWT_SECRET
+from test_profile_regression import ALICE, ProfileDatabase
 
 class Row:
     def __init__(self, **values): self._mapping=values
@@ -24,9 +29,18 @@ class LeagueRulesApiTests(unittest.TestCase):
     def setUp(self):
         self.endpoint=LeagueEndpoints.__new__(LeagueEndpoints)
         self.endpoint.leagueModel=Mock()
+        self.endpoint.leagueModel.get_league_read_access.return_value = {
+            'fullAccess': True, 'isDiscoverable': False,
+        }
+        self.endpoint.db_engine = ProfileDatabase()
+        self.addCleanup(self.endpoint.db_engine.connection.close)
         app=Flask(__name__)
+        install_auth_middleware(app)
         app.add_url_rule('/rules/<int:league_id>',view_func=self.endpoint.get_league_rules)
         self.client=app.test_client()
+        token = jwt.encode(dict(sub=ALICE, iss=ISSUER, aud='authenticated',
+                                exp=int(time.time()) + 600), SUPABASE_JWT_SECRET, algorithm='HS256')
+        self.client.environ_base['HTTP_AUTHORIZATION'] = f'Bearer {token}'
 
     def test_missing_league(self):
         self.endpoint.leagueModel.get_league_rules.return_value=None

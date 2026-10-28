@@ -1,10 +1,10 @@
 # Regression verification baseline
 
-Latest result: MOD-002 is complete for its bounded application/API scope. Final stage below records **106/106 isolated backend tests and 42/42 frontend tests passing**, plus passing app TypeScript and changed-type lint. Earlier partial/red results are historical; broader existing lint failures and deployed/concurrency limits remain.
+Latest result: **MOD-003A complete** in bounded application/API scope. Final guarded backend suite **220/220**, frontend **45/45**, app TypeScript and `git diff --check` pass (exit 0). Focused lint exits 1 on three pre-existing Discover `any` errors; other touched frontend files lint clean. Deployed PostgreSQL/RLS/concurrency/cascade/browser limits remain; no production used. Historical results and policy proposals below are superseded by the final entry.
 
 2026-10-28. Read with [behavior checklist](behavior-checklist.md), [backlog](backlog.md), [database audit](database-audit.md), and [progress](progress.md). Baseline is checkout `162f89a` plus the pre-existing modification to `api/startSeasonJobs/configs/ncaa-mens-basketball-2026.json` and untracked modernization docs. This is not a clean-HEAD or deployed-production result.
 
-**Result:** original suites passed (66 backend + 34 frontend utility + 9 tier-tool tests). Added 12 backend tests: 10 pass and **two fail on known profile-isolation defects**. Final backend suite is **76 passing / 78 total, exit 1**. Frontend build and tier type check pass; frontend lint has **63 pre-existing errors and 11 warnings, exit 1**. There is no all-green regression gate yet. No failure was fixed, skipped, marked expected-failure, or converted into a compatibility requirement.
+**Original baseline result (historical):** original suites passed (66 backend + 34 frontend utility + 9 tier-tool tests). Added 12 backend tests: 10 pass and **two fail on known profile-isolation defects**. Final backend suite is **76 passing / 78 total, exit 1**. Frontend build and tier type check pass; frontend lint has **63 pre-existing errors and 11 warnings, exit 1**. There is no all-green regression gate yet. No failure was fixed, skipped, marked expected-failure, or converted into a compatibility requirement.
 
 ## Tools, prerequisites and isolation
 
@@ -225,3 +225,234 @@ User decision: keep commissioner email private. Removed only `commissionerEmail`
 Four new tests execute real registered search handlers/middleware/model SQL using SQLite synthetic discoverable/hidden leagues with a commissioner contact value that must not appear in JSON. They assert exact retained fields, no email, anonymous access, hidden-league exclusion, sport filtering, page offset/limit, short/no-match query results and invalid-parameter JSON status. Actual auth allowlist is parsed without running/importing the factory. SQLite adapts ILIKE to LIKE and substitutes constant similarity; these tests do not prove PostgreSQL trigram ranking, collation, deployed privileges or query performance. A synthetic provider URL is set only during route construction; no provider/network call occurs.
 
 MOD-002 is complete within its documented application/API boundary across stages 1–3. No production connection/mutation, schema/migration, dependency upgrade, app/listener startup, job or deployment occurred. Real browser lifecycle, direct Supabase/deployed RLS, historical logs and PostgreSQL concurrency remain unverified. MOD-006 owns concurrent unique provisioning after MOD-005 evidence; no race-safety claim is made here. Recommended next implementation: MOD-003A with its remaining role-policy decisions, not additional MOD-002 work. Stopped after this task.
+
+
+## MOD-003A stage 1 verification — 2026-10-28
+
+Scope: existing self-service member PATCH only. Principal dependency checked in actual code; frontend caller is an own-team rename. Implemented owner-constrained teamName-only UPDATE, explicit principal errors, generic 404 for missing/foreign targets and 400 for unknown fields/non-object/nonblank-string violations. Response fields and valid rename behavior retained. Trusted general model update unchanged. Commissioner role does not bypass owner checks on this route; remaining administrative policies were not inferred.
+
+| Command (root unless specified) | Actual result |
+| --- | --- |
+| `python3 api/tests/run_isolated.py 'test_member_profile_authorization.py'` before implementation | Seven tests; 14 assertion/subtest failures, exit 1. Real synthetic unauthorized renames and score/order mutations reproduced; missing target returned old 400. |
+| Same targeted command after implementation | 7/7 pass, exit 0. |
+| `python3 api/tests/run_isolated.py` | 113/113 pass, exit 0; no errors/skips/expected failures, original MOD-002 denial assertions unchanged. Intentional bootstrap ERROR fixture output remains. |
+| `front-end`: `node --test --experimental-strip-types tests/profileApi.test.ts` before frontend narrowing | 8/9 pass, one failure on score/order payload, exit 1. |
+| `front-end`: `node --test --experimental-strip-types tests/*.test.ts` after narrowing | 43/43 pass, exit 0, including new rename request test. |
+| `front-end`: `./node_modules/.bin/tsc -p tsconfig.app.json --noEmit` | Exit 0. |
+| `front-end`: `./node_modules/.bin/eslint src/api/leagues.ts src/types/leagueMember.ts tests/profileApi.test.ts` | Exit 0; dependency-age notice only. Full lint not rerun; prior findings remain. |
+| `git diff --check` | Exit 0. |
+
+Seven new backend tests reuse the existing synthetic in-memory profile SQL result adapter and actual principal JWT/middleware/league route/model paths. Added synthetic League/LeagueMember rows for commissioner A, member B and nonmember C, with B also owning a member in another league. Own renames preserve all response/DB fields except teamName. Foreign targets, including commissioner's attempt to rename B and nonmember/cross-league substitution, fail without mutation. Extra score/order/identity/league fields cannot cause partial writes. Missing/expired auth, absent/ambiguous profile, invalid payload and missing member have explicit outcomes. Ownership is part of the UPDATE predicate; no separate check-then-write lookup. No parent league ID exists in this route; own membership defines its resource scope. The SQL fixture is not a deployed schema or PostgreSQL/RLS/concurrency test.
+
+Frontend test executes actual API module with substituted transport and confirms even stale JavaScript extra arguments cannot serialize score/order fields. Type-check confirms the only UI caller matches the narrowed signature. No browser rendering or account-switch verification claimed.
+
+Remaining: MOD-003A is partial; own-league listing/creation, commissioner administration, moderation/admission, week generation and scoped reads are unchanged. Next bounded recommendation: principal-bound `/api/league/byUser`; Q1 nonmember read and Q4 operational policy still need resolution for later slices. No new schema/migration, dependency, production/network/private-row access, environment values, job/app factory/listener or deployment. Stop after selected stage, not another backlog task.
+
+
+## MOD-003A stage 2 verification — 2026-10-28
+
+Scope: `/api/league/byUser` only. Actual resolver, current handler/model SQL and frontend caller checked before implementation. Body userId remains required for compatibility but must match the resolved principal; only the principal's ID reaches the listing model. Foreign ID is 403 `user_identity_mismatch`; missing/ambiguous profile or subject uses explicit resolver errors; malformed JSON objects/ID/stage types get safe 400 messages. Own successful payload and stage semantics remain unchanged. No public visibility/admin role decisions made.
+
+| Command from root | Actual result |
+| --- | --- |
+| `python3 api/tests/run_isolated.py 'test_own_league_listing.py'` before implementation | Nine tests, nine assertion/subtest failures and one error; exit 1. Foreign listing and identity failures returned 200; invalid userId string raised uncaught ValueError. |
+| Same targeted command after implementation | 9/9 pass, exit 0. |
+| `python3 api/tests/run_isolated.py` | 122/122 pass, exit 0; no errors/skips/expected failures. Prior profile/member denial tests preserved and passing. Intentional bootstrap ERROR fixture output remains. |
+| `git diff --check` | Exit 0. |
+
+Nine added tests use actual JWT verification/middleware/registered routes/principal and model listing query with synthetic SQLite profiles, leagues, sport and memberships. They verify exact retained own fields (member-specific name/order/points, nullable current week and other league metadata), both users' isolation, commissioner/member/nonmember identity cases, empty own membership, stage active/completed/all/case/default/null/unknown-string behavior, matching numeric-string ID, forged body/header/query identities, missing/invalid/expired JWT, absent/ambiguous app identity/empty subject and invalid request shapes/IDs/stage. Denials are checked before substituted model lifecycle sync is reached.
+
+Tests substitute `sync_due_league_statuses` to avoid unrelated lifecycle transitions; production status-sync code remains unchanged. SQL current-week interval expression is adapted to SQLite datetime with fixed now and no Week rows, and settings fixture is SQLite TEXT. These checks validate identity/query binding and compatible SQL fields, not PostgreSQL interval/JSON types, current-week boundaries, lifecycle transitions, deployed RLS/locking/concurrency or query performance. No frontend tests/type/lint rerun because frontend code is unchanged; prior results stay historical.
+
+Remaining MOD-003A: league creation, commissioner administration/moderation/admission, operational week generation and other league-scoped reads. Recommended next: bind creation's commissioner/initial membership to the authenticated principal; Q1 nonmember read and Q4 operational decisions remain for their slices. No schema/migration/dependency/production/network/environment-value access, app factory/listener startup, job or deployment; no other backlog task started. Stopped after stage 2.
+
+
+## MOD-003A stage 3 verification — 2026-10-28
+
+Scope: principal-bound league creation and its initial membership only. Actual resolver/model/caller inspected. Commissioner remains a required compatibility field but must match principal; only resolved principal.user_id reaches the create model. Foreign commissioner returns 403 `commissioner_identity_mismatch`, invalid ID/object/missing fields JSON 400, auth/subject/profile absence/ambiguity explicit 401/403. Matching integer and numeric-string commissioner inputs remain supported. Success remains 201 with existing league/sportInfo/creatorMemberId shape; model retains team-name trimming, settings/rule/timezone handling and week initializer call. Frontend caller already conforms and is unchanged.
+
+| Command from root | Actual result |
+| --- | --- |
+| `python3 api/tests/run_isolated.py 'test_league_creation_authorization.py'` before implementation | Eight tests, six assertion/subtest failures, two SQLite constraint errors on invalid commissioner values; exit 1. Foreign/missing/empty/ambiguous identities incorrectly permitted creation. |
+| Same targeted command after implementation | 8/8 pass, exit 0. |
+| `python3 api/tests/run_isolated.py` | 130/130 pass, exit 0; no errors/skips/expected failures. Existing denial assertions remain intact. Intentional bootstrap ERROR fixture output remains. |
+| `git diff --check` | Exit 0. |
+
+Eight tests reuse the guarded runner/profile fixture with synthetic League/LeagueMember/Sport rows, real JWT/middleware/routes/model and SQLite foreign keys. Creation fixture extracts the model's INSERT/RETURNING body from PostgreSQL CTE, replaces JSONB cast with a SQLite parameter and supplies synthetic equivalent sportInfo/settings projection. It executes real membership INSERT SQL. Tests check persisted commissioner and member user IDs for both A/B, response fields, initial points/order/name, forged body/query/header identities, required and invalid object/ID values, matching numeric-string commissioner, model name validation, and no persisted league/member or week initialization on rejection. Week initializer is substituted; this is not PostgreSQL CTE/JSON compatibility, actual scheduling, RLS, concurrency or browser verification.
+
+No frontend checks rerun because frontend unchanged; previous frontend/lint/type results stay historical. The model's pre-existing league/member commit followed by week initialization is unchanged; initializer failure can occur after creation commits, and rollback/retry semantics for that boundary were not tested or repaired here. No schema/migration/dependency, production/network/private-row/environment values, app factory/listener, real week/job or deployment used.
+
+MOD-003A remains partial: next recommended slice is principal-bound commissioner-only league settings PATCH, then other administration/moderation/admission/scoped-read operations. Q1 nonmember visibility and Q4 operational/week-generation policy remain open. Stop after stage 3; no other task started.
+
+
+## MOD-003A stage 4 verification — 2026-10-28
+
+Scope: commissioner-only league settings PATCH. Actual principal dependency, original update model/commissioner helper, frontend caller and existing rules tests checked. Handler now resolves principal, validates object shape and uses explicit checked `update_league_as_commissioner` model entry point. Shared update implementation verifies current commissioner before rules/settings validation and includes commissioner in final UPDATE predicate. Original trusted `update_league` remains separate from HTTP identity. Existing success fields, field allowlist (including name/capacity/status/settings/deadlines), rules-version/timezone behavior and missing-league 400 retained. No new role/lifecycle policy inferred.
+
+| Command from root | Actual result |
+| --- | --- |
+| `python3 api/tests/run_isolated.py 'test_league_settings_authorization.py'` before implementation | Eight tests, six assertion/subtest failures; exit 1. Unauthorized member/nonmember/foreign commissioner and missing identity/empty-subject writes, plus stale-owner write reproduced. |
+| Same command after implementation and operational-failure case addition | 9/9 pass, exit 0. |
+| `python3 api/tests/run_isolated.py` | 139/139 pass, exit 0; no errors/skips/expected failures. Trusted-model rules tests and prior denial assertions unchanged and passing. Intentional bootstrap ERROR fixture output remains. |
+| `git diff --check` | Exit 0. |
+
+Nine tests use real JWT/middleware/registered route/model logic and synthetic profiles/leagues/member rows. SQL fixture extracts PostgreSQL UPDATE CTE's UPDATE/RETURNING body, adapts JSONB cast to SQLite storage and supplies equivalent synthetic sportInfo/decoded settings projection. It also executes actual league reads and parameterized owner predicate. Assertions cover valid A/B commissioner saves/response fields/persisted deadlines/name/capacity and pinned rules version; ordinary member, nonmember and another league commissioner denial; forged body/header/query actor and ownership-transfer attempts; missing/invalid/expired JWT, empty subject and missing/ambiguous application identity; existing empty-patch/settings/version/timezone/missing-target validation; non-object input; safe generic 500 on injected operational DB read error with unchanged row.
+
+A deterministic fixture hook changes commissioner between initial read and UPDATE; former owner is denied and requested name/updatedAt do not change. This checks that final write enforces commissionership, not PostgreSQL transaction interleaving/locking or isolation levels. Shared read/write remains two transactions; no general concurrency/whole-operation atomicity guarantee. SQLite does not verify PostgreSQL CTE/JSON/types/RLS or browser behavior. Frontend unchanged; checks not rerun and historical results not claimed fresh.
+
+Remaining MOD-003A: bind admission actors starting with join-request creation, then moderation/member removal/deletion and other scoped reads/week generation. Q1 nonmember visibility/Q4 operational policy remain open; no broader REST authorization completion claimed. No schema/migration/dependency/production/network/private-row/environment-value access, app/listener, job or deployment. Stop after stage 4; no other task started.
+
+
+## MOD-003A stage 5 verification — 2026-10-28
+
+Scope: join-request creation identity only. Actual model/caller/previous dependencies checked; legacy body userId remains required but must match verified principal. Only principal.user_id and URL league_id reach unchanged create_join_request model. Foreign userId is 403 `user_identity_mismatch`, missing/invalid ID/object JSON 400, principal absence/ambiguity/auth errors explicit 401/403. Success remains 201 with existing JSON fields; trimmed name, message, existing-member rejection and sequential own pending-repeat behavior retained.
+
+| Command from root | Actual result |
+| --- | --- |
+| `python3 api/tests/run_isolated.py 'test_join_request_authorization.py'` before implementation | Nine tests, nine assertion/subtest failures; exit 1. Foreign creation/pending lookup and empty/missing identity bypasses reproduced; invalid boolean/fractional IDs also created requests. Some later subtest no-write assertions observe the preceding unauthorized fixture insert. |
+| Same command after implementation | 9/9 pass, exit 0. |
+| `python3 api/tests/run_isolated.py` | 148/148 pass, exit 0; no errors/skips/expected failures. Previous denial assertions remain unchanged. Intentional bootstrap ERROR fixture output remains. |
+| `git diff --check` | Exit 0. |
+
+Nine tests reuse the guarded runner and actual profile SQLite result fixture, with synthetic League/LeagueMember/LeagueJoinRequest tables, real JWT verification/middleware/registered route/model SQL. No SQL dialect adaptation needed for this query subset. Tests inspect persisted owner/league/name fields for A/B, deny forged userId before insert, prevent another user's pending response leakage through creation, ensure header/query/body actor and league fields cannot override verified owner/URL, retain own repeat response/no-overwrite, existing-member/name contracts, numeric-string ID compatibility and auth/identity/shape/type errors. Synthetic duplicate app mappings are created only in the disposable fixture. No existing assertions weakened or skipped.
+
+No frontend changes/checks rerun; Discover already sends matching current user ID and team name. SQLite does not establish deployed PostgreSQL FK/role/RLS/concurrency behavior or browser journeys. Sequential pending reuse is not a concurrent uniqueness guarantee. Discoverability, private-league visibility, capacity/status admission policy, approval/denial/cancellation and moderator permissions are unchanged and outside this stage; broader Q1/Q4 decisions remain open. No production/network/environment/private-row access, app/listener/job, schema/migration/dependency/deployment or unrelated cleanup.
+
+MOD-003A remains partial. Recommended next: commissioner-only join-request listing bound to principal, then remaining moderation and scoped operations. Stop after stage 5; no other task started.
+
+
+## MOD-003A stage 6 verification — 2026-10-28
+
+Scope: commissioner-only join-request listing. Actual principal/helper/model/caller and moderator rendering inspected. Required actingUserId remains compatibility assertion, must match principal (403 actor_identity_mismatch), and never grants authority. Checked model entry point verifies commissioner for URL league and final request SELECT includes commissioner EXISTS predicate; trusted original listing shares query implementation separately. Missing/ambiguous app identity/auth explicit 401/403; invalid object/actor/status types JSON 400. Existing authorized response/contact fields, status filter/descending order/empty results and missing-league 400 are preserved. No approval/denial/cancellation changes.
+
+| Command from root | Actual result |
+| --- | --- |
+| `python3 api/tests/run_isolated.py 'test_join_request_listing_authorization.py'` before implementation | Nine tests, nine assertion/subtest failures, exit 1. Forged commissioner actor and stale check exposed applicant data; absent identity/empty subject also bypassed checks. Invalid status list logged DB binding error and returned 500 instead of 400. |
+| Same command after implementation | 9/9 pass, exit 0. |
+| `python3 api/tests/run_isolated.py` | 157/157 pass, exit 0; no errors/skips/expected failures. Existing profile/member/admission denial assertions unchanged. Intentional bootstrap ERROR fixture output remains. |
+| `git diff --check` | Exit 0. |
+
+Nine tests reuse guarded runner/profile SQLite fixture (extended result interface) with synthetic commissioners/members/nonmember and multiple leagues/request rows. Real JWT/middleware/registered routes/model/helper/parameterized SQL execute without dialect adaptation. Exact own-league response including authorized userEmail/userDisplayName, descending order, status filter/unknown/empty/null behavior, empty league, numeric-string actor, foreign roles, forged body/header/query scope, auth/identity and input errors are asserted. Synthetic role-change hook modifies commissioner immediately before final SELECT and verifies 200 empty list/no applicant data; this is intentional fail-closed data behavior after initial check passes, not a 403 race outcome or PostgreSQL concurrency/locking proof. Duplicate identity setup is disposable only.
+
+Frontend unchanged and checks not rerun; historical results not claimed fresh. No live DB/RLS/direct Supabase/browser verification, post-query revocation guarantee, production/network/environment/private-row access, app/listener/job, schema/migration/dependency/deployment or unrelated cleanup. Q1 nonmember visibility/discoverability and Q4 operational permissions remain open.
+
+MOD-003A remains partial. Next recommended slice: commissioner join-request approval bound to verified principal, followed by remaining moderation and scoped operations. Stop after stage 6; no other task started.
+
+
+## MOD-003A stage 7 verification — 2026-10-28
+
+Scope: principal-bound commissioner approval only. Actual model/caller inspected. Required body actingUserId remains compatibility assertion matching principal; mismatch 403 actor_identity_mismatch; malformed object/ID 400; auth/identity explicit 401/403. Checked model locks and verifies URL league commissioner inside approval transaction before mutations; request read and resolution UPDATE bind both URL league/request, and resolvedByUserId uses principal ID. Existing 200 request/member shape and pending/nonpending/replay/missing-resource contracts preserved. Trusted model remains direct-call/HTTP-independent, sharing approval transaction body and league-first lock order.
+
+| Command from root | Actual result |
+| --- | --- |
+| `python3 api/tests/run_isolated.py 'test_join_request_approval_authorization.py'` before implementation | Nine tests, nine assertion/subtest failures, exit 1. Forged commissioner actor/missing identity/empty subject could approve; invalid actor types also caused mutation. Some subsequent subtest no-change assertions observed prior unauthorized fixture mutation. |
+| Same command final (after trusted-call regression added and lock-order alignment) | 10/10 pass, exit 0. |
+| `python3 api/tests/run_isolated.py` final | 167/167 pass, exit 0; no errors/skips/expected failures. Prior denial assertions unchanged. Approval rollback case intentionally logs synthetic exception; bootstrap ERROR output remains intentional fault fixtures. |
+| `git diff --check` | Exit 0. |
+
+Ten tests reuse guarded runner/profile fixture with synthetic applicants, commissioner/member/nonmember accounts, leagues/members/requests/sport configuration. Real JWT/middleware/registered routes/model transaction executes against SQLite; FOR UPDATE removed only in fixture, PostgreSQL UPDATE alias/RETURNING/JSONB syntax adapted, and synthetic JSON/GREATEST functions support the existing league update branch. Tests inspect both commissioners' persisted resolution actor/member owner/name/order and response shape; deny forged actor, wrong role/foreign league/request, missing/nonpending/replay, invalid actor/shape and auth/identity failures without state changes. Body/header/query cannot replace URL resource or principal. Injected failure after member INSERT proves synthetic membership/league/request state rolls back together. Trusted direct call without Flask request context remains functional and accepts audit actor metadata as before; HTTP cannot select that path.
+
+Code review aligned trusted and checked approval entry points to league-before-request locking, avoiding opposite approval lock orders introduced by the new checked path. This is code-level ordering, not a PostgreSQL deadlock/concurrency proof. SQLite rollback is not deployed RLS/constraint/isolation/locking validation; counter/rounds/capacity policy and broader admission races remain unchanged/unverified. No frontend checks rerun (caller unchanged), production/network/environment/private-row access, app/listener/job, schema/migration/dependency/deployment or unrelated cleanup.
+
+MOD-003A remains partial. Next: commissioner denial bound to principal, reviewing known malformed denial SQL finding before valid-flow assertions; other moderation and scoped operations/Q1/Q4 remain. Stop after stage 7; no other task started.
+
+
+## MOD-003A stage 8 verification — 2026-10-28
+
+Scope: commissioner denial authorization and its necessary canonical-status/SQL repair. Handler resolves principal, requires legacy matching actingUserId, passes only principal actor and URL scope to checked model. Checked transaction locks/verifies league commissioner before scoped request lock/update. Both checked/trusted entry points use league-first order and shared denial body, with trusted path independent of HTTP identity. Fixed lowercase pending comparison and malformed trailing-comma SQL; final UPDATE guards request ID, URL league and PENDING. Intended 200 DENIED response with principal resolver restored; wrong role/actor 403, auth/identity 401/403, malformed body/ID and missing/foreign/resolved request 400. Frontend unchanged and already conforms.
+
+| Command from root | Actual result |
+| --- | --- |
+| `python3 api/tests/run_isolated.py 'test_join_request_denial_authorization.py'` before implementation | Nine tests, ten assertion/subtest failures and one error from direct model rejecting canonical PENDING; exit 1. Intended denial failed, identity/forged-actor checks were absent, and rollback path was unreachable. |
+| Same command after implementation | 9/9 pass, exit 0. |
+| `python3 api/tests/run_isolated.py` | 176/176 pass, exit 0; no errors/skips/expected failures. Existing assertion set preserved. Approval rollback's logged synthetic exception and bootstrap ERROR fixture output remain intentional. Denial rollback logs are captured/asserted by its test. |
+| `git diff --check` | Exit 0. |
+
+Nine tests reuse guarded runner/profile SQLite fixture with synthetic commissioners/members/nonmember, two leagues and pending/approved/denied/cancelled request rows. Fixture CHECK admits uppercase canonical statuses; only FOR UPDATE is removed from model SQL. Actual denial UPDATE/RETURNING executes, including fixed comma and scope/status predicates. Assertions verify both commissioners' successful request fields/persisted resolver and no league/member mutation; deny forged actor, wrong role/league/request, all resolved states/replay; ensure body/header/query cannot replace URL or resolver; explicit auth/missing/ambiguous identity and malformed-input errors; synthetic fault after actual UPDATE rolls back resolution; trusted direct model remains callable without HTTP request.
+
+SQLite CHECK is synthetic, not deployed PostgreSQL verification. Row locks, concurrency/deadlocks, deployed SQL/types/RLS/status constraints and real browser flow remain unverified; no disposable PostgreSQL command run. No frontend checks rerun because caller unchanged; historical results stay historical. No schema/migration/dependency/production/network/environment/private-row access, app/listener/job or deployment.
+
+MOD-003A remains partial. Necessary denial repair overlaps MOD-011; its backlog note now records completed denial code/synthetic checks, with cancellation and required disposable PostgreSQL validation still open. Next MOD-003A slice: authenticated own-request cancellation, reviewing its known lowercase status bug, followed by remaining moderation/scoped operations and Q1/Q4 decisions. Stop after stage 8; no broader task started.
+
+
+## MOD-003A stage 9 verification — 2026-10-28
+
+Scope: authenticated own-request cancellation and necessary canonical-status repair. Handler resolves principal, requires matching legacy userId (403 mismatch), passes verified owner/URL scope only. Model's locked owner check retained, no commissioner override; fixed PENDING comparison and guarded final UPDATE by request ID/league/user/PENDING. Intended 200 CANCELLED response/timestamp restored with resolvedByUserId unchanged (normally null). Auth/identity errors explicit 401/403, malformed object/ID 400, foreign owner 403, missing/foreign/resolved request 400. Trusted direct model remains HTTP-independent and retains request-owner enforcement.
+
+| Command from root | Actual result |
+| --- | --- |
+| `python3 api/tests/run_isolated.py 'test_join_request_cancellation_authorization.py'` before implementation | Ten tests, twelve assertion/subtest failures and one direct-model error rejecting canonical PENDING; exit 1. Intended cancellation was broken and HTTP identity/actor gaps reproduced as wrong error outcomes. |
+| Same command after implementation | 10/10 pass, exit 0. |
+| `python3 api/tests/run_isolated.py > /tmp/mod003a-stage9-tests.log 2>&1` | 186/186 pass, exit 0; no errors/skips/expected failures. Summary inspected; existing assertions preserved. Approval rollback exception/other bootstrap ERROR fixture output remains intentional. |
+| `git diff --check` | Exit 0. |
+
+Ten tests reuse guarded runner/profile SQLite result adapter with synthetic League/LeagueMember/request rows and uppercase-status CHECK; only FOR UPDATE is removed. Actual cancellation UPDATE/RETURNING executes. Assertions inspect A/B own cancellations/exact fields/persisted status/timestamp and unchanged resolver; reject forged IDs, foreign owners including target league commissioner, foreign URL request IDs, all resolved statuses/replay, auth/missing/ambiguous identity/invalid shape/types with unchanged state. Body/header/query resource/resolver substitutions ignored. Fault injected after actual UPDATE rolls back to prior request state; logs captured. Direct model rejects nonowner and succeeds for owner without HTTP context. No existing assertions weakened/skipped.
+
+SQLite CHECK/transaction results are not deployed PostgreSQL SQL/types/status-CHECK/RLS/row-lock/concurrency verification. No frontend checks rerun (wrapper unchanged, no screen caller found); historical frontend/type/lint results stay historical. No production/network/private-row/environment access, app/listener/job, schema/migration/dependency/deployment or unrelated cleanup.
+
+MOD-003A remains partial: next principal-bound commissioner member removal, then deletion/remaining scoped reads/week generation with relevant Q1/Q4 decisions. MOD-011 now has denial/cancellation code repairs and synthetic regression evidence recorded; it remains open for its required disposable PostgreSQL validation. Stop after stage 9; no broader task started.
+
+
+## MOD-003A stage 10 verification — 2026-10-28
+
+Scope: authenticated commissioner member removal. Actual existing locked model and frontend caller inspected. Handler now resolves principal, treats required actingUserId as matching integer/numeric-string assertion (403 mismatch), validates JSON object/actor/boolean shift flag (400), and supplies principal ID plus URL resources to model. Existing model already locks/checks league commissioner and scoped member; wrong commissioner now PermissionError/403 instead of ValueError/400. Valid 200 response/default true/explicit false shifting, missing/foreign target/commissioner-removal 400 and replay/count/order behavior retained. Trusted direct model remains HTTP-independent with authority enforcement; frontend unchanged.
+
+| Command from root | Actual result |
+| --- | --- |
+| `python3 api/tests/run_isolated.py 'test_member_removal_authorization.py'` before implementation | Twelve tests, fourteen assertion/subtest failures and one direct-model error-class mismatch; exit 1. Forged actor/missing identity could remove, invalid actor/shift inputs coerced, wrong role mapped to 400. Later subtest state assertions also observed preceding unauthorized synthetic removals. |
+| Same command after implementation | 12/12 pass, exit 0. |
+| `python3 api/tests/run_isolated.py > /tmp/mod003a-stage10-tests.log 2>&1` | 198/198 pass, exit 0; no errors/skips/expected failures. Previous assertions unchanged. Intentional approval rollback exception/bootstrap ERROR fixture output remains. |
+| `git diff --check` | Exit 0. |
+
+Twelve tests reuse guarded runner/profile SQLite fixture with synthetic commissioner/member/nonmember profiles, two leagues and distinct member IDs/orders. Actual JWT/middleware/routes/model SQL execute with FOR UPDATE removed and synthetic now/GREATEST functions. Tests inspect successful A/B scoped removals, exact member-list payload and retained points, default shifting and explicit no-shift, unchanged other-league data; deny forged actors/other roles/foreign member IDs, missing targets and commissioner removal; reject auth/missing/ambiguous identity/shape/actor/nonboolean flag; verify actual DELETE fault rollback and replay without extra changes; direct model outside request context still enforces commissioner.
+
+Fixture has no dependent roster/history rows: cascading deletes/FK enforcement, historical integrity, deployed PostgreSQL roles/RLS/row locks/concurrency, browser behavior and nullable-order cases are not verified. Existing league-status policy/count algorithm not redesigned. No frontend checks rerun, schema/migration/dependency, production/network/private-row/environment-value access, app/listener/job or deployment.
+
+MOD-003A remains partial. Next recommended slice: commissioner league deletion bound to principal, then remaining scoped reads/week generation with Q1 nonmember visibility/Q4 operator decisions. Stop after stage 10; no other task started.
+
+
+## MOD-003A stage 11 verification — 2026-10-28
+
+Scope: authenticated commissioner league deletion only. Actual locked model and frontend caller checked. Handler requires principal and matching legacy actingUserId assertion (403 mismatch), validates object/ID (400), and passes principal ID/URL league only. Existing model commissioner check now returns PermissionError/403 and final DELETE includes commissioner predicate. Valid 200 fields and missing/replay 400 retained. Trusted model remains callable without HTTP context and still enforces commissioner. No profile deletion or new retention/status policy.
+
+| Command from root | Actual result |
+| --- | --- |
+| `python3 api/tests/run_isolated.py 'test_league_deletion_authorization.py'` before implementation | Nine tests, twelve assertion/subtest failures and one direct-model error-class mismatch, exit 1. Forged actor/missing identity/invalid types could delete synthetic leagues; wrong commissioner mapped to 400. Subsequent no-change assertions also observed preceding unintended fixture deletions. |
+| Same command after implementation | 9/9 pass, exit 0. |
+| `python3 api/tests/run_isolated.py > /tmp/mod003a-stage11-tests.log 2>&1` | 207/207 pass, exit 0; no errors/skips/expected failures. Existing assertions preserved. Intentional approval rollback exception/bootstrap ERROR fixture output remains. |
+| `git diff --check` | Exit 0. |
+
+Nine tests reuse guarded runner and removal/profile SQL result adapter, synthetic accounts/two leagues and representative SQLite ON DELETE CASCADE member/request rows. Actual JWT/middleware/registered routes/model SQL run with FOR UPDATE removed only. Assert both commissioners' own deletion and exact response, matching numeric-string identity, other-league and child preservation, forged actor/member/nonmember/foreign commissioner denial, URL versus body/header/query scope, auth/missing/ambiguous identity/shape/type errors, missing/replay contracts, actual DELETE fault rollback restoring league/children and direct-model commissioner enforcement without HTTP context. No assertions weakened/skipped.
+
+SQLite cascade fixture is a deliberately small test schema, not a deployed schema/migration or historical-retention guarantee. Actual PostgreSQL roles/RLS/locks/concurrency/deadlocks, complete dependent FK cascades/history and browser confirmation flow unverified. No frontend checks rerun (caller unchanged); historical results remain historical. No production/network/private-row/environment-value access, app/listener/job, schema/migration/dependency/deployment or unrelated cleanup.
+
+MOD-003A remains partial. Next requires Q1 nonmember read/preview policy for remaining league details/rules/member/conference reads and Q4 standalone HTTP week-generation authority before adopting those routes. No new global admin/operator inferred. Separate deployed-policy/schema/PostgreSQL evidence tasks remain open. Stop after stage 11; no other task started.
+
+
+## MOD-003A remaining-scope policy review — 2026-10-28
+
+Read actual league/schedule registrations and relevant read/preview/week caller paths; five routes remain grouped into two implementation stages (four league reads, then standalone week generation), plus final verification/handoff. No tests executed or application/test changes in this review; latest actual suite remains stage 11's 207/207, not a new verification run. User choices requested for open Q1 nonmember visibility and Q4 standalone generation authority; proposed limited discoverable previews/member-only full reads and commissioner-only HTTP generation await response. Automatic creation/internal week initialization is separate. No new policy or broader security guarantee claimed, and no production/network/environment-value access, app/listener/job/schema/migration/deployment occurred.
+
+
+## MOD-003A final read policy and internal-only generation — 2026-10-28
+
+Accepted policy: limited discoverable previews for authenticated nonmembers; full details/rules/member data/conferences only for members and commissioner; private leagues restricted. Standalone HTTP generation disabled, with trusted internal/automatic model calls unchanged. These user answers supersede the preceding pending Q1/Q4 proposal.
+
+| Command / check | Actual result |
+| --- | --- |
+| `python3 api/tests/run_isolated.py 'test_league_read_authorization.py'` before implementation | Initial 7 tests: 24 failures and 1 error, exit 1; unauthorized/private data and missing app-identity checks exposed. |
+| `python3 api/tests/run_isolated.py 'test_http_week_generation_disabled.py'` before implementation | 2 tests, 12 failing subtests, exit 1; HTTP still invoked generation. |
+| Frontend `node --test --experimental-strip-types tests/profileApi.test.ts` before preview helper | 9 pass / 10 total, exit 1; preview helper missing. |
+| Added explicit full-projection contract, before implementing | Backend 10-test read suite: 2 failures, exit 1; nonmembers still received partial 200 responses to `view=full`. Frontend 10 pass / 11 total, exit 1; full API helpers omitted the projection parameter. Both fixed without reducing assertions. |
+| First full backend run after endpoint implementation | 216 tests, 2 failures and 1 error, exit 1; three existing rules-format tests lacked newly required authenticated identity setup. Added real middleware/synthetic valid JWT/profile and full-access model fixture; original assertions unchanged. Two earlier preview failures were a new SQLite result adapter missing `.all()`, corrected in fixture only. |
+| Independent review regression, before projection correction | Explicit member/commissioner details `view=preview` returned full data and invoked lifecycle sync. New 11-test read suite failed 5 assertions/subtests, exit 1. Corrected details projection condition; reduction now applies regardless of full entitlement. Static review found no further material issue. |
+| Final `python3 api/tests/run_isolated.py > /tmp/mod003a-final-backend.log 2>&1` | **220/220 pass**, exit 0; no skips or expected failures. Existing profile-isolation denials pass unchanged. Intentional rollback/bootstrap fault-test messages are not suite failures. |
+| Frontend `node --test --experimental-strip-types tests/*.test.ts` | **45/45 pass**, exit 0. |
+| Frontend `./node_modules/.bin/tsc -p tsconfig.app.json --noEmit` | Exit 0. |
+| Frontend `./node_modules/.bin/eslint src/api/leagues.ts src/types/leagueMember.ts src/screens/League/DiscoverLeaguePage.tsx tests/profileApi.test.ts` | Exit 1: three existing `no-explicit-any` errors at Discover lines 53/84/146, confirmed unchanged in HEAD. No suppression/cleanup. Tool also reports its stale browser-baseline-data notice; no dependencies updated. |
+| Same focused ESLint excluding Discover | Exit 0 for API/types/tests. |
+| `git diff --check` | Exit 0. |
+
+Eleven read integration tests reuse the existing guarded harness/profile database with synthetic users, discoverable/private leagues, memberships, rules/conferences and empty week/score fixtures. They execute verified JWT middleware, actual registered endpoints and model SQL. They assert exact reduced projections, member/commissioner-without-membership full reads, private/foreign/missing restrictions, missing/expired/missing-subject and missing/ambiguous application identities, forged actor/query/header values, inability to elevate with projection parameters, explicit member/commissioner details-preview reduction without lifecycle sync, and membership/discoverability revocation immediately before scoped data queries. Preview/denial paths do not invoke global status synchronization. Two schedule tests assert no call to generation for authenticated roles/missing profiles/forged trusted flags/invalid bodies and middleware 401 for anonymous requests. Two frontend actual-module transport regressions verify authenticated reduced and explicit-full projections.
+
+The credential-free runner disables dotenv/network/real engine construction and does not import the app factory. Tests adapt PostgreSQL interval syntax for SQLite and substitute global lifecycle synchronization; they do not establish real PostgreSQL locks/RLS/transactions/cascades/concurrency or browser rendering. No frontend production build or real browser was run in this final stage. Existing full-detail global status synchronization remains unchanged (MOD-020). Previous PostgreSQL evidence tasks, including MOD-011, stay open. No production/network/credential/environment-value access, application listener/job, migration/schema/dependency/deployment or other task implementation. MOD-003A is complete; recommended next is MOD-003B, separately scoped after dependency/policy review.

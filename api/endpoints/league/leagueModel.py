@@ -22,6 +22,54 @@ class LeagueModel:
         self.db = db
         self.scheduleModel = ScheduleModel(db, os.getenv("ESPN_BASE_URL"))
 
+    @staticmethod
+    def _league_read_scope(league_id: int, reader_user_id: Optional[int]):
+        """Optional SQL scope for verified HTTP readers; trusted model calls stay separate."""
+        if reader_user_id is None:
+            return '', {}
+        return '''AND EXISTS (
+            SELECT 1 FROM "League" read_league
+            WHERE read_league.id = :readLeagueId
+              AND (read_league.commissioner = :readerUserId OR EXISTS (
+                  SELECT 1 FROM "LeagueMember" read_member
+                  WHERE read_member."leagueId" = read_league.id
+                    AND read_member."userId" = :readerUserId
+              ))
+        )''', {'readLeagueId': league_id, 'readerUserId': reader_user_id}
+
+    def get_league_read_access(self, league_id: int, user_id: int):
+        """Fetch only discovery metadata and the caller's full-read entitlement."""
+        with self.db.begin() as conn:
+            row = conn.execute(text('''
+                SELECT l.id, l.name, l.sport, l."isDiscoverable",
+                       u."displayName" AS "commissionerDisplayName",
+                       CASE WHEN l.commissioner = :userId OR EXISTS (
+                           SELECT 1 FROM "LeagueMember" lm
+                           WHERE lm."leagueId" = l.id AND lm."userId" = :userId
+                       ) THEN true ELSE false END AS "fullAccess"
+                FROM "League" l LEFT JOIN "User" u ON u.id = l.commissioner
+                WHERE l.id = :leagueId
+            '''), {'leagueId': league_id, 'userId': user_id}).mappings().first()
+        return dict(row) if row else None
+
+    def get_member_previews_for_user(self, league_id: int, user_id: int):
+        """Names only; query rechecks discoverability or caller's own full access."""
+        with self.db.begin() as conn:
+            rows = conn.execute(text('''
+                SELECT lm.id, lm."teamName", u."displayName"
+                FROM "LeagueMember" lm
+                JOIN "User" u ON u.id = lm."userId"
+                JOIN "League" l ON l.id = lm."leagueId"
+                WHERE l.id = :leagueId AND (
+                    l."isDiscoverable" = true OR l.commissioner = :userId OR EXISTS (
+                        SELECT 1 FROM "LeagueMember" reader
+                        WHERE reader."leagueId" = l.id AND reader."userId" = :userId
+                    )
+                )
+                ORDER BY lm.id
+            '''), {'leagueId': league_id, 'userId': user_id}).mappings().all()
+        return [dict(row) for row in rows]
+
     def sync_due_league_statuses(self) -> None:
         """
         Keep League.status aligned with draft state and season dates.
@@ -135,12 +183,13 @@ class LeagueModel:
         updated["timezone"] = "UTC"
         return updated
 
-    def get_league(self, leagueId):
+    def get_league(self, leagueId, reader_user_id: Optional[int] = None):
+        scope, reader_params = self._league_read_scope(leagueId, reader_user_id)
         self.sync_due_league_statuses()
 
         with self.db.begin() as conn:
             league = conn.execute(
-                text("""
+                text(f"""
                     SELECT
                         l.*,
                         w.id AS "currentWeekId",
@@ -156,18 +205,20 @@ class LeagueModel:
                      )
                      AND now() <= w."endDate"
                     WHERE l.id = :leagueId
+                    {scope}
                     ORDER BY w."weekNumber" DESC NULLS LAST
                     LIMIT 1
                 """),
-                {"leagueId": leagueId}
+                {"leagueId": leagueId, **reader_params}
             ).fetchone()
 
         return dict(league._mapping) if league else None
 
-    def get_league_rules(self, league_id):
+    def get_league_rules(self, league_id, reader_user_id: Optional[int] = None):
+        scope, reader_params = self._league_read_scope(league_id, reader_user_id)
         with self.db.connect() as conn:
-            row = conn.execute(text('SELECT id, name, sport, "seasonYear", settings, "tradeDeadline", "freeAgentDeadline", "draftDate" FROM "League" WHERE id = :leagueId'),
-                               {'leagueId': league_id}).fetchone()
+            row = conn.execute(text(f'SELECT id, name, sport, "seasonYear", settings, "tradeDeadline", "freeAgentDeadline", "draftDate" FROM "League" WHERE id = :leagueId {scope}'),
+                               {'leagueId': league_id, **reader_params}).fetchone()
             if not row:
                 return None
             league = dict(row._mapping)
@@ -246,6 +297,18 @@ class LeagueModel:
         return created
     
     def update_league(self, league_id: int, patch: Dict[str, Any]) -> Dict[str, Any]:
+        """Trusted model entry point; interactive HTTP must use the checked variant."""
+        return self._update_league(league_id, patch)
+
+    def update_league_as_commissioner(
+        self, league_id: int, user_id: int, patch: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Update as a verified HTTP principal; caller supplies resolved user_id."""
+        return self._update_league(league_id, patch, commissioner_id=user_id)
+
+    def _update_league(
+        self, league_id: int, patch: Dict[str, Any], commissioner_id: int | None = None,
+    ) -> Dict[str, Any]:
         """
         Partially updates a League row.
 
@@ -254,11 +317,11 @@ class LeagueModel:
         - Always updates "updatedAt" = now().
         """
 
-        # 1) Fetch current league (and optionally enforce commissioner)
+        # Fetch current settings and check authority before settings validation.
         with self.db.begin() as conn:
             league_row = conn.execute(
                 text("""
-                    SELECT id, sport, settings
+                    SELECT id, sport, settings, commissioner
                     FROM "League"
                     WHERE id = :leagueId
                 """),
@@ -267,6 +330,9 @@ class LeagueModel:
 
         if not league_row:
             raise ValueError(f"League {league_id} not found")
+
+        if commissioner_id is not None and league_row._mapping['commissioner'] != commissioner_id:
+            raise PermissionError("Only the commissioner can perform this action")
 
         # 2) Allowlist fields you actually want to update
         allowed_fields = {
@@ -320,11 +386,16 @@ class LeagueModel:
             # You can choose to return the current league instead.
             raise ValueError("No valid fields to update")
 
+        ownership_clause = ''
+        if commissioner_id is not None:
+            update_data['actingUserId'] = commissioner_id
+            ownership_clause = 'AND commissioner = :actingUserId'
+
         sql = text(f"""
             WITH updated AS (
             UPDATE "League"
             SET {", ".join(set_clauses)}
-            WHERE id = :leagueId
+            WHERE id = :leagueId {ownership_clause}
             RETURNING
                 id, "createdAt", name, sport, "numPlayers", status, settings, "updatedAt",
                 "draftDate", "freeAgentDeadline", "tradeDeadline", commissioner
@@ -340,6 +411,8 @@ class LeagueModel:
             updated_row = conn.execute(sql, update_data).mappings().first()
 
         if not updated_row:
+            if commissioner_id is not None:
+                raise PermissionError("Only the commissioner can perform this action")
             raise RuntimeError("Failed to update League")
 
         return dict(updated_row)
@@ -446,9 +519,10 @@ class LeagueModel:
         return rows
 
 
-    def get_members_for_league(self, league_id: int) -> List[Dict[str, Any]]:
+    def get_members_for_league(self, league_id: int, reader_user_id: Optional[int] = None) -> List[Dict[str, Any]]:
+        scope, reader_params = self._league_read_scope(league_id, reader_user_id)
         sql = text(
-            """
+            f"""
             SELECT
               lm.id               AS "memberId",
               lm."createdAt"      AS "memberCreatedAt",
@@ -474,14 +548,16 @@ class LeagueModel:
             ON sp."leagueId" = lm."leagueId"
             AND sp."memberId" = lm.id
             WHERE lm."leagueId" = :league_id
+            {scope}
             ORDER BY lm."draftOrder", lm.id
             """
         )
 
-        current_week_sql = text("""
+        current_week_sql = text(f"""
             SELECT w."weekNumber", w."startDate", w."endDate"
             FROM "Week" w
             WHERE w."leagueId" = :league_id
+              {scope}
               AND now() >= COALESCE(
                 w."startDate",
                 w."endDate" + interval '1 microsecond' - interval '7 days'
@@ -492,11 +568,11 @@ class LeagueModel:
         """)
 
         with self.db.connect() as conn:
-            result = conn.execute(sql, {"league_id": league_id})
+            result = conn.execute(sql, {"league_id": league_id, **reader_params})
             rows = [dict(r._mapping) for r in result]
             current_week_row = conn.execute(
                 current_week_sql,
-                {"league_id": league_id},
+                {"league_id": league_id, **reader_params},
             ).fetchone()
 
         current_week_number = None
@@ -572,25 +648,27 @@ class LeagueModel:
 
         return members
 
-    def get_league_conferences(self, league_id: int) -> Dict[str, Any]:
+    def get_league_conferences(self, league_id: int, reader_user_id: Optional[int] = None) -> Dict[str, Any]:
         """
         For a leagueId, returns all SportConference rows for that league's sport,
         joined to base Conference for displayName, plus team counts.
         """
 
         # IMPORTANT: adjust these column names if your League schema differs
-        league_sql = text("""
+        scope, reader_params = self._league_read_scope(league_id, reader_user_id)
+        league_sql = text(f"""
             SELECT
               id AS "leagueId",
               sport AS "sportId",
               "seasonYear" AS "seasonYear"
             FROM "League"
             WHERE id = :leagueId
+            {scope}
             LIMIT 1
         """)
 
         with self.db.begin() as conn:
-            league_row = conn.execute(league_sql, {"leagueId": league_id}).fetchone()
+            league_row = conn.execute(league_sql, {"leagueId": league_id, **reader_params}).fetchone()
 
             if not league_row:
                 raise ValueError(f"League {league_id} not found")
@@ -702,11 +780,32 @@ class LeagueModel:
             return dict(row)
 
     def list_join_requests(self, league_id: int, status: Optional[str] = None) -> list[Dict[str, Any]]:
+        """Trusted model listing; HTTP must use the commissioner-checked variant."""
+        return self._list_join_requests(league_id, status)
+
+    def list_join_requests_as_commissioner(
+        self, league_id: int, user_id: int, status: Optional[str] = None,
+    ) -> list[Dict[str, Any]]:
+        """Check verified caller and constrain the final read to that commissioner."""
+        self._ensure_commissioner(league_id, user_id)
+        return self._list_join_requests(league_id, status, commissioner_id=user_id)
+
+    def _list_join_requests(
+        self, league_id: int, status: Optional[str], commissioner_id: int | None = None,
+    ) -> list[Dict[str, Any]]:
         params: Dict[str, Any] = {"leagueId": league_id}
         where_status = ""
         if status:
             where_status = "AND r.status = :status"
             params["status"] = status
+
+        ownership_clause = ''
+        if commissioner_id is not None:
+            params['actingUserId'] = commissioner_id
+            ownership_clause = '''AND EXISTS (
+                SELECT 1 FROM "League" l
+                WHERE l.id = r."leagueId" AND l.commissioner = :actingUserId
+            )'''
 
         with self.db.begin() as conn:
             rows = conn.execute(
@@ -720,6 +819,7 @@ class LeagueModel:
                     JOIN "User" u ON u.id = r."userId"
                     WHERE r."leagueId" = :leagueId
                     {where_status}
+                    {ownership_clause}
                     ORDER BY r."createdAt" DESC
                 """),
                 params,
@@ -728,150 +828,197 @@ class LeagueModel:
         return [dict(r) for r in rows]
 
     def approve_join_request(self, league_id: int, request_id: int, acting_user_id: int) -> Dict[str, Any]:
+        """Trusted model entry point; HTTP must use the checked variant."""
         with self.db.begin() as conn:
-            # lock the request row to prevent double-approval races
-            req = conn.execute(
-                text("""
-                    SELECT id, "leagueId", "userId", status, "teamName"
-                    FROM "LeagueJoinRequest"
-                    WHERE id = :requestId AND "leagueId" = :leagueId
+            # Keep lock order aligned with the checked HTTP entry point.
+            conn.execute(text('''
+                SELECT id FROM "League" WHERE id = :leagueId FOR UPDATE
+            '''), {'leagueId': league_id}).fetchone()
+            return self._approve_join_request(conn, league_id, request_id, acting_user_id)
+
+    def approve_join_request_as_commissioner(
+        self, league_id: int, request_id: int, user_id: int,
+    ) -> Dict[str, Any]:
+        """Authorize verified caller under league lock before approval mutations."""
+        with self.db.begin() as conn:
+            league = conn.execute(text('''
+                SELECT commissioner FROM "League" WHERE id = :leagueId FOR UPDATE
+            '''), {'leagueId': league_id}).mappings().first()
+            if not league:
+                raise ValueError(f"League {league_id} not found")
+            if league['commissioner'] != user_id:
+                raise PermissionError("Only the commissioner can perform this action")
+            return self._approve_join_request(conn, league_id, request_id, user_id)
+
+    def _approve_join_request(
+        self, conn, league_id: int, request_id: int, acting_user_id: int,
+    ) -> Dict[str, Any]:
+        # lock the request row to prevent double-approval races
+        req = conn.execute(
+            text("""
+                SELECT id, "leagueId", "userId", status, "teamName"
+                FROM "LeagueJoinRequest"
+                WHERE id = :requestId AND "leagueId" = :leagueId
+                FOR UPDATE
+            """),
+            {"requestId": request_id, "leagueId": league_id},
+        ).mappings().first()
+
+        if not req:
+            raise ValueError("Join request not found")
+        if req["status"] != "PENDING":
+            raise ValueError("Join request is not pending")
+
+        # create membership (unique index should prevent duplicates)
+        conn.execute(
+            text("""
+                INSERT INTO "LeagueMember"
+                    ("leagueId", "userId", "teamName", "draftOrder", "seasonPoints")
+                SELECT
+                    :leagueId,
+                    :userId,
+                    :teamName,
+                    COALESCE(MAX(lm."draftOrder"), 0) + 1,
+                    0
+                FROM "LeagueMember" lm
+                WHERE lm."leagueId" = :leagueId
+            """),
+            {
+                "leagueId": league_id,
+                "userId": req["userId"],
+                "teamName": req.get("teamName") or "My Team",
+            },
+        )
+
+        conn.execute(
+            text("""
+                WITH locked_league AS (
+                    SELECT l.id,
+                        l."sport",
+                        l."numPlayers" AS cur_players,
+                        l.settings AS cur_settings
+                    FROM "League" l
+                    WHERE l.id = :leagueId
                     FOR UPDATE
-                """),
-                {"requestId": request_id, "leagueId": league_id},
-            ).mappings().first()
-
-            if not req:
-                raise ValueError("Join request not found")
-            if req["status"] != "PENDING":
-                raise ValueError("Join request is not pending")
-
-            # create membership (unique index should prevent duplicates)
-            conn.execute(
-                text("""
-                    INSERT INTO "LeagueMember"
-                        ("leagueId", "userId", "teamName", "draftOrder", "seasonPoints")
+                ),
+                sport_cfg AS (
+                    SELECT s.id,
+                        s."maxDraftRounds" AS max_rounds,
+                        s."maxPlayersToHaveMaxRounds" AS max_players_full
+                    FROM "Sport" s
+                    JOIN locked_league ll ON ll."sport" = s.id
+                ),
+                computed AS (
                     SELECT
-                        :leagueId,
-                        :userId,
-                        :teamName,
-                        COALESCE(MAX(lm."draftOrder"), 0) + 1,
-                        0
-                    FROM "LeagueMember" lm
-                    WHERE lm."leagueId" = :leagueId
-                """),
-                {
-                    "leagueId": league_id,
-                    "userId": req["userId"],
-                    "teamName": req.get("teamName") or "My Team",
-                },
-            )
-
-            conn.execute(
-                text("""
-                    WITH locked_league AS (
-                        SELECT l.id,
-                            l."sport",
-                            l."numPlayers" AS cur_players,
-                            l.settings AS cur_settings
-                        FROM "League" l
-                        WHERE l.id = :leagueId
-                        FOR UPDATE
+                        ll.id AS league_id,
+                        (ll.cur_players + 1) AS new_players,
+                        GREATEST(
+                            1,
+                            CASE
+                                WHEN (ll.cur_players + 1) <= sc.max_players_full
+                                    THEN sc.max_rounds
+                                ELSE sc.max_rounds - ((ll.cur_players + 1) - sc.max_players_full)
+                            END
+                        ) AS new_num_rounds
+                    FROM locked_league ll
+                    JOIN sport_cfg sc ON true
+                )
+                UPDATE "League" l
+                SET
+                    "numPlayers" = c.new_players,
+                    settings = jsonb_set(
+                        COALESCE(l.settings, '{}'::jsonb),
+                        '{draft,numberOfRounds}',
+                        to_jsonb(c.new_num_rounds),
+                        true
                     ),
-                    sport_cfg AS (
-                        SELECT s.id,
-                            s."maxDraftRounds" AS max_rounds,
-                            s."maxPlayersToHaveMaxRounds" AS max_players_full
-                        FROM "Sport" s
-                        JOIN locked_league ll ON ll."sport" = s.id
-                    ),
-                    computed AS (
-                        SELECT
-                            ll.id AS league_id,
-                            (ll.cur_players + 1) AS new_players,
-                            GREATEST(
-                                1,
-                                CASE
-                                    WHEN (ll.cur_players + 1) <= sc.max_players_full
-                                        THEN sc.max_rounds
-                                    ELSE sc.max_rounds - ((ll.cur_players + 1) - sc.max_players_full)
-                                END
-                            ) AS new_num_rounds
-                        FROM locked_league ll
-                        JOIN sport_cfg sc ON true
-                    )
-                    UPDATE "League" l
-                    SET
-                        "numPlayers" = c.new_players,
-                        settings = jsonb_set(
-                            COALESCE(l.settings, '{}'::jsonb),
-                            '{draft,numberOfRounds}',
-                            to_jsonb(c.new_num_rounds),
-                            true
-                        ),
-                        "updatedAt" = now()
-                    FROM computed c
-                    WHERE l.id = c.league_id
-                    RETURNING l.id, l."numPlayers", l.settings
-                """),
-                {"leagueId": league_id},
-            ).mappings().first()
+                    "updatedAt" = now()
+                FROM computed c
+                WHERE l.id = c.league_id
+                RETURNING l.id, l."numPlayers", l.settings
+            """),
+            {"leagueId": league_id},
+        ).mappings().first()
 
-            updated = conn.execute(
-                text("""
-                    UPDATE "LeagueJoinRequest"
-                    SET status = 'APPROVED',
-                        "resolvedAt" = now(),
-                        "resolvedByUserId" = :actingUserId
-                    WHERE id = :requestId
-                    RETURNING
-                        id, "createdAt", "leagueId", "userId", status, "message",
-                        "resolvedAt", "resolvedByUserId"
-                """),
-                {"requestId": request_id, "actingUserId": acting_user_id},
-            ).mappings().first()
+        updated = conn.execute(
+            text("""
+                UPDATE "LeagueJoinRequest"
+                SET status = 'APPROVED',
+                    "resolvedAt" = now(),
+                    "resolvedByUserId" = :actingUserId
+                WHERE id = :requestId AND "leagueId" = :leagueId
+                RETURNING
+                    id, "createdAt", "leagueId", "userId", status, "message",
+                    "resolvedAt", "resolvedByUserId"
+            """),
+            {"requestId": request_id, "leagueId": league_id, "actingUserId": acting_user_id},
+        ).mappings().first()
 
-            # Return the new member too (handy for UI)
-            member = conn.execute(
-                text("""
-                    SELECT id, "leagueId", "userId", "teamName", "seasonPoints", "createdAt"
-                    FROM "LeagueMember"
-                    WHERE "leagueId" = :leagueId AND "userId" = :userId
-                """),
-                {"leagueId": league_id, "userId": req["userId"]},
-            ).mappings().first()
+        # Return the new member too (handy for UI)
+        member = conn.execute(
+            text("""
+                SELECT id, "leagueId", "userId", "teamName", "seasonPoints", "createdAt"
+                FROM "LeagueMember"
+                WHERE "leagueId" = :leagueId AND "userId" = :userId
+            """),
+            {"leagueId": league_id, "userId": req["userId"]},
+        ).mappings().first()
 
         return {"request": dict(updated), "member": dict(member) if member else None}
 
     def deny_join_request(self, league_id: int, request_id: int, acting_user_id: int) -> Dict[str, Any]:
+        """Trusted model entry point; HTTP must use the checked variant."""
         with self.db.begin() as conn:
-            req = conn.execute(
-                text("""
-                    SELECT id, status
-                    FROM "LeagueJoinRequest"
-                    WHERE id = :requestId AND "leagueId" = :leagueId
-                    FOR UPDATE
-                """),
-                {"requestId": request_id, "leagueId": league_id},
-            ).mappings().first()
+            conn.execute(text('''
+                SELECT id FROM "League" WHERE id = :leagueId FOR UPDATE
+            '''), {'leagueId': league_id}).fetchone()
+            return self._deny_join_request(conn, league_id, request_id, acting_user_id)
 
-            if not req:
-                raise ValueError("Join request not found")
-            if req["status"] != "pending":
-                raise ValueError("Join request is not pending")
+    def deny_join_request_as_commissioner(
+        self, league_id: int, request_id: int, user_id: int,
+    ) -> Dict[str, Any]:
+        """Authorize verified caller under league lock before resolving request."""
+        with self.db.begin() as conn:
+            league = conn.execute(text('''
+                SELECT commissioner FROM "League" WHERE id = :leagueId FOR UPDATE
+            '''), {'leagueId': league_id}).mappings().first()
+            if not league:
+                raise ValueError(f"League {league_id} not found")
+            if league['commissioner'] != user_id:
+                raise PermissionError("Only the commissioner can perform this action")
+            return self._deny_join_request(conn, league_id, request_id, user_id)
 
-            updated = conn.execute(
-                text("""
-                    UPDATE "LeagueJoinRequest"
-                    SET status = 'DENIED',
-                        "resolvedAt" = now(),
-                        "resolvedByUserId" = :actingUserId,
-                    WHERE id = :requestId
-                    RETURNING
-                        id, "createdAt", "leagueId", "userId", status, "message",
-                        "resolvedAt", "resolvedByUserId"
-                """),
-                {"requestId": request_id, "actingUserId": acting_user_id},
-            ).mappings().first()
+    def _deny_join_request(
+        self, conn, league_id: int, request_id: int, acting_user_id: int,
+    ) -> Dict[str, Any]:
+        req = conn.execute(
+            text("""
+                SELECT id, status
+                FROM "LeagueJoinRequest"
+                WHERE id = :requestId AND "leagueId" = :leagueId
+                FOR UPDATE
+            """),
+            {"requestId": request_id, "leagueId": league_id},
+        ).mappings().first()
+
+        if not req:
+            raise ValueError("Join request not found")
+        if req["status"] != "PENDING":
+            raise ValueError("Join request is not pending")
+
+        updated = conn.execute(
+            text("""
+                UPDATE "LeagueJoinRequest"
+                SET status = 'DENIED',
+                    "resolvedAt" = now(),
+                    "resolvedByUserId" = :actingUserId
+                WHERE id = :requestId AND "leagueId" = :leagueId AND status = 'PENDING'
+                RETURNING
+                    id, "createdAt", "leagueId", "userId", status, "message",
+                    "resolvedAt", "resolvedByUserId"
+            """),
+            {"requestId": request_id, "leagueId": league_id, "actingUserId": acting_user_id},
+        ).mappings().first()
 
         return dict(updated)
 
@@ -891,7 +1038,7 @@ class LeagueModel:
                 raise ValueError("Join request not found")
             if req["userId"] != user_id:
                 raise PermissionError("Cannot cancel another user's request")
-            if req["status"] != "pending":
+            if req["status"] != "PENDING":
                 raise ValueError("Only pending requests can be cancelled")
 
             updated = conn.execute(
@@ -899,12 +1046,13 @@ class LeagueModel:
                     UPDATE "LeagueJoinRequest"
                     SET status = 'CANCELLED',
                         "resolvedAt" = now()
-                    WHERE id = :requestId
+                    WHERE id = :requestId AND "leagueId" = :leagueId
+                      AND "userId" = :userId AND status = 'PENDING'
                     RETURNING
                         id, "createdAt", "leagueId", "userId", status, "message",
                         "resolvedAt", "resolvedByUserId"
                 """),
-                {"requestId": request_id},
+                {"requestId": request_id, "leagueId": league_id, "userId": user_id},
             ).mappings().first()
 
         return dict(updated)
@@ -940,7 +1088,7 @@ class LeagueModel:
 
             # Basic permission (adjust to your rules)
             if int(league["commissioner"]) != int(acting_user_id):
-                raise ValueError("Only the commissioner can remove members")
+                raise PermissionError("Only the commissioner can remove members")
 
             # Find member + their draft order (lock the member row)
             member = conn.execute(
@@ -1094,16 +1242,16 @@ class LeagueModel:
                 raise ValueError("League not found")
 
             if int(league["commissioner"]) != int(acting_user_id):
-                raise ValueError("Only the commissioner can delete this league")
+                raise PermissionError("Only the commissioner can delete this league")
 
             # Delete league (cascades to members, join requests, weeks, etc.)
             deleted = conn.execute(
                 text("""
                     DELETE FROM "League"
-                    WHERE id = :leagueId
+                    WHERE id = :leagueId AND commissioner = :actingUserId
                     RETURNING id, name
                 """),
-                {"leagueId": league_id},
+                {"leagueId": league_id, "actingUserId": acting_user_id},
             ).mappings().first()
 
             if not deleted:
@@ -1114,6 +1262,28 @@ class LeagueModel:
             "deletedLeagueName": deleted["name"],
         }
     
+    def update_owned_league_member(
+        self, member_id: int, user_id: int, team_name: str,
+    ) -> Dict[str, Any]:
+        """Self-service rename; ownership and write share one SQL predicate.
+
+        HTTP callers must supply user_id from the authenticated principal.
+        This operation cannot change order, scores or member/league ownership.
+        """
+        with self.db.begin() as conn:
+            row = conn.execute(text("""
+                UPDATE "LeagueMember"
+                SET "teamName" = :teamName
+                WHERE id = :memberId AND "userId" = :userId
+                RETURNING id, "leagueId", "userId", "teamName", "draftOrder",
+                          "seasonPoints", "createdAt"
+            """), {
+                'memberId': member_id, 'userId': user_id, 'teamName': team_name,
+            }).mappings().first()
+        if not row:
+            raise LookupError('LeagueMember not found')
+        return dict(row)
+
     def update_league_member(self, member_id: int, updates: Dict[str, Any]) -> Dict[str, Any]:
         # keep only allowed keys that are actually present
         payload = {k: updates[k] for k in updates.keys() if k in ALLOWED_LEAGUE_MEMBER_FIELDS}

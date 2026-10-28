@@ -16,7 +16,11 @@ export type LeagueMember = {
 };
 
 export type UpdateLeagueMember = {
-  teamName?: string;
-  draftOrder?: number;
-  seasonPoints?: number;
+  teamName: string;
 }
+
+export type LeagueMemberPreview = {
+  id: number;
+  teamName: string | null;
+  displayName: string | null;
+};

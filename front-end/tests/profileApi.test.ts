@@ -140,3 +140,57 @@ for (const outcome of ['exists', 'missing', 'denied'] as const) {
     assert.equal(storage.has('otm:user-created:own-uuid'), outcome !== 'denied');
   });
 }
+
+test('self-service rename sends only teamName despite stale extra arguments', async () => {
+  const calls: { url: string; init: RequestInit }[] = [];
+  const api = loadModule('../src/api/leagues.ts', {
+    './client': {
+      API_BASE_URL: 'https://api.example.test',
+      apiFetch: async (url: string, init: RequestInit) => {
+        calls.push({ url, init });
+        return new Response(JSON.stringify({ id: 12, teamName: 'New Team' }), { status: 200 });
+      },
+    },
+  });
+  const result = await api.updateLeagueMember(12, 'New Team', 1, 999);
+  assert.deepEqual(result, { id: 12, teamName: 'New Team' });
+  assert.equal(calls[0].url, 'https://api.example.test/api/league/leagueMember/12');
+  assert.equal(calls[0].init.method, 'PATCH');
+  assert.deepEqual(JSON.parse(String(calls[0].init.body)), { teamName: 'New Team' });
+});
+
+test('Discover member previews request a reduced authenticated projection', async () => {
+  const calls: { url: string; init?: RequestInit & { skipAuth?: boolean } }[] = [];
+  const preview = [{ id: 11, teamName: 'Team', displayName: 'Display' }];
+  const api = loadModule('../src/api/leagues.ts', {
+    './client': {
+      API_BASE_URL: 'https://api.example.test',
+      apiFetch: async (url: string, init?: RequestInit) => {
+        calls.push({ url, init });
+        return new Response(JSON.stringify(preview), { status: 200 });
+      },
+    },
+  });
+  assert.deepEqual(await api.getMemberPreviewsOfLeague(10), preview);
+  assert.equal(calls[0].url, 'https://api.example.test/api/league/10/members?view=preview');
+  assert.notEqual(calls[0].init?.skipAuth, true);
+});
+
+test('full-data league API functions explicitly request full responses', async () => {
+  const calls: string[] = [];
+  const api = loadModule('../src/api/leagues.ts', {
+    './client': {
+      API_BASE_URL: 'https://api.example.test',
+      apiFetch: async (url: string) => {
+        calls.push(url);
+        return new Response('{}', { status: 200 });
+      },
+    },
+  });
+  await api.getLeague(10);
+  await api.getMembersOfLeague(10);
+  assert.deepEqual(calls, [
+    'https://api.example.test/api/league/10?view=full',
+    'https://api.example.test/api/league/10/members?view=full',
+  ]);
+});
