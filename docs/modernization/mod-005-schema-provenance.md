@@ -1,6 +1,6 @@
 # MOD-005 schema provenance — 2026-10-29
 
-Status: repository reconciliation, candidate initialization, collected-definition comparison and two explicit historical migration fixtures verified. The assessment candidate is reproducible locally; an approved deployment baseline, migration runner/ledger and supported production upgrade path remain open. No deployed schema changes performed.
+Status: complete in documented repository baseline and supported-provider scope. Real Supabase initialization, historical upgrade/adoption/replay, HTTP role checks and data-preserving recovery pass. No hosted baseline/ledger, schema or grant changes performed.
 
 ## Source provenance
 
@@ -79,3 +79,62 @@ original SQL unavailable**. Do not block independent assessment on recovering th
 file, or present newly authored SQL as its recovered contents. Next: define the
 versioned deployment baseline, prerequisites, checksummed ledger and explicit
 supported upgrade/recovery policy before calling MOD-005 complete.
+
+
+## Versioned baseline implementation — 2026-10-29
+
+Added the [frozen observed baseline](../../db/baselines/20261029/README.md),
+ordered SQL/checksum manifest, expanded expected-state reference and
+[transaction-aware runner](../../scripts/modernization/baseline.py). The local CLI
+accepts only marked synthetic loopback targets; no deployed adoption occurred.
+Initialization and verified adoption record one manifest-checksummed ledger row;
+concurrent/replayed calls converge. Savepoints prevent partial installation even
+if a caller catches a validation error and commits the outer transaction.
+
+The latest [read-only deployed verification](evidence/baseline-deployed-verification-2026-10-29.json)
+matches every versioned state group, now including exact type modifiers/collations,
+sequence options, explicit/global default ACLs, role flags/memberships, custom
+routines, internal FK trigger enabled states and relation durability. Ordinal
+positions remain deliberately ignored. No deployed application rows were read.
+
+[Local verification](evidence/baseline-local-verification-2026-10-29.json): 16/16
+PostgreSQL tests and 354/354 isolated backend tests pass. Tests cover supported
+empty/matching states, ledger/checksum conflicts, concurrent initialization,
+rollback, drift and no replacement of existing custom routines. Historical
+migration fixtures remain verified by the earlier assessment; historical files are
+not replayed after baseline adoption.
+
+MOD-005's repository baseline/runner/ledger work is implemented for the documented
+local compatibility scope. Keep the card open for full Supabase initialization/
+upgrade/recovery acceptance: test fixtures do not stand in for provider-managed
+Auth/extension/event-trigger setup, and the configured postgres role's authority
+to create event triggers is not established. Operational use and deployed adoption
+require review of those prerequisites and explicit deployment approval.
+
+
+## Completion — real provider acceptance — 2026-10-29
+
+The previous provider-coverage gap is resolved by a fresh, separate Supabase CLI
+stack using actual Auth/PostgREST services. See the [reproducible runbook](../../scripts/modernization/SUPABASE_PROVIDER.md)
+and [final sanitized evidence](evidence/supabase-provider-verification-2026-10-29.json).
+CLI2.90.0, PostgreSQL17.6/Supabase image17.6.1.084, GoTrue2.188.1 and PostgREST14.4.
+The frozen baseline's source files/checksum were not changed in this stage.
+
+- Actual postgres is NOSUPERUSER/BYPASSRLS; initialization including ensure_rls
+  succeeds after the explicit pg_trgm prerequisite, without granting new powers.
+- Baseline replay preserves real synthetic Auth/profile rows.
+- Actual Auth/public schema-only exports restore into two separate generated
+  databases with explicit extension/public-initial-privilege/event-trigger
+  prerequisites. Both supported historical states accept the checked-in migrations
+  and then baseline adoption/replay, preserving an existing School row.
+- Real issued JWTs enforce own-profile isolation through PostgREST. Full privilege
+  proposal/recovery preserves profiles and returns to the frozen reference. The
+  normal actor's insufficient privilege is separately tested with atomic rollback;
+  only existing local maintenance credentials test the full file.
+
+MOD-005 is **complete for this documented source/baseline and supported-state
+scope**. The missing historical SQL remains unavailable with maintainer-recalled
+application; current observed end state is versioned rather than invented history.
+Arbitrary historical schemas, alternate provider versions, hosted execution and
+production data backup/restore remain outside this acceptance. MOD-004 retains
+Render environment/actor mapping and any hardening rollout decision.

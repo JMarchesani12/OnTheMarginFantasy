@@ -379,3 +379,18 @@ schema inspection scripts. Do not expose it in frontend code.
 ## Basketball postseason configuration
 
 `SeasonPhase.rules` stores per-game margin rules, source matchers, and the shared final scoring period. The previously referenced `api/migrations/20261023_basketball_tournament_rules.sql` is absent from available repository history. The configured database already has `SeasonPhase.rules`; other environments must verify that prerequisite. Recover or reconcile migration provenance before defining an upgrade; do not run a nonexistent migration. See [season setup documentation](../api/startSeasonJobs/README.md) for tournament JSON examples, phase classification, and existing-league rebuild requirements.
+
+
+## Versioned observed baseline
+
+The [2026-10-29 baseline package](baselines/20261029/README.md) provides ordered,
+checksummed schema/access SQL, an expected catalog reference and a transaction-aware
+initialization/adoption ledger runner restricted to synthetic local targets by its
+CLI. It has been tested locally and verified against configured Supabase catalogs
+read-only. It has not been installed/adopted on the deployed database. Historical
+migration files are not replayed after baseline initialization.
+
+The [browser privilege proposal](proposals/README.md) is separate and unapplied;
+baseline installation deliberately preserves observed grants. Full Supabase
+platform setup, runtime role alignment and deployment/recovery approval remain
+explicit prerequisites for operational use.

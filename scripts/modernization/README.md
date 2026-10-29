@@ -53,3 +53,26 @@ Historical upgrade fixtures cover only an absent subdivision table and old-only
 or correct-only SportSeason start column. They are not evidence that these were
 actual historical deployments. The missing basketball migration is not recreated.
 No automatic policy/grant changes or production execution are part of this tool.
+
+## Versioned baseline and privilege proposal tests
+
+After the same marked container is ready, run this separate suite sequentially
+with other assessment suites:
+
+```sh
+python3 -m unittest discover -s scripts/modernization/tests -p test_baseline.py
+```
+
+It creates random-named fixture databases and platform-named NOLOGIN roles, all
+removed afterward. No .env is loaded. See the [baseline runbook](../../db/baselines/20261029/README.md)
+and [unapplied proposal/recovery](../../db/proposals/README.md). The frozen baseline
+preserves the observed access behavior; it does not apply the tightening proposal.
+
+## Real provider coverage
+
+[Supabase provider acceptance](SUPABASE_PROVIDER.md) provisions a distinct local
+Auth/PostgREST project, tests the same frozen baseline and historical/adoption
+paths with real platform definitions, and verifies HTTP role behavior and
+privilege recovery. It also demonstrates the normal postgres actor cannot change
+supabase_admin defaults; the complete proposal needs a separately authorized
+platform maintenance actor. No hosted changes or role elevation are performed.

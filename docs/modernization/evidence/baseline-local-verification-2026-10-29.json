@@ -1,0 +1,38 @@
+{
+  "scope": "Disposable PostgreSQL17.6 only; configured Supabase catalogs verified separately read-only.",
+  "integration": {
+    "command": "python3 -m unittest discover -s scripts/modernization/tests -p test_baseline.py",
+    "tests": 16,
+    "exit_code": 0,
+    "result": "PASS"
+  },
+  "backend": {
+    "command": "python3 api/tests/run_isolated.py",
+    "tests": 354,
+    "exit_code": 0,
+    "result": "PASS"
+  },
+  "sha256": {
+    "db/baselines/20261029/manifest.json": "58e8dffe807fe2ceed56949d96892ade5e293740cc2776dc757d33cba24c52af",
+    "scripts/modernization/baseline.py": "dbc3491491a091c9733a9227f084ec80611152660d17cf6d487cbc16288161c0",
+    "scripts/modernization/tests/test_baseline.py": "808045456a616aeb981e545f05527e5ee34b0342d5ccc55867ce3960ddb1d950",
+    "db/proposals/mod004_browser_privileges.sql": "d5490f41eecaab7cb9d8da9079f7f0a5bd95bac08082468ff6a4fdb60b718b08",
+    "db/proposals/mod004_browser_privileges_recovery.sql": "362dccb0f4e46e8e0eb18ca09e79e6b84f5373a522ed38b96e7a82f67d1ddbbb"
+  },
+  "checks": [
+    "initialization/adoption/replay",
+    "concurrent initialization",
+    "checksum/ledger conflict rejection",
+    "schema/access/global-default/column/routine/role drift rejection",
+    "disabled internal FK triggers and unlogged relation rejection",
+    "savepoint rollback after caught state failure",
+    "no replacement of pre-existing custom routines",
+    "all 23-table/21-sequence browser privilege matrix",
+    "own-profile reads and service privileges preserved",
+    "future-object defaults for both creators",
+    "observed ACL recovery"
+  ],
+  "review": "Independent static review; two enforcement/durability findings reproduced and fixed; final focused rechecks found no remaining material findings.",
+  "deployed_mutations": false,
+  "runtime_role_alignment": "not verified; local listener DATABASE_URL absent"
+}

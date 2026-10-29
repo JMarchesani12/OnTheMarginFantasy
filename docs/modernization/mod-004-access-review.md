@@ -1,6 +1,6 @@
 # MOD-004 access-policy evidence — 2026-10-29
 
-Status: metadata/access matrix, synthetic PostgreSQL role tests and observed event-trigger replay verified. Reviewed least-privilege policy/grant baseline and deployment alignment remain open. No deployed DDL, grants, policy changes or application-row reads performed.
+Status: versioned observed access baseline and separately tested privilege proposal/recovery implemented locally. Approved least-privilege rollout, external consumers and deployed runtime alignment remain open. No deployed DDL, grants, policy changes or application-row reads performed.
 
 ## Evidence scope
 
@@ -75,3 +75,60 @@ ACL entries. No role transition or grant/policy deployment is implemented here.
 
 MOD-004 remains open for that reviewed versioned access baseline and runtime
 alignment; isolated SQL tests no longer require deployed-row access.
+
+
+## Versioned access baseline and unapplied proposal — 2026-10-29
+
+The [baseline access SQL](../../db/baselines/20261029/002_access.sql) now versions
+the observed RLS/policy/grants/ensure_rls mechanism without silently tightening
+permissions during initialization/adoption. [Read-only verification](evidence/baseline-deployed-verification-2026-10-29.json)
+confirms the frozen reference matches the configured database, including role
+flags/memberships and global/schema default ACLs. No ledger or permission changes
+were made remotely.
+
+The separate [proposal/recovery runbook](../../db/proposals/README.md) supplies
+reviewable browser table/sequence revokes, authenticated own-User SELECT retention
+and future-object default changes for postgres/supabase_admin. It refuses unexpected
+inherited roles, privileged browser flags, column/schema grants and global defaults
+that schema-specific revokes cannot safely resolve. It is not applied as part of
+the baseline and has not been applied to Supabase.
+
+Local tests enumerate all browser object privileges on all 23 tables and 21
+sequences, verify own-profile reads and service access, test new objects created
+by both observed creators, and restore the original ACL reference with the scoped
+recovery SQL. Final PostgreSQL suite: 16/16 pass; independent review findings were
+reproduced and fixed. See [verification evidence](evidence/baseline-local-verification-2026-10-29.json).
+
+[Local configuration comparison](evidence/local-role-config-check-2026-10-29.json)
+found no listener DATABASE_URL in api/.env or the current process; this does not
+establish its deployed environment. A server connection variable also exists in
+front-end/.env with a different endpoint/user tuple. That does not prove different
+projects or browser credential exposure (it is not VITE-prefixed). No DSNs were
+printed and no configuration was altered.
+
+MOD-004 remains open for external-consumer confirmation, deployed API/listener/job
+role alignment and an approved/versioned least-privilege rollout. Changing
+supabase_admin defaults requires an actor authorized by the platform; do not grant
+broader powers or partially apply SQL to work around that boundary. The proposed
+recovery restores this exact observed starting state, not arbitrary later changes.
+
+
+## Real provider acceptance and Render boundary — 2026-10-29
+
+[Actual Auth/PostgREST tests](evidence/supabase-provider-verification-2026-10-29.json)
+now pass before/proposal/after recovery, with generated local users/tokens and no
+fake Auth schema/functions. The normal Supabase postgres role rejects the full
+proposal's supabase_admin defaults (SQLSTATE42501); rollback retains the entire
+observed reference. The existing local maintenance account can test the full
+proposal/recovery without changing role powers. Do not infer hosted capability.
+
+Maintainer confirms Render hosting and an intentionally suspended listener
+service. The [runtime handoff](mod-004-runtime-handoff.md) records that preference,
+the source factory's additional in-process listener startup, sanitized role/activity
+aggregates and remaining service-command/environment mapping. No Render operation
+or deployed Supabase mutation occurred. The installed tool set still lacks a
+connected Render integration; the discovered optional integration was suggested.
+
+MOD-004 remains open specifically for that runtime/consumer mapping and a reviewed,
+versioned rollout path for the privileged proposal. Provider HTTP/setup validation
+is no longer the outstanding item; MOD-005 is complete in its documented scope.

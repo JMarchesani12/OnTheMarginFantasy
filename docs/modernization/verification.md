@@ -610,3 +610,103 @@ assessment with explicit authorization and existing cached Docker image.
   or checks. Final JSON assertions and `git diff --check` pass. No production schema,
   policy, grant, data or job changes. MOD-004/005 remain open for reviewed/versioned
   baselines, deployment alignment, supported upgrades/recovery and migration ledger.
+
+
+## MOD-004/005 — versioned baseline, adoption ledger and privilege proposal — 2026-10-29
+
+- Added db/baselines/20261029 version/ordered SQL/SHA-256 manifest and frozen expected
+  public-state reference. Initialization preserves observed access; tightening is
+  a distinct unapplied proposal. Runner accepts caller transactions/savepoints;
+  local CLI targets only the marked loopback synthetic server, never .env.
+- TDD: initial suite 9/9 failed for missing package/runner; initial implementation
+  exposed default-ACL fixture differences (explicit postgres grants were missing),
+  corrected to the observed definitions. Additional RED tests reproduced unchecked
+  global defaults/custom routines/column ACL/role flags, caught-error partial commit,
+  disabled FK enforcement, unlogged relations and pre-existing routine replacement.
+  Added rejection/savepoint guards; all final regression assertions remain active.
+- `python3 -m unittest discover -s scripts/modernization/tests -p test_baseline.py`:
+  **16/16 pass, exit0**, final run. Covers initialize/adopt/replay, concurrent
+  initialization, checksum/ledger conflicts, schema/access drift, rollback even
+  after caller catches a validation error, and nonreplacement of custom routines.
+- Proposal/recovery tests enumerate SELECT/INSERT/UPDATE/DELETE/TRUNCATE/REFERENCES/
+  TRIGGER/MAINTAIN on 23 tables and USAGE/SELECT/UPDATE on 21 sequences for both
+  browser roles. Verify retained own-profile SELECT/service privileges, new-object
+  defaults for both postgres/supabase_admin and return to the frozen observed ACL
+  reference. Global defaults that cannot be safely resolved schema-locally reject.
+- Supplementary deployed queries were catalog-only/read-only, including exact type
+  modifiers/collations, 21 sequence options, 182 internal constraint-trigger states
+  and durability of 44 tables/sequences. Final package verifier matched all 20
+  versioned public-state groups and routine definition. No deployed ledger writes,
+  DDL, grants, application-row reads or configuration changes. Artifact records
+  transaction_read_only=on, statement_timeout=10s, lock_timeout=2s and manifest hash.
+- Independent static reviewer found disabled-internal-FK-trigger and unlogged-table
+  drift gaps; RED regressions reproduced both. Added normalized trigger/persistence
+  metadata and reviewer confirmed fixes; final initialization guard recheck also
+  found no material regression. Reviewer did not independently run DB tests.
+- `python3 api/tests/run_isolated.py`: **354/354 pass, exit0**. No frontend code or
+  frontend checks. JSON/checksum/evidence checks and `git diff --check` pass.
+- Secret-safe local config presence/comparison: API backend configured, listener
+  DATABASE_URL absent from api/.env/current process, front-end server variable
+  has a different exact endpoint/user tuple. This does not prove project mismatch
+  or browser exposure; deployed API/listener/job role alignment remains unknown.
+- [Local evidence](evidence/baseline-local-verification-2026-10-29.json),
+  [deployed read-only verification](evidence/baseline-deployed-verification-2026-10-29.json),
+  [baseline runbook](../../db/baselines/20261029/README.md),
+  [unapplied proposal/recovery](../../db/proposals/README.md).
+- MOD-004/005 remain open for the runbooks' explicit runtime/provider/upgrade/recovery
+  and approval boundaries. No production rollout, new dependencies or other MOD
+  work. All task-created fixture databases/roles and the disposable container removed.
+
+
+## MOD-005 completion / MOD-004 real provider and runtime assessment — 2026-10-29
+
+- Used installed Supabase CLI2.90.0 and cached provider images to start a separate
+  project at local API55441/DB55442. Existing local projects untouched. Disabled
+  unused services; used actual Auth/PostgREST, not minimal SQL Auth fixtures.
+- `python3 scripts/modernization/assess_supabase.py`: **PASS, exit0**, final run
+  after deleting/recreating only the owned disposable project. Evidence records
+  `initialize_or_replay=initialized`, a successful subsequent replay with existing
+  Auth/profile rows, provider versions and source/proposal/migration hashes.
+- Two real signup tokens enforce own/unfiltered/cross-profile reads through
+  PostgREST, anonymous/no-policy-table denial, browser write denial and preserved
+  service reads. Tests pass before proposal, during proposal and after recovery;
+  profile values persist. Generated tokens/status data stay under private temp,
+  never in repository artifacts. Emails use synthetic.test with local Auth setup.
+- Historical fixtures export actual local auth/public schema-only DDL, then restore
+  to two separately created databases. Supplied explicit pg_trgm, initial public
+  USAGE and database event-trigger prerequisites omitted/assumed by schema-selected
+  pg_dump; event registration runs as the observed postgres function owner. Real
+  restore diagnostics found missing maintenance password, initial public schema
+  collision, missing event-trigger registration and owner/public-ACL assumptions;
+  corrected fixture setup without changing frozen application DDL or role powers.
+  Both old-only esasonStart and correct-only seasonStart cases with subdivision
+  absent accept historical files, verify/adopt/replay and preserve a School row.
+- Normal real-provider postgres rejects full proposal at supabase_admin default
+  privileges (SQLSTATE42501). Probe always rolls back, including an unexpected
+  future success, then verifies unchanged baseline state. Existing local maintenance
+  account tests the full proposal/recovery; no privilege elevation. Hosted proposal
+  remains unapplied and must not be partially substituted/applied as ordinary actor.
+- Independent static review found no material issues; requested final evidence be
+  replaced after the fresh-reset run. Final report now includes preserved-row
+  assertions/input hashes and initialized rather than replay-only result.
+- `python3 api/tests/run_isolated.py`: **354/354 pass, exit0**, fresh. Earlier
+  16-test baseline regression result remains valid/historical; baseline code/SQL
+  unchanged in this provider stage. No frontend changes/checks.
+- Read-only hosted Supabase capability/activity aggregates (read_only=on, requested
+  local transaction timeouts): configured postgres NOSUPERUSER/BYPASSRLS, not
+  supabase_admin member. Role counts and matching-source-LISTEN last-command count
+  exported only; no raw SQL text/client addresses/application rows. Zero matching
+  last commands does not prove absence of listeners or map them to Render services.
+- Maintainer confirms Render hosting and listener service intentionally suspended
+  for cost. No restart/deploy/env changes. Source create_app also starts notify
+  listener in the web process; actual Render command/revision/DSN mapping remains
+  unverified. Render integration found but not installed/connected; suggested once.
+- [Provider runbook](../../scripts/modernization/SUPABASE_PROVIDER.md),
+  [provider evidence](evidence/supabase-provider-verification-2026-10-29.json),
+  [runtime handoff](mod-004-runtime-handoff.md). JSON/hash checks and diff check pass.
+  All generated restore databases/users and the owned provider project/volumes
+  cleaned up; no deployed baseline/ledger/grant/policy/data changes.
+- **MOD-005 complete in documented repository baseline/supported-provider scope.**
+  This does not authorize hosted execution or claim arbitrary historical schemas/
+  production disaster restores. MOD-004 remains partial for Render/consumer mapping
+  and an authorized, versioned privilege rollout path. MOD-009 stays complete.

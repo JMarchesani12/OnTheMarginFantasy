@@ -1,0 +1,40 @@
+{
+  "scope": "Read-only configured Supabase catalog/activity aggregates only; no SQL text/client addresses/application rows exported.",
+  "read_only": "on",
+  "configured_actor": {
+    "current_user": "postgres",
+    "rolsuper": false,
+    "rolbypassrls": true,
+    "member_of_platform_admin": false
+  },
+  "connection_role_categories": [
+    {
+      "role_category": "authenticator",
+      "sessions": 1
+    },
+    {
+      "role_category": "other",
+      "sessions": 1
+    },
+    {
+      "role_category": "postgres",
+      "sessions": 1
+    },
+    {
+      "role_category": "supabase_admin",
+      "sessions": 2
+    }
+  ],
+  "sessions_with_last_command_matching_source_LISTEN": 0,
+  "limits": "Activity is a point-in-time aggregate. Roles/connection pools cannot be attributed to Render services here; zero matching last-command sessions would not prove no listeners.",
+  "owner_report": {
+    "hosting": "Render",
+    "listener_service": "intentionally suspended for cost",
+    "suspension_preserved": true
+  },
+  "source_runtime": {
+    "api_factory_starts_notification_listener": true,
+    "source": "api/api.py:68; api/wsgi.py constructs create_app",
+    "render_commands_env_and_active_revision": "not verified; Render integration not connected"
+  }
+}

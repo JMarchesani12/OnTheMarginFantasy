@@ -1,0 +1,81 @@
+{
+  "scope": "Dedicated real local Supabase Auth/PostgREST project; synthetic users only; no deployed changes.",
+  "baseline_version": "20261029_observed_public_v1",
+  "baseline_checksum": "58e8dffe807fe2ceed56949d96892ade5e293740cc2776dc757d33cba24c52af",
+  "sha256": {
+    "scripts/modernization/assess_supabase.py": "8633e28fee63f060f35290d23134800ba643ef7fb5fdfdd2d48e0886cad312f0",
+    "db/proposals/mod004_browser_privileges.sql": "d5490f41eecaab7cb9d8da9079f7f0a5bd95bac08082468ff6a4fdb60b718b08",
+    "db/proposals/mod004_browser_privileges_recovery.sql": "362dccb0f4e46e8e0eb18ca09e79e6b84f5373a522ed38b96e7a82f67d1ddbbb",
+    "api/migrations/20260803_create_sport_season_subdivision.sql": "6d57d486763d56a625c20f4e5cd3ec82b5f94a0aff276e34d764282abc3f824b",
+    "api/migrations/20260803_fix_sport_season_start_column.sql": "9d2e1547acb5d50f7f109bfab03f2a955b70d062debd28815d3fcc98e3fd487f"
+  },
+  "cli_version": "2.90.0",
+  "provider_images": [
+    "public.ecr.aws/supabase/postgres:17.6.1.106",
+    "public.ecr.aws/supabase/gotrue:v2.188.1",
+    "public.ecr.aws/supabase/postgrest:v14.8"
+  ],
+  "initialize_or_replay": "initialized",
+  "real_provider_actor": {
+    "current_user": "postgres",
+    "rolsuper": false,
+    "rolbypassrls": true
+  },
+  "baseline_replay": "already_applied with existing Auth/application rows preserved",
+  "http_before": {
+    "real_auth_users": 2,
+    "own_and_cross_user_reads": "PASS",
+    "browser_writes": "denied",
+    "anonymous_profiles": "denied",
+    "other_browser_table": "denied",
+    "service_reads": "preserved",
+    "stage": "observed baseline"
+  },
+  "historical_upgrade": {
+    "schema_only_export_sha256": "649cc72563cae78fb420b7bb4700e97754261ade91ab634e74bf64e3f3007a8c",
+    "restore_prerequisites": [
+      "empty target public schema",
+      "initial public schema PUBLIC USAGE grant",
+      "pg_trgm 1.6",
+      "ensure_rls database event-trigger registration"
+    ],
+    "fixtures": [
+      {
+        "starting_column": "seasonStart",
+        "subdivision": "absent before historical files",
+        "adoption_and_replay": "PASS",
+        "existing_application_row": "preserved"
+      },
+      {
+        "starting_column": "esasonStart",
+        "subdivision": "absent before historical files",
+        "adoption_and_replay": "PASS",
+        "existing_application_row": "preserved"
+      }
+    ]
+  },
+  "ordinary_postgres_proposal": {
+    "result": "rejected with SQLSTATE42501",
+    "partial_changes": "none; observed reference preserved"
+  },
+  "http_proposal": {
+    "real_auth_users": 2,
+    "own_and_cross_user_reads": "PASS",
+    "browser_writes": "denied",
+    "anonymous_profiles": "denied",
+    "other_browser_table": "denied",
+    "service_reads": "preserved",
+    "stage": "proposal"
+  },
+  "http_recovery": {
+    "real_auth_users": 2,
+    "own_and_cross_user_reads": "PASS",
+    "browser_writes": "denied",
+    "anonymous_profiles": "denied",
+    "other_browser_table": "denied",
+    "service_reads": "preserved",
+    "stage": "observed baseline"
+  },
+  "data_preserved_after_recovery": true,
+  "result": "PASS"
+}

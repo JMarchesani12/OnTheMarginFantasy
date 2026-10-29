@@ -177,6 +177,8 @@ These conventions remain in force until MOD-038/041 decisions approve changes; t
 
 ### MOD-004 — Verify and version Supabase access policies and role boundaries
 
+- **Current status — 2026-10-29: partial; remaining runtime/rollout boundary explicit.** Real provider Auth/PostgREST and grant-recovery checks now pass. Normal postgres cannot change platform-owned default grants in the real local provider; full proposal needs an authorized platform path or separately reviewed narrower scope. Maintainer reports Render hosting with listener service intentionally suspended; no restart authorized. [Runtime handoff](mod-004-runtime-handoff.md) covers remaining Render service/command/environment and consumer mapping. Render integration is not connected; no hosted changes.
+
 - **Priority / size / risk:** P0 / M / High.
 - **Features:** F-002, F-004, F-022–028, F-034, F-036.
 - **Problem / evidence:** DB-02 access matrix: direct browser User SELECT and backend/listener DSNs; no versioned RLS/grants.
@@ -188,7 +190,11 @@ These conventions remain in force until MOD-038/041 decisions approve changes; t
 
 - **Evidence stage — 2026-10-29:** Configured Supabase catalogs inspected read-only; [access review](mod-004-access-review.md) and [dated metadata](evidence/supabase-catalog-2026-10-29.json) now available. All 23 public tables enable RLS, one own-User SELECT policy exists, broad browser-role grants and backend postgres BYPASSRLS are observed. No policy/grant changes; role tests, reviewed intended privilege matrix and versioned access baseline remain open.
 
+- **Versioned artifact stage — 2026-10-29:** Observed access baseline and separately unapplied browser-privilege proposal/recovery now available as working-tree artifacts. Full local table/sequence privilege matrix, own-profile/service access, creator defaults and recovery tests pass. Frozen reference matches configured Supabase catalogs read-only. [Runbooks](../../db/proposals/README.md). MOD-004 remains open: external consumers, deployed runtime roles and authorized/versioned least-privilege rollout not established. No deployed permissions changed.
+
 ### MOD-005 — Reconcile migration history and produce a reproducible schema baseline
+
+- **Current status — 2026-10-29: complete in documented repository baseline/supported-provider scope.** The frozen baseline initializes on a fresh real Supabase Auth/PostgREST stack, two explicit historical source states upgrade/adopt/replay with data preserved, and role/proposal/recovery HTTP checks pass. [Provider evidence](evidence/supabase-provider-verification-2026-10-29.json) and [runbook](../../scripts/modernization/SUPABASE_PROVIDER.md). Supersedes earlier open provider-acceptance notes below. No hosted baseline/ledger/adoption/DDL or grant changes; arbitrary prior states and production disaster restore are not claimed. Missing original SQL is reconciled as unavailable history plus maintainer recollection, not reconstructed content.
 
 - **Priority / size / risk:** P0 / M / Medium.
 - **Features:** F-007, F-022, F-028, F-031, F-035, F-036.
@@ -200,6 +206,8 @@ These conventions remain in force until MOD-038/041 decisions approve changes; t
 - **Contract impact:** Behavior: no intended; API: no; schema: reproducibility artifacts, actual changes separately reviewed.
 
 - **Evidence stage — 2026-10-29:** [Provenance review](mod-005-schema-provenance.md) records migration commits/checksums and missing migration history; configured database matches all 23 table/180 column names, not yet normalized DDL. SeasonPhase.rules exists; missing migration is not recovered. Corrected README instructions to stop directing users to a nonexistent file. No executable baseline/runner or upgrade validation yet; MOD-005 remains open.
+
+- **Baseline implementation stage — 2026-10-29:** [Versioned package/runner](../../db/baselines/20261029/README.md) now defines ordered SQL, checksums, supported local initialize/adopt states, private ledger and recovery boundaries. 16/16 local integration tests and 354/354 backend tests pass, including concurrency/rollback/drift rejection. Expanded frozen metadata verified against configured Supabase read-only. MOD-005 remains open for full provider-compatible setup/upgrade/recovery acceptance and operational prerequisites; minimal Auth fixtures are not a complete Supabase environment. No deployed adoption/migrations.
 
 ### MOD-006 — Establish one application profile per auth subject
 
