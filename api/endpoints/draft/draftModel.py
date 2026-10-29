@@ -1,4 +1,5 @@
 import logging
+from contextlib import contextmanager
 import math
 import secrets
 from sqlalchemy.exc import IntegrityError
@@ -73,24 +74,33 @@ class DraftModel:
         with self.db.begin() as c:
             return _run(c)
 
-    def force_finalize_draft(self, league_id: int, acting_user_id: int) -> Dict[str, Any]:
-        with self.db.begin() as conn:
-            league = conn.execute(
-                text("""
-                    SELECT commissioner
-                    FROM "League"
-                    WHERE id = :leagueId
-                    LIMIT 1
-                """),
-                {"leagueId": league_id},
-            ).fetchone()
-            if not league:
-                raise ValueError(f"League {league_id} not found")
-            if int(league._mapping["commissioner"]) != int(acting_user_id):
-                raise PermissionError("Only the commissioner can finalize this draft")
+    def _assert_draft_commissioner(self, conn, league_id: int, acting_user_id: int):
+        league = conn.execute(
+            text('SELECT commissioner FROM "League" WHERE id = :leagueId'),
+            {'leagueId': league_id},
+        ).fetchone()
+        if not league:
+            raise ValueError(f'League {league_id} not found')
+        if int(league._mapping['commissioner']) != int(acting_user_id):
+            raise PermissionError('Only the commissioner can control this draft')
 
-        return self.finalize_draft(league_id)
-        return self.finalize_draft(league_id)
+    @contextmanager
+    def _draft_control_transaction(self, league_id: int, acting_user_id: Optional[int]):
+        # Trusted defaults stay independent of HTTP. Supplied principals must
+        # retain commissioner authority through the final transaction check.
+        # These checks add no row locks or concurrent-removal guarantee.
+        with self.db.begin() as conn:
+            if acting_user_id is not None:
+                self._assert_draft_commissioner(conn, league_id, acting_user_id)
+            yield conn
+            if acting_user_id is not None:
+                self._assert_draft_commissioner(conn, league_id, acting_user_id)
+
+    def force_finalize_draft(self, league_id: int, acting_user_id: int) -> Dict[str, Any]:
+        if acting_user_id is None:
+            raise PermissionError('Only the commissioner can control this draft')
+        with self._draft_control_transaction(league_id, acting_user_id) as conn:
+            return self.finalize_draft(league_id, conn=conn)
 
     def _repair_completed_draft_state(self, league_id: int, state: Dict[str, Any], conn) -> Dict[str, Any]:
         if str(state.get("status")) != "complete":
@@ -228,6 +238,7 @@ class DraftModel:
         member_id: int,
         sport_team_id: int,
         acquired_week: int = 1,
+        *, acting_user_id: Optional[int] = None,
     ) -> Dict[str, Any]:
         """
         Live draft pick (concurrency-safe):
@@ -238,7 +249,26 @@ class DraftModel:
         - Advances DraftState and resets expiresAt
         """
 
+        # Interactive callers supply only their resolved principal ID. Trusted
+        # model callers keep the default path without an HTTP identity.
+        ownership_scope = ''
+        actor_params = {}
+        if acting_user_id is not None:
+            ownership_scope = '''WHERE EXISTS (
+                SELECT 1 FROM "LeagueMember" owned_member
+                WHERE owned_member.id = :memberId
+                  AND owned_member."leagueId" = :leagueId
+                  AND owned_member."userId" = :actingUserId
+            )'''
+            actor_params = {'actingUserId': acting_user_id}
+
         with self.db.begin() as conn:
+            if acting_user_id is not None:
+                owned = conn.execute(text(f'SELECT 1 {ownership_scope}'), {
+                    'memberId': member_id, 'leagueId': league_id, **actor_params,
+                }).fetchone()
+                if not owned:
+                    raise PermissionError('League member not found')
             cfg = self._get_draft_settings(conn, league_id)
             num_players = cfg["numPlayers"]
             rounds = cfg["numberOfRounds"]
@@ -320,13 +350,13 @@ class DraftModel:
             # 5) Insert DraftPick (unique constraints protect races)
             try:
                 draft_row = conn.execute(
-                    text("""
+                    text(f"""
                         INSERT INTO "DraftPick"
                             ("leagueId", "overallPickNumber", "roundNumber", "pickInRound",
                              "memberId", "sportTeamId")
-                        VALUES
-                            (:leagueId, :overallPickNumber, :roundNumber, :pickInRound,
-                             :memberId, :sportTeamId)
+                        SELECT :leagueId, :overallPickNumber, :roundNumber, :pickInRound,
+                               :memberId, :sportTeamId
+                        {ownership_scope}
                         RETURNING id, "createdAt", "leagueId",
                                   "overallPickNumber", "roundNumber", "pickInRound",
                                   "memberId", "sportTeamId"
@@ -338,12 +368,15 @@ class DraftModel:
                         "pickInRound": pick_in_round,
                         "memberId": member_id,
                         "sportTeamId": sport_team_id,
+                        **actor_params,
                     },
                 ).fetchone()
             except IntegrityError as e:
                 raise ValueError("Pick conflict (team already drafted or slot already filled).") from e
 
             if not draft_row:
+                if acting_user_id is not None:
+                    raise PermissionError('League member not found')
                 raise RuntimeError("Failed to insert DraftPick")
 
             draft_pick = dict(draft_row._mapping)
@@ -979,14 +1012,14 @@ class DraftModel:
 
         return rounds
     
-    def start_draft(self, league_id: int) -> Dict[str, Any]:
+    def start_draft(self, league_id: int, *, acting_user_id: Optional[int] = None) -> Dict[str, Any]:
         """
         Sets DraftState to live and initializes:
         - currentOverallPickNumber = 1
         - currentMemberId = member with draftOrder=1
         - expiresAt = now + selectionTime
         """
-        with self.db.begin() as conn:
+        with self._draft_control_transaction(league_id, acting_user_id) as conn:
             cfg = self._get_draft_settings(conn, league_id)
             selection_time = cfg["selectionTime"]
             num_players = cfg["numPlayers"]
@@ -1047,8 +1080,8 @@ class DraftModel:
 
             return self.get_draft_state_snapshot(league_id, conn=conn)
 
-    def pause_draft(self, league_id: int) -> Dict[str, Any]:
-        with self.db.begin() as conn:
+    def pause_draft(self, league_id: int, *, acting_user_id: Optional[int] = None) -> Dict[str, Any]:
+        with self._draft_control_transaction(league_id, acting_user_id) as conn:
             state = conn.execute(
                 text("""
                     SELECT status FROM "DraftState"
@@ -1077,8 +1110,8 @@ class DraftModel:
 
             return self.get_draft_state_snapshot(league_id, conn=conn)
 
-    def resume_draft(self, league_id: int) -> Dict[str, Any]:
-        with self.db.begin() as conn:
+    def resume_draft(self, league_id: int, *, acting_user_id: Optional[int] = None) -> Dict[str, Any]:
+        with self._draft_control_transaction(league_id, acting_user_id) as conn:
             cfg = self._get_draft_settings(conn, league_id)
             selection_time = cfg["selectionTime"]
 
@@ -1193,7 +1226,9 @@ class DraftModel:
         return int(row._mapping["overall"]), int(row._mapping["memberId"])
     
 
-    def get_draft_state_snapshot(self, league_id: int, conn=None) -> Dict[str, Any]:
+    def get_draft_state_snapshot(
+        self, league_id: int, conn=None, *, reader_user_id: Optional[int] = None,
+    ) -> Dict[str, Any]:
         """
         Snapshot for frontend reconnect:
         - DraftState
@@ -1201,12 +1236,26 @@ class DraftModel:
         - picks so far
         - league draft settings (draft object)
         """
+        # HTTP supplies only the resolved principal ID. Default calls remain
+        # trusted model/socket/job calls, with no fabricated HTTP identity.
+        scope = ''
+        params = {'leagueId': league_id}
+        if reader_user_id is not None:
+            scope = '''AND EXISTS (
+                SELECT 1 FROM "LeagueMember" reader_member
+                WHERE reader_member."leagueId" = :leagueId
+                  AND reader_member."userId" = :readerUserId
+            )'''
+            params['readerUserId'] = reader_user_id
+
         def _run(c):
             league = c.execute(
-                text('SELECT id, "numPlayers", settings FROM "League" WHERE id = :leagueId'),
-                {"leagueId": league_id},
+                text(f'SELECT id, "numPlayers", settings FROM "League" WHERE id = :leagueId {scope}'),
+                params,
             ).fetchone()
             if not league:
+                if reader_user_id is not None:
+                    raise PermissionError('League not found')
                 raise ValueError(f"League {league_id} not found")
 
             settings = league._mapping["settings"] or {}
@@ -1311,11 +1360,11 @@ class DraftModel:
             return _run(conn2)
 
     # Optional but recommended: prevent changing order mid-live draft
-    def set_draft_order(self, league_id: int, member_ids_in_order: List[int]) -> Dict[str, Any]:
+    def set_draft_order(self, league_id: int, member_ids_in_order: List[int], *, acting_user_id: Optional[int] = None) -> Dict[str, Any]:
         if not member_ids_in_order:
             raise ValueError("memberIdsInOrder is required")
 
-        with self.db.begin() as conn:
+        with self._draft_control_transaction(league_id, acting_user_id) as conn:
             # Block re-ordering once draft is live/paused/complete
             state = conn.execute(
                 text('SELECT status FROM "DraftState" WHERE "leagueId" = :leagueId'),

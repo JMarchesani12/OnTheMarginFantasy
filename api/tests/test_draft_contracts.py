@@ -1,6 +1,8 @@
 """K6/J3 transport slice: observable HTTP and room-event contracts, not a live draft."""
 import datetime as dt
 import sys
+import time
+import jwt
 import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
@@ -12,6 +14,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from endpoints.draft.draftEndpoints import DraftEndpoints
 from endpoints.draft.routes import setup_routes
 from socketioInstance import socketio
+from authMiddleware import install_auth_middleware
+from supabaseAuth import ISSUER, SUPABASE_JWT_SECRET
+from test_profile_regression import ALICE, ProfileDatabase
 
 
 class DraftContractTests(unittest.TestCase):
@@ -21,9 +26,15 @@ class DraftContractTests(unittest.TestCase):
         self.model = Mock()
         app = Flask(__name__)
         app.config["TESTING"] = True
+        self.db = ProfileDatabase()
+        self.addCleanup(self.db.connection.close)
+        install_auth_middleware(app)
         with patch('endpoints.draft.draftEndpoints.DraftModel', return_value=self.model):
-            setup_routes(app, None)
+            setup_routes(app, self.db)
         self.client = app.test_client()
+        token = jwt.encode(dict(sub=ALICE, aud='authenticated', iss=ISSUER,
+                                exp=int(time.time()) + 600), SUPABASE_JWT_SECRET, algorithm='HS256')
+        self.client.environ_base['HTTP_AUTHORIZATION'] = f'Bearer {token}'
         self.body = {"leagueId": 7, "memberId": 11, "sportTeamId": 21}
         self.emitter = patch.object(socketio, 'emit')
         self.emitted = self.emitter.start()

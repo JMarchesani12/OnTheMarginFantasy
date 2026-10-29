@@ -4,31 +4,43 @@ from flask import request, jsonify
 from endpoints.draft.draftBroadcast import broadcast_draft_update
 from endpoints.draft.draftModel import DraftModel
 from utils.jsonSafe import jsonSafe
+from authenticatedPrincipal import PrincipalResolutionError, resolve_authenticated_principal
 
 class DraftEndpoints:
     def __init__(self, db_engine):
         self.draftModel = DraftModel(db_engine)
+        self.db_engine = db_engine
 
     # POST /api/draft/pick
     def create_pick(self):
-        data = request.get_json() or {}
-
-        required = ["leagueId", "memberId", "sportTeamId"]
-        missing = [k for k in required if k not in data]
-        if missing:
-            return jsonify({"message": f"Missing fields: {', '.join(missing)}"}), 400
-
-        league_id = int(data["leagueId"])
-        member_id = int(data["memberId"])
-        sport_team_id = int(data["sportTeamId"])
-        week_number = int(data.get("weekNumber", 0))
-
         try:
+            principal = resolve_authenticated_principal(self.db_engine)
+            data = request.get_json(silent=True)
+            if not isinstance(data, dict):
+                return jsonify({'message': 'Request body must be a JSON object'}), 400
+            required = ['leagueId', 'memberId', 'sportTeamId']
+            missing = [key for key in required if key not in data]
+            if missing:
+                return jsonify({'message': f"Missing fields: {', '.join(missing)}"}), 400
+
+            def integer(value, field):
+                if isinstance(value, bool) or not isinstance(value, (int, str)):
+                    raise ValueError(f'{field} must be an integer')
+                try:
+                    return int(value)
+                except ValueError:
+                    raise ValueError(f'{field} must be an integer') from None
+
+            league_id = integer(data['leagueId'], 'leagueId')
+            member_id = integer(data['memberId'], 'memberId')
+            sport_team_id = integer(data['sportTeamId'], 'sportTeamId')
+            week_number = integer(data.get('weekNumber', 0), 'weekNumber')
             draft_pick = self.draftModel.create_draft_pick_live(
                 league_id=league_id,
                 member_id=member_id,
                 sport_team_id=sport_team_id,
                 acquired_week=week_number,
+                acting_user_id=principal.user_id,
             )
 
             snapshot = self.draftModel.get_draft_state_snapshot(league_id)
@@ -39,6 +51,10 @@ class DraftEndpoints:
             
             return jsonify(jsonSafe(draft_pick)), 201
 
+        except PrincipalResolutionError as exc:
+            return jsonify({'error': exc.code}), exc.status_code
+        except PermissionError:
+            return jsonify({'message': 'League member not found'}), 404
         except ValueError as e:
             msg = str(e).lower()
 
@@ -53,132 +69,105 @@ class DraftEndpoints:
             # in case anything bubbles up from unique constraints
             return jsonify({"message": "Pick conflict (already taken)."}), 409
 
-        except Exception as e:
-            print("❌ create_pick error:", repr(e))
+        except Exception:
             return jsonify({"message": "Failed to create draft pick"}), 500
     
-    # POST /api/draft/start { "leagueId": 1 }
     def start(self):
-        data = request.get_json() or {}
-        if "leagueId" not in data:
-            return jsonify({"message": "Missing field: leagueId"}), 400
+        return self._draft_control_response('start')
 
-        league_id = int(data["leagueId"])
-
-        try:
-            snapshot = self.draftModel.start_draft(league_id)
-
-            # ✅ broadcast to everyone in the draft room
-            broadcast_draft_update(
-                league_id,
-                {"type": "start", "snapshot": snapshot}
-            )
-
-            return jsonify(snapshot), 200
-
-        except ValueError as e:
-            return jsonify({"message": str(e)}), 400
-        except Exception:
-            return jsonify({"message": "Failed to start draft"}), 500
-
-    # POST /api/draft/pause { "leagueId": 1 }
     def pause(self):
-        data = request.get_json() or {}
-        if "leagueId" not in data:
-            return jsonify({"message": "Missing field: leagueId"}), 400
-        try:
-            result = self.draftModel.pause_draft(int(data["leagueId"]))
-            broadcast_draft_update(int(data["leagueId"]), {"type":"pause", "snapshot": result})
-            return jsonify(result), 200
-        except ValueError as e:
-            return jsonify({"message": str(e)}), 400
-        except Exception:
-            return jsonify({"message": "Failed to pause draft"}), 500
+        return self._draft_control_response('pause')
 
-    # POST /api/draft/resume { "leagueId": 1 }
     def resume(self):
-        data = request.get_json() or {}
-        if "leagueId" not in data:
-            return jsonify({"message": "Missing field: leagueId"}), 400
-        try:
-            result = self.draftModel.resume_draft(int(data["leagueId"]))
-            broadcast_draft_update(int(data["leagueId"]), {"type":"resume", "snapshot": result})
-            return jsonify(result), 200
-        except ValueError as e:
-            return jsonify({"message": str(e)}), 400
-        except Exception:
-            return jsonify({"message": "Failed to resume draft"}), 500
+        return self._draft_control_response('resume')
 
-    # POST /api/draft/finalize { "leagueId": 1, "actingUserId": 2 }
     def finalize(self):
-        data = request.get_json() or {}
-        if "leagueId" not in data or "actingUserId" not in data:
-            return jsonify({"message": "Missing field: leagueId or actingUserId"}), 400
+        return self._draft_control_response('finalize')
 
-        league_id = int(data["leagueId"])
-
+    def _draft_control_response(self, action: str, league_id=None):
+        failures = {
+            'start': 'Failed to start draft', 'pause': 'Failed to pause draft',
+            'resume': 'Failed to resume draft', 'finalize': 'Failed to finalize draft',
+            'order': 'Failed to set draft order',
+        }
         try:
-            result = self.draftModel.force_finalize_draft(
-                league_id=league_id,
-                acting_user_id=int(data["actingUserId"]),
-            )
-            snapshot = self.draftModel.get_draft_state_snapshot(league_id)
-            broadcast_draft_update(
-                league_id,
-                {"type": "finalize", "snapshot": snapshot},
-            )
+            principal = resolve_authenticated_principal(self.db_engine)
+            body = request.get_json(silent=True)
+            if not isinstance(body, dict):
+                return jsonify({'message': 'Request body must be a JSON object'}), 400
+            if action == 'finalize' and ('leagueId' not in body or 'actingUserId' not in body):
+                return jsonify({'message': 'Missing field: leagueId or actingUserId'}), 400
+
+            def integer(value, field):
+                if isinstance(value, bool) or not isinstance(value, (int, str)):
+                    raise ValueError(f'{field} must be an integer')
+                try:
+                    return int(value)
+                except ValueError:
+                    raise ValueError(f'{field} must be an integer') from None
+
+            if action != 'order':
+                if 'leagueId' not in body:
+                    return jsonify({'message': 'Missing field: leagueId'}), 400
+                league_id = integer(body['leagueId'], 'leagueId')
+            # An actor field can assert compatibility, never establish identity.
+            if 'actingUserId' in body:
+                if integer(body['actingUserId'], 'actingUserId') != principal.user_id:
+                    return jsonify({'message': 'actingUserId does not match authenticated user'}), 403
+
+            if action == 'order':
+                ids = body.get('memberIdsInOrder')
+                if not isinstance(ids, list) or not ids:
+                    return jsonify({'message': 'memberIdsInOrder must be a non-empty array'}), 400
+                result = self.draftModel.set_draft_order(
+                    league_id=league_id,
+                    member_ids_in_order=[integer(value, 'memberId') for value in ids],
+                    acting_user_id=principal.user_id,
+                )
+            elif action == 'finalize':
+                result = self.draftModel.force_finalize_draft(league_id, principal.user_id)
+                snapshot = self.draftModel.get_draft_state_snapshot(league_id)
+                broadcast_draft_update(league_id, {'type': action, 'snapshot': snapshot})
+            else:
+                method = {
+                    'start': self.draftModel.start_draft,
+                    'pause': self.draftModel.pause_draft,
+                    'resume': self.draftModel.resume_draft,
+                }[action]
+                result = method(league_id, acting_user_id=principal.user_id)
+                broadcast_draft_update(league_id, {'type': action, 'snapshot': result})
             return jsonify(result), 200
-        except PermissionError as e:
-            return jsonify({"message": str(e)}), 403
-        except ValueError as e:
-            return jsonify({"message": str(e)}), 400
+        except PrincipalResolutionError as exc:
+            return jsonify({'error': exc.code}), exc.status_code
+        except PermissionError as exc:
+            return jsonify({'message': str(exc)}), 403
+        except ValueError as exc:
+            return jsonify({'message': str(exc)}), 400
         except Exception:
-            return jsonify({"message": "Failed to finalize draft"}), 500
+            return jsonify({'message': failures[action]}), 500
 
     # GET /api/draft/state/<league_id>
     def state(self, league_id: int):
         try:
-            return jsonify(self.draftModel.get_draft_state_snapshot(league_id)), 200
+            principal = resolve_authenticated_principal(self.db_engine)
+            snapshot = self.draftModel.get_draft_state_snapshot(
+                league_id, reader_user_id=principal.user_id,
+            )
+            return jsonify(snapshot), 200
+        except PrincipalResolutionError as exc:
+            return jsonify({'error': exc.code}), exc.status_code
+        except PermissionError:
+            return jsonify({'message': 'League not found'}), 404
         except ValueError as e:
             return jsonify({"message": str(e)}), 400
-        except Exception as e:
-            print(e)
+        except Exception:
             return jsonify({"message": "Failed to get draft state"}), 500
 
 
     # POST /api/draft/pick-manual
-    # {
-    #   "leagueId": 1,
-    #   "memberId": 7,
-    #   "sportTeamId": 42
-    # }
     def create_pick_manual(self):
-        data = request.get_json() or {}
-
-        required = ["leagueId", "memberId", "sportTeamId"]
-        missing = [k for k in required if k not in data]
-        if missing:
-            return jsonify({"message": f"Missing fields: {', '.join(missing)}"}), 400
-
-        league_id = int(data["leagueId"])
-        member_id = int(data["memberId"])
-        sport_team_id = int(data["sportTeamId"])
-        week_number = int(data.get("weekNumber", 1))
-
-        try:
-            draft_pick = self.draftModel.create_draft_pick(
-                league_id=league_id,
-                member_id=member_id,
-                sport_team_id=sport_team_id,
-                acquired_week=week_number,
-            )
-        except ValueError as e:
-            return jsonify({"message": str(e)}), 400
-        except Exception as e:
-            # log e if you have logging
-            return jsonify({"message": "Failed to create draft pick"}), 500
-
-        return jsonify(draft_pick), 201
+        """HTTP allocation is disabled; trusted model callers remain separate."""
+        return jsonify({'error': 'http_manual_pick_disabled'}), 410
 
     # GET /api/draft/rounds/<int:sportId>
     def get_rounds(self, sportId):
@@ -198,20 +187,4 @@ class DraftEndpoints:
 
     # PUT /api/league/<league_id>/draft/order
     def set_draft_order(self, league_id: int):
-        try:
-            body = request.get_json(force=True) or {}
-            ids = body.get("memberIdsInOrder")
-
-            if not isinstance(ids, list) or not ids:
-                return jsonify({"message": "memberIdsInOrder must be a non-empty array"}), 400
-
-            result = self.draftModel.set_draft_order(
-                league_id=league_id,
-                member_ids_in_order=[int(x) for x in ids],
-            )
-            return jsonify(result), 200
-
-        except ValueError as e:
-            return jsonify({"message": str(e)}), 400
-        except Exception as e:
-            return jsonify({"message": "Failed to set draft order"}), 500
+        return self._draft_control_response('order', league_id)
