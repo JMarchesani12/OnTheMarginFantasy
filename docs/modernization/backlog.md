@@ -1,22 +1,31 @@
 # Modernization backlog
 
-2026-10-28. Proposed work only; no fixes implemented. Synthesizes [architecture](architecture.md), [all 41 features](features.md), [behavior checklist](behavior-checklist.md), [frontend audit](frontend-audit.md), [backend audit](backend-audit.md) and [database audit](database-audit.md). FE/BE D/M/S references point to those audit sections; DB references point to the database audit. Feature ranges are inclusive stable inventory IDs, not file paths.
+Originally audited 2026-10-28; reprioritized 2026-10-29 after MOD-001–003 completion. Implementation status appears on the relevant cards. Synthesizes [architecture](architecture.md), [all 41 features](features.md), [behavior checklist](behavior-checklist.md), [frontend audit](frontend-audit.md), [backend audit](backend-audit.md) and [database audit](database-audit.md). FE/BE D/M/S references point to those audit sections; DB references point to the database audit. Feature ranges are inclusive stable inventory IDs, not file paths.
 
 ## Priorities, assumptions and sizing
 
-P0: identity/exposure and reproducible evidence; P1: integrity, focused regressions and demonstrated user failures; P2: measured performance investigations and bounded responsibility consolidation; P3: low-impact mechanical/text cleanup and investigations with weaker evidence. Priority is impact plus dependency, not task-number order. No runtime-measured performance problem has been established by any audit. Performance work starts with measurement and may end with “no change justified.”
+P0: identity/exposure, demonstrated data-integrity hazards and reproducible evidence; P1: integrity, focused regressions and demonstrated user failures; P2: measured performance investigations and bounded responsibility consolidation; P3: low-impact mechanical/text cleanup and investigations with weaker evidence. Priority is impact plus dependency, not task-number order. No runtime-measured performance problem has been established by any audit. Performance work starts with measurement and may end with “no change justified.”
 
-S ≈ up to 1–2 engineering days; M ≈ 3–5 days, excluding access/product decisions and rollout. Ranges express uncertainty, not commitments. Risk describes implementation/rollout impact, not verified exploit likelihood. Dependencies on Q1–Q8 refer to product questions in the behavior checklist. Resolve a task's decisions before changing that behavior, but continue independent source/test work meanwhile. Never codify known security/SQL/state defects as compatibility requirements. Existing tests have been mapped, not executed by this audit; the acceptance checks below are future work.
+S ≈ up to 1–2 engineering days; M ≈ 3–5 days, excluding access/product decisions and rollout. Ranges express uncertainty, not commitments. Risk describes implementation/rollout impact, not verified exploit likelihood. Dependencies on Q1–Q8 refer to product questions in the behavior checklist. Resolve a task's decisions before changing that behavior, but continue independent source/test work meanwhile. Never codify known security/SQL/state defects as compatibility requirements. Original audit acceptance checks were prospective; later card status and verification.md record actual implementation/test evidence.
 
 Schema tasks require safe preflight, reviewed remediation, disposable-database validation and deployment/recovery planning. Metadata unavailability blocks live conclusions and migrations requiring that evidence, not independent app-level fixes. Use synthetic users/rows; do not use production mutation, jobs or private-row exports as verification. Every schema/policy deployment and external publication remains outside this audit.
 
-## Recommended first implementation
+## Current recommended implementation order — 2026-10-29
 
-**MOD-001**, followed immediately by MOD-002 and MOD-003A–C. Add a small credential-free principal/test boundary, then demonstrate own-profile success and cross-user denial while adopting it in profile endpoints. This addresses the shared cause of the highest-impact source-demonstrated security defects and makes later authorization changes verifiable. Do not report broad authorization fixed when only the helper/profile slice is complete. Run MOD-004/005 evidence/provenance work in parallel only if an implementation session authorizes that workflow; it need not delay these app fixes.
+MOD-001, MOD-002/002A and MOD-003A/B/C are complete in their recorded application scopes. Their completion does not establish deployed RLS, schema constraints, concurrency or job recovery. Current ordering and architecture discussion agenda: [reprioritized roadmap](priorities-2026-10-29.md).
 
-Security sequence: MOD-001 → MOD-002 and separately MOD-003A/B/C; MOD-004 validates the direct Supabase and backend privilege boundary. Integrity sequence: MOD-005 → key/constraint work; MOD-007 → MOD-008 → MOD-013, MOD-009 → MOD-010 → MOD-013; MOD-011 → MOD-012; MOD-025 protects draft invariants. Small UI/accessibility fixes can ship independently as dependencies allow. No repository-wide reorganization is proposed.
+1. **Next actionable fix: MOD-009**, then MOD-007; MOD-025 is the next draft integrity priority. Trusted jobs still expose replay/partial-write risks after HTTP authorization.
+2. Prepare MOD-005 source provenance and MOD-004 access evidence early; do not block independent model fixes on unavailable metadata. PostgreSQL-dependent acceptance remains explicit.
+3. **Discuss MOD-038 API layering and MOD-041 request/response/outbound interceptors early**, before broad structural implementation. These are decisions, not approval of a migration or new rate-limit infrastructure.
+4. MOD-034 startup isolation and MOD-019 safe errors/resource limits with MOD-028A browser refresh alignment; respect lifecycle/gateway policy dependencies.
+5. Follow MOD-006/008/010/011/012 prerequisites, then MOD-013/014 recovery and MOD-015/016 historical consistency; address MOD-023/024 reliability as applicable. MOD-011 needs verification rather than duplicate code repairs; MOD-014 is partially overlapped, not complete.
+6. MOD-039 shared-function extraction and MOD-040 structural pilots, plus existing MOD-029–033 decomposition, follow the architecture/correctness prerequisites. Small identical-helper extractions may accompany touched code earlier. User-facing defects can proceed independently; performance remains measurement-first.
+
+This queue supersedes the original MOD-001-first recommendation. IDs remain stable; task priority is not a promise to bypass dependencies. No other MOD implementation, production access or deployment is started by this planning update.
 
 ## Incremental organization conventions
+
+These conventions remain in force until MOD-038/041 decisions approve changes; the new cards authorize discussion, not an automatic folder or middleware migration.
 
 - Keep frontend `screens`, `components`, domain `api`, `context`, `types`, `utils` and colocated styles. Screens orchestrate route/user identity and rendering; shared components do not import screens. PascalCase components/hooks named useX; domain API modules own wire calls, not UI state. Keep existing casing outside touched files. Route-local hooks begin in `screens/League/hooks`; promote only with demonstrated reuse.
 - Shared BonusesEditor belongs in `components/League`; draft clock/connection hooks and DraftOrderEditor have focused inputs/outputs. One resource owner should coordinate refresh for each feature; identity keys include user/league/week/filter as appropriate. A cancellation guard is not a cache. Do not install a global state/cache library as a prerequisite.
@@ -201,7 +210,7 @@ Security sequence: MOD-001 → MOD-002 and separately MOD-003A/B/C; MOD-004 vali
 
 ### MOD-007 — Replace weekly scores atomically
 
-- **Priority / size / risk:** P1 / S–M / High.
+- **Priority / size / risk:** P0 / S–M / High.
 - **Features:** F-009, F-025, F-032, F-036.
 - **Problem / evidence:** BE D06 / DB-04: delete commits before replacement.
 - **Expected benefit:** Keep old scores intact on failure.
@@ -223,7 +232,7 @@ Security sequence: MOD-001 → MOD-002 and separately MOD-003A/B/C; MOD-004 vali
 
 ### MOD-009 — Guard trade application inside its lock
 
-- **Priority / size / risk:** P1 / S–M / High.
+- **Priority / size / risk:** P0 / S–M / High.
 - **Features:** F-016, F-025, F-033.
 - **Problem / evidence:** BE D07 / DB-05: apply_trade lacks locked type/PENDING_APPLY checks.
 - **Expected benefit:** Prevent invalid or replayed ownership writes.
@@ -288,6 +297,8 @@ Security sequence: MOD-001 → MOD-002 and separately MOD-003A/B/C; MOD-004 vali
 - **Dependencies:** MOD-001 isolation; MOD-007 for scores; Q5 completion policy.
 - **Acceptance / verification:** Run CLI logic with fake model/DB outside Flask; injected failure leaves completion flags unset; successful/all-league outcomes mark only agreed scope; HTTP season response unchanged.
 - **Contract impact:** Behavior: job failure/success yes; API: no intended; schema: no.
+
+- **Overlap status — 2026-10-29:** MOD-003C changed the finalizer's direct HTTP-handler invocation to its model call and verified synthetic successful completion outside HTTP. Do not repeat that fix. Job builders still construct endpoint objects, and completion/failure policy, broader startup decoupling and failure-path validation remain open here; MOD-014 is not complete.
 
 ### MOD-015 — Make seasonal conference precedence and sport consistency explicit
 
@@ -629,6 +640,54 @@ Security sequence: MOD-001 → MOD-002 and separately MOD-003A/B/C; MOD-004 vali
 - **Dependencies:** Coordinate MOD-014/028B/034 to avoid conflicting edits.
 - **Acceptance / verification:** Source references/messages describe actual module/action; user-visible wording reviewed; import checks only if imports touched; no payload/SQL changes.
 - **Contract impact:** Behavior: error text only if changed; API/schema: no.
+
+## Added architecture and refactoring work — 2026-10-29
+
+These cards reflect the user's explicit new scope. They cross-cut existing features without adding product capabilities. Discussion decisions remain unapproved; do not infer authorization for a repository-wide rewrite.
+
+### MOD-038 — Decide API layering and dependency ownership
+
+- **Priority / size / risk:** P1 / S for discussion/design; migration sized separately / Medium.
+- **Features:** Cross-cutting existing backend features.
+- **Problem / evidence:** Routes/endpoints/models exist, but model classes mix orchestration and SQL; job builders construct HTTP adapters. New shared auth/validation functions expose opportunities to clarify responsibilities.
+- **Expected benefit:** Agree where validation, resource authorization, use cases, transaction ownership and persistence belong before moving code.
+- **Scope / exclusions:** Compare retained layers, domain routes/schemas/services/repositories and incremental hybrid using one real read/command. Decide domain versus layer folders, schemas/library needs, connection passing, actor contracts, job entry points and compatibility facades. Exclude implementation, mandatory framework replacement and generic CRUD scaffolding.
+- **Dependencies:** MOD-001–003 evidence; coordinate MOD-034/041 and existing MOD-032/033. No dependency on completing every correctness card for this discussion.
+- **Acceptance / verification:** User-approved architecture decision with alternatives/tradeoffs, responsibility map, representative call graph, dependency rules and bounded pilot criteria. Do not mark implementation complete from a diagram.
+- **Contract impact:** Behavior/API/schema: none in decision task; migration requires its own approved design and validation.
+
+### MOD-039 — Inventory and extract demonstrated common functions
+
+- **Priority / size / risk:** P1 / S–M per pilot / Medium.
+- **Features:** Cross-cutting backend/frontend boundary helpers.
+- **Problem / evidence:** Repeated parsing, error translation, principal/ownership predicates and serialization; existing requestValidation/authorization/apiFetch should be reused before introducing alternatives.
+- **Expected benefit:** Reduce duplication while preserving meaningful role and transaction distinctions.
+- **Scope / exclusions:** Inventory callers and semantic differences; extract one pure/boundary helper with two real consumers first. Separate frontend and backend batches. Keep domain rules with their owners; MOD-033 owns ownership/conference rule consolidation. No universal base controller/repository or global utilities rewrite.
+- **Dependencies:** MOD-038/041 for structural/pipeline decisions when applicable; pure identical helper extraction need not wait. Coordinate MOD-019/028B/029 to avoid duplicate work.
+- **Acceptance / verification:** Consumer-level valid/error/identity behavior preserved, no hidden I/O/commit/auth bypass, focused regressions and relevant broader checks pass. Record deliberate non-extractions where semantics differ.
+- **Contract impact:** Behavior/API/schema: no intended; real defects receive separate behavior-change scope.
+
+### MOD-040 — Pilot file-content and folder refactoring without changing behavior
+
+- **Priority / size / risk:** P2 / S–M per domain pilot / Medium.
+- **Features:** Cross-cutting API and frontend organization.
+- **Problem / evidence:** User requested file-content and structure refactoring; large model/screen responsibilities and existing MOD-029–033 identify concrete candidates.
+- **Expected benefit:** Make domain ownership and navigation clearer with reviewable migrations.
+- **Scope / exclusions:** After the architecture decision, choose one API domain and later one frontend feature. Split content extraction from import-only moves; retain facades where callers need stability. Define test placement and naming/import conventions. Reuse existing decomposition cards rather than repeating their implementations. No mass rename, schema/API-path rename or simultaneous behavior redesign.
+- **Dependencies:** MOD-038 approved target; MOD-034 import/startup boundaries; relevant domain correctness and MOD-029–033 prerequisites.
+- **Acceptance / verification:** Before/after call/import map, acyclic dependencies, stable public/model/job contracts, isolated import/tests and relevant frontend type/build checks. Verify Flask endpoint registration, mocks, CLIs and jobs after moves.
+- **Contract impact:** Behavior/API/schema: no intended; file/import paths may change with documented compatibility.
+
+### MOD-041 — Decide incoming, response and outbound interceptor architecture
+
+- **Priority / size / risk:** P1 / S–M for decision / Medium.
+- **Features:** F-002, F-004, F-022–028, F-034; cross-cutting transport concerns.
+- **Problem / evidence:** authMiddleware.before_request, app CORS, endpoint principal/error handling, separate socket auth and frontend apiFetch form several boundaries without a documented common pipeline; rate/gateway policy remains unresolved.
+- **Expected benefit:** Place authentication, authorization, limits, errors, credentials and telemetry at explicit, testable boundaries.
+- **Scope / exclusions:** Discuss Flask hooks versus WSGI middleware, registration/order and short circuits; public/bootstrap/OPTIONS/socket paths; principal resolution; coarse and per-identity limits; safe response envelopes/headers; frontend refresh and outbound provider credentials/timeouts/retries. Decide proxy trust, multiworker limiter storage, quota/failure policy and ownership. No new limiter/library/storage install, retry-all behavior, service authorization replacement or production gateway change.
+- **Dependencies:** MOD-038 for layer ownership; Q5 runtime/gateway evidence. Independent discussion can start now.
+- **Acceptance / verification:** User-approved incoming/response/outbound sequence with explicit responsibility/implementation mapping to MOD-019/028A/024/034, exemption matrix and synthetic test plan covering early denial/errors/retries/worker consistency. Unknown deployment facts remain unknown.
+- **Contract impact:** None in decision task; selected auth/error/rate policies may intentionally change APIs in their implementation cards.
 
 ## Complete feature disposition
 

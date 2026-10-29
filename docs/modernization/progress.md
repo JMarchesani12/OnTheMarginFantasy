@@ -1,6 +1,6 @@
 # Modernization progress
 
-Latest: **MOD-003C complete in bounded application/HTTP authorization scope (2026-10-29)**. Final isolated backend **345/345 pass**. User approved internal-only HTTP weekly scoring/trade application; those triggers are disabled, scoring reads require full league-read access, trusted models and the finalizer's model call are verified synthetically. No remaining MOD-003C slices or other task started. MOD-003B remains closed. Details/checks/limitations: [concise checklist](mod-003c-checklist.md). Historical next-step sections below are superseded by this handoff.
+Latest: **Backlog reprioritized — 2026-10-29**, following bounded MOD-001–003 completion. Recommended next implementation: MOD-009, followed by MOD-007; prepare MOD-004/005 evidence and discuss new MOD-038 API layering / MOD-041 interceptors early. Added MOD-039 common-function extraction and MOD-040 structural pilots. [Roadmap and discussion agenda](priorities-2026-10-29.md). MOD-003C remains complete (last actual backend run 345/345); no tests rerun or application changes in this documentation update. No other MOD implementation or production work started.
 
 ## Completed — 2026-10-28
 
