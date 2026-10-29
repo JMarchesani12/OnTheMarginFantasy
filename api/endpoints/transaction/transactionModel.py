@@ -753,9 +753,25 @@ class TransactionModel:
                 raise ValueError("Transaction not found")
 
             txm = tx._mapping
+            # The dispatcher read is advisory; this locked row owns the transition.
+            if txm["type"] != self.TYPE_TRADE:
+                raise ValueError("Not a trade transaction")
+            if txm["status"] != self.STATUS_PENDING:
+                raise ValueError("Transaction is not pending apply")
             self._assert_trade_deadline(conn, txm["leagueId"])
 
-            week = self._get_week_for_league(txm["leagueId"], txm["weekId"])
+            week_row = conn.execute(
+                text('SELECT "weekNumber" FROM "Week" WHERE id = :week_id AND "leagueId" = :league_id'),
+                {"week_id": txm["weekId"], "league_id": txm["leagueId"]},
+            ).fetchone()
+            if not week_row:
+                raise ValueError("Week not found for league")
+            week = week_row._mapping
+            self._validate_trade(
+                conn, txm["leagueId"], week["weekNumber"],
+                txm["memberFromId"], txm["memberToId"],
+                txm["fromTeamIds"], txm["toTeamIds"],
+            )
 
             # 1) Close out current ownership rows for teams leaving each member
             if txm['fromTeamIds']:

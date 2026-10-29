@@ -219,6 +219,8 @@ These conventions remain in force until MOD-038/041 decisions approve changes; t
 - **Acceptance / verification:** Inject failure after delete and during insert: old complete score set remains; success produces expected exact set; isolated ranking fixtures unchanged.
 - **Contract impact:** Behavior: failure atomicity yes; API: no intended; schema: no.
 
+- **Implementation status — 2026-10-29: Complete in bounded model scope.** Weekly score deletion and all replacement inserts share one `db.begin()` connection. Three new isolated tests verify rollback after deletion/before first insert and during second insert, exact successful replacement with other league/week rows preserved, and sequential repeat convergence. Full backend 354/354 passes, including existing ranking/tiebreak/week0/final-period fixtures. No scoring rule, response, schema or job orchestration changes. Concurrent job uniqueness remains MOD-008.
+
 ### MOD-008 — Enforce week/weekly-score identity under concurrent work
 
 - **Priority / size / risk:** P1 / M / High.
@@ -240,6 +242,8 @@ These conventions remain in force until MOD-038/041 decisions approve changes; t
 - **Dependencies:** MOD-003C for HTTP protection; isolated model fix can proceed independently.
 - **Acceptance / verification:** Rejected/cancelled/wrong-type/already-applied commands do not mutate ownership; two concurrent applies transfer once; valid pending trade remains atomic and J4 stays correct.
 - **Contract impact:** Behavior: yes; API: define replay/error outcome and current null success compatibility; schema: no.
+
+- **Implementation status — 2026-10-29:** Locked `apply_trade` now rejects wrong types and every non-PENDING_APPLY state before domain reads/writes; direct and dispatcher replays raise `ValueError("Transaction is not pending apply")`. Valid success retains `None`. Week scope lookup and existing ownership/conference validation execute on the application connection before mutation. Isolated state, stale-dispatcher-read, replay, historical interval and rollback tests pass; full backend 351/351. **Open acceptance:** two concurrent applies on disposable PostgreSQL (SQLite strips FOR UPDATE); cross-command ownership concurrency remains MOD-010. No schema/HTTP/frontend/job scheduling changes or production access.
 
 ### MOD-010 — Verify ownership reservation concurrency and add justified guards
 

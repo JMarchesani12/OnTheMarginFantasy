@@ -114,14 +114,13 @@ class ScoringModel:
             rows = conn.execute(sql, {"leagueId": league_id}).fetchall()
         return [dict(r._mapping) for r in rows]
 
-    def _delete_existing_weekly_scores(self, league_id: int, week_id: int) -> None:
+    def _delete_existing_weekly_scores(self, conn, league_id: int, week_id: int) -> None:
         sql = text("""
             DELETE FROM "WeeklyTeamScore"
             WHERE "leagueId" = :leagueId
               AND "weekId" = :weekId
         """)
-        with self.db.begin() as conn:
-            conn.execute(sql, {"leagueId": league_id, "weekId": week_id})
+        conn.execute(sql, {"leagueId": league_id, "weekId": week_id})
 
     # ------------------------------------------------------------------
     # SportSeason & ownership helpers (for season-level tiebreakers)
@@ -263,7 +262,6 @@ class ScoringModel:
             ms["pointsAwarded"] = points_awarded
 
         # Persist to WeeklyTeamScore (replace existing rows for this league+week)
-        self._delete_existing_weekly_scores(league_id, week_id)
         insert_sql = text("""
             INSERT INTO "WeeklyTeamScore"
                 ("leagueId", "weekId", "memberId",
@@ -274,6 +272,7 @@ class ScoringModel:
         """)
 
         with self.db.begin() as conn:
+            self._delete_existing_weekly_scores(conn, league_id, week_id)
             for ms in member_scores:
                 conn.execute(
                     insert_sql,

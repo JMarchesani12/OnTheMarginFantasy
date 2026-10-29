@@ -538,3 +538,21 @@ Final registered route audit: member-only state and own-member live pick derive 
 - `python3 api/tests/run_isolated.py test_operational_trusted_contract.py`: 2/2 pass. Includes real pending trade application SQL and isolated finalizer-function execution against synthetic SQLite without job module startup imports.
 - `python3 api/tests/run_isolated.py`: 345/345 pass, exit 0. `git diff --check`: pass. No frontend changes/checks, production/configured jobs/schema/deployment access. Existing synthetic failure-path log messages do not represent test failures.
 - MOD-003C complete only in bounded application/HTTP scope. PostgreSQL/RLS/locking/concurrent revocation/scheduler/browser guarantees remain unverified. See [current checklist](mod-003c-checklist.md). No other MOD started.
+
+
+## MOD-009 — locked trade application guards — 2026-10-29
+
+- Before implementation: `python3 api/tests/run_isolated.py test_trade_application_guards.py` ran 5 tests with 9 failures, reproducing invalid state/type application, replay and stale ownership/conference acceptance.
+- Final focused run: 6/6 pass. Full `python3 api/tests/run_isolated.py` run: **351/351 pass**, exit 0, no skips/expected failures. `git diff --check` passes.
+- Checks real model SQL on the existing synthetic SQLite adapter: all nonpending states and wrong type reject without ownership writes; direct/dispatcher replay rejects; dispatcher pre-read cannot override later application state; valid trade preserves half-open week2 ownership history and None success; stale ownership and conference caps reject; faults before first/second ownership insertion and completion roll back all writes. Existing trusted week1 application and J4 baseline tests pass in the full suite.
+- The dispatcher stale-read fixture initially failed because FOR UPDATE is removed before the query hook; corrected the hook to target the actual locked-read SELECT shape. This models state observed by the application, not a competing PostgreSQL transaction.
+- No schema, HTTP, frontend, scheduler, production or network changes/access. Existing deadline policy retained. SQLite cannot verify row locks or two concurrent applies; that MOD-009 acceptance remains outstanding on disposable PostgreSQL. Ownership concurrency across distinct commands remains MOD-010.
+
+
+## MOD-007 — atomic weekly score replacement — 2026-10-29
+
+- MOD-009 infrastructure check: `psql` and Docker clients are present; `postgres`/`initdb` are absent from PATH. Read-only Docker daemon/image inspection reports daemon unavailable. No database connection, container, installation or infrastructure startup performed; concurrent-apply evidence remains outstanding.
+- `python3 api/tests/run_isolated.py test_weekly_score_atomicity.py` before implementation: 3 tests, **2 failures**, proving both failure points lose old scores. Each fault has an independent fixture so the second case cannot pass against an already emptied table. After implementation: **3/3 pass**.
+- `python3 api/tests/run_isolated.py`: **354/354 pass**, exit 0. `git diff --check`: pass. Existing weekly ranking/tiebreak/week0/final-period tests included.
+- Production deletion helper now requires the caller's connection; compute_weekly_scores deletes and inserts inside the same transaction. Removed the week0 fixture's deletion override so it exercises the real deletion helper. New tests run actual deletion/insertion SQL against synthetic SQLite, inject faults before first and second inserts, assert the complete old set survives, and verify exact successful rows, other league/week isolation and sequential repeat convergence.
+- No scoring-rule, response, schema, frontend or job orchestration changes. Concurrent replacements/uniqueness remain MOD-008; this does not establish PostgreSQL isolation, deployed schema/RLS or concurrent job behavior. No production/network/configured database access.

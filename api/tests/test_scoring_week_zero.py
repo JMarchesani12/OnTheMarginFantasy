@@ -48,9 +48,6 @@ class WeekZeroScoringModel(ScoringModel):
             {"id": 2, "teamName": "B"},
         ]
 
-    def _delete_existing_weekly_scores(self, league_id, week_id):
-        self.deleted = (league_id, week_id)
-
     def compute_member_point_diff_for_week(self, league_id, member_id, week_number):
         return {1: 5, 2: -2}[member_id]
 
