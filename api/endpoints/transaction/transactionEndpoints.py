@@ -3,11 +3,14 @@
 from flask import request, jsonify
 from sqlalchemy import text
 from .transactionModel import TransactionModel
+from authenticatedPrincipal import PrincipalResolutionError, resolve_authenticated_principal
+from utils.requestValidation import integer_field, integer_list_field
 
 
 class TransactionEndpoints:
     def __init__(self, db_engine):
         self.transactionModel = TransactionModel(db_engine)
+        self.db_engine = db_engine
 
     # POST /api/league/<league_id>/week/<week_id>/trade/propose
     # {
@@ -17,62 +20,75 @@ class TransactionEndpoints:
     #     "toTeamIds": [205]
     # }
     def propose_trade(self, league_id: int, week_id: int):
-        body = request.get_json(force=True) or {}
-
-        required = ["fromMemberId", "toMemberId", "fromTeamIds", "toTeamIds"]
-        missing = [k for k in required if k not in body]
-        if missing:
-            return jsonify({"error": f"Missing fields: {', '.join(missing)}"}), 400
-
         try:
+            principal = resolve_authenticated_principal(self.db_engine)
+            body = request.get_json(silent=True)
+            if not isinstance(body, dict):
+                return jsonify({"error": "Request body must be a JSON object"}), 400
+
             result = self.transactionModel.propose_trade(
                 league_id=league_id,
                 week_id=week_id,
-                from_member_id=int(body["fromMemberId"]),
-                to_member_id=int(body["toMemberId"]),
-                from_team_ids=[int(x) for x in body["fromTeamIds"]],
-                to_team_ids=[int(x) for x in body["toTeamIds"]],
+                from_member_id=integer_field(body, "fromMemberId"),
+                to_member_id=integer_field(body, "toMemberId"),
+                from_team_ids=integer_list_field(body, "fromTeamIds"),
+                to_team_ids=integer_list_field(body, "toTeamIds"),
+                acting_user_id=principal.user_id,
             )
             return jsonify(result), 200
+        except PrincipalResolutionError as exc:
+            return jsonify({'error': exc.code}), exc.status_code
+        except PermissionError:
+            return jsonify({'message': 'League member not found'}), 404
         except ValueError as e:
             return jsonify({"error": str(e)}), 400
+        except Exception:
+            return jsonify({'message': 'Failed to propose trade'}), 500
 
     # POST /api/league/<league_id>/transaction/<transaction_id>/trade/respond
     # body: { action: "ACCEPT"|"REJECT", responderMemberId, rejectReason? }
     def respond_trade(self, league_id: int, transaction_id: int):
-        body = request.get_json(force=True) or {}
-
-        required = ["action", "responderMemberId"]
-        missing = [k for k in required if k not in body]
-        if missing:
-            return jsonify({"error": f"Missing fields: {', '.join(missing)}"}), 400
-
-        try:
-            result = self.transactionModel.respond_to_trade(
-                transaction_id=int(transaction_id),
-                action=str(body["action"]),
-                responder_member_id=int(body["responderMemberId"]),
-                reject_reason=body.get("rejectReason"),
-            )
-            return jsonify(result), 200
-        except ValueError as e:
-            return jsonify({"error": str(e)}), 400
+        return self._trade_action_response('respond', league_id, transaction_id)
 
     # POST /api/league/<league_id>/transaction/<transaction_id>/trade/cancel
     # body: { requesterMemberId }
     def cancel_trade(self, league_id: int, transaction_id: int):
-        body = request.get_json(force=True) or {}
-        if "requesterMemberId" not in body:
-            return jsonify({"error": "Missing field: requesterMemberId"}), 400
+        return self._trade_action_response('cancel', league_id, transaction_id)
 
+    def _trade_action_response(self, operation: str, league_id: int, transaction_id: int):
         try:
-            result = self.transactionModel.cancel_trade_proposal(
-                transaction_id=int(transaction_id),
-                requester_member_id=int(body["requesterMemberId"]),
-            )
+            principal = resolve_authenticated_principal(self.db_engine)
+            body = request.get_json(silent=True)
+            if not isinstance(body, dict):
+                return jsonify({'error': 'Request body must be a JSON object'}), 400
+            actor = {'league_id': league_id, 'acting_user_id': principal.user_id}
+            if operation == 'respond':
+                action = body.get('action')
+                if not isinstance(action, str):
+                    return jsonify({'error': 'action must be a string'}), 400
+                result = self.transactionModel.respond_to_trade(
+                    transaction_id=transaction_id,
+                    action=action,
+                    responder_member_id=integer_field(body, 'responderMemberId'),
+                    reject_reason=body.get('rejectReason'),
+                    **actor,
+                )
+            else:
+                result = self.transactionModel.cancel_trade_proposal(
+                    transaction_id=transaction_id,
+                    requester_member_id=integer_field(body, 'requesterMemberId'),
+                    **actor,
+                )
             return jsonify(result), 200
-        except ValueError as e:
-            return jsonify({"error": str(e)}), 400
+        except PrincipalResolutionError as exc:
+            return jsonify({'error': exc.code}), exc.status_code
+        except PermissionError:
+            return jsonify({'message': 'Trade not found'}), 404
+        except ValueError as exc:
+            return jsonify({'error': str(exc)}), 400
+        except Exception:
+            message = 'Failed to respond to trade' if operation == 'respond' else 'Failed to cancel trade'
+            return jsonify({'message': message}), 500
 
     # POST /api/league/<leagueId>/freeAgency/addDrop
     #
@@ -85,56 +101,44 @@ class TransactionEndpoints:
     #   "dropTeamId": 101   # optional
     # }
     def free_agency_add_drop(self, leagueId):
-        data = request.get_json() or {}
-
-        week_id = data.get("weekId")
-        week_number = data.get("weekNumber")
-        member_id = data.get("memberId")
-
-        if week_id is None or week_number is None or member_id is None:
-            return jsonify({"message": "weekId, weekNumber and memberId are required"}), 400
-
         try:
-            week_id = int(week_id)
-            week_number = int(week_number)
-            member_id = int(member_id)
-        except (TypeError, ValueError):
-            return jsonify({"message": "weekId, weekNumber and memberId must be integers"}), 400
+            principal = resolve_authenticated_principal(self.db_engine)
+            data = request.get_json(silent=True)
+            if not isinstance(data, dict):
+                return jsonify({"message": "Request body must be a JSON object"}), 400
 
-        add_team_id = data.get("addTeamId")
-        drop_team_id = data.get("dropTeamId")
+            week_id = integer_field(data, "weekId")
+            week_number = integer_field(data, "weekNumber")
+            member_id = integer_field(data, "memberId")
+            add_team_id = (integer_field(data, "addTeamId")
+                           if data.get("addTeamId") is not None else None)
+            drop_team_id = (integer_field(data, "dropTeamId")
+                            if data.get("dropTeamId") is not None else None)
+            if add_team_id is None and drop_team_id is None:
+                return jsonify({"message": "addTeamId or dropTeamId is required"}), 400
 
-        if add_team_id is None and drop_team_id is None:
-            return jsonify({"message": "addTeamId or dropTeamId is required"}), 400
-
-        try:
-            if add_team_id is not None:
-                add_team_id = int(add_team_id)
-            if drop_team_id is not None:
-                drop_team_id = int(drop_team_id)
-        except (TypeError, ValueError):
-            return jsonify({"message": "addTeamId and dropTeamId must be integers"}), 400
-
-        try:
             result = self.transactionModel.free_agency_add_drop(
-                league_id=int(leagueId),
+                league_id=leagueId,
                 week_id=week_id,
                 week_number=week_number,
                 member_id=member_id,
                 add_team_id=add_team_id,
                 drop_team_id=drop_team_id,
+                acting_user_id=principal.user_id,
             )
+        except PrincipalResolutionError as exc:
+            return jsonify({'error': exc.code}), exc.status_code
+        except PermissionError:
+            return jsonify({'message': 'League member not found'}), 404
         except TransactionModel.SwapLimitExceeded as e:
             return jsonify({"message": "Max swaps reached", "details": str(e)}), 400
         except ValueError as e:
             return jsonify({"message": "Free agency move rejected", "details": str(e)}), 400
-        except Exception as e:
-            return jsonify(
-                {"message": "Failed to process free agency move", "details": str(e)}
-            ), 500
+        except Exception:
+            return jsonify({"message": "Failed to process free agency move"}), 500
 
         return jsonify(result), 200
-    
+
     # POST /api/league/<leagueId>/week/<weekId>/lock
     def lock_week(self, leagueId, weekId):
         league_id = int(leagueId)
@@ -173,58 +177,71 @@ class TransactionEndpoints:
     # POST /api/league/<league_id>/transactions/trades/open
     # body: { "memberId": 123 }
     def get_open_trade_transactions(self, league_id: int):
-        body = request.get_json(force=True) or {}
-        if "memberId" not in body:
-            return jsonify({"error": "memberId is required"}), 400
-
         try:
-            member_id = int(body["memberId"])
+            principal = resolve_authenticated_principal(self.db_engine)
+            body = request.get_json(silent=True)
+            if not isinstance(body, dict):
+                return jsonify({'error': 'Request body must be a JSON object'}), 400
             result = self.transactionModel.get_open_trade_transactions_for_member(
                 league_id=league_id,
-                member_id=member_id,
+                member_id=integer_field(body, 'memberId'),
+                reader_user_id=principal.user_id,
             )
             return jsonify(result), 200
-        except ValueError as e:
-            return jsonify({"error": str(e)}), 400
+        except PrincipalResolutionError as exc:
+            return jsonify({'error': exc.code}), exc.status_code
+        except PermissionError:
+            return jsonify({'message': 'League member not found'}), 404
+        except ValueError as exc:
+            return jsonify({'error': str(exc)}), 400
+        except Exception:
+            return jsonify({'error': 'Failed to get open trades'}), 500
 
     # POST /api/league/<int:league_id>/transaction/<int:transaction_id>/trade/veto
     # body: { "memberId": 123 }  // LeagueMember.id
     def veto_trade(self, league_id: int, transaction_id: int):
-        body = request.get_json(force=True) or {}
-        if "memberId" not in body:
-            return jsonify({"error": "memberId is required"}), 400
-
         try:
+            principal = resolve_authenticated_principal(self.db_engine)
+            body = request.get_json(silent=True)
+            if not isinstance(body, dict):
+                return jsonify({'error': 'Request body must be a JSON object'}), 400
             result = self.transactionModel.veto_trade(
-                transaction_id=int(transaction_id),
-                league_member_id=int(body["memberId"]),
+                transaction_id=transaction_id,
+                league_member_id=integer_field(body, 'memberId'),
+                league_id=league_id,
+                acting_user_id=principal.user_id,
             )
             return jsonify(result), 200
-        except ValueError as e:
-            return jsonify({"error": str(e)}), 400
-        
+        except PrincipalResolutionError as exc:
+            return jsonify({'error': exc.code}), exc.status_code
+        except PermissionError:
+            return jsonify({'message': 'Trade not found'}), 404
+        except ValueError as exc:
+            return jsonify({'error': str(exc)}), 400
+        except Exception:
+            return jsonify({'message': 'Failed to veto trade'}), 500
+
     # POST /api/league/<int:league_id>/transaction/<int:transaction_id>/trade/apply
     # body: {}
     def apply_trade(self, league_id: int, transaction_id: int):
-        try:
-            result = self.transactionModel.apply_trade(
-                transaction_id=int(transaction_id)
-            )
-            return jsonify(result), 200
-        except ValueError as e:
-            return jsonify({"error": str(e)}), 400
-        except Exception:
-            return jsonify({"error": "Failed to apply trade"}), 500
+        # Approved internal-only operation; trusted callers use the model.
+        return jsonify({'error': 'http_trade_application_disabled'}), 410
 
     # GET /api/league/<league_id>/transactions
     def get_transactions_for_league(self, league_id: int):
         try:
+            principal = resolve_authenticated_principal(self.db_engine)
             status = request.args.get("status") or TransactionModel.STATUS_PENDING
             result = self.transactionModel.get_transactions_for_league(
                 league_id=int(league_id),
                 status=status,
+                reader_user_id=principal.user_id,
             )
             return jsonify(result), 200
+        except PrincipalResolutionError as exc:
+            return jsonify({'error': exc.code}), exc.status_code
+        except PermissionError:
+            return jsonify({'message': 'League not found'}), 404
         except ValueError as e:
             return jsonify({"error": str(e)}), 400
         except Exception:

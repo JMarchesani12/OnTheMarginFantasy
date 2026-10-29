@@ -1,6 +1,6 @@
 # Modernization progress
 
-Latest: **MOD-003B complete** in bounded HTTP/application authorization scope, including user-approved internal-only manual allocation. Final isolated backend **256/256 pass**; no frontend changes/checks rerun. No MOD-003B stages remain. Recommended next: MOD-003C after dependency/role review; no other task started.
+Latest: **MOD-003C complete in bounded application/HTTP authorization scope (2026-10-29)**. Final isolated backend **345/345 pass**. User approved internal-only HTTP weekly scoring/trade application; those triggers are disabled, scoring reads require full league-read access, trusted models and the finalizer's model call are verified synthetically. No remaining MOD-003C slices or other task started. MOD-003B remains closed. Details/checks/limitations: [concise checklist](mod-003c-checklist.md). Historical next-step sections below are superseded by this handoff.
 
 ## Completed — 2026-10-28
 

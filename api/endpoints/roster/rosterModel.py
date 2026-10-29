@@ -1,5 +1,6 @@
 # endpoints/roster/rosterModel.py
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
+from endpoints.league.leagueModel import LeagueModel
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
@@ -44,8 +45,20 @@ class RosterModel:
       self,
       league_id: int,
       member_id: int,
-      week_number: int
+      week_number: int,
+      *, reader_user_id: Optional[int] = None
   ) -> List[Dict[str, Any]]:
+      # None is reserved for trusted direct model callers; HTTP always supplies
+      # the verified principal. Reuse the established full league-read policy.
+      scope, reader_params = LeagueModel._league_read_scope(league_id, reader_user_id)
+      if reader_user_id is not None:
+          with self.db.connect() as conn:
+              allowed = conn.execute(text('''
+                  SELECT id FROM "LeagueMember"
+                  WHERE id = :memberId AND "leagueId" = :leagueId
+              ''' + scope), dict(leagueId=league_id, memberId=member_id, **reader_params)).fetchone()
+              if allowed is None:
+                  raise PermissionError('League member not found')
       with self.db.connect() as conn:
           week_info = self._get_week_by_number(conn, league_id, week_number)
           if week_info and week_info.get("isLocked"):
@@ -93,6 +106,11 @@ class RosterModel:
             AND lts."memberId" = :memberId
             AND lts."acquiredWeek" <= :weekNumber
             AND (lts."droppedWeek" IS NULL OR lts."droppedWeek" > :weekNumber)
+          """ + scope + ("""
+            AND EXISTS (SELECT 1 FROM "LeagueMember" target_member
+                        WHERE target_member.id = lts."memberId"
+                          AND target_member."leagueId" = lts."leagueId")
+          """ if reader_user_id is not None else "") + """
           ORDER BY st."displayName"
       """)
 
@@ -100,6 +118,7 @@ class RosterModel:
           result = conn.execute(
               sql,
               {
+                  **reader_params,
                   "leagueId": league_id,
                   "memberId": member_id,
                   "weekNumber": week_number,
@@ -112,6 +131,7 @@ class RosterModel:
         self,
         league_id: int,
         week_number: int,
+        *, reader_user_id: Optional[int] = None,
     ) -> List[Dict[str, Any]]:
         """
         Returns all SportTeams in the league's sport that are NOT owned by
@@ -125,10 +145,13 @@ class RosterModel:
         """
 
         # 1) Get the league's sport/season so we only include teams from that season.
-        league_sql = text('SELECT sport, "seasonYear" FROM "League" WHERE id = :leagueId')
+        scope, reader_params = LeagueModel._league_read_scope(league_id, reader_user_id)
+        league_sql = text('SELECT sport, "seasonYear" FROM "League" WHERE id = :leagueId ' + scope)
 
         with self.db.connect() as conn:
-            league_row = conn.execute(league_sql, {"leagueId": league_id}).fetchone()
+            league_row = conn.execute(league_sql, {"leagueId": league_id, **reader_params}).fetchone()
+            if reader_user_id is not None and league_row is None:
+                raise PermissionError("League not found")
             week_info = self._get_week_by_number(conn, league_id, week_number)
             if week_info and week_info.get("isLocked"):
                 week_number = self._get_next_unlocked_week_number(
@@ -202,6 +225,7 @@ class RosterModel:
                 )
                 OR st.id IN (SELECT team_id FROM pending_drops)
               )
+            """ + scope + """
             ORDER BY conf.name, st."displayName"
         """)
 
@@ -209,6 +233,7 @@ class RosterModel:
             result = conn.execute(
                 sql,
                 {
+                    **reader_params,
                     "leagueId": league_id,
                     "sportId": sport_id,
                     "seasonYear": season_year,

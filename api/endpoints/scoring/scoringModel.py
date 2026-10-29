@@ -1,6 +1,7 @@
 import json
 import datetime as dt
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
+from utils.authorization import league_read_access
 
 from sqlalchemy import bindparam, text
 from sqlalchemy.engine import Engine
@@ -451,7 +452,9 @@ class ScoringModel:
     # Season standings + season tiebreakers
     # ------------------------------------------------------------------
 
-    def compute_end_of_year_season_standings(self, league_id: int) -> Dict[str, Any]:
+    def compute_end_of_year_season_standings(
+        self, league_id: int, *, reader_user_id: Optional[int] = None,
+    ) -> Dict[str, Any]:
         """
         Aggregate WeeklyTeamScore + computed bonuses for a league:
 
@@ -460,62 +463,63 @@ class ScoringModel:
         - totalPoints  = weeklyPoints + bonusPoints
         - Apply season tiebreakers within ties on totalPoints.
         """
-        sql = text("""
-            SELECT
-            lm.id         AS "memberId",
-            lm."teamName" AS "teamName",
-            COALESCE(SUM(wts."pointsAwarded"), 0) AS "weeklyPoints"
-            FROM "LeagueMember" lm
-            LEFT JOIN "WeeklyTeamScore" wts
-            ON wts."memberId" = lm.id
-            AND wts."leagueId" = lm."leagueId"
-            WHERE lm."leagueId" = :leagueId
-            GROUP BY lm.id, lm."teamName"
-        """)
+        with league_read_access(self.db, league_id, reader_user_id):
+            sql = text("""
+                SELECT
+                lm.id         AS "memberId",
+                lm."teamName" AS "teamName",
+                COALESCE(SUM(wts."pointsAwarded"), 0) AS "weeklyPoints"
+                FROM "LeagueMember" lm
+                LEFT JOIN "WeeklyTeamScore" wts
+                ON wts."memberId" = lm.id
+                AND wts."leagueId" = lm."leagueId"
+                WHERE lm."leagueId" = :leagueId
+                GROUP BY lm.id, lm."teamName"
+            """)
 
-        with self.db.begin() as conn:
-            rows = list(conn.execute(sql, {"leagueId": league_id}))
+            with self.db.begin() as conn:
+                rows = list(conn.execute(sql, {"leagueId": league_id}))
 
-        # Extract the member IDs from the query so bonus logic knows who exists
-        member_ids: List[int] = [int(r._mapping["memberId"]) for r in rows]
+            # Extract the member IDs from the query so bonus logic knows who exists
+            member_ids: List[int] = [int(r._mapping["memberId"]) for r in rows]
 
-        # Compute all bonus points for these members
-        bonus_points_by_member: Dict[int, float] = self._compute_bonus_points(
-            league_id,
-            member_ids,
-        )
-
-        # Build standings list
-        members: List[Dict[str, Any]] = []
-        for r in rows:
-            m = r._mapping
-            member_id = int(m["memberId"])
-            weekly = float(m["weeklyPoints"])
-            bonus = float(bonus_points_by_member.get(member_id, 0.0))
-            total = weekly + bonus
-
-            members.append(
-                {
-                    "memberId": member_id,
-                    "teamName": m["teamName"],
-                    "weeklyPoints": weekly,
-                    "bonusPoints": bonus,
-                    "totalPoints": total,
-                }
+            # Compute all bonus points for these members
+            bonus_points_by_member: Dict[int, float] = self._compute_bonus_points(
+                league_id,
+                member_ids,
             )
 
-        # Initial sort: by total desc, then weekly desc, then memberId asc for stability
-        members.sort(
-            key=lambda x: (-x["totalPoints"], -x["weeklyPoints"], int(x["memberId"]))
-        )
+            # Build standings list
+            members: List[Dict[str, Any]] = []
+            for r in rows:
+                m = r._mapping
+                member_id = int(m["memberId"])
+                weekly = float(m["weeklyPoints"])
+                bonus = float(bonus_points_by_member.get(member_id, 0.0))
+                total = weekly + bonus
 
-        # Apply season tiebreakers within ties on totalPoints
-        members = self._apply_season_tiebreakers(league_id, members)
+                members.append(
+                    {
+                        "memberId": member_id,
+                        "teamName": m["teamName"],
+                        "weeklyPoints": weekly,
+                        "bonusPoints": bonus,
+                        "totalPoints": total,
+                    }
+                )
 
-        return {
-            "leagueId": league_id,
-            "members": members,
-        }
+            # Initial sort: by total desc, then weekly desc, then memberId asc for stability
+            members.sort(
+                key=lambda x: (-x["totalPoints"], -x["weeklyPoints"], int(x["memberId"]))
+            )
+
+            # Apply season tiebreakers within ties on totalPoints
+            members = self._apply_season_tiebreakers(league_id, members)
+
+            return {
+                "leagueId": league_id,
+                "members": members,
+            }
 
 
     # ---------- season tiebreaker engine ----------
@@ -1412,39 +1416,41 @@ class ScoringModel:
         self,
         league_id: int,
         week_numbers: List[int],
+        *, reader_user_id: Optional[int] = None,
     ) -> List[Dict[str, Any]]:
-        if not week_numbers:
-            return []
+        with league_read_access(self.db, league_id, reader_user_id):
+            if not week_numbers:
+                return []
 
-        # normalize: int + unique + sorted (optional but nice)
-        week_numbers = sorted({int(w) for w in week_numbers if int(w) >= 0})
-        if not week_numbers:
-            return []
+            # normalize: int + unique + sorted (optional but nice)
+            week_numbers = sorted({int(w) for w in week_numbers if int(w) >= 0})
+            if not week_numbers:
+                return []
 
-        sql = text("""
-            SELECT
-            w."weekNumber",
-            w."startDate",
-            w."endDate",
-            wts."memberId",
-            lm."teamName",
-            wts."pointsAwarded",
-            wts."pointDifferential",
-            wts.rank
-            FROM "WeeklyTeamScore" wts
-            JOIN "Week" w
-            ON w.id = wts."weekId"
-            JOIN "LeagueMember" lm
-            ON lm.id = wts."memberId"
-            WHERE wts."leagueId" = :leagueId
-            AND w."weekNumber" IN :weekNumbers
-            ORDER BY w."weekNumber" ASC, wts.rank ASC;
-        """).bindparams(bindparam("weekNumbers", expanding=True))
+            sql = text("""
+                SELECT
+                w."weekNumber",
+                w."startDate",
+                w."endDate",
+                wts."memberId",
+                lm."teamName",
+                wts."pointsAwarded",
+                wts."pointDifferential",
+                wts.rank
+                FROM "WeeklyTeamScore" wts
+                JOIN "Week" w
+                ON w.id = wts."weekId"
+                JOIN "LeagueMember" lm
+                ON lm.id = wts."memberId"
+                WHERE wts."leagueId" = :leagueId
+                AND w."weekNumber" IN :weekNumbers
+                ORDER BY w."weekNumber" ASC, wts.rank ASC;
+            """).bindparams(bindparam("weekNumbers", expanding=True))
 
-        with self.db.connect() as conn:
-            rows = conn.execute(
-                sql,
-                {"leagueId": league_id, "weekNumbers": week_numbers},
-            ).fetchall()
+            with self.db.connect() as conn:
+                rows = conn.execute(
+                    sql,
+                    {"leagueId": league_id, "weekNumbers": week_numbers},
+                ).fetchall()
 
-        return [dict(r._mapping) for r in rows]
+            return [dict(r._mapping) for r in rows]

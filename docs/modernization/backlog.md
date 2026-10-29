@@ -155,6 +155,8 @@ Security sequence: MOD-001 → MOD-002 and separately MOD-003A/B/C; MOD-004 vali
 
 ### MOD-003C — Bind roster, scoring and transaction authorization to resource scope
 
+- **Current status — 2026-10-29: complete in bounded application/HTTP authorization scope.** Roster/scoring/transaction reads and interactive transaction actions are principal/resource-bound. User-approved internal-only weekly scoring/trade application HTTP routes are disabled; trusted models retained and finalizer dependency uses its model directly. Final isolated backend 345/345 pass. No implementation slices remain; checks/limitations/stop instruction: [concise checklist](mod-003c-checklist.md). MOD-003B remains closed; deployed PostgreSQL/RLS/concurrency/security-wide completion is not claimed.
+
 - **Priority / size / risk:** P0 / M / High.
 - **Features:** F-009, F-015, F-016, F-025, F-032, F-033.
 - **Problem / evidence:** BE D01/D02; trade routes discard URL league; DB-02/05.

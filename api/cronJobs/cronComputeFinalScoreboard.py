@@ -74,7 +74,7 @@ def main():
         for row in leagues:
             league_id = int(row._mapping["leagueId"])
             print(f"  Computing end-of-year standings for league {league_id}")
-            scoring.compute_end_of_year_season_standings(league_id)
+            scoring.scoringModel.compute_end_of_year_season_standings(league_id)
             
             with engine.begin() as conn:
                 conn.execute(

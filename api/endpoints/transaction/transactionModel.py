@@ -1,8 +1,11 @@
 import json
+from contextlib import contextmanager
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
+from utils.authorization import require_owned_league_member
+from endpoints.league.leagueModel import LeagueModel
 
 
 class TransactionModel:
@@ -564,7 +567,13 @@ class TransactionModel:
         to_member_id: int,
         from_team_ids: List[int],
         to_team_ids: List[int],
+        *, acting_user_id: Optional[int] = None,
     ) -> Dict[str, Any]:
+        # Only verified HTTP actors opt into ownership checks; trusted direct
+        # callers keep the context-free model contract.
+        if acting_user_id is not None:
+            with self.db.connect() as conn:
+                require_owned_league_member(conn, league_id, from_member_id, acting_user_id)
         week = self._get_week_for_league(league_id, week_id)
         if week["isLocked"]:
             raise ValueError("Week is locked")
@@ -572,6 +581,8 @@ class TransactionModel:
         self._validate_members_in_league(league_id, [from_member_id, to_member_id])
 
         with self.db.begin() as conn:
+            if acting_user_id is not None:
+                require_owned_league_member(conn, league_id, from_member_id, acting_user_id)
             self._assert_trade_deadline(conn, league_id)
             self._validate_trade(
                 conn,
@@ -602,8 +613,53 @@ class TransactionModel:
                     "to_teams": json.dumps(to_team_ids),
                 },
             ).fetchone()
+            if acting_user_id is not None:
+                require_owned_league_member(conn, league_id, from_member_id, acting_user_id)
 
         return {"transactionId": row._mapping["id"], "status": self.STATUS_PROPOSED}
+
+    @contextmanager
+    def _trade_actor_transaction(
+        self, transaction_id: int, member_id: int, role: str,
+        league_id: Optional[int], acting_user_id: Optional[int],
+    ):
+        """Share trade actor/scope checks while keeping each action's state rules local.
+
+        HTTP must supply both verified actor and URL league. Trusted model calls
+        omit both. Role predicates come only from this fixed server-side mapping.
+        Existing transaction row locking is retained; no new concurrency guarantee.
+        """
+        if (league_id is None) != (acting_user_id is None):
+            raise ValueError('league_id and acting_user_id must be supplied together')
+        role_scope = {
+            'receiving': '"memberToId" = :member_id',
+            'proposing': '"memberFromId" = :member_id',
+            'voter': '"memberFromId" <> :member_id AND "memberToId" <> :member_id',
+        }[role]
+        interactive = acting_user_id is not None
+        scope = (' AND "leagueId" = :league_id AND ' + role_scope
+                 if interactive else '')
+        params = {'id': transaction_id}
+        if interactive:
+            params.update(league_id=league_id, member_id=member_id)
+        with self.db.begin() as conn:
+            if interactive:
+                require_owned_league_member(conn, league_id, member_id, acting_user_id)
+            tx = conn.execute(text('''
+                SELECT * FROM "Transaction" WHERE id = :id
+            ''' + scope + ' FOR UPDATE'), params).fetchone()
+            if tx is None:
+                if interactive:
+                    raise PermissionError('Trade not found')
+                raise ValueError('Transaction not found')
+            yield conn, tx
+            if interactive:
+                require_owned_league_member(conn, league_id, member_id, acting_user_id)
+                current = conn.execute(text(
+                    'SELECT id FROM "Transaction" WHERE id = :id' + scope
+                ), params).fetchone()
+                if current is None:
+                    raise PermissionError('Trade not found')
 
     def respond_to_trade(
         self,
@@ -611,25 +667,15 @@ class TransactionModel:
         action: str,
         responder_member_id: int,
         reject_reason: str | None = None,
+        *, league_id: Optional[int] = None, acting_user_id: Optional[int] = None,
     ) -> Dict[str, Any]:
         action = action.upper()
         if action not in ("ACCEPT", "REJECT"):
             raise ValueError("Invalid action")
 
-        with self.db.begin() as conn:
-            tx = conn.execute(
-                text("""
-                    SELECT *
-                    FROM "Transaction"
-                    WHERE id = :id
-                    FOR UPDATE
-                """),
-                {"id": transaction_id},
-            ).fetchone()
-
-            if not tx:
-                raise ValueError("Transaction not found")
-
+        with self._trade_actor_transaction(
+            transaction_id, responder_member_id, 'receiving', league_id, acting_user_id,
+        ) as (conn, tx):
             txm = tx._mapping
 
             if txm["status"] != self.STATUS_PROPOSED:
@@ -797,21 +843,13 @@ class TransactionModel:
             )
         
     
-    def cancel_trade_proposal(self, transaction_id: int, requester_member_id: int) -> Dict[str, Any]:
-        with self.db.begin() as conn:
-            tx = conn.execute(
-                text("""
-                    SELECT id, status, type, "memberFromId"
-                    FROM "Transaction"
-                    WHERE id = :id
-                    FOR UPDATE
-                """),
-                {"id": transaction_id},
-            ).fetchone()
-
-            if not tx:
-                raise ValueError("Transaction not found")
-
+    def cancel_trade_proposal(
+        self, transaction_id: int, requester_member_id: int,
+        *, league_id: Optional[int] = None, acting_user_id: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        with self._trade_actor_transaction(
+            transaction_id, requester_member_id, 'proposing', league_id, acting_user_id,
+        ) as (conn, tx):
             txm = tx._mapping
 
             if txm["type"] != self.TYPE_TRADE:
@@ -995,10 +1033,15 @@ class TransactionModel:
         member_id: int,
         add_team_id: Optional[int],
         drop_team_id: Optional[int],
+        *, acting_user_id: Optional[int] = None,
     ) -> Dict[str, Any]:
         """
         Performs a free-agency add/drop for a single league member…
         """
+        # HTTP supplies the verified actor; None is only for trusted model calls.
+        if acting_user_id is not None:
+            with self.db.connect() as conn:
+                require_owned_league_member(conn, league_id, member_id, acting_user_id)
         week_info = self._get_week_for_league(league_id, week_id)
         week_number = week_info["weekNumber"]
         if week_info["isLocked"]:
@@ -1016,6 +1059,8 @@ class TransactionModel:
         self._validate_members_in_league(league_id, [member_id])
 
         with self.db.begin() as conn:
+            if acting_user_id is not None:
+                require_owned_league_member(conn, league_id, member_id, acting_user_id)
             self._assert_free_agent_deadline(conn, league_id)
             pending = self._get_pending_free_agent_team_ids_for_week(
                 conn,
@@ -1145,6 +1190,8 @@ class TransactionModel:
             if add_team_id is not None and add_team_id not in member_roster:
                 member_roster.append(add_team_id)
             member_roster = sorted({int(t) for t in member_roster})
+            if acting_user_id is not None:
+                require_owned_league_member(conn, league_id, member_id, acting_user_id)
 
         return {
             "leagueId": league_id,
@@ -1163,7 +1210,16 @@ class TransactionModel:
         self,
         league_id: int,
         status: Optional[str] = None,
+        *, reader_user_id: Optional[int] = None,
     ) -> List[Dict[str, Any]]:
+        scope, reader_params = LeagueModel._league_read_scope(league_id, reader_user_id)
+        if reader_user_id is not None:
+            with self.db.connect() as conn:
+                allowed = conn.execute(text(
+                    'SELECT id FROM "League" WHERE id = :leagueId ' + scope
+                ), {'leagueId': league_id, **reader_params}).fetchone()
+                if allowed is None:
+                    raise PermissionError('League not found')
         sql = """
             SELECT
               t.id,
@@ -1209,7 +1265,8 @@ class TransactionModel:
             ) tt ON TRUE
             WHERE t."leagueId" = :leagueId
         """
-        params: Dict[str, Any] = {"leagueId": league_id}
+        sql += scope
+        params: Dict[str, Any] = {"leagueId": league_id, **reader_params}
         if status:
             sql += " AND t.status = :status"
             params["status"] = status
@@ -1317,12 +1374,28 @@ class TransactionModel:
         self,
         league_id: int,
         member_id: int,
+        *, reader_user_id: Optional[int] = None,
     ) -> Dict[str, Any]:
         """
         Returns all non-finalized TRADE transactions involving this member,
         split into incoming/outgoing, plus an 'all' list.
         Excludes FREE_AGENT transactions entirely.
         """
+        # Personalized vote/party context requires the reader's own member ID.
+        # Trusted callers omit reader_user_id and keep their original contract.
+        params = {"league_id": league_id, "member_id": member_id}
+        scope = ''
+        if reader_user_id is not None:
+            with self.db.connect() as conn:
+                require_owned_league_member(conn, league_id, member_id, reader_user_id)
+            params['reader_user_id'] = reader_user_id
+            scope = '''AND EXISTS (
+                SELECT 1 FROM "LeagueMember" reader_member
+                JOIN "League" reader_league ON reader_league.id = reader_member."leagueId"
+                WHERE reader_member.id = :member_id
+                  AND reader_member."leagueId" = :league_id
+                  AND reader_member."userId" = :reader_user_id
+            )'''
         sql = text("""
             SELECT
             t.id,
@@ -1407,6 +1480,7 @@ class TransactionModel:
             AND t.type = 'TRADE'
             AND t.status NOT IN ('COMPLETED', 'REJECTED', 'CANCELLED', 'VETOED')
 
+            """ + scope + """
             GROUP BY
             t.id,
             t."leagueId",
@@ -1429,7 +1503,7 @@ class TransactionModel:
         with self.db.connect() as conn:
             rows = conn.execute(
                 sql,
-                {"league_id": league_id, "member_id": member_id},
+                params,
             ).mappings().all()
 
         mine_all: List[Dict[str, Any]] = []
@@ -1488,26 +1562,18 @@ class TransactionModel:
         return {"enabled": enabled, "requiredVetoCount": required_int}
 
 
-    def veto_trade(self, transaction_id: int, league_member_id: int) -> Dict[str, Any]:
+    def veto_trade(
+        self, transaction_id: int, league_member_id: int,
+        *, league_id: Optional[int] = None, acting_user_id: Optional[int] = None,
+    ) -> Dict[str, Any]:
         """
         Toggles a member's veto vote for a trade.
         If veto_count reaches requiredVetoCount, marks Transaction as VETOED.
         league_member_id is LeagueMember.id (not User.id).
         """
-        with self.db.begin() as conn:
-            tx = conn.execute(
-                text("""
-                    SELECT id, "leagueId", type, status, "memberFromId", "memberToId"
-                    FROM "Transaction"
-                    WHERE id = :id
-                    FOR UPDATE
-                """),
-                {"id": transaction_id},
-            ).fetchone()
-
-            if not tx:
-                raise ValueError("Transaction not found")
-
+        with self._trade_actor_transaction(
+            transaction_id, league_member_id, 'voter', league_id, acting_user_id,
+        ) as (conn, tx):
             txm = tx._mapping
 
             if txm["type"] != self.TYPE_TRADE:
