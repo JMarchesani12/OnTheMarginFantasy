@@ -1,8 +1,12 @@
 # Database Schema
 
-This document describes the current application database shape as used by the
-API. It is based on the live Supabase schema and the SQL in `api/endpoints`,
-`api/startSeasonJobs`, `api/cronJobs`, and `api/worker`.
+This document describes the application database shape from repository SQL and
+application consumers. `tables.sql` is a descriptive snapshot, not an executable
+blank-database baseline. A read-only catalog check on 2026-10-29 confirmed the
+configured backend database has the same 23 public table names and 180 column
+names; full definition equivalence and migration history remain unverified.
+See [schema provenance](../docs/modernization/mod-005-schema-provenance.md) and
+[access-policy evidence](../docs/modernization/mod-004-access-review.md).
 
 ## Overview
 
@@ -374,4 +378,4 @@ schema inspection scripts. Do not expose it in frontend code.
 
 ## Basketball postseason configuration
 
-`SeasonPhase.rules` stores per-game margin rules, source matchers, and the shared final scoring period. Apply `api/migrations/20261023_basketball_tournament_rules.sql` before using the updated API. See [season setup documentation](../api/startSeasonJobs/README.md) for tournament JSON examples, phase classification, and existing-league rebuild requirements.
+`SeasonPhase.rules` stores per-game margin rules, source matchers, and the shared final scoring period. The previously referenced `api/migrations/20261023_basketball_tournament_rules.sql` is absent from available repository history. The configured database already has `SeasonPhase.rules`; other environments must verify that prerequisite. Recover or reconcile migration provenance before defining an upgrade; do not run a nonexistent migration. See [season setup documentation](../api/startSeasonJobs/README.md) for tournament JSON examples, phase classification, and existing-league rebuild requirements.

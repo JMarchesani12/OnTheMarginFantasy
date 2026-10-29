@@ -1,0 +1,942 @@
+{
+  "scope": "Synthetic PostgreSQL 17.6; no deployed changes; auth.users/auth.uid are minimal SQL test fixtures.",
+  "sha256": {
+    "db/tables.sql": "bc9d3b208a588bb14146030e86a6a820d5e9f8cc8f491fbe72908bf7189f3bf8",
+    "api/endpoints/transaction/transactionModel.py": "3a66069e320838d29e3e8971a53d2f3a140d138aea5fdc9d7edbaf90b064eff0",
+    "api/migrations/20260803_create_sport_season_subdivision.sql": "6d57d486763d56a625c20f4e5cd3ec82b5f94a0aff276e34d764282abc3f824b",
+    "api/migrations/20260803_fix_sport_season_start_column.sql": "9d2e1547acb5d50f7f109bfab03f2a955b70d062debd28815d3fcc98e3fd487f"
+  },
+  "source_vs_deployed": {
+    "columns": {
+      "candidate_only": [],
+      "deployed_only": [],
+      "different": [
+        {
+          "key": [
+            "GameResult",
+            "broadcast"
+          ],
+          "candidate": {
+            "table_name": "GameResult",
+            "column_name": "broadcast",
+            "ordinal_position": 17,
+            "data_type": "text",
+            "udt_name": "text",
+            "is_nullable": "YES",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          },
+          "deployed": {
+            "table_name": "GameResult",
+            "column_name": "broadcast",
+            "ordinal_position": 20,
+            "data_type": "text",
+            "udt_name": "text",
+            "is_nullable": "YES",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          }
+        },
+        {
+          "key": [
+            "GameResult",
+            "roundOrder"
+          ],
+          "candidate": {
+            "table_name": "GameResult",
+            "column_name": "roundOrder",
+            "ordinal_position": 16,
+            "data_type": "integer",
+            "udt_name": "int4",
+            "is_nullable": "YES",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          },
+          "deployed": {
+            "table_name": "GameResult",
+            "column_name": "roundOrder",
+            "ordinal_position": 19,
+            "data_type": "integer",
+            "udt_name": "int4",
+            "is_nullable": "YES",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          }
+        },
+        {
+          "key": [
+            "GameResult",
+            "seasonPhaseId"
+          ],
+          "candidate": {
+            "table_name": "GameResult",
+            "column_name": "seasonPhaseId",
+            "ordinal_position": 15,
+            "data_type": "bigint",
+            "udt_name": "int8",
+            "is_nullable": "YES",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          },
+          "deployed": {
+            "table_name": "GameResult",
+            "column_name": "seasonPhaseId",
+            "ordinal_position": 18,
+            "data_type": "bigint",
+            "udt_name": "int8",
+            "is_nullable": "YES",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          }
+        },
+        {
+          "key": [
+            "GameResult",
+            "sportSeasonId"
+          ],
+          "candidate": {
+            "table_name": "GameResult",
+            "column_name": "sportSeasonId",
+            "ordinal_position": 14,
+            "data_type": "bigint",
+            "udt_name": "int8",
+            "is_nullable": "NO",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          },
+          "deployed": {
+            "table_name": "GameResult",
+            "column_name": "sportSeasonId",
+            "ordinal_position": 15,
+            "data_type": "bigint",
+            "udt_name": "int8",
+            "is_nullable": "NO",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          }
+        },
+        {
+          "key": [
+            "League",
+            "freeAgentDeadline"
+          ],
+          "candidate": {
+            "table_name": "League",
+            "column_name": "freeAgentDeadline",
+            "ordinal_position": 12,
+            "data_type": "timestamp with time zone",
+            "udt_name": "timestamptz",
+            "is_nullable": "YES",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          },
+          "deployed": {
+            "table_name": "League",
+            "column_name": "freeAgentDeadline",
+            "ordinal_position": 14,
+            "data_type": "timestamp with time zone",
+            "udt_name": "timestamptz",
+            "is_nullable": "YES",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          }
+        },
+        {
+          "key": [
+            "League",
+            "isDiscoverable"
+          ],
+          "candidate": {
+            "table_name": "League",
+            "column_name": "isDiscoverable",
+            "ordinal_position": 14,
+            "data_type": "boolean",
+            "udt_name": "bool",
+            "is_nullable": "NO",
+            "column_default": "true",
+            "is_identity": "NO",
+            "identity_generation": null
+          },
+          "deployed": {
+            "table_name": "League",
+            "column_name": "isDiscoverable",
+            "ordinal_position": 16,
+            "data_type": "boolean",
+            "udt_name": "bool",
+            "is_nullable": "NO",
+            "column_default": "true",
+            "is_identity": "NO",
+            "identity_generation": null
+          }
+        },
+        {
+          "key": [
+            "League",
+            "seasonYear"
+          ],
+          "candidate": {
+            "table_name": "League",
+            "column_name": "seasonYear",
+            "ordinal_position": 13,
+            "data_type": "integer",
+            "udt_name": "int4",
+            "is_nullable": "NO",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          },
+          "deployed": {
+            "table_name": "League",
+            "column_name": "seasonYear",
+            "ordinal_position": 15,
+            "data_type": "integer",
+            "udt_name": "int4",
+            "is_nullable": "NO",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          }
+        },
+        {
+          "key": [
+            "League",
+            "tradeDeadline"
+          ],
+          "candidate": {
+            "table_name": "League",
+            "column_name": "tradeDeadline",
+            "ordinal_position": 11,
+            "data_type": "timestamp with time zone",
+            "udt_name": "timestamptz",
+            "is_nullable": "YES",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          },
+          "deployed": {
+            "table_name": "League",
+            "column_name": "tradeDeadline",
+            "ordinal_position": 13,
+            "data_type": "timestamp with time zone",
+            "udt_name": "timestamptz",
+            "is_nullable": "YES",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          }
+        },
+        {
+          "key": [
+            "LeagueTeamSlot",
+            "acquiredVia"
+          ],
+          "candidate": {
+            "table_name": "LeagueTeamSlot",
+            "column_name": "acquiredVia",
+            "ordinal_position": 8,
+            "data_type": "text",
+            "udt_name": "text",
+            "is_nullable": "NO",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          },
+          "deployed": {
+            "table_name": "LeagueTeamSlot",
+            "column_name": "acquiredVia",
+            "ordinal_position": 9,
+            "data_type": "text",
+            "udt_name": "text",
+            "is_nullable": "NO",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          }
+        },
+        {
+          "key": [
+            "LeagueTeamSlot",
+            "acquiredWeek"
+          ],
+          "candidate": {
+            "table_name": "LeagueTeamSlot",
+            "column_name": "acquiredWeek",
+            "ordinal_position": 6,
+            "data_type": "integer",
+            "udt_name": "int4",
+            "is_nullable": "NO",
+            "column_default": "1",
+            "is_identity": "NO",
+            "identity_generation": null
+          },
+          "deployed": {
+            "table_name": "LeagueTeamSlot",
+            "column_name": "acquiredWeek",
+            "ordinal_position": 7,
+            "data_type": "integer",
+            "udt_name": "int4",
+            "is_nullable": "NO",
+            "column_default": "1",
+            "is_identity": "NO",
+            "identity_generation": null
+          }
+        },
+        {
+          "key": [
+            "LeagueTeamSlot",
+            "droppedWeek"
+          ],
+          "candidate": {
+            "table_name": "LeagueTeamSlot",
+            "column_name": "droppedWeek",
+            "ordinal_position": 7,
+            "data_type": "integer",
+            "udt_name": "int4",
+            "is_nullable": "YES",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          },
+          "deployed": {
+            "table_name": "LeagueTeamSlot",
+            "column_name": "droppedWeek",
+            "ordinal_position": 8,
+            "data_type": "integer",
+            "udt_name": "int4",
+            "is_nullable": "YES",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          }
+        },
+        {
+          "key": [
+            "SeasonPhase",
+            "endDate"
+          ],
+          "candidate": {
+            "table_name": "SeasonPhase",
+            "column_name": "endDate",
+            "ordinal_position": 7,
+            "data_type": "timestamp with time zone",
+            "udt_name": "timestamptz",
+            "is_nullable": "YES",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          },
+          "deployed": {
+            "table_name": "SeasonPhase",
+            "column_name": "endDate",
+            "ordinal_position": 9,
+            "data_type": "timestamp with time zone",
+            "udt_name": "timestamptz",
+            "is_nullable": "YES",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          }
+        },
+        {
+          "key": [
+            "SeasonPhase",
+            "name"
+          ],
+          "candidate": {
+            "table_name": "SeasonPhase",
+            "column_name": "name",
+            "ordinal_position": 5,
+            "data_type": "text",
+            "udt_name": "text",
+            "is_nullable": "NO",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          },
+          "deployed": {
+            "table_name": "SeasonPhase",
+            "column_name": "name",
+            "ordinal_position": 6,
+            "data_type": "text",
+            "udt_name": "text",
+            "is_nullable": "NO",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          }
+        },
+        {
+          "key": [
+            "SeasonPhase",
+            "priority"
+          ],
+          "candidate": {
+            "table_name": "SeasonPhase",
+            "column_name": "priority",
+            "ordinal_position": 9,
+            "data_type": "integer",
+            "udt_name": "int4",
+            "is_nullable": "YES",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          },
+          "deployed": {
+            "table_name": "SeasonPhase",
+            "column_name": "priority",
+            "ordinal_position": 11,
+            "data_type": "integer",
+            "udt_name": "int4",
+            "is_nullable": "YES",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          }
+        },
+        {
+          "key": [
+            "SeasonPhase",
+            "rules"
+          ],
+          "candidate": {
+            "table_name": "SeasonPhase",
+            "column_name": "rules",
+            "ordinal_position": 10,
+            "data_type": "jsonb",
+            "udt_name": "jsonb",
+            "is_nullable": "NO",
+            "column_default": "'{}'::jsonb",
+            "is_identity": "NO",
+            "identity_generation": null
+          },
+          "deployed": {
+            "table_name": "SeasonPhase",
+            "column_name": "rules",
+            "ordinal_position": 12,
+            "data_type": "jsonb",
+            "udt_name": "jsonb",
+            "is_nullable": "NO",
+            "column_default": "'{}'::jsonb",
+            "is_identity": "NO",
+            "identity_generation": null
+          }
+        },
+        {
+          "key": [
+            "SeasonPhase",
+            "startDate"
+          ],
+          "candidate": {
+            "table_name": "SeasonPhase",
+            "column_name": "startDate",
+            "ordinal_position": 6,
+            "data_type": "timestamp with time zone",
+            "udt_name": "timestamptz",
+            "is_nullable": "YES",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          },
+          "deployed": {
+            "table_name": "SeasonPhase",
+            "column_name": "startDate",
+            "ordinal_position": 8,
+            "data_type": "timestamp with time zone",
+            "udt_name": "timestamptz",
+            "is_nullable": "YES",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          }
+        },
+        {
+          "key": [
+            "SeasonPhase",
+            "tournamentId"
+          ],
+          "candidate": {
+            "table_name": "SeasonPhase",
+            "column_name": "tournamentId",
+            "ordinal_position": 8,
+            "data_type": "bigint",
+            "udt_name": "int8",
+            "is_nullable": "YES",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          },
+          "deployed": {
+            "table_name": "SeasonPhase",
+            "column_name": "tournamentId",
+            "ordinal_position": 10,
+            "data_type": "bigint",
+            "udt_name": "int8",
+            "is_nullable": "YES",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          }
+        },
+        {
+          "key": [
+            "SeasonPhase",
+            "type"
+          ],
+          "candidate": {
+            "table_name": "SeasonPhase",
+            "column_name": "type",
+            "ordinal_position": 4,
+            "data_type": "text",
+            "udt_name": "text",
+            "is_nullable": "NO",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          },
+          "deployed": {
+            "table_name": "SeasonPhase",
+            "column_name": "type",
+            "ordinal_position": 5,
+            "data_type": "text",
+            "udt_name": "text",
+            "is_nullable": "NO",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          }
+        },
+        {
+          "key": [
+            "Sport",
+            "apiGroupIds"
+          ],
+          "candidate": {
+            "table_name": "Sport",
+            "column_name": "apiGroupIds",
+            "ordinal_position": 6,
+            "data_type": "jsonb",
+            "udt_name": "jsonb",
+            "is_nullable": "YES",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          },
+          "deployed": {
+            "table_name": "Sport",
+            "column_name": "apiGroupIds",
+            "ordinal_position": 7,
+            "data_type": "jsonb",
+            "udt_name": "jsonb",
+            "is_nullable": "YES",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          }
+        },
+        {
+          "key": [
+            "Sport",
+            "baseUrlName"
+          ],
+          "candidate": {
+            "table_name": "Sport",
+            "column_name": "baseUrlName",
+            "ordinal_position": 8,
+            "data_type": "text",
+            "udt_name": "text",
+            "is_nullable": "YES",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          },
+          "deployed": {
+            "table_name": "Sport",
+            "column_name": "baseUrlName",
+            "ordinal_position": 9,
+            "data_type": "text",
+            "udt_name": "text",
+            "is_nullable": "YES",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          }
+        },
+        {
+          "key": [
+            "Sport",
+            "maxDraftRounds"
+          ],
+          "candidate": {
+            "table_name": "Sport",
+            "column_name": "maxDraftRounds",
+            "ordinal_position": 7,
+            "data_type": "numeric",
+            "udt_name": "numeric",
+            "is_nullable": "YES",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          },
+          "deployed": {
+            "table_name": "Sport",
+            "column_name": "maxDraftRounds",
+            "ordinal_position": 8,
+            "data_type": "numeric",
+            "udt_name": "numeric",
+            "is_nullable": "YES",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          }
+        },
+        {
+          "key": [
+            "SportConference",
+            "maxTeamsPerOwner"
+          ],
+          "candidate": {
+            "table_name": "SportConference",
+            "column_name": "maxTeamsPerOwner",
+            "ordinal_position": 5,
+            "data_type": "integer",
+            "udt_name": "int4",
+            "is_nullable": "NO",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          },
+          "deployed": {
+            "table_name": "SportConference",
+            "column_name": "maxTeamsPerOwner",
+            "ordinal_position": 6,
+            "data_type": "integer",
+            "udt_name": "int4",
+            "is_nullable": "NO",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          }
+        },
+        {
+          "key": [
+            "SportSeason",
+            "scheduleBootstrapped"
+          ],
+          "candidate": {
+            "table_name": "SportSeason",
+            "column_name": "scheduleBootstrapped",
+            "ordinal_position": 7,
+            "data_type": "boolean",
+            "udt_name": "bool",
+            "is_nullable": "NO",
+            "column_default": "false",
+            "is_identity": "NO",
+            "identity_generation": null
+          },
+          "deployed": {
+            "table_name": "SportSeason",
+            "column_name": "scheduleBootstrapped",
+            "ordinal_position": 9,
+            "data_type": "boolean",
+            "udt_name": "bool",
+            "is_nullable": "NO",
+            "column_default": "false",
+            "is_identity": "NO",
+            "identity_generation": null
+          }
+        },
+        {
+          "key": [
+            "SportSeason",
+            "scheduleBootstrappedAt"
+          ],
+          "candidate": {
+            "table_name": "SportSeason",
+            "column_name": "scheduleBootstrappedAt",
+            "ordinal_position": 8,
+            "data_type": "timestamp with time zone",
+            "udt_name": "timestamptz",
+            "is_nullable": "YES",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          },
+          "deployed": {
+            "table_name": "SportSeason",
+            "column_name": "scheduleBootstrappedAt",
+            "ordinal_position": 10,
+            "data_type": "timestamp with time zone",
+            "udt_name": "timestamptz",
+            "is_nullable": "YES",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          }
+        },
+        {
+          "key": [
+            "SportSeason",
+            "seasonFinalized"
+          ],
+          "candidate": {
+            "table_name": "SportSeason",
+            "column_name": "seasonFinalized",
+            "ordinal_position": 9,
+            "data_type": "boolean",
+            "udt_name": "bool",
+            "is_nullable": "NO",
+            "column_default": "false",
+            "is_identity": "NO",
+            "identity_generation": null
+          },
+          "deployed": {
+            "table_name": "SportSeason",
+            "column_name": "seasonFinalized",
+            "ordinal_position": 11,
+            "data_type": "boolean",
+            "udt_name": "bool",
+            "is_nullable": "NO",
+            "column_default": "false",
+            "is_identity": "NO",
+            "identity_generation": null
+          }
+        },
+        {
+          "key": [
+            "Transaction",
+            "decidedByMemberId"
+          ],
+          "candidate": {
+            "table_name": "Transaction",
+            "column_name": "decidedByMemberId",
+            "ordinal_position": 11,
+            "data_type": "bigint",
+            "udt_name": "int8",
+            "is_nullable": "YES",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          },
+          "deployed": {
+            "table_name": "Transaction",
+            "column_name": "decidedByMemberId",
+            "ordinal_position": 12,
+            "data_type": "bigint",
+            "udt_name": "int8",
+            "is_nullable": "YES",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          }
+        },
+        {
+          "key": [
+            "Transaction",
+            "rejectReason"
+          ],
+          "candidate": {
+            "table_name": "Transaction",
+            "column_name": "rejectReason",
+            "ordinal_position": 12,
+            "data_type": "text",
+            "udt_name": "text",
+            "is_nullable": "YES",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          },
+          "deployed": {
+            "table_name": "Transaction",
+            "column_name": "rejectReason",
+            "ordinal_position": 13,
+            "data_type": "text",
+            "udt_name": "text",
+            "is_nullable": "YES",
+            "column_default": null,
+            "is_identity": "NO",
+            "identity_generation": null
+          }
+        }
+      ]
+    },
+    "constraints": {
+      "candidate_only": [],
+      "deployed_only": [],
+      "different": []
+    },
+    "indexes": {
+      "candidate_only": [],
+      "deployed_only": [],
+      "different": []
+    }
+  },
+  "logical_definition_comparison": {
+    "collected_properties": "match except ordinal positions",
+    "ordinal_position_differences": 27
+  },
+  "access": {
+    "profile_and_catalog_reads": [
+      {
+        "role": "otm_anon",
+        "subject": "",
+        "visible_profile_ids": [],
+        "visible_sport_rows": 0
+      },
+      {
+        "role": "otm_authenticated",
+        "subject": "00000000-0000-4000-8000-000000000001",
+        "visible_profile_ids": [
+          1
+        ],
+        "visible_sport_rows": 0
+      },
+      {
+        "role": "otm_authenticated",
+        "subject": "00000000-0000-4000-8000-000000000002",
+        "visible_profile_ids": [
+          2
+        ],
+        "visible_sport_rows": 0
+      },
+      {
+        "role": "otm_authenticated",
+        "subject": "",
+        "visible_profile_ids": [],
+        "visible_sport_rows": 0
+      },
+      {
+        "role": "otm_authenticated",
+        "subject": "00000000-0000-4000-8000-000000000003",
+        "visible_profile_ids": [],
+        "visible_sport_rows": 0
+      },
+      {
+        "role": "otm_service",
+        "subject": "",
+        "visible_profile_ids": [
+          1,
+          2
+        ],
+        "visible_sport_rows": 1
+      },
+      {
+        "role": "postgres",
+        "subject": "",
+        "visible_profile_ids": [
+          1,
+          2
+        ],
+        "visible_sport_rows": 1
+      }
+    ],
+    "browser_updates_and_inserts": "denied",
+    "anon_truncate_cascade": "succeeds on synthetic tables; probe rolled back",
+    "deployed_event_trigger_definition": "replayed; public CREATE TABLE automatically enabled RLS",
+    "scope": "SQL role tests; synthetic auth.uid; no HTTP/PostgREST or full Auth-service test"
+  },
+  "historical_upgrade_fixtures": [
+    {
+      "starting_column": "seasonStart",
+      "subdivision": "initially absent",
+      "normalized_comparison": "matches source candidate"
+    },
+    {
+      "starting_column": "esasonStart",
+      "subdivision": "initially absent",
+      "normalized_comparison": "matches source candidate"
+    }
+  ],
+  "trade_concurrency": [
+    {
+      "path": "direct",
+      "observed_lock_wait": true,
+      "outcomes": {
+        "first": [
+          "success",
+          null
+        ],
+        "second": [
+          "ValueError",
+          "Transaction is not pending apply"
+        ]
+      },
+      "ownership_intervals": [
+        [
+          11,
+          101,
+          1,
+          2
+        ],
+        [
+          12,
+          102,
+          1,
+          2
+        ],
+        [
+          12,
+          101,
+          2,
+          null
+        ],
+        [
+          11,
+          102,
+          2,
+          null
+        ]
+      ]
+    },
+    {
+      "path": "dispatcher",
+      "observed_lock_wait": true,
+      "outcomes": {
+        "first": [
+          "success",
+          null
+        ],
+        "second": [
+          "ValueError",
+          "Transaction is not pending apply"
+        ]
+      },
+      "ownership_intervals": [
+        [
+          11,
+          101,
+          1,
+          2
+        ],
+        [
+          12,
+          102,
+          1,
+          2
+        ],
+        [
+          12,
+          101,
+          2,
+          null
+        ],
+        [
+          11,
+          102,
+          2,
+          null
+        ]
+      ]
+    }
+  ],
+  "result": "PASS"
+}

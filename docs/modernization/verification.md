@@ -556,3 +556,57 @@ Final registered route audit: member-only state and own-member live pick derive 
 - `python3 api/tests/run_isolated.py`: **354/354 pass**, exit 0. `git diff --check`: pass. Existing weekly ranking/tiebreak/week0/final-period tests included.
 - Production deletion helper now requires the caller's connection; compute_weekly_scores deletes and inserts inside the same transaction. Removed the week0 fixture's deletion override so it exercises the real deletion helper. New tests run actual deletion/insertion SQL against synthetic SQLite, inject faults before first and second inserts, assert the complete old set survives, and verify exact successful rows, other league/week isolation and sequential repeat convergence.
 - No scoring-rule, response, schema, frontend or job orchestration changes. Concurrent replacements/uniqueness remain MOD-008; this does not establish PostgreSQL isolation, deployed schema/RLS or concurrent job behavior. No production/network/configured database access.
+
+
+## MOD-004/005 — configured Supabase metadata and provenance — 2026-10-29
+
+- User authorized starting MOD-004/005 and asked whether Supabase tables are accessible. Used existing api/.env connection internally; no secret values printed. No connected Supabase plugin was installed; plugin discovery found an optional Supabase integration, but direct configured SQL was sufficient, so no installation requested.
+- Initial sandbox connection failed; approved network execution succeeded. Connection startup read-only option was not retained (`transaction_read_only=off` on the preliminary catalog-only SELECT pass). Recollected the full artifact after explicit `SET TRANSACTION READ ONLY`; final metadata records `on`. No application-row queries or mutation statements executed in either pass.
+- Dated catalog artifact: 23 public tables, 180 columns, 83 constraints, 45 indexes, one policy; table/schema/sequence/default grants, role memberships/flags, public routines/extension ownership, event triggers and publication metadata. Routine bodies, role settings and scheduler command text excluded. No cron or supabase_migrations schema observed.
+- Local available all-ref Git/path/content history and SHA-256 checks establish checked-in artifact provenance; missing 20261023 migration not recovered. Name-level source/catalog comparison matches 23 tables and 180 columns; no normalized full-DDL equivalence claimed.
+- Corrected db/README and season setup README missing-migration instructions; added bounded MOD-004/005 reviews and status links. Catalog JSON/claim assertions and `git diff --check` pass. No application source changed, so backend/frontend tests not rerun; previous 354/354 backend result is historical.
+- Docker daemon now reachable (29.9.2); Supabase PostgreSQL 17.6.1.084 image cached. Read-only daemon/image inspection only. No container, database baseline, role test or MOD-009 concurrent test started in this evidence stage.
+
+
+## MOD-004/005/009 — real PostgreSQL assessment — 2026-10-29
+
+User recalled almost certainly applying the missing basketball SQL but cannot
+locate it; recorded as recollection, not recovered migration provenance. Continued
+assessment with explicit authorization and existing cached Docker image.
+
+- `python3 scripts/modernization/assess_postgres.py`: **PASS, exit 0** on the final
+  reviewed run, task-owned PostgreSQL 17.6 container, fixed loopback port 55439.
+  Creates random-named databases and fixture roles, uses no .env/configured DB
+  imports, validates a task-owned server marker before mutation and cleans up only
+  objects successfully created by this run. Existing unrelated Supabase containers
+  and volumes untouched; final container stopped/removed.
+- MOD-009: actual TransactionModel direct/direct and dispatcher/dispatcher apply
+  commands on two connections. First application paused after acquiring FOR UPDATE;
+  second observed waiting on a real PostgreSQL lock using pg_stat_activity and
+  pg_blocking_pids. After release: first returns None, second ValueError nonpending,
+  one COMPLETED transaction, exactly two closed/two newly acquired ownership rows
+  at week2. **Outstanding MOD-009 concurrent-apply acceptance satisfied.**
+- MOD-005: source duplicates byte-identical, removed in assessment candidate;
+  FK dependencies ordered; initializes with explicit synthetic auth.users/auth.uid
+  and pg_trgm fixtures. Candidate/deployed collected column properties match except
+  27 ordinal positions; all 83 constraints and 45 indexes match. No full sequence
+  state/type modifier/collation or platform equivalence claim. Two synthetic prior
+  states (subdivision absent; seasonStart correct-only or esasonStart old-only) each
+  accept historical migrations and converge to candidate definitions.
+- MOD-004: SQL-role fixture reproduces own-profile SELECT isolation, anon and
+  missing/unknown-subject denial, browser insert/update denial, seeded Sport
+  default-deny, service-equivalent BYPASSRLS/owner access. Broad anon TRUNCATE CASCADE
+  succeeds locally and is rolled back; no deployed operation or PostgREST exposure
+  claim. Supplemental deployed catalog-only query explicitly read-only with verified
+  10s statement/2s lock timeouts retrieves rls_auto_enable definition. Replayed
+  function/event-trigger enables RLS on public CREATE TABLE; original definition
+  remains unchanged. Full Auth/PostgREST/role membership runtime not tested.
+- Focused independent static review found cleanup could target pre-existing fixed
+  roles after failed CREATE. Fixed by tracking successful creations only; reviewer
+  rechecked and reported no remaining material findings. Added target marker guard
+  and derived comparison count. Harness development caught quoting/DBAPI-percent
+  issues and an initially unset marker; corrected before final PASS evidence.
+- `python3 api/tests/run_isolated.py`: **354/354 pass**, exit0. No frontend changes
+  or checks. Final JSON assertions and `git diff --check` pass. No production schema,
+  policy, grant, data or job changes. MOD-004/005 remain open for reviewed/versioned
+  baselines, deployment alignment, supported upgrades/recovery and migration ledger.

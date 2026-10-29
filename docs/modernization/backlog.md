@@ -186,6 +186,8 @@ These conventions remain in force until MOD-038/041 decisions approve changes; t
 - **Acceptance / verification:** Document flags/owners/roles/grants for all exposed tables and routines; isolated anon/A/B/service-role tests prove required access and deny cross-user access; no assumption backend gets auth.uid; migration rollback/recovery plan reviewed. If metadata unavailable, record blocked evidence and do not invent policies.
 - **Contract impact:** Behavior/API: conditional access changes; schema: policies/grants conditional.
 
+- **Evidence stage — 2026-10-29:** Configured Supabase catalogs inspected read-only; [access review](mod-004-access-review.md) and [dated metadata](evidence/supabase-catalog-2026-10-29.json) now available. All 23 public tables enable RLS, one own-User SELECT policy exists, broad browser-role grants and backend postgres BYPASSRLS are observed. No policy/grant changes; role tests, reviewed intended privilege matrix and versioned access baseline remain open.
+
 ### MOD-005 — Reconcile migration history and produce a reproducible schema baseline
 
 - **Priority / size / risk:** P0 / M / Medium.
@@ -196,6 +198,8 @@ These conventions remain in force until MOD-038/041 decisions approve changes; t
 - **Dependencies:** None for repository reconciliation; metadata access for live comparison; MOD-004 coordination.
 - **Acceptance / verification:** Disposable supported Supabase-compatible database initializes from documented baseline and upgrades from supported prior state; normalized definitions match intended source; absent migration reference resolved with provenance; current drift explicitly verified or unknown.
 - **Contract impact:** Behavior: no intended; API: no; schema: reproducibility artifacts, actual changes separately reviewed.
+
+- **Evidence stage — 2026-10-29:** [Provenance review](mod-005-schema-provenance.md) records migration commits/checksums and missing migration history; configured database matches all 23 table/180 column names, not yet normalized DDL. SeasonPhase.rules exists; missing migration is not recovered. Corrected README instructions to stop directing users to a nonexistent file. No executable baseline/runner or upgrade validation yet; MOD-005 remains open.
 
 ### MOD-006 — Establish one application profile per auth subject
 
@@ -244,6 +248,8 @@ These conventions remain in force until MOD-038/041 decisions approve changes; t
 - **Contract impact:** Behavior: yes; API: define replay/error outcome and current null success compatibility; schema: no.
 
 - **Implementation status — 2026-10-29:** Locked `apply_trade` now rejects wrong types and every non-PENDING_APPLY state before domain reads/writes; direct and dispatcher replays raise `ValueError("Transaction is not pending apply")`. Valid success retains `None`. Week scope lookup and existing ownership/conference validation execute on the application connection before mutation. Isolated state, stale-dispatcher-read, replay, historical interval and rollback tests pass; full backend 351/351. **Open acceptance:** two concurrent applies on disposable PostgreSQL (SQLite strips FOR UPDATE); cross-command ownership concurrency remains MOD-010. No schema/HTTP/frontend/job scheduling changes or production access.
+
+- **Completion — 2026-10-29: MOD-009 complete in bounded application scope.** PostgreSQL 17.6 direct/direct and dispatcher/dispatcher concurrent application checks now pass: first application holds the real row lock, second is observed waiting in pg_stat_activity, first commits once, second raises the defined nonpending ValueError; exact half-open ownership intervals and COMPLETED state verified. Earlier isolated invalid-state/precondition/rollback tests retained; fresh backend 354/354 passes. [Harness](../../scripts/modernization/README.md) and [results](evidence/postgres-assessment-2026-10-29.json). Supersedes prior open concurrent-apply acceptance above. Cross-command ownership concurrency remains MOD-010; no deployed changes.
 
 ### MOD-010 — Verify ownership reservation concurrency and add justified guards
 

@@ -1,5 +1,7 @@
 # Database audit
 
+**2026-10-29 evidence update:** The original source-only findings below are historical. Read-only configured-Supabase catalog evidence is now available: [MOD-004 access review](mod-004-access-review.md), [MOD-005 provenance](mod-005-schema-provenance.md), [catalog artifact](evidence/supabase-catalog-2026-10-29.json). RLS is enabled on all 23 public tables; own-User SELECT policy, grants, backend postgres BYPASSRLS and deployed ensure_rls event trigger are observed. No application rows or deployed changes. Full baseline/role tests remain open. MOD-007 score atomicity and MOD-009 locked application guards have since been repaired; see progress/verification for bounded evidence and remaining concurrency limits.
+
 Observed 2026-10-28. Read with [architecture](architecture.md), [feature inventory](features.md), [behavior checklist](behavior-checklist.md), [frontend audit](frontend-audit.md) and [backend audit](backend-audit.md). Paths below are repository-relative. Findings concern available source, not a certification of deployed Supabase.
 
 ## Evidence and limits
