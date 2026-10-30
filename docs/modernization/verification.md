@@ -1,5 +1,22 @@
 # Regression verification baseline
 
+## MOD-038 draft finalization — 2026-10-30
+
+DraftControlService owns actor validation, pre/post commissioner authority, central finalization and transaction ownership. Repository contains original commissioner read, state update and season-derived league status update. Model finalizer supports trusted/caller connection, force-finalize retains None guard/integer legacy coercion and assertion facade supports remaining original controls. HTTP finalize uses actor service, then original trusted snapshot and broadcast after commit. No new lock, status/replay guard or notification.
+
+| Verification | Fresh result |
+| --- | --- |
+| Guarded baseline | Exit 0, 495/495 |
+| Direct-service tests | RED five missing-module errors plus one passing legacy case; GREEN 6/6 |
+| `python3 api/tests/run_isolated.py` | Exit 0, 501/501 including final fresh rerun; existing tests unchanged |
+| `python3 scripts/modernization/verify_draft_finalization.py` | Exit 0, native PostgreSQL PASS; snapshot suite rerun |
+| Independent review | No Critical/Important/Minor findings; focused guarded suite 6/6 |
+| AST/dependency/diff checks | Other model methods including control transaction helper unchanged; control modules transport/model/configured-engine independent; diff check passes |
+
+[Native results/source hashes](evidence/mod-038-draft-finalization-postgres-2026-10-30.json) verify final-state projection, cleared current member/expiry, preserved lastPickAt/overall pick, native timestamps and future/active/ended/inclusive season status. Missing season preserves league row with leagueStatus=None; missing state rejects. Post-state/post-league write, actual statement, deferred commit and caller rollback each restore prior state. Separate connection changes commissioner after first check; final authority check rejects and rolls back control mutations while preserving independent ownership change. Trusted supplied-connection/model coercion paths and full snapshot suite pass. Current report supersedes earlier draft source hashes; history retained.
+
+Original pre/post checks add no row locks or guarantee beyond final check. Other controls/picks/timeouts unchanged; remaining decomposition separate. Harness used only marked loopback server/owned random DB, no configured DSN/.env. Database/container `otm-mod038-draft-finalize-20261030` removed. Checkout uncommitted; no schema, hosted DB, frontend, dependency, listener or deployment changes.
+
 ## MOD-038 draft snapshot pilot — 2026-10-30
 
 DraftSnapshotService now owns actor/trusted member policy, authorized completed-state repair, snapshot/pick/upcoming-turn orchestration and transaction scope. Repository owns original scoped league/state/member/pick/repair/turn SQL. HTTP state constructs actor from principal. Member access remains mandatory even for commissioners; query authorization precedes repair. Existing model signatures and helper use by commands remain; caller-supplied connection never opens another transaction. No pick/control/broadcast changes.

@@ -4,6 +4,7 @@ from flask import request, jsonify
 from endpoints.draft.draftBroadcast import broadcast_draft_update
 from endpoints.draft.draftModel import DraftModel
 from .snapshot_service import DraftSnapshotService
+from .control_service import DraftControlService
 from actors import UserActor
 from utils.jsonSafe import jsonSafe
 from authenticatedPrincipal import PrincipalResolutionError, resolve_authenticated_principal
@@ -13,6 +14,7 @@ class DraftEndpoints:
         self.draftModel = DraftModel(db_engine)
         self.db_engine = db_engine
         self.snapshot_service = DraftSnapshotService(db_engine)
+        self.control_service = DraftControlService(db_engine)
 
     # POST /api/draft/pick
     def create_pick(self):
@@ -128,7 +130,7 @@ class DraftEndpoints:
                     acting_user_id=principal.user_id,
                 )
             elif action == 'finalize':
-                result = self.draftModel.force_finalize_draft(league_id, principal.user_id)
+                result = self.control_service.finalize(UserActor(principal.user_id, principal.subject), league_id)
                 snapshot = self.draftModel.get_draft_state_snapshot(league_id)
                 broadcast_draft_update(league_id, {'type': action, 'snapshot': snapshot})
             else:

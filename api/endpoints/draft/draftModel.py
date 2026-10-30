@@ -11,6 +11,7 @@ from sqlalchemy.engine import Engine
 
 from endpoints.draft.notifyChannel import notify_draft_updated
 from .snapshot_service import DraftSnapshotService
+from .control_service import DraftControlService
 
 
 class DraftModel:
@@ -18,72 +19,10 @@ class DraftModel:
         self.db = db
 
     def finalize_draft(self, league_id: int, conn=None) -> Dict[str, Any]:
-        """
-        Centralized draft finalization.
-
-        This is used by normal final-pick paths and by explicit commissioner
-        force-finalize. It closes active draft state and derives the league
-        status from season dates so the league cannot remain stuck Drafting.
-        """
-        def _run(c):
-            state_row = c.execute(
-                text("""
-                    UPDATE "DraftState"
-                    SET status = 'complete',
-                        "currentMemberId" = NULL,
-                        "expiresAt" = NULL,
-                        "lastPickAt" = COALESCE("lastPickAt", now()),
-                        "updatedAt" = now()
-                    WHERE "leagueId" = :leagueId
-                    RETURNING "leagueId", status, "currentOverallPickNumber",
-                              "currentMemberId", "expiresAt", "lastPickAt", "updatedAt"
-                """),
-                {"leagueId": league_id},
-            ).fetchone()
-
-            if not state_row:
-                raise ValueError(f"DraftState not found for league {league_id}")
-
-            league_row = c.execute(
-                text("""
-                    UPDATE "League" l
-                    SET status = CASE
-                            WHEN ss."seasonEnd"::date < now()::date THEN 'Completed'
-                            WHEN ss."seasonStart"::date <= now()::date THEN 'In-Season'
-                            ELSE 'Post-Draft'
-                        END,
-                        "updatedAt" = now()
-                    FROM "SportSeason" ss
-                    WHERE l.id = :leagueId
-                      AND ss."sportId" = l.sport
-                      AND ss."seasonYear" = l."seasonYear"
-                    RETURNING l.id AS "leagueId", l.status AS "leagueStatus"
-                """),
-                {"leagueId": league_id},
-            ).fetchone()
-
-            return {
-                "leagueId": league_id,
-                "draftComplete": True,
-                "state": dict(state_row._mapping),
-                "leagueStatus": league_row._mapping["leagueStatus"] if league_row else None,
-            }
-
-        if conn is not None:
-            return _run(conn)
-
-        with self.db.begin() as c:
-            return _run(c)
+        return DraftControlService(getattr(self, "db", None)).finalize_for_job(league_id, conn)
 
     def _assert_draft_commissioner(self, conn, league_id: int, acting_user_id: int):
-        league = conn.execute(
-            text('SELECT commissioner FROM "League" WHERE id = :leagueId'),
-            {'leagueId': league_id},
-        ).fetchone()
-        if not league:
-            raise ValueError(f'League {league_id} not found')
-        if int(league._mapping['commissioner']) != int(acting_user_id):
-            raise PermissionError('Only the commissioner can control this draft')
+        return DraftControlService(None).assert_commissioner(conn, league_id, acting_user_id)
 
     @contextmanager
     def _draft_control_transaction(self, league_id: int, acting_user_id: Optional[int]):
@@ -98,10 +37,7 @@ class DraftModel:
                 self._assert_draft_commissioner(conn, league_id, acting_user_id)
 
     def force_finalize_draft(self, league_id: int, acting_user_id: int) -> Dict[str, Any]:
-        if acting_user_id is None:
-            raise PermissionError('Only the commissioner can control this draft')
-        with self._draft_control_transaction(league_id, acting_user_id) as conn:
-            return self.finalize_draft(league_id, conn=conn)
+        return DraftControlService(getattr(self, "db", None)).force_finalize_for_user_id(league_id, acting_user_id)
 
     def _repair_completed_draft_state(self, league_id: int, state: Dict[str, Any], conn) -> Dict[str, Any]:
         return DraftSnapshotService(None).repair_completed(league_id, state, conn)

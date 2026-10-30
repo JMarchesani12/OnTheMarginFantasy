@@ -334,6 +334,17 @@ rollback and pre-query membership revocation. Results/source hashes:
 No configured DSN/.env. Stop only the task-owned container afterward. Picks,
 controls, timeouts and realtime publication are outside this slice.
 
+### MOD-038 draft finalization
+
+Run `python3 scripts/modernization/verify_draft_finalization.py` on the marked
+synthetic server, sequentially with other suites. It reruns draft snapshot checks
+then verifies central finalization SQL, date boundaries/no-season/lastPickAt,
+authority checks with separate revocation, post-write/statement/deferred-commit
+and caller rollback, trusted/legacy paths. Results/source hashes:
+`docs/modernization/evidence/mod-038-draft-finalization-postgres-2026-10-30.json`.
+Prior draft source hashes superseded; history retained. No configured DSN/.env;
+owned random DB removed. Stop only the task-owned container afterward.
+
 ### Baseline suite
 
 After the same marked container is ready, run this separate suite sequentially
