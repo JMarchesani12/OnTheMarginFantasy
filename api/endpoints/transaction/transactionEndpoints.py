@@ -1,8 +1,7 @@
 # endpoints/league/transactionEndpoints.py
 
 from flask import request, jsonify
-from sqlalchemy import text
-from .transactionModel import TransactionModel
+from .workflow_service import TransactionWorkflowService
 from .service import TransactionService
 from .contracts import TransactionAccessDenied
 from actors import UserActor
@@ -12,7 +11,7 @@ from utils.requestValidation import integer_field, integer_list_field
 
 class TransactionEndpoints:
     def __init__(self, db_engine):
-        self.transactionModel = TransactionModel(db_engine)
+        self.workflow_service = TransactionWorkflowService(db_engine)
         self.db_engine = db_engine
         self.transaction_service = TransactionService(db_engine)
 
@@ -30,14 +29,14 @@ class TransactionEndpoints:
             if not isinstance(body, dict):
                 return jsonify({"error": "Request body must be a JSON object"}), 400
 
-            result = self.transactionModel.propose_trade(
+            result = self.workflow_service.propose(
+                actor=UserActor(principal.user_id, principal.subject),
                 league_id=league_id,
                 week_id=week_id,
                 from_member_id=integer_field(body, "fromMemberId"),
                 to_member_id=integer_field(body, "toMemberId"),
                 from_team_ids=integer_list_field(body, "fromTeamIds"),
                 to_team_ids=integer_list_field(body, "toTeamIds"),
-                acting_user_id=principal.user_id,
             )
             return jsonify(result), 200
         except PrincipalResolutionError as exc:
@@ -65,12 +64,12 @@ class TransactionEndpoints:
             body = request.get_json(silent=True)
             if not isinstance(body, dict):
                 return jsonify({'error': 'Request body must be a JSON object'}), 400
-            actor = {'league_id': league_id, 'acting_user_id': principal.user_id}
+            actor = {'league_id': league_id, 'actor': UserActor(principal.user_id, principal.subject)}
             if operation == 'respond':
                 action = body.get('action')
                 if not isinstance(action, str):
                     return jsonify({'error': 'action must be a string'}), 400
-                result = self.transactionModel.respond_to_trade(
+                result = self.workflow_service.respond(
                     transaction_id=transaction_id,
                     action=action,
                     responder_member_id=integer_field(body, 'responderMemberId'),
@@ -78,7 +77,7 @@ class TransactionEndpoints:
                     **actor,
                 )
             else:
-                result = self.transactionModel.cancel_trade_proposal(
+                result = self.workflow_service.cancel(
                     transaction_id=transaction_id,
                     requester_member_id=integer_field(body, 'requesterMemberId'),
                     **actor,
@@ -121,20 +120,20 @@ class TransactionEndpoints:
             if add_team_id is None and drop_team_id is None:
                 return jsonify({"message": "addTeamId or dropTeamId is required"}), 400
 
-            result = self.transactionModel.free_agency_add_drop(
+            result = self.workflow_service.free_agency(
+                actor=UserActor(principal.user_id, principal.subject),
                 league_id=leagueId,
                 week_id=week_id,
                 week_number=week_number,
                 member_id=member_id,
                 add_team_id=add_team_id,
                 drop_team_id=drop_team_id,
-                acting_user_id=principal.user_id,
             )
         except PrincipalResolutionError as exc:
             return jsonify({'error': exc.code}), exc.status_code
         except PermissionError:
             return jsonify({'message': 'League member not found'}), 404
-        except TransactionModel.SwapLimitExceeded as e:
+        except TransactionWorkflowService.SwapLimitExceeded as e:
             return jsonify({"message": "Max swaps reached", "details": str(e)}), 400
         except ValueError as e:
             return jsonify({"message": "Free agency move rejected", "details": str(e)}), 400
@@ -145,36 +144,13 @@ class TransactionEndpoints:
 
     # POST /api/league/<leagueId>/week/<weekId>/lock
     def lock_week(self, leagueId, weekId):
-        league_id = int(leagueId)
-        week_id = int(weekId)
-
+        # Historical unregistered helper; no new route or HTTP capability added.
+        league_id, week_id = int(leagueId), int(weekId)
         try:
-            # Will raise ValueError if any roster is illegal
-            self.transactionModel.assert_week_rosters_valid(league_id, week_id)
-        except ValueError as e:
-            return jsonify(
-                {
-                    "message": "Cannot lock week; roster violations present",
-                    "details": str(e),
-                }
-            ), 400
-
-        # If everything is valid, lock the week
-        sql = text(
-            """
-            UPDATE "Week"
-            SET "isLocked" = true
-            WHERE id = :week_id
-              AND "leagueId" = :league_id
-            """
-        )
-
-        with self.db.begin() as conn:
-            conn.execute(sql, {"week_id": week_id, "league_id": league_id})
-
-        return jsonify(
-            {"message": "Week locked successfully", "leagueId": league_id, "weekId": week_id}
-        ), 200
+            result = self.workflow_service.lock_week_for_job(league_id, week_id)
+        except ValueError as exc:
+            return jsonify({'message': 'Cannot lock week; roster violations present', 'details': str(exc)}), 400
+        return jsonify(result), 200
 
     from flask import request, jsonify
 
@@ -186,10 +162,10 @@ class TransactionEndpoints:
             body = request.get_json(silent=True)
             if not isinstance(body, dict):
                 return jsonify({'error': 'Request body must be a JSON object'}), 400
-            result = self.transactionModel.get_open_trade_transactions_for_member(
+            result = self.workflow_service.open_trades(
+                actor=UserActor(principal.user_id, principal.subject),
                 league_id=league_id,
                 member_id=integer_field(body, 'memberId'),
-                reader_user_id=principal.user_id,
             )
             return jsonify(result), 200
         except PrincipalResolutionError as exc:
@@ -209,11 +185,11 @@ class TransactionEndpoints:
             body = request.get_json(silent=True)
             if not isinstance(body, dict):
                 return jsonify({'error': 'Request body must be a JSON object'}), 400
-            result = self.transactionModel.veto_trade(
+            result = self.workflow_service.veto(
+                actor=UserActor(principal.user_id, principal.subject),
                 transaction_id=transaction_id,
                 league_member_id=integer_field(body, 'memberId'),
                 league_id=league_id,
-                acting_user_id=principal.user_id,
             )
             return jsonify(result), 200
         except PrincipalResolutionError as exc:
@@ -228,14 +204,14 @@ class TransactionEndpoints:
     # POST /api/league/<int:league_id>/transaction/<int:transaction_id>/trade/apply
     # body: {}
     def apply_trade(self, league_id: int, transaction_id: int):
-        # Approved internal-only operation; trusted callers use the model.
+        # Approved internal-only operation; trusted callers use the service.
         return jsonify({'error': 'http_trade_application_disabled'}), 410
 
     # GET /api/league/<league_id>/transactions
     def get_transactions_for_league(self, league_id: int):
         try:
             principal = resolve_authenticated_principal(self.db_engine)
-            status = request.args.get("status") or TransactionModel.STATUS_PENDING
+            status = request.args.get("status") or TransactionWorkflowService.STATUS_PENDING
             result = self.transaction_service.list_transactions(
                 UserActor(principal.user_id, principal.subject),
                 league_id=int(league_id),

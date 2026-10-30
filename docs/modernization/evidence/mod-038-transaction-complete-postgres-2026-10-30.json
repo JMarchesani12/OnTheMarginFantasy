@@ -1,0 +1,153 @@
+{
+  "result": "PASS",
+  "scope": "Marked uniquely owned loopback PostgreSQL; no configured app/DB/jobs startup",
+  "workflows": {
+    "all33_workflow_operations_arrays_jsonb_lateral_executemany": "PASS",
+    "actor_roles_ownership_status_deadline_swap_caps_pending_and_effective_week": "PASS",
+    "proposal_accept_reject_cancel_veto_toggle_threshold_and_dispatch_apply_replay": "PASS",
+    "personalized_party_voter_display_projection_and_query_time_revocation": "PASS",
+    "mutation_phase_real_statement_deferred_commit_and_postwrite_authority_rollback": "PASS",
+    "observed_concurrent_cancel_lock_wait_and_replay_rejection": "PASS",
+    "roster_violations_unregistered_lock_helper_and_legacy_exception_identity": "PASS",
+    "repository_queries_exercised": [
+      "accept_trade",
+      "add_free_agent_slots",
+      "assert_owned_member",
+      "cancel_trade",
+      "complete_free_agent",
+      "drop_free_agent_slots",
+      "free_agent_deadline",
+      "free_agent_for_update",
+      "insert_free_agent",
+      "insert_trade",
+      "insert_veto",
+      "league_settings",
+      "lock_week",
+      "mark_vetoed",
+      "member_conference_counts",
+      "member_count",
+      "member_roster_ids",
+      "member_swap_count",
+      "member_team_owned",
+      "next_unlocked_week",
+      "open_trades",
+      "pending_add_ids",
+      "pending_drop_ids",
+      "pending_transaction",
+      "reject_trade",
+      "roster_violations",
+      "team_conference_info",
+      "team_owned",
+      "toggle_veto",
+      "trade_current_scope",
+      "trade_for_action",
+      "veto_count",
+      "week_for_league"
+    ],
+    "scope_limit": "Original helper connections, validation/revalidation, membership/cap rules and revocation boundary semantics preserved; no new routes/schema/timeout/startup policy."
+  },
+  "original_trade_pilot_rerun": [
+    {
+      "path": "direct",
+      "observed_lock_wait": true,
+      "outcomes": {
+        "first": [
+          "success",
+          null
+        ],
+        "second": [
+          "ValueError",
+          "Transaction is not pending apply"
+        ]
+      },
+      "ownership_intervals": [
+        [
+          11,
+          101,
+          1,
+          2
+        ],
+        [
+          12,
+          102,
+          1,
+          2
+        ],
+        [
+          12,
+          101,
+          2,
+          null
+        ],
+        [
+          11,
+          102,
+          2,
+          null
+        ]
+      ]
+    },
+    {
+      "path": "dispatcher",
+      "observed_lock_wait": true,
+      "outcomes": {
+        "first": [
+          "success",
+          null
+        ],
+        "second": [
+          "ValueError",
+          "Transaction is not pending apply"
+        ]
+      },
+      "ownership_intervals": [
+        [
+          11,
+          101,
+          1,
+          2
+        ],
+        [
+          12,
+          102,
+          1,
+          2
+        ],
+        [
+          12,
+          101,
+          2,
+          null
+        ],
+        [
+          11,
+          102,
+          2,
+          null
+        ]
+      ]
+    }
+  ],
+  "original_read_pilot_rerun": {
+    "postgres_json_projection": "PASS",
+    "commissioner_without_membership": "PASS",
+    "member_and_denials": "PASS",
+    "query_time_revocation": "PASS"
+  },
+  "sha256": {
+    "api/endpoints/transaction/contracts.py": "fc1d2b82723fc82dc337871ab5a0dcb1e148cbb0a8f4a0dfede2f53f15f666fc",
+    "api/endpoints/transaction/repository.py": "0a99da7f0690ff2a33f87c598019572a955381ebda91560ca1bc261e86f06aa3",
+    "api/endpoints/transaction/routes.py": "5e978104614caaae432717c7f6182bc215be023819cd23df05fd3fb0b01ce8cd",
+    "api/endpoints/transaction/service.py": "9d57b60c5bfc6ff25c7a05de137dfd157999f80db520300a6056c58eb6988e49",
+    "api/endpoints/transaction/transactionEndpoints.py": "fb4e08e286e16af228f029371ef264f56bd329dc06a8136c055f07f66c8b5728",
+    "api/endpoints/transaction/transactionModel.py": "0785feef75eb1c8b7e8bfebce1d2e4cf965a57ab4a16c0583bab9b765b62a5c3",
+    "api/endpoints/transaction/workflow_repository.py": "5a482fd49f1543b1d09f218725424957d46222f0df1407112de4d8e68129a694",
+    "api/endpoints/transaction/workflow_service.py": "dd874223c2fe188144204b734fb7c2ef7405ecd17e311b52c7acc6bc616a54f2",
+    "api/actors.py": "6b0ea454e1227c2e9fe94cb3ca76db15a799ec3b5481a063b0fd2705318b789f",
+    "api/utils/authorization.py": "76bd2e7086a2ef1086987feb1e461e53944ba6a290970aee74715d03b64bbecb",
+    "api/cronJobs/cronComputeWeeklyScores.py": "18f0179995d47ba881d4949dba8224011501d305384f7ad5a076add5412994c7",
+    "api/tests/test_transaction_workflow_service.py": "5b116b2ec9bba371c667d7480e3c4756a7b1e0e2553e83a902bdbff2253e9742",
+    "scripts/modernization/verify_transaction_pilot.py": "aca4b65367e6563048e6723cf91742f5617919045e69af040d554f665e4236ff",
+    "scripts/modernization/verify_transaction_complete.py": "1249a7d24bcb6e4846cf4af1a966a34f7945f2eee4612ca1a5e3db4c4d331b38"
+  }
+}

@@ -408,6 +408,14 @@ python3 scripts/modernization/verify_schedule_complete.py
 
 Uses only a marked uniquely owned loopback database and temporary checkpoint directory, removed in finally/context exit. Requires all13 ingestion queries and all10 read/all7 calendar queries, exercising actual parser with replaced fetch methods (no provider requests), phase matching/upserts/null mapping/group types/LIMIT, real statement/deferred/caller rollback, per-game partial commits, partial/resume/force/skip/failed-day retries and checkpoint-file-before-metadata-commit convergence. Evidence: `docs/modernization/evidence/mod-038-schedule-complete-postgres-2026-10-30.json`, superseding earlier schedule source captures. Rerun affected `verify_league_folders.py` and `verify_scoring_complete.py` for integration/source capture. No actual application/job/provider startup. Broader transaction rollout remains partial; see backend extraction audit.
 
+### MOD-038 complete transaction workflow verification
+
+```sh
+python3 scripts/modernization/verify_transaction_complete.py
+```
+
+Requires the marked synthetic loopback server. Creates/removes a unique owned database, exercises all33 workflow repository operations (coverage required): actual arrays/JSONB/LATERAL/executemany, proposal/response/cancel/veto/free-agent/dispatch/apply/status/replay/roster/lock, actor role/ownership/pre+post and query-time revocation, mutation/statement/deferred rollback and observed native cancellation lock contention. Reruns the original direct/dispatcher trade concurrency and checked listing pilots. Evidence: `docs/modernization/evidence/mod-038-transaction-complete-postgres-2026-10-30.json` supersedes the old pilot source capture. The week-lock helper stays unregistered and trade-applyHTTP410 remains; no actual app/job/provider startup. After weekly dispatch wiring changed, complete schedule and scoring native suites were also rerun to refresh dependencies.
+
 ### Baseline suite
 
 After the same marked container is ready, run this separate suite sequentially

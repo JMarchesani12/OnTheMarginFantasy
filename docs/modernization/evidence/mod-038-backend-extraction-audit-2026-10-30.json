@@ -1,18 +1,47 @@
 {
-  "scope": "Source audit of eight domain model files; SQL-free facades alone are not proof of all backend/job/frontend refactoring.",
-  "correction": "Earlier claim that only sport and schedule remained was incorrect. Transaction initial read/trusted-apply pilot is partial; trade/free-agency/dispatch/related reads still contain model SQL.",
+  "scope": "Source audit of eight model facades plus recorded complete native domain evidence; not a claim that all backend jobs/frontend/correctness/startup work is complete.",
+  "status": "Planned eight-domain backend content extraction complete",
+  "prior_correction": "Earlier claim that only sport and schedule remained was incorrect. Transaction initial read/trusted-apply pilot is partial; trade/free-agency/dispatch/related reads still contain model SQL.",
+  "resolution": "Remaining transaction workflow/action/free-agency/dispatch/read extraction and caller wiring now complete; no SQL execution remains in any model facade.",
   "complete_domain_content_extractions": [
-    "roster",
-    "user",
-    "scoring",
-    "league",
     "draft",
+    "league",
+    "roster",
+    "schedule",
+    "scoring",
     "sport",
-    "schedule"
+    "transaction",
+    "user"
   ],
-  "partial_domain_content_extractions": [
-    "transaction"
-  ],
+  "partial_domain_content_extractions": [],
+  "resolved_transaction_inventory": {
+    "previous_sql_bearing_methods": [
+      "_get_league_settings",
+      "_get_member_swap_count",
+      "_validate_members_in_league",
+      "_assert_free_agent_deadline",
+      "_get_week_for_league",
+      "_get_pending_free_agent_team_ids_for_week",
+      "apply_free_agent_transaction",
+      "apply_pending_transaction",
+      "_get_next_unlocked_week_for_league",
+      "propose_trade",
+      "_trade_actor_transaction",
+      "respond_to_trade",
+      "cancel_trade_proposal",
+      "_is_team_owned_in_week",
+      "_is_team_owned_by_member_in_week",
+      "_get_team_conference_info",
+      "_get_member_conference_counts",
+      "_get_member_roster_team_ids_for_week",
+      "free_agency_add_drop",
+      "get_week_roster_violations",
+      "get_open_trade_transactions_for_member",
+      "veto_trade"
+    ],
+    "previous_direct_execute_calls": 31,
+    "evidence": "mod-038-transaction-complete-postgres-2026-10-30.json"
+  },
   "models": [
     {
       "domain": "draft",
@@ -59,32 +88,9 @@
     {
       "domain": "transaction",
       "model": "api/endpoints/transaction/transactionModel.py",
-      "direct_execute_calls": 31,
-      "sql_bearing_methods": [
-        "_get_league_settings",
-        "_get_member_swap_count",
-        "_validate_members_in_league",
-        "_assert_free_agent_deadline",
-        "_get_week_for_league",
-        "_get_pending_free_agent_team_ids_for_week",
-        "apply_free_agent_transaction",
-        "apply_pending_transaction",
-        "_get_next_unlocked_week_for_league",
-        "propose_trade",
-        "_trade_actor_transaction",
-        "respond_to_trade",
-        "cancel_trade_proposal",
-        "_is_team_owned_in_week",
-        "_is_team_owned_by_member_in_week",
-        "_get_team_conference_info",
-        "_get_member_conference_counts",
-        "_get_member_roster_team_ids_for_week",
-        "free_agency_add_drop",
-        "get_week_roster_violations",
-        "get_open_trade_transactions_for_member",
-        "veto_trade"
-      ],
-      "sha256": "92ec3dae2ea23a3705961d7379eb3d893cfca1b66a8a8ab882763cfa1c849342"
+      "direct_execute_calls": 0,
+      "sql_bearing_methods": [],
+      "sha256": "0785feef75eb1c8b7e8bfebce1d2e4cf965a57ab4a16c0583bab9b765b62a5c3"
     },
     {
       "domain": "user",

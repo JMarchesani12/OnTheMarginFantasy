@@ -102,7 +102,7 @@
     "api/endpoints/league/leagueEndpoints.py": "71a5fb3e9caa50f3b75092d62257fcbe0b8af7f6824921fa3c91aed6260a5483",
     "api/endpoints/scoring/routes.py": "386ae66414e1064426a514e4e81d20efb9501d83882b153828209459ee93358f",
     "api/cronJobs/cronIngestScoreboard.py": "07f62ac2dac6f12c27699fe8c2768a166a63514ade00cb247f5b3ab772dd1d7c",
-    "api/cronJobs/cronComputeWeeklyScores.py": "ca66c63494dfa3f2e938e0a17b81a1cdb314283cae937853340b0d67b5979eea",
+    "api/cronJobs/cronComputeWeeklyScores.py": "18f0179995d47ba881d4949dba8224011501d305384f7ad5a076add5412994c7",
     "api/cronJobs/cronComputeFinalScoreboard.py": "a887b47fd728718d49d3a485911b01abfa8870059b1eb4f5afb27891e2b0f754",
     "api/startSeasonJobs/startSeason.py": "78936029b61d55dccc200b0a9cca3e4ccdb34435c3ec6b8608449f206d064287",
     "api/scripts/rebuild_weeks_and_rescore.py": "b1f445b69ad7e23724d07844b1eb3a23e56e9db7f03f9d3ace552452485788d4",

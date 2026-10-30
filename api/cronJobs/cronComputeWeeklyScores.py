@@ -8,7 +8,7 @@ from sqlalchemy import text
 
 from endpoints.schedule.read_service import ScheduleReadService
 from endpoints.scoring.service import ScoringService
-from endpoints.transaction.transactionModel import TransactionModel
+from endpoints.transaction.workflow_service import TransactionWorkflowService
 
 def build_scoring(engine):
     load_dotenv()
@@ -53,7 +53,7 @@ GET_PENDING_TRANSACTIONS = text("""
 
 def main():
     scoring = build_scoring(engine)
-    transaction_model = TransactionModel(engine)
+    transaction_model = TransactionWorkflowService(engine)
 
     now = datetime.now(timezone.utc)
 
@@ -103,7 +103,7 @@ def main():
         trade_rows = conn.execute(GET_PENDING_TRANSACTIONS).fetchall()
 
     for tr in trade_rows:
-        transaction_model.apply_pending_transaction(int(tr._mapping["id"]))
+        transaction_model.apply_pending_for_job(int(tr._mapping["id"]))
 
     print("Weekly scoring, next-week locking, and transactions complete.")
 

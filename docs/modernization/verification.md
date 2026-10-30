@@ -1,5 +1,28 @@
 # Regression verification baseline
 
+## MOD-038 complete transaction workflow and final backend audit — 2026-10-30
+
+Remaining31 model SQL calls now use named workflow repository queries; fixed role/reader fragments and shared ownership routing reside there. Canonical workflow composes the untouched initial transaction pilot. Actor entry points reject missing/non-UserActor before I/O; HTTP resolves real principals, jobs call explicit trusted APIs. Model retains exact constructor/inherited helpers/constants/exception identity with no SQL. No route or policy is added.
+
+| Verification | Fresh result |
+| --- | --- |
+| Guarded baseline | 557/557 |
+| Test first | Seven RED cases: six missing workflow and original unregistered week-lock self.db AttributeError; GREEN7/7 |
+| Full guarded backend | 564/564; reviewer independently ran full suite successfully |
+| Direct workflow | Actor-before-I/O across6 operations, own/wrong proposal, role/accept/cancel/veto toggle, effective-week pending free agency/swap exception identity, post-action rollback, legacy override/db-only protocol and working unregistered lock helper |
+| `python3 scripts/modernization/verify_transaction_complete.py` | PASS all33 workflow operations:31 migrated queries plus shared entitlement and week-lock operations, actual JSONB/arrays/LATERAL/executemany, actor/role/scope/status/deadline/swap/caps/pending/effective-week guards, full DTOs and dispatch/application/replay |
+| Native failure/concurrency | Phase mutation rollback, real statement/deferred-commit failure, postwrite authority loss rollback, query-time personalized-read revocation and observed pg_stat_activity cancellation row-lock wait followed by replay rejection |
+| Original pilot rerun | Both direct/dispatcher native trade-apply concurrency/replay and checked read projection/revocation suites PASS |
+| Affected integrations | Complete schedule30-query/fake-provider/checkpoint suite and complete scoring suite PASS; changed weekly-job dependency captures refreshed |
+| Independent final review | No Critical/Important/Minor findings; all33 methods/31 SQL AST proof and fresh full suite |
+| Source/architecture audit | All33 original algorithms unchanged after explicit query/entitlement/role substitutions; all31 text-call ASTs and fixed role mapping exact. Model and HTTP adapter contain no SQL execution, canonical layers import no model/HTTP/configured engine. All8 domain model files now have no execute calls |
+
+[Complete transaction results/source hashes](evidence/mod-038-transaction-complete-postgres-2026-10-30.json), [final eight-domain audit](evidence/mod-038-backend-extraction-audit-2026-10-30.json), [refreshed schedule](evidence/mod-038-schedule-complete-postgres-2026-10-30.json), [refreshed scoring](evidence/mod-038-scoring-complete-postgres-2026-10-29.json), [ledger](../superpowers/plans/2026-10-30-mod-038-transaction-complete-implementation.md). Eight complete domain reports/source hashes are current; original transaction pilot and schedule slices remain historical. The previously recorded22-method transaction remainder is resolved, with its prior inventory retained in the audit.
+
+The unregistered week-lock helper previously failed at undefined self.db after successful validation. Its regression was watched RED and corrected by moving original UPDATE to repository/service; it stays unregistered, keeps validation/update as separate scopes and adds no public permission. HTTP trade apply stays410. Preserve existing free-agent apply validation/separate week lookup, helper connections, dispatcher preflight/application locking, reject/deadline and ownership postcheck boundaries, cap/membership/swap/projection semantics. No new schema/dependency/auth/timeout/correctness/startup policy. Only marked owned synthetic databases/container used and removed; no configured app/job/provider/hosted/deployment work. Checkout remains uncommitted.
+
+Planned backend content extraction is complete across all8 domains. Broader MOD-040 frontend/optional folder work and separately tracked correctness/startup items remain open; SQL-free model source audit does not imply those are complete.
+
 ## MOD-038 schedule completion and rollout audit — 2026-10-30
 
 ScheduleModel is a SQL-free facade with its original constructor/inherited helper dispatch. Canonical ingestion owns provider/config/phase/upsert/bootstrap/checkpoint operations and active-league facts; original SQL now lives in its repository. HTTP uses read service/member aggregate with original response/scopes; league callbacks/scoring builders/routes/rebuild receive canonical read/calendar capabilities without provider configuration. Season setup/ingest cron use trusted ingestion; metadata retains caller connection. Existing dotenv/startup policy and HTTP week-generation410 remain.
