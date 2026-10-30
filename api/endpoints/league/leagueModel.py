@@ -11,14 +11,12 @@ from zoneinfo import ZoneInfo
 from endpoints.schedule.scheduleModel import ScheduleModel
 from utils.authorization import league_read_scope
 from .admission_service import AdmissionService
+from .member_service import MemberService
+from .member_repository import ALLOWED_LEAGUE_MEMBER_FIELDS
 from .contracts import AdmissionDenied, AdmissionRejected
 from rules.leagueRules import settings_for_creation, settings_for_update, describe_rules
 
-ALLOWED_LEAGUE_MEMBER_FIELDS = {
-    "teamName": '"teamName"',
-    "draftOrder": '"draftOrder"',
-    "seasonPoints": '"seasonPoints"',
-}
+
 
 class LeagueModel:
     def __init__(self, db: Engine):
@@ -809,106 +807,9 @@ class LeagueModel:
         acting_user_id: int,
         shift_draft_order: bool = True,
     ) -> Dict[str, Any]:
-        """
-        Removes a LeagueMember and (optionally) shifts down draftOrder
-        for all members behind them so orders remain contiguous.
-
-        This is transactional: if anything fails, nothing is committed.
-        """
-
-        with self.db.begin() as conn:
-            # Lock league row to avoid concurrent join/removal races
-            league = conn.execute(
-                text("""
-                    SELECT id, status, "commissioner", "numPlayers"
-                    FROM "League"
-                    WHERE id = :leagueId
-                    FOR UPDATE
-                """),
-                {"leagueId": league_id},
-            ).mappings().first()
-
-            if not league:
-                raise ValueError("League not found")
-
-            # Basic permission (adjust to your rules)
-            if int(league["commissioner"]) != int(acting_user_id):
-                raise PermissionError("Only the commissioner can remove members")
-
-            # Find member + their draft order (lock the member row)
-            member = conn.execute(
-                text("""
-                    SELECT id, "userId", "draftOrder"
-                    FROM "LeagueMember"
-                    WHERE id = :memberId AND "leagueId" = :leagueId
-                    FOR UPDATE
-                """),
-                {"memberId": member_id, "leagueId": league_id},
-            ).mappings().first()
-
-            if not member:
-                raise ValueError("Member not found in this league")
-
-            # (Optional) prevent removing commissioner
-            if int(member["userId"]) == int(league["commissioner"]):
-                raise ValueError("Cannot remove the commissioner")
-
-            removed_order = int(member["draftOrder"])
-
-            # Delete the member
-            conn.execute(
-                text("""
-                    DELETE FROM "LeagueMember"
-                    WHERE id = :memberId AND "leagueId" = :leagueId
-                """),
-                {"memberId": member_id, "leagueId": league_id},
-            )
-
-            # Shift draft order (only if you want this behavior)
-            if shift_draft_order:
-                conn.execute(
-                    text("""
-                        UPDATE "LeagueMember"
-                        SET "draftOrder" = "draftOrder" - 1
-                        WHERE "leagueId" = :leagueId
-                          AND "draftOrder" > :removedOrder
-                    """),
-                    {"leagueId": league_id, "removedOrder": removed_order},
-                )
-
-            # Keep numPlayers in sync
-            conn.execute(
-                text("""
-                    UPDATE "League"
-                    SET "numPlayers" = GREATEST("numPlayers" - 1, 0),
-                        "updatedAt" = now()
-                    WHERE id = :leagueId
-                """),
-                {"leagueId": league_id},
-            )
-
-            # Return updated member list (handy for UI)
-            members = conn.execute(
-                text("""
-                    SELECT
-                      lm.id AS "memberId",
-                      lm."userId" AS "userId",
-                      lm."teamName" AS "teamName",
-                      lm."draftOrder" AS "draftOrder",
-                      u."displayName" AS "displayName"
-                    FROM "LeagueMember" lm
-                    JOIN "User" u ON u.id = lm."userId"
-                    WHERE lm."leagueId" = :leagueId
-                    ORDER BY lm."draftOrder", lm.id
-                """),
-                {"leagueId": league_id},
-            ).mappings().all()
-
-        return {
-            "removedMemberId": member_id,
-            "removedDraftOrder": removed_order,
-            "members": [dict(m) for m in members],
-        }
+        return MemberService(self.db).remove_for_legacy_commissioner(
+            league_id, member_id, acting_user_id, shift_draft_order,
+        )
     
     def search_leagues(
         self,
@@ -1010,51 +911,8 @@ class LeagueModel:
     def update_owned_league_member(
         self, member_id: int, user_id: int, team_name: str,
     ) -> Dict[str, Any]:
-        """Self-service rename; ownership and write share one SQL predicate.
-
-        HTTP callers must supply user_id from the authenticated principal.
-        This operation cannot change order, scores or member/league ownership.
-        """
-        with self.db.begin() as conn:
-            row = conn.execute(text("""
-                UPDATE "LeagueMember"
-                SET "teamName" = :teamName
-                WHERE id = :memberId AND "userId" = :userId
-                RETURNING id, "leagueId", "userId", "teamName", "draftOrder",
-                          "seasonPoints", "createdAt"
-            """), {
-                'memberId': member_id, 'userId': user_id, 'teamName': team_name,
-            }).mappings().first()
-        if not row:
-            raise LookupError('LeagueMember not found')
-        return dict(row)
+        return MemberService(self.db).rename_for_owner_id(member_id, user_id, team_name)
 
     def update_league_member(self, member_id: int, updates: Dict[str, Any]) -> Dict[str, Any]:
         # keep only allowed keys that are actually present
-        payload = {k: updates[k] for k in updates.keys() if k in ALLOWED_LEAGUE_MEMBER_FIELDS}
-
-        if not payload:
-            raise ValueError("No valid fields provided to update")
-
-        set_clauses = []
-        params: Dict[str, Any] = {"memberId": member_id}
-
-        for i, (key, val) in enumerate(payload.items()):
-            param_name = f"v{i}"
-            set_clauses.append(f'{ALLOWED_LEAGUE_MEMBER_FIELDS[key]} = :{param_name}')
-            params[param_name] = val
-
-        sql = text(f"""
-            UPDATE "LeagueMember"
-            SET {", ".join(set_clauses)}
-            WHERE id = :memberId
-            RETURNING id, "leagueId", "userId", "teamName", "draftOrder", "seasonPoints", "createdAt"
-        """)
-
-        with self.db.begin() as conn:
-            row = conn.execute(sql, params).mappings().first()
-
-        if not row:
-            raise ValueError("LeagueMember not found")
-
-        return dict(row)
+        return MemberService(self.db).update_for_job(member_id, updates)

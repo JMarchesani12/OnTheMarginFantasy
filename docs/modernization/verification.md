@@ -1,5 +1,39 @@
 # Regression verification baseline
 
+## MOD-038 member removal and draft-order shifting — 2026-10-30
+
+MemberService now owns actor validation, locked commissioner authority, URL-scoped target and commissioner protection, optional shifting and one transaction. MemberRepository owns original league→member locks and SQL. HTTP still parses identity assertion and strict boolean shift before invoking the actor service. The legacy context-free model method keeps integer coercion and shift truthiness. Exact errors and response projections/order remain unchanged; removal still does not recalculate draft-round settings or restrict league status.
+
+| Verification | Fresh result |
+| --- | --- |
+| Guarded baseline | Exit 0, 431/431 |
+| New direct-service tests | Initial RED: five missing-operation assertion failures and one passing legacy case; GREEN 6/6 |
+| `python3 api/tests/run_isolated.py` | Exit 0, 437/437 including final fresh rerun; existing authorization tests unchanged |
+| `python3 scripts/modernization/verify_member_removal.py` | Exit 0, native PostgreSQL PASS; prior member/admission suites rerun |
+| Independent final review | No Critical/Important/Minor findings; reviewer separately ran focused guarded suite, 6/6 |
+| AST/dependency/diff checks | All non-removal model methods unchanged; member imports remain transport/model/configured-engine independent; diff check passes |
+
+[Native results/source hashes](evidence/mod-038-member-removal-postgres-2026-10-30.json) verify authority/scope/commissioner protection, exact remaining-member projection/order, shift-off behavior, count floor, timestamp update and unchanged settings/other league/scores. A real FK restriction, injected failures after executed deletion/shifting/count update and deferred commit failure each preserve all prior state. Six service/facade concurrency cases observe PostgreSQL lock waits and league→member order: same-target replay rejects without another decrement, distinct removals serialize, and approval waiting behind removal allocates the next draft position with correct count. Legacy actor coercion/shift truthiness passes. All earlier member-profile and admission native checks rerun successfully; this combined report supersedes their source hashes while retaining historical reports.
+
+Only marked loopback PostgreSQL and one owned random database were used; no configured DSN/.env. Database and task-owned container `otm-mod038-member-removal-20261030` removed. Broader league reads/administration and correctness-policy redesign remain separate. Checkout uncommitted; no schema, hosted DB, frontend, dependencies, listener or deployment changes.
+
+## MOD-038 member profile updates — 2026-10-30
+
+Extracted owner-only rename and legacy trusted allowlisted updates into MemberService/MemberRepository. The interactive service requires UserActor and a nonblank string before I/O. HTTP still rejects all other fields and preserves the raw name. The owner predicate remains in the UPDATE, concealing foreign/missing targets with 404. Legacy owner-ID method remains permissive; trusted updater keeps teamName/draftOrder/seasonPoints filtering, bound values, original error types and returned fields. Model db-only callers and constant import remain compatible.
+
+| Verification | Fresh result |
+| --- | --- |
+| Guarded baseline | Exit 0, 426/426 |
+| New direct-service tests | Initial RED: four missing-module errors, one existing compatibility case passed; GREEN 5/5 |
+| `python3 api/tests/run_isolated.py` | Exit 0, 431/431 including final fresh rerun; existing tests unchanged |
+| `python3 scripts/modernization/verify_member_profile.py` | Exit 0, native PostgreSQL PASS; earlier admission checks rerun |
+| Independent final review | No Critical/Important/Minor findings; reviewer separately ran focused guarded tests, 5/5 |
+| AST/dependency/diff checks | All other model methods unchanged; member service/repository independent of transport/model/configured DB; diff check passes |
+
+[Native results/source hashes](evidence/mod-038-member-profile-postgres-2026-10-30.json) verify exact projection/native timestamp preservation, raw quoted/bound name, owner/foreign/cross-league/missing scope, trusted allowlist and permissive legacy compatibility. Both update paths roll back after executed UPDATE and deferred commit failure. A separate ownership update holds the row lock while rename waits; after ownership changes, PostgreSQL rechecks the owner predicate and both direct service and legacy facade return LookupError without changing the name. Complete prior listing/cancellation/creation/denial/approval checks rerun successfully; this combined report supersedes prior admission source hashes while retaining historical evidence.
+
+Harness used only the marked loopback server and an owned random database; no configured DSN/.env. Database and task-owned container `otm-mod038-member-profile-20261030` removed. Removal/draft-order shifting and wider league work remain separate. Changes uncommitted; no schema, hosted DB, frontend, dependencies, listener or deployment changes.
+
 ## MOD-038 admission approval; admission extraction complete — 2026-10-29
 
 Approval now calls the actor-requiring admission service from HTTP. The service verifies commissioner under League FOR UPDATE, then locks the URL-scoped request, requires PENDING and owns one transaction for membership, capacity/draft rounds and request resolution. Repository SQL preserves MAX(draftOrder)+1, fallback team, zero points, original JSON CTE behavior, resolver attribution and projections. Trusted legacy approval remains explicit; model and supplied-connection private helper signatures remain compatible.

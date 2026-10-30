@@ -3,6 +3,7 @@ from venv import logger
 from flask import request, jsonify
 from .leagueModel import LeagueModel
 from .admission_service import AdmissionService
+from .member_service import MemberService
 from .contracts import AdmissionDenied, AdmissionRejected
 from actors import UserActor
 from authenticatedPrincipal import PrincipalResolutionError, resolve_authenticated_principal
@@ -12,6 +13,7 @@ class LeagueEndpoints:
         self.leagueModel = LeagueModel(db_engine)
         self.db_engine = db_engine
         self.admission_service = AdmissionService(db_engine)
+        self.member_service = MemberService(db_engine)
 
     def get_league(self, league_id):
         return self._league_read_response(league_id, 'details')
@@ -345,9 +347,9 @@ class LeagueEndpoints:
             if not isinstance(shift, bool):
                 return jsonify({"message": "shiftDraftOrder must be a boolean"}), 400
 
-            result = self.leagueModel.remove_member_and_shift_draft_order(
-                league_id=league_id, member_id=member_id,
-                acting_user_id=principal.user_id, shift_draft_order=shift,
+            result = self.member_service.remove(
+                UserActor(principal.user_id, principal.subject),
+                league_id=league_id, member_id=member_id, shift_draft_order=shift,
             )
             return jsonify(result), 200
         except PrincipalResolutionError as e:
@@ -425,8 +427,8 @@ class LeagueEndpoints:
             team_name = body.get('teamName')
             if not isinstance(team_name, str) or not team_name.strip():
                 return jsonify({"message": "Team name is required"}), 400
-            updated = self.leagueModel.update_owned_league_member(
-                member_id, principal.user_id, team_name,
+            updated = self.member_service.rename(
+                UserActor(principal.user_id, principal.subject), member_id, team_name,
             )
             return jsonify(updated), 200
         except PrincipalResolutionError as e:

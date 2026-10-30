@@ -167,6 +167,33 @@ No configured DSN or `.env` is accepted. The harness removes its database;
 stop only the task-owned container afterward. No new capacity policy or
 concurrent-creation uniqueness guarantee is implied.
 
+### MOD-038 member profile updates
+
+With the marked disposable server ready, run
+`python3 scripts/modernization/verify_member_profile.py` sequentially with other
+assessment suites. It reruns all admission checks, then resets only its owned
+random database schema for member projection/owner scope/bound values, trusted
+allowlist, executed-update/deferred-commit rollback and observed ownership
+revocation during row-lock waits through service and facade. Results/source
+hashes go to `docs/modernization/evidence/mod-038-member-profile-postgres-2026-10-30.json`,
+superseding prior admission hashes while retaining historical reports. No
+configured DSN or `.env` is accepted. The harness removes its database; stop
+only the task-owned container afterward. Member removal is outside this slice.
+
+### MOD-038 member removal and draft-order shifting
+
+With the marked disposable server ready, run
+`python3 scripts/modernization/verify_member_removal.py` sequentially with other
+assessment suites. It reruns admission and member-profile checks before resetting
+only its own random database schema for removal protection/projection/shift/count,
+real FK/post-write/deferred-commit rollback and observed contention. Same-target
+replay, distinct removals and approval after removal run through service/facade.
+Results/source hashes go to
+`docs/modernization/evidence/mod-038-member-removal-postgres-2026-10-30.json`,
+superseding previous member/admission hashes while retaining historical reports.
+No configured DSN or `.env` is accepted. The harness removes its database; stop
+only the task-owned container afterward. No removal-policy redesign is implied.
+
 ### Baseline suite
 
 After the same marked container is ready, run this separate suite sequentially
