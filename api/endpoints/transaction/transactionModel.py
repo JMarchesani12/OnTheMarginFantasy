@@ -6,6 +6,8 @@ from sqlalchemy import text
 from sqlalchemy.engine import Engine
 from utils.authorization import require_owned_league_member
 from endpoints.league.leagueModel import LeagueModel
+from .service import TransactionService
+from .contracts import TradeRejected, TransactionNotFound, TransactionAccessDenied
 
 
 class TransactionModel:
@@ -24,6 +26,7 @@ class TransactionModel:
 
     def __init__(self, db: Engine):
         self.db = db
+        self._transaction_service = TransactionService(db)
 
     # ---------- League / settings helpers ----------
 
@@ -127,20 +130,10 @@ class TransactionModel:
             raise ValueError("One or more members do not belong to this league")
 
     def _assert_trade_deadline(self, conn, league_id: int) -> None:
-        row = conn.execute(
-            text("""
-                SELECT ("tradeDeadline" IS NOT NULL AND now() > "tradeDeadline") AS "pastDeadline"
-                FROM "League"
-                WHERE id = :league_id
-            """),
-            {"league_id": league_id},
-        ).fetchone()
-
-        if not row:
-            raise ValueError(f"League {league_id} not found")
-
-        if bool(row._mapping["pastDeadline"]):
-            raise ValueError("Trade deadline has passed")
+        try:
+            self._transaction_service.assert_trade_deadline_in_transaction(conn, league_id)
+        except (TradeRejected, TransactionNotFound) as exc:
+            raise ValueError(str(exc)) from exc
 
     def _assert_free_agent_deadline(self, conn, league_id: int) -> None:
         row = conn.execute(
@@ -380,93 +373,13 @@ class TransactionModel:
         from_team_ids: List[int],
         to_team_ids: List[int],
     ) -> None:
-        # ---- ownership ----
-        ownership_rows = conn.execute(
-            text("""
-                SELECT "sportTeamId","memberId"
-                FROM "LeagueTeamSlot"
-                WHERE "leagueId" = :league_id
-                AND "sportTeamId" = ANY(:team_ids)
-                AND "acquiredWeek" <= :week_number
-                AND ("droppedWeek" IS NULL OR "droppedWeek" > :week_number)
-            """),
-            {
-                "league_id": league_id,
-                "week_number": week_number,
-                "team_ids": from_team_ids + to_team_ids,
-            },
-        ).fetchall()
-
-        ownership = {r._mapping["sportTeamId"]: r._mapping["memberId"] for r in ownership_rows}
-
-        for tid in from_team_ids:
-            if ownership.get(tid) != from_member_id:
-                raise ValueError(f"Member {from_member_id} does not own team {tid}")
-
-        for tid in to_team_ids:
-            if ownership.get(tid) != to_member_id:
-                raise ValueError(f"Member {to_member_id} does not own team {tid}")
-
-        # ---- conference limits ----
-        def conference_counts(member_id: int, exclude_ids: List[int]) -> Dict[int, int]:
-            rows = conn.execute(
-                text("""
-                    SELECT cm."sportConferenceId", COUNT(*) AS cnt
-                    FROM "LeagueTeamSlot" lts
-                    JOIN "ConferenceMembership" cm
-                    ON cm."sportTeamId" = lts."sportTeamId"
-                    WHERE lts."leagueId" = :league_id
-                    AND lts."memberId" = :member_id
-                    AND lts."acquiredWeek" <= :week_number
-                    AND (lts."droppedWeek" IS NULL OR lts."droppedWeek" > :week_number)
-                    AND NOT (lts."sportTeamId" = ANY(:exclude_ids))
-                    GROUP BY cm."sportConferenceId"
-                """),
-                {
-                    "league_id": league_id,
-                    "week_number": week_number,
-                    "member_id": member_id,
-                    "exclude_ids": exclude_ids,
-                },
-            ).fetchall()
-
-
-            return {r._mapping["sportConferenceId"]: r._mapping["cnt"] for r in rows}
-
-        from_counts = conference_counts(from_member_id, from_team_ids)
-        to_counts = conference_counts(to_member_id, to_team_ids)
-
-        def incoming_confs(team_ids: List[int]) -> Dict[int, int]:
-            rows = conn.execute(
-                text("""
-                    SELECT "sportConferenceId", COUNT(*) AS cnt
-                    FROM "ConferenceMembership"
-                    WHERE "sportTeamId" = ANY(:team_ids)
-                    GROUP BY "sportConferenceId"
-                """),
-                {"team_ids": team_ids},
-            ).fetchall()
-            return {r._mapping["sportConferenceId"]: r._mapping["cnt"] for r in rows}
-
-        from_incoming = incoming_confs(to_team_ids)
-        to_incoming = incoming_confs(from_team_ids)
-
-        limit_rows = conn.execute(
-            text("""
-                SELECT id, "maxTeamsPerOwner"
-                FROM "SportConference"
-            """)
-        ).fetchall()
-
-        limits = {r._mapping["id"]: r._mapping["maxTeamsPerOwner"] for r in limit_rows}
-
-        for conf_id, add in from_incoming.items():
-            if from_counts.get(conf_id, 0) + add > limits.get(conf_id, 999):
-                raise ValueError("Conference limit exceeded for proposing member")
-
-        for conf_id, add in to_incoming.items():
-            if to_counts.get(conf_id, 0) + add > limits.get(conf_id, 999):
-                raise ValueError("Conference limit exceeded for receiving member")
+        try:
+            self._transaction_service.validate_trade_in_transaction(
+                conn, league_id, week_number, from_member_id, to_member_id,
+                from_team_ids, to_team_ids,
+            )
+        except TradeRejected as exc:
+            raise ValueError(str(exc)) from exc
 
     # ------------------------------------------------------------------
     # APPLY TRADE
@@ -482,78 +395,10 @@ class TransactionModel:
         from_team_ids: List[int],
         to_team_ids: List[int],
     ) -> None:
-        # 1) Close out current ownership rows for teams leaving each member
-        if from_team_ids:
-            conn.execute(
-                text("""
-                    UPDATE "LeagueTeamSlot"
-                    SET "droppedWeek" = :week_number
-                    WHERE "leagueId" = :league_id
-                    AND "memberId" = :member_id
-                    AND "sportTeamId" = ANY(:team_ids)
-                    AND "acquiredWeek" <= :week_number
-                    AND ("droppedWeek" IS NULL OR "droppedWeek" > :week_number)
-                """),
-                {
-                    "league_id": league_id,
-                    "member_id": from_member_id,
-                    "team_ids": from_team_ids,
-                    "week_number": week_number,
-                },
-            )
-
-        if to_team_ids:
-            conn.execute(
-                text("""
-                    UPDATE "LeagueTeamSlot"
-                    SET "droppedWeek" = :week_number
-                    WHERE "leagueId" = :league_id
-                    AND "memberId" = :member_id
-                    AND "sportTeamId" = ANY(:team_ids)
-                    AND "acquiredWeek" <= :week_number
-                    AND ("droppedWeek" IS NULL OR "droppedWeek" > :week_number)
-                """),
-                {
-                    "league_id": league_id,
-                    "member_id": to_member_id,
-                    "team_ids": to_team_ids,
-                    "week_number": week_number,
-                },
-            )
-
-        # 2) Insert new ownership rows starting this week (executemany)
-        insert_sql = text("""
-            INSERT INTO "LeagueTeamSlot"
-                ("leagueId","memberId","sportTeamId","acquiredWeek","acquiredVia")
-            VALUES
-                (:league_id, :member_id, :team_id, :week_number, :acquired_via)
-        """)
-
-        if from_team_ids:
-            rows = [
-                {
-                    "league_id": league_id,
-                    "member_id": to_member_id,
-                    "team_id": int(tid),
-                    "week_number": week_number,
-                    "acquired_via": self.TYPE_TRADE,
-                }
-                for tid in from_team_ids
-            ]
-            conn.execute(insert_sql, rows)
-
-        if to_team_ids:
-            rows = [
-                {
-                    "league_id": league_id,
-                    "member_id": from_member_id,
-                    "team_id": int(tid),
-                    "week_number": week_number,
-                    "acquired_via": self.TYPE_TRADE,
-                }
-                for tid in to_team_ids
-            ]
-            conn.execute(insert_sql, rows)
+        self._transaction_service.repository.transfer_ownership(
+            conn, league_id, week_number, from_member_id, to_member_id,
+            from_team_ids, to_team_ids,
+        )
 
     # ------------------------------------------------------------------
     # PUBLIC API
@@ -737,126 +582,11 @@ class TransactionModel:
         self,
         transaction_id: int,
     ):
-        with self.db.begin() as conn:
-
-            tx = conn.execute(
-                text("""
-                    SELECT *
-                    FROM "Transaction"
-                    WHERE id = :id
-                    FOR UPDATE
-                """),
-                {"id": transaction_id},
-            ).fetchone()
-
-            if not tx:
-                raise ValueError("Transaction not found")
-
-            txm = tx._mapping
-            # The dispatcher read is advisory; this locked row owns the transition.
-            if txm["type"] != self.TYPE_TRADE:
-                raise ValueError("Not a trade transaction")
-            if txm["status"] != self.STATUS_PENDING:
-                raise ValueError("Transaction is not pending apply")
-            self._assert_trade_deadline(conn, txm["leagueId"])
-
-            week_row = conn.execute(
-                text('SELECT "weekNumber" FROM "Week" WHERE id = :week_id AND "leagueId" = :league_id'),
-                {"week_id": txm["weekId"], "league_id": txm["leagueId"]},
-            ).fetchone()
-            if not week_row:
-                raise ValueError("Week not found for league")
-            week = week_row._mapping
-            self._validate_trade(
-                conn, txm["leagueId"], week["weekNumber"],
-                txm["memberFromId"], txm["memberToId"],
-                txm["fromTeamIds"], txm["toTeamIds"],
-            )
-
-            # 1) Close out current ownership rows for teams leaving each member
-            if txm['fromTeamIds']:
-                conn.execute(
-                    text("""
-                        UPDATE "LeagueTeamSlot"
-                        SET "droppedWeek" = :week_number
-                        WHERE "leagueId" = :league_id
-                        AND "memberId" = :member_id
-                        AND "sportTeamId" = ANY(:team_ids)
-                        AND "acquiredWeek" <= :week_number
-                        AND ("droppedWeek" IS NULL OR "droppedWeek" > :week_number)
-                    """),
-                    {
-                        "league_id": txm['leagueId'],
-                        "member_id": txm['memberFromId'],
-                        "team_ids": txm['fromTeamIds'],
-                        "week_number": week['weekNumber'],
-                    },
-                )
-
-            if txm['toTeamIds']:
-                conn.execute(
-                    text("""
-                        UPDATE "LeagueTeamSlot"
-                        SET "droppedWeek" = :week_number
-                        WHERE "leagueId" = :league_id
-                        AND "memberId" = :member_id
-                        AND "sportTeamId" = ANY(:team_ids)
-                        AND "acquiredWeek" <= :week_number
-                        AND ("droppedWeek" IS NULL OR "droppedWeek" > :week_number)
-                    """),
-                    {
-                        "league_id": txm['leagueId'],
-                        "member_id": txm['memberToId'],
-                        "team_ids": txm['toTeamIds'],
-                        "week_number": week['weekNumber'],
-                    },
-                )
-
-            # 2) Insert new ownership rows starting this week (executemany)
-            insert_sql = text("""
-                INSERT INTO "LeagueTeamSlot"
-                    ("leagueId","memberId","sportTeamId","acquiredWeek","acquiredVia")
-                VALUES
-                    (:league_id, :member_id, :team_id, :week_number, :acquired_via)
-            """)
-
-            if txm['fromTeamIds']:
-                rows = [
-                    {
-                        "league_id": txm['leagueId'],
-                        "member_id": txm['memberToId'],
-                        "team_id": int(tid),
-                        "week_number": week['weekNumber'],
-                        "acquired_via": self.TYPE_TRADE,
-                    }
-                    for tid in txm['fromTeamIds']
-                ]
-                conn.execute(insert_sql, rows)
-
-            if txm['toTeamIds']:
-                rows = [
-                    {
-                        "league_id": txm['leagueId'],
-                        "member_id": txm['memberFromId'],
-                        "team_id": int(tid),
-                        "week_number": week['weekNumber'],
-                        "acquired_via": self.TYPE_TRADE,
-                    }
-                    for tid in txm['toTeamIds']
-                ]
-                conn.execute(insert_sql, rows)
-
-            conn.execute(
-                text("""
-                    UPDATE "Transaction"
-                    SET status = :status
-                    WHERE id = :id
-                """),
-                {
-                    "status": self.STATUS_COMPLETED,
-                    "id": transaction_id,
-                },
-            )
+        # Compatibility boundary for the dispatcher, jobs and existing callers.
+        try:
+            return self._transaction_service.apply_trade_for_job(transaction_id)
+        except (TradeRejected, TransactionNotFound) as exc:
+            raise ValueError(str(exc)) from exc
         
     
     def cancel_trade_proposal(
@@ -1228,71 +958,14 @@ class TransactionModel:
         status: Optional[str] = None,
         *, reader_user_id: Optional[int] = None,
     ) -> List[Dict[str, Any]]:
-        scope, reader_params = LeagueModel._league_read_scope(league_id, reader_user_id)
-        if reader_user_id is not None:
-            with self.db.connect() as conn:
-                allowed = conn.execute(text(
-                    'SELECT id FROM "League" WHERE id = :leagueId ' + scope
-                ), {'leagueId': league_id, **reader_params}).fetchone()
-                if allowed is None:
-                    raise PermissionError('League not found')
-        sql = """
-            SELECT
-              t.id,
-              t."leagueId",
-              t."weekId",
-              w."weekNumber",
-              t.type,
-              t.status,
-              t."memberFromId",
-              t."memberToId",
-              u_from."displayName" AS "memberFromDisplayName",
-              u_to."displayName" AS "memberToDisplayName",
-              ft."fromTeams",
-              tt."toTeams",
-              t."createdAt"
-            FROM "Transaction" t
-            LEFT JOIN "Week" w ON w.id = t."weekId"
-            LEFT JOIN "LeagueMember" lm_from ON lm_from.id = t."memberFromId"
-            LEFT JOIN "User" u_from ON u_from.id = lm_from."userId"
-            LEFT JOIN "LeagueMember" lm_to ON lm_to.id = t."memberToId"
-            LEFT JOIN "User" u_to ON u_to.id = lm_to."userId"
-            LEFT JOIN LATERAL (
-              SELECT jsonb_agg(
-                jsonb_build_object(
-                  'id', st.id,
-                  'displayName', st."displayName"
-                )
-                ORDER BY st."displayName"
-              ) AS "fromTeams"
-              FROM jsonb_array_elements_text(t."fromTeamIds") AS f(team_id)
-              JOIN "SportTeam" st ON st.id = (f.team_id)::int
-            ) ft ON TRUE
-            LEFT JOIN LATERAL (
-              SELECT jsonb_agg(
-                jsonb_build_object(
-                  'id', st.id,
-                  'displayName', st."displayName"
-                )
-                ORDER BY st."displayName"
-              ) AS "toTeams"
-              FROM jsonb_array_elements_text(t."toTeamIds") AS tt(team_id)
-              JOIN "SportTeam" st ON st.id = (tt.team_id)::int
-            ) tt ON TRUE
-            WHERE t."leagueId" = :leagueId
-        """
-        sql += scope
-        params: Dict[str, Any] = {"leagueId": league_id, **reader_params}
-        if status:
-            sql += " AND t.status = :status"
-            params["status"] = status
-
-        sql += ' ORDER BY t."createdAt" DESC, t.id DESC'
-
-        with self.db.connect() as conn:
-            rows = conn.execute(text(sql), params).mappings().all()
-
-        return [dict(r) for r in rows]
+        try:
+            if reader_user_id is None:
+                return self._transaction_service.list_transactions_for_job(league_id, status)
+            return self._transaction_service.list_transactions_for_legacy_reader(
+                reader_user_id, league_id, status,
+            )
+        except TransactionAccessDenied as exc:
+            raise PermissionError(str(exc)) from exc
 
     def get_week_roster_violations(
         self,

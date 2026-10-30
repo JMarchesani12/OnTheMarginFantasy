@@ -25,7 +25,7 @@ This queue supersedes the original MOD-001-first recommendation. IDs remain stab
 
 ## Incremental organization conventions
 
-These conventions remain in force until MOD-038/041 decisions approve changes; the new cards authorize discussion, not an automatic folder or middleware migration.
+These conventions remain the baseline. Approved MOD-038/041 decisions and their recorded pilots refine touched domains; they do not authorize an automatic repository-wide folder or middleware migration.
 
 - Keep frontend `screens`, `components`, domain `api`, `context`, `types`, `utils` and colocated styles. Screens orchestrate route/user identity and rendering; shared components do not import screens. PascalCase components/hooks named useX; domain API modules own wire calls, not UI state. Keep existing casing outside touched files. Route-local hooks begin in `screens/League/hooks`; promote only with demonstrated reuse.
 - Shared BonusesEditor belongs in `components/League`; draft clock/connection hooks and DraftOrderEditor have focused inputs/outputs. One resource owner should coordinate refresh for each feature; identity keys include user/league/week/filter as appropriate. A cancellation guard is not a cache. Do not install a global state/cache library as a prerequisite.
@@ -662,11 +662,11 @@ These conventions remain in force until MOD-038/041 decisions approve changes; t
 
 ## Added architecture and refactoring work — 2026-10-29
 
-These cards reflect the user's explicit new scope. They cross-cut existing features without adding product capabilities. Discussion decisions remain unapproved; do not infer authorization for a repository-wide rewrite.
+These cards reflect the user's explicit new scope. They cross-cut existing features without adding product capabilities. Individual statuses record approved decisions and bounded implementations; do not infer authorization for a repository-wide rewrite.
 
 ### MOD-038 — Decide API layering and dependency ownership
 
-- **Discussion status — 2026-10-29:** Incremental hybrid selected by the user; MOD-041 architecture approved and its first auth slice implemented. [Detailed MOD-038 draft](../superpowers/specs/2026-10-29-mod-038-layering-design.md) now covers responsibilities, explicit user/job entry points, read/command call graphs, service transactions, connection-scoped repositories, compatibility facades, policy ownership and transaction-domain pilot acceptance. Independent builder check found no important gaps. Draft awaits user approval; no structural application changes or new application verification performed for MOD-038.
+- **Status — 2026-10-29: architecture approved and decision scope complete.** User approved the [incremental-hybrid design](../superpowers/specs/2026-10-29-mod-038-layering-design.md) and requested implementation. First transaction read/trusted-apply pilot is implemented: canonical UserActor, explicit user/job service calls, connection-scoped repository, model compatibility facades and shared full-read policy. Independent review reports no findings. Fresh backend 366/366 and disposable PostgreSQL direct/dispatcher lock/replay plus read/projection/revocation checks pass. [Plan/ledger](../superpowers/plans/2026-10-29-mod-038-pilot-implementation.md), [evidence](evidence/mod-038-pilot-postgres-2026-10-29.json). This is not a whole-backend migration; MOD-040 retains broader follow-ups.
 - **Priority / size / risk:** P1 / S for discussion/design; migration sized separately / Medium.
 - **Features:** Cross-cutting existing backend features.
 - **Problem / evidence:** Routes/endpoints/models exist, but model classes mix orchestration and SQL; job builders construct HTTP adapters. New shared auth/validation functions expose opportunities to clarify responsibilities.
@@ -689,6 +689,8 @@ These cards reflect the user's explicit new scope. They cross-cut existing featu
 
 ### MOD-040 — Pilot file-content and folder refactoring without changing behavior
 
+- **Continuation — 2026-10-29: roster domain content extraction complete.** User requested another domain; both roster reads now use actor-requiring services and connection-scoped repositories. Existing model/helper signatures, HTTP projections/statuses, locked-week selection, pending moves and query-time access predicates remain compatible. Fresh guarded backend 373/373 and [native PostgreSQL roster checks](evidence/mod-038-roster-postgres-2026-10-29.json) pass. Independent review has no blocking findings; minor endpoint construction cleanup deferred. No folder move, frontend extraction or hosted change. [Plan/ledger](../superpowers/plans/2026-10-29-mod-038-roster-implementation.md).
+- **Status — 2026-10-29: API content pilot complete; broader card partial.** Approved MOD-038 extraction covers transaction listing and trusted trade application within the existing domain directory. Actual routes, legacy model/helper signatures, dispatcher behavior, authorization, ownership intervals and replay/rollback contracts are preserved. No folder move performed or needed for this pilot. Full isolated backend 366/366 and real disposable PostgreSQL concurrency/read checks pass; independent review has no findings. Remaining domains, optional import-only folder moves and frontend pilot are separate work; app/listener startup remains MOD-034.
 - **Priority / size / risk:** P2 / S–M per domain pilot / Medium.
 - **Features:** Cross-cutting API and frontend organization.
 - **Problem / evidence:** User requested file-content and structure refactoring; large model/screen responsibilities and existing MOD-029–033 identify concrete candidates.
@@ -701,7 +703,7 @@ These cards reflect the user's explicit new scope. They cross-cut existing featu
 ### MOD-041 — Decide incoming, response and outbound interceptor architecture
 
 - **Implementation follow-up — 2026-10-29:** User requested implementation; the [first auth slice](../superpowers/plans/2026-10-29-mod-041-auth-implementation.md) is implemented and independently reviewed in the current checkout. MOD-028A's bounded recovery contract and basic request IDs/no-store response handling are covered. This does not complete MOD-019/024/034, provider policy work or MOD-038/040 structural migration. Rate limiting remains deferred; no deployment or infrastructure changes.
-- **Status — 2026-10-29: complete in architecture-decision scope.** User approved the [architecture decision](../superpowers/specs/2026-10-29-mod-041-boundaries-design.md): Flask application hooks with explicit hosting and separate outbound-client ownership (option 3), existing Render hosting and rate limiting deferred. No required new paid infrastructure. Implementation remains in the mapped cards; deployment facts and concrete bounds/timeouts remain evidence tasks. MOD-038 incremental hybrid is the selected direction, pending its detailed architecture decision. [Follow-through sequence](../superpowers/plans/2026-10-29-mod-041-follow-through.md).
+- **Status — 2026-10-29: complete in architecture-decision scope.** User approved the [architecture decision](../superpowers/specs/2026-10-29-mod-041-boundaries-design.md): Flask application hooks with explicit hosting and separate outbound-client ownership (option 3), existing Render hosting and rate limiting deferred. No required new paid infrastructure. Implementation remains in the mapped cards; deployment facts and concrete bounds/timeouts remain evidence tasks. MOD-038 incremental hybrid is now approved and its first transaction-domain pilot is implemented. [Follow-through sequence](../superpowers/plans/2026-10-29-mod-041-follow-through.md).
 - **Priority / size / risk:** P1 / S–M for decision / Medium.
 - **Features:** F-002, F-004, F-022–028, F-034; cross-cutting transport concerns.
 - **Problem / evidence:** authMiddleware.before_request, app CORS, endpoint principal/error handling, separate socket auth and frontend apiFetch form several boundaries without a documented common pipeline; rate/gateway policy remains unresolved.

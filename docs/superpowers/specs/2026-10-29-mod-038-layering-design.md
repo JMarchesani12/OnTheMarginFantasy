@@ -1,6 +1,6 @@
 # MOD-038: API layering and dependency ownership
 
-Date: 2026-10-29. Status: draft for user approval. The incremental hybrid is the user's selected approach; concrete interfaces, file placement and pilot below are architecture proposals. MOD-041 is approved; its authentication slice is implemented locally. No structural implementation is performed by this decision task.
+Date: 2026-10-29. Status: approved by the user's instruction to implement on 2026-10-29. The incremental hybrid, interfaces, file placement and pilot boundaries below are approved direction. MOD-041 is approved; its authentication slice is implemented locally. The transaction read/trusted-apply pilot is now implemented; see the [implementation plan and ledger](../plans/2026-10-29-mod-038-pilot-implementation.md) and [PostgreSQL evidence](../../modernization/evidence/mod-038-pilot-postgres-2026-10-29.json). Other domains remain incremental follow-up work.
 
 ## Intent, scope and constraints
 
@@ -156,7 +156,7 @@ Keep provider calls and nontransactional effects outside command transactions. E
 5. Run the existing isolated backend authorization, trade replay and rollback suites plus focused service/repository tests. Retain real PostgreSQL concurrent-apply evidence by rerunning the affected disposable tests before claiming unchanged lock/concurrency guarantees; SQLite/fakes alone cannot reestablish those guarantees after extraction.
 6. Pilot rejection conditions: a repository commits, an actor defaults to trusted, a job constructs endpoints, a service imports Flask/model facades, a resource predicate disappears, or an import-only move includes behavior changes.
 
-No application tests are rerun for this decision draft. Historical MOD-041 application results remain 359 backend / 62 frontend tests, build and targeted lint passing; those results do not verify a future extraction.
+At draft time, no application tests were rerun; the earlier MOD-041 results were historical evidence only. The completed pilot now has fresh 366/366 backend results and disposable PostgreSQL concurrency/read evidence, recorded in the implementation ledger. Frontend checks were not rerun for this backend-only extraction.
 
 Builder check: independent planning review found no important unanswered questions. No architecture approval or implementation completion is implied by that check.
 

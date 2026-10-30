@@ -3,6 +3,9 @@
 from flask import request, jsonify
 from sqlalchemy import text
 from .transactionModel import TransactionModel
+from .service import TransactionService
+from .contracts import TransactionAccessDenied
+from actors import UserActor
 from authenticatedPrincipal import PrincipalResolutionError, resolve_authenticated_principal
 from utils.requestValidation import integer_field, integer_list_field
 
@@ -11,6 +14,7 @@ class TransactionEndpoints:
     def __init__(self, db_engine):
         self.transactionModel = TransactionModel(db_engine)
         self.db_engine = db_engine
+        self.transaction_service = TransactionService(db_engine)
 
     # POST /api/league/<league_id>/week/<week_id>/trade/propose
     # {
@@ -232,15 +236,15 @@ class TransactionEndpoints:
         try:
             principal = resolve_authenticated_principal(self.db_engine)
             status = request.args.get("status") or TransactionModel.STATUS_PENDING
-            result = self.transactionModel.get_transactions_for_league(
+            result = self.transaction_service.list_transactions(
+                UserActor(principal.user_id, principal.subject),
                 league_id=int(league_id),
                 status=status,
-                reader_user_id=principal.user_id,
             )
             return jsonify(result), 200
         except PrincipalResolutionError as exc:
             return jsonify({'error': exc.code}), exc.status_code
-        except PermissionError:
+        except (PermissionError, TransactionAccessDenied):
             return jsonify({'message': 'League not found'}), 404
         except ValueError as e:
             return jsonify({"error": str(e)}), 400

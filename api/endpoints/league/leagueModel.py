@@ -9,6 +9,7 @@ from sqlalchemy.engine import Engine
 from zoneinfo import ZoneInfo
 
 from endpoints.schedule.scheduleModel import ScheduleModel
+from utils.authorization import league_read_scope
 from rules.leagueRules import settings_for_creation, settings_for_update, describe_rules
 
 ALLOWED_LEAGUE_MEMBER_FIELDS = {
@@ -24,18 +25,7 @@ class LeagueModel:
 
     @staticmethod
     def _league_read_scope(league_id: int, reader_user_id: Optional[int]):
-        """Optional SQL scope for verified HTTP readers; trusted model calls stay separate."""
-        if reader_user_id is None:
-            return '', {}
-        return '''AND EXISTS (
-            SELECT 1 FROM "League" read_league
-            WHERE read_league.id = :readLeagueId
-              AND (read_league.commissioner = :readerUserId OR EXISTS (
-                  SELECT 1 FROM "LeagueMember" read_member
-                  WHERE read_member."leagueId" = read_league.id
-                    AND read_member."userId" = :readerUserId
-              ))
-        )''', {'readLeagueId': league_id, 'readerUserId': reader_user_id}
+        return league_read_scope(league_id, reader_user_id)
 
     def get_league_read_access(self, league_id: int, user_id: int):
         """Fetch only discovery metadata and the caller's full-read entitlement."""

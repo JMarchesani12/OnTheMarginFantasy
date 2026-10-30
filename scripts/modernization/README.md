@@ -56,6 +56,32 @@ No automatic policy/grant changes or production execution are part of this tool.
 
 ## Versioned baseline and privilege proposal tests
 
+### MOD-038 transaction pilot
+
+With the same marked disposable loopback server ready, run
+`python3 scripts/modernization/verify_transaction_pilot.py`. It creates/removes a
+random synthetic database and reuses only the direct/dispatcher concurrent-trade
+checks, then verifies native PostgreSQL transaction-list JSON projections,
+member/commissioner access, denials and query-time revocation. It never loads
+`.env`, accepts no DSN and refuses an unmarked server. Results and source hashes
+are written to `docs/modernization/evidence/mod-038-pilot-postgres-2026-10-29.json`.
+No schema/access reassessment output is overwritten. Stop only the task-owned
+container when finished.
+
+### MOD-038 roster continuation
+
+With the same marked disposable loopback server ready, run
+`python3 scripts/modernization/verify_roster_pilot.py`. It creates/removes its own
+random database and checks native roster projections, locked-week/pending-move
+semantics, seasonal conferences, tier fallback, resource denials and query-time
+revocation/target-member removal. It accepts no DSN and never loads `.env`.
+Results and source hashes are written separately to
+`docs/modernization/evidence/mod-038-roster-postgres-2026-10-29.json` without
+overwriting the transaction pilot report. Stop only the task-owned container
+afterward.
+
+### Baseline suite commands
+
 After the same marked container is ready, run this separate suite sequentially
 with other assessment suites:
 

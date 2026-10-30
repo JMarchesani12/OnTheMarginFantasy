@@ -1,5 +1,44 @@
 # Regression verification baseline
 
+## MOD-038 roster continuation — 2026-10-29
+
+User requested another domain under the approved incremental hybrid. Roster was selected because its two reads combine policy and locked-week orchestration with SQL; the cohesive single-query sport model was deliberately left alone. Prior uncommitted transaction-pilot changes were preserved.
+
+Baseline guarded suite: 366/366, exit 0. Seven direct service tests first failed on the absent service, then passed after extraction. The first SQL run exposed a missing separator before the reused access predicate; the scoped query was corrected and all cases passed. New tests verify actor requirements before I/O, one connection, commissioner/member scope, locked-week pending filters, late revocation, target-member deletion, missing-week behavior, no-future-week domain failure/legacy ValueError and explicit trusted reads. Existing roster tests remain unchanged.
+
+| Verification | Fresh result |
+| --- | --- |
+| `python3 api/tests/run_isolated.py test_roster_service.py` | Exit 0, 7/7 |
+| `python3 api/tests/run_isolated.py` | Exit 0, 373/373 |
+| Independent review of roster code/callers and all four roster suites | No Critical/Important findings; 26/26 tests pass |
+| `python3 scripts/modernization/verify_roster_pilot.py` | Exit 0, native PostgreSQL roster checks pass |
+| Dependency inspection and guarded imports | No service/repository imports of Flask, model facades, dotenv or configured engine |
+| `git diff --check` | Exit 0 |
+
+[PostgreSQL evidence with source hashes](evidence/mod-038-roster-postgres-2026-10-29.json) verifies native JSONB pending moves, locked-week forwarding, exact member projection, availability ordering, season-filtered conference joins, tier fallback confined to the correct sport, commissioner/member access and outsider denials. Separate-connection revocation before each data query suppresses rows; commissioner access also cannot expose an orphaned target member. Missing next unlocked week raises the designated domain failure.
+
+The runner refuses unmarked servers and accepts no DSN/.env; only a random synthetic database on the dedicated loopback container was used. Database and task-owned container `otm-mod038-roster-20261029` were removed, other containers untouched. Source hashes for the preceding transaction pilot still match. No hosted database, deployment, frontend changes/checks or listener startup.
+
+Review minor deferred: the HTTP endpoint retains its existing compatibility-model attribute although both read methods now call the service directly. This costs one unused lightweight object construction per endpoint instance, with no extra engine/connection; removal is future composition cleanup. It is not an unresolved authorization/correctness issue.
+
+## MOD-038 transaction-domain pilot — 2026-10-29
+
+User approved the architecture and requested its bounded transaction read/trusted-apply implementation. Baseline guarded backend 359/359 passed. Seven direct service regressions initially failed on missing implementation, then passed. New cases verify required interactive actors, one read connection, commissioner/member projection, query-time revocation, explicit trusted reads, one command transaction, replay rejection, invalid types/deadlines and rollback after ownership closure. Existing HTTP authorization, model helpers, proposal/response, free-agency and operational/trade suites remain active and unchanged.
+
+| Verification | Fresh result |
+| --- | --- |
+| `python3 api/tests/run_isolated.py test_transaction_service.py` | Exit 0, 7/7 |
+| `python3 api/tests/run_isolated.py` | Exit 0, 366/366 |
+| `python3 scripts/modernization/verify_transaction_pilot.py` | Exit 0, marked disposable PostgreSQL direct/dispatcher concurrency and transaction reads pass |
+| Dependency inspection + guarded suite | New service/repository/actor paths import no Flask, model facade, dotenv or configured engine; imports remain network/listener-free |
+| `git diff --check` | Exit 0 |
+
+[PostgreSQL results and source hashes](evidence/mod-038-pilot-postgres-2026-10-29.json) record actual lock waits, one transfer, compatible ValueError replay rejection and half-open ownership intervals through both direct model facade and pending dispatcher. Native JSONB/LATERAL projections, commissioner-without-membership and member reads, denied/missing resources and query-time membership revocation also pass. Harness creates a random database only after verifying the synthetic loopback server marker and removes only its own database. Task container `otm-mod038-pilot-20261029` was stopped/removed; existing local containers were not changed.
+
+Before: HTTP adapter → model → private LeagueModel policy / engine SQL; trusted dispatcher → model-owned trade transaction. After: HTTP adapter → UserActor → TransactionService → TransactionRepository on one supplied connection; trusted dispatcher → legacy facade → service-owned transaction → repository SQL. Legacy helper methods delegate to connection-aware service validation, preserving existing proposal/response callers without service-to-model dependencies. LeagueModel's policy method delegates to the extracted pure SQL helper.
+
+Independent final review found no Critical, Important or Minor issues. No test required skipping or changed compatibility expectations. No frontend code changed or frontend tests/build rerun. No hosted/provider DB, production process, schema migration, listener or deployment was used. Other domain migrations, HTTP trade-response connection behavior, generic wire-error migration, broader ownership/conference consolidation and lifecycle work remain outside this pilot.
+
 ## MOD-041 authentication slice — 2026-10-29
 
 User approved the architecture and requested implementation in the current checkout. First bounded slice covers MOD-028A plus basic HTTP correlation/cache behavior. Full architecture migration is not implemented.

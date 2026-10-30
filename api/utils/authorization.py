@@ -5,6 +5,22 @@ semantics. These checks never derive identity from client data or job flags.
 """
 from contextlib import contextmanager
 from sqlalchemy import text
+from typing import Optional
+
+
+def league_read_scope(league_id: int, reader_user_id: Optional[int]):
+    """Optional SQL scope for verified HTTP readers; trusted model calls stay separate."""
+    if reader_user_id is None:
+        return '', {}
+    return '''AND EXISTS (
+        SELECT 1 FROM "League" read_league
+        WHERE read_league.id = :readLeagueId
+          AND (read_league.commissioner = :readerUserId OR EXISTS (
+              SELECT 1 FROM "LeagueMember" read_member
+              WHERE read_member."leagueId" = read_league.id
+                AND read_member."userId" = :readerUserId
+          ))
+    )''', {'readLeagueId': league_id, 'readerUserId': reader_user_id}
 
 
 def require_owned_league_member(conn, league_id: int, member_id: int, user_id: int):
@@ -33,8 +49,7 @@ def league_read_access(db, league_id: int, reader_user_id):
     if reader_user_id is None:
         yield
         return
-    from endpoints.league.leagueModel import LeagueModel
-    scope, params = LeagueModel._league_read_scope(league_id, reader_user_id)
+    scope, params = league_read_scope(league_id, reader_user_id)
 
     def require_access():
         with db.connect() as conn:

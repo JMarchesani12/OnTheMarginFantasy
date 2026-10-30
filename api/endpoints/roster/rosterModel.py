@@ -1,131 +1,41 @@
-# endpoints/roster/rosterModel.py
+"""Compatibility facade for existing roster model and trusted direct callers."""
 from typing import Any, Dict, List, Optional
-from endpoints.league.leagueModel import LeagueModel
-from sqlalchemy import text
 from sqlalchemy.engine import Engine
+from .contracts import RosterAccessDenied, RosterWeekUnavailable
+from .service import RosterService
+
 
 class RosterModel:
     def __init__(self, db: Engine):
         self.db = db
+        self._roster_service = RosterService(db)
 
     def _get_week_by_number(self, conn, league_id: int, week_number: int):
-        row = conn.execute(
-            text("""
-                SELECT id, "weekNumber", "isLocked"
-                FROM "Week"
-                WHERE "leagueId" = :league_id
-                  AND "weekNumber" = :week_number
-                LIMIT 1
-            """),
-            {"league_id": league_id, "week_number": week_number},
-        ).fetchone()
-
-        return dict(row._mapping) if row else None
+        return self._roster_service.repository.get_week_by_number(conn, league_id, week_number)
 
     def _get_next_unlocked_week_number(self, conn, league_id: int, week_number: int) -> int:
-        row = conn.execute(
-            text("""
-                SELECT "weekNumber"
-                FROM "Week"
-                WHERE "leagueId" = :league_id
-                  AND "weekNumber" > :week_number
-                  AND "isLocked" = FALSE
-                ORDER BY "weekNumber" ASC
-                LIMIT 1
-            """),
-            {"league_id": league_id, "week_number": week_number},
-        ).fetchone()
-
-        if not row:
-            raise ValueError(f"No unlocked future week found after week {week_number}")
-
-        return int(row[0])
+        try:
+            return self._roster_service.next_unlocked_week_in_transaction(conn, league_id, week_number)
+        except RosterWeekUnavailable as exc:
+            raise ValueError(str(exc)) from exc
 
     def get_member_teams_for_week(
-      self,
-      league_id: int,
-      member_id: int,
-      week_number: int,
-      *, reader_user_id: Optional[int] = None
-  ) -> List[Dict[str, Any]]:
-      # None is reserved for trusted direct model callers; HTTP always supplies
-      # the verified principal. Reuse the established full league-read policy.
-      scope, reader_params = LeagueModel._league_read_scope(league_id, reader_user_id)
-      if reader_user_id is not None:
-          with self.db.connect() as conn:
-              allowed = conn.execute(text('''
-                  SELECT id FROM "LeagueMember"
-                  WHERE id = :memberId AND "leagueId" = :leagueId
-              ''' + scope), dict(leagueId=league_id, memberId=member_id, **reader_params)).fetchone()
-              if allowed is None:
-                  raise PermissionError('League member not found')
-      with self.db.connect() as conn:
-          week_info = self._get_week_by_number(conn, league_id, week_number)
-          if week_info and week_info.get("isLocked"):
-              week_number = self._get_next_unlocked_week_number(
-                  conn,
-                  league_id=league_id,
-                  week_number=week_number,
-              )
-
-      sql = text("""
-          WITH league_info AS (
-            SELECT "seasonYear"
-            FROM "League"
-            WHERE id = :leagueId
-          )
-          SELECT
-            lts.id                AS "slotId",
-            lts."sportTeamId",
-            lts."acquiredWeek",
-            lts."droppedWeek",
-            lts."acquiredVia",
-            st."displayName",
-            COALESCE(st.tier, (
-                  SELECT COALESCE(MAX(tier_team.tier), 0) + 1
-                  FROM "SportTeam" tier_team
-                  WHERE tier_team."sportId" = st."sportId"
-                )) AS "tier",
-            st."externalId",
-            sc.id                 AS "sportConferenceId",
-            c.name                AS "conferenceName"
-          FROM "LeagueTeamSlot" lts
-          JOIN "SportTeam" st
-            ON st.id = lts."sportTeamId"
-          CROSS JOIN league_info li
-          LEFT JOIN "ConferenceMembership" cm
-            ON cm."sportTeamId" = st.id
-           AND cm."sportId" = st."sportId"
-           AND (cm."seasonYear" IS NULL OR cm."seasonYear" = li."seasonYear")
-          LEFT JOIN "SportConference" sc
-            ON sc.id = cm."sportConferenceId"
-           AND sc."sportId" = st."sportId"
-          LEFT JOIN "Conference" c
-            ON c.id = sc."conferenceId"
-          WHERE lts."leagueId" = :leagueId
-            AND lts."memberId" = :memberId
-            AND lts."acquiredWeek" <= :weekNumber
-            AND (lts."droppedWeek" IS NULL OR lts."droppedWeek" > :weekNumber)
-          """ + scope + ("""
-            AND EXISTS (SELECT 1 FROM "LeagueMember" target_member
-                        WHERE target_member.id = lts."memberId"
-                          AND target_member."leagueId" = lts."leagueId")
-          """ if reader_user_id is not None else "") + """
-          ORDER BY st."displayName"
-      """)
-
-      with self.db.connect() as conn:
-          result = conn.execute(
-              sql,
-              {
-                  **reader_params,
-                  "leagueId": league_id,
-                  "memberId": member_id,
-                  "weekNumber": week_number,
-              },
-          )
-          return [dict(r._mapping) for r in result]
-
+        self,
+        league_id: int,
+        member_id: int,
+        week_number: int,
+        *, reader_user_id: Optional[int] = None,
+    ) -> List[Dict[str, Any]]:
+        try:
+            if reader_user_id is None:
+                return self._roster_service.get_member_teams_for_job(league_id, member_id, week_number)
+            return self._roster_service.get_member_teams_for_legacy_reader(
+                reader_user_id, league_id, member_id, week_number,
+            )
+        except RosterAccessDenied as exc:
+            raise PermissionError(str(exc)) from exc
+        except RosterWeekUnavailable as exc:
+            raise ValueError(str(exc)) from exc
 
     def get_available_teams_for_week(
         self,
@@ -133,112 +43,13 @@ class RosterModel:
         week_number: int,
         *, reader_user_id: Optional[int] = None,
     ) -> List[Dict[str, Any]]:
-        """
-        Returns all SportTeams in the league's sport that are NOT owned by
-        any member in this league for the given week.
-
-        Includes:
-          - sportConferenceId
-          - conferenceId
-          - conferenceName
-        so the frontend can group by conference.
-        """
-
-        # 1) Get the league's sport/season so we only include teams from that season.
-        scope, reader_params = LeagueModel._league_read_scope(league_id, reader_user_id)
-        league_sql = text('SELECT sport, "seasonYear" FROM "League" WHERE id = :leagueId ' + scope)
-
-        with self.db.connect() as conn:
-            league_row = conn.execute(league_sql, {"leagueId": league_id, **reader_params}).fetchone()
-            if reader_user_id is not None and league_row is None:
-                raise PermissionError("League not found")
-            week_info = self._get_week_by_number(conn, league_id, week_number)
-            if week_info and week_info.get("isLocked"):
-                week_number = self._get_next_unlocked_week_number(
-                    conn,
-                    league_id=league_id,
-                    week_number=week_number,
-                )
-                week_info = self._get_week_by_number(conn, league_id, week_number)
-
-        if not league_row:
-            return []
-
-        sport_id = league_row._mapping["sport"]
-        season_year = league_row._mapping["seasonYear"]
-        week_id = int(week_info["id"]) if week_info else None
-
-        # 2) Query available teams with conference info
-        sql = text("""
-            WITH pending_adds AS (
-              SELECT DISTINCT (jsonb_array_elements_text(t."toTeamIds"))::int AS team_id
-              FROM "Transaction" t
-              WHERE t."leagueId" = :leagueId
-                AND t."weekId" = :weekId
-                AND t.status = 'PENDING_APPLY'
-                AND t.type = 'FREE_AGENT'
-                AND t."toTeamIds" IS NOT NULL
-            ),
-            pending_drops AS (
-              SELECT DISTINCT (jsonb_array_elements_text(t."fromTeamIds"))::int AS team_id
-              FROM "Transaction" t
-              WHERE t."leagueId" = :leagueId
-                AND t."weekId" = :weekId
-                AND t.status = 'PENDING_APPLY'
-                AND t.type = 'FREE_AGENT'
-                AND t."fromTeamIds" IS NOT NULL
+        try:
+            if reader_user_id is None:
+                return self._roster_service.get_available_teams_for_job(league_id, week_number)
+            return self._roster_service.get_available_teams_for_legacy_reader(
+                reader_user_id, league_id, week_number,
             )
-            SELECT
-              st.id,
-              st."displayName",
-              COALESCE(st.tier, (
-                  SELECT COALESCE(MAX(tier_team.tier), 0) + 1
-                  FROM "SportTeam" tier_team
-                  WHERE tier_team."sportId" = st."sportId"
-                )) AS "tier",
-              st."externalId",
-              st."schoolId",
-              st."sportId",
-              sc.id AS "sportConferenceId",
-              sc."conferenceId",
-              conf.name AS "conferenceName"
-            FROM "SportTeam" st
-            LEFT JOIN "ConferenceMembership" cm
-              ON cm."sportTeamId" = st.id
-             AND cm."sportId" = st."sportId"
-             AND (cm."seasonYear" IS NULL OR cm."seasonYear" = :seasonYear)
-            LEFT JOIN "SportConference" sc
-              ON sc.id = cm."sportConferenceId"
-             AND sc."sportId" = st."sportId"
-            LEFT JOIN "Conference" conf
-              ON conf.id = sc."conferenceId"
-            WHERE st."sportId" = :sportId
-              AND st.id NOT IN (SELECT team_id FROM pending_adds)
-              AND (
-                NOT EXISTS (
-                  SELECT 1
-                  FROM "LeagueTeamSlot" lts
-                  WHERE lts."leagueId" = :leagueId
-                    AND lts."sportTeamId" = st.id
-                    AND lts."acquiredWeek" <= :weekNumber
-                    AND (lts."droppedWeek" IS NULL OR lts."droppedWeek" > :weekNumber)
-                )
-                OR st.id IN (SELECT team_id FROM pending_drops)
-              )
-            """ + scope + """
-            ORDER BY conf.name, st."displayName"
-        """)
-
-        with self.db.connect() as conn:
-            result = conn.execute(
-                sql,
-                {
-                    **reader_params,
-                    "leagueId": league_id,
-                    "sportId": sport_id,
-                    "seasonYear": season_year,
-                    "weekId": week_id,
-                    "weekNumber": week_number,
-                },
-            )
-            return [dict(r._mapping) for r in result]
+        except RosterAccessDenied as exc:
+            raise PermissionError(str(exc)) from exc
+        except RosterWeekUnavailable as exc:
+            raise ValueError(str(exc)) from exc
