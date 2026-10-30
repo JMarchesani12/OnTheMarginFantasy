@@ -152,3 +152,14 @@ def validate_timezone_name(tz_name):
         ZoneInfo(tz_name)
     except Exception as exc:
         raise ValueError(f"Invalid timezone: {tz_name}") from exc
+
+
+def ensure_timezone_in_settings(settings):
+    tz_name = get_timezone_name_from_settings(settings)
+    if tz_name:
+        validate_timezone_name(tz_name)
+        return settings
+
+    updated = dict(settings or {})
+    updated["timezone"] = "UTC"
+    return updated

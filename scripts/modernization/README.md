@@ -223,6 +223,21 @@ superseding previous league/member/admission hashes while retaining historical
 reports. No configured DSN or `.env` is accepted. It removes its database; stop
 only the task-owned container afterward. No lost-update or merge guarantee added.
 
+### MOD-038 league creation
+
+With the marked disposable server ready, run
+`python3 scripts/modernization/verify_league_creation.py` sequentially with other
+assessment suites. It reruns settings/deletion/member/admission checks before
+resetting only its owned random schema for native creation CTE/JSON/projection,
+league/member FK/post-write/deferred-commit rollback, missing projection and
+post-commit initializer visibility/failure from a separate connection. The supplied
+initializer creates a synthetic Week; ScheduleModel algorithms are unchanged,
+not reimplemented by this fixture. Results/source hashes go to
+`docs/modernization/evidence/mod-038-league-creation-postgres-2026-10-30.json`,
+superseding prior league/member/admission hashes while retaining historical reports.
+No configured DSN or `.env` is accepted. It removes its database; stop only the
+task-owned container afterward. Initializer failure still preserves saved creation.
+
 ### Baseline suite
 
 After the same marked container is ready, run this separate suite sequentially

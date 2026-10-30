@@ -1,7 +1,7 @@
 """League administration authority and transaction ownership, independent of HTTP."""
 import json
 from actors import UserActor
-from rules.leagueRules import settings_for_update, get_timezone_name_from_settings, validate_timezone_name
+from rules.leagueRules import settings_for_update, get_timezone_name_from_settings, validate_timezone_name, settings_for_creation, ensure_timezone_in_settings
 from .league_admin_repository import LeagueAdminRepository
 
 
@@ -74,3 +74,31 @@ class LeagueAdminService:
                 raise PermissionError('Only the commissioner can perform this action')
             raise RuntimeError('Failed to update League')
         return updated
+
+    def create(self, actor, league, initialize_weeks):
+        if not isinstance(actor, UserActor):
+            raise TypeError('A verified UserActor is required')
+        league = dict(league)
+        league['commissioner'] = actor.user_id
+        return self.create_for_job(league, initialize_weeks)
+
+    def create_for_job(self, league, initialize_weeks):
+        """Trusted supplied commissioner; initialization retains post-commit scope."""
+        league = dict(league)
+        team_name = league.get('teamName')
+        if not isinstance(team_name, str) or not team_name.strip():
+            raise ValueError('Team name is required.')
+        team_name = team_name.strip()
+        settings = settings_for_creation(league['sport'], league.get('settings'))
+        league['settings'] = json.dumps(ensure_timezone_in_settings(settings))
+        if not callable(initialize_weeks):
+            raise TypeError('A week initialization capability is required')
+        with self.engine.begin() as conn:
+            created = self.repository.insert_league(conn, league)
+            if not created:
+                raise RuntimeError('Failed to create League')
+            created['creatorMemberId'] = self.repository.insert_creator_member(
+                conn, created['id'], created['commissioner'], team_name,
+            )
+        initialize_weeks(created['id'])
+        return created

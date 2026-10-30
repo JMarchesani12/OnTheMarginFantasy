@@ -97,7 +97,10 @@ class LeagueEndpoints:
                 "seasonYear": data["seasonYear"],
                 "isDiscoverable": data["isDiscoverable"]
             }
-            created = self.leagueModel.create_league(league=league_data)
+            created = self.league_admin_service.create(
+                UserActor(principal.user_id, principal.subject), league_data,
+                self.leagueModel.scheduleModel.ensure_weeks_for_league,
+            )
             return jsonify(created), 201
         except PrincipalResolutionError as exc:
             return jsonify({"error": exc.code}), exc.status_code

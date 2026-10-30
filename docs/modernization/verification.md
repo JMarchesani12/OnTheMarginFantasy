@@ -1,5 +1,22 @@
 # Regression verification baseline
 
+## MOD-038 league creation — 2026-10-30
+
+Creation now calls LeagueAdminService with UserActor. Service binds commissioner to actor, copies input, trims required team name, pins rules version and validates/defaults timezone. Repository contains unchanged league INSERT CTE and member INSERT/fetchone/_mapping, preserving native unquoted sportinfo projection and creatorMemberId. HTTP retains commissioner assertion parsing/order and supplies existing ScheduleModel.ensure_weeks_for_league as a public capability; service imports no compatibility model. Trusted model delegate retains supplied commissioner and defers schedule attribute access until the original post-commit execution point. Pure timezone ensure is shared with a legacy helper delegate.
+
+| Verification | Fresh result |
+| --- | --- |
+| Guarded baseline | Exit 0, 449/449 |
+| New direct-service tests | Initial RED five missing-operation assertions and one existing legacy case passed; GREEN 6/6 |
+| `python3 api/tests/run_isolated.py` | Exit 0, 455/455 including final fresh rerun; existing creation/auth/rules/schedule tests unchanged |
+| `python3 scripts/modernization/verify_league_creation.py` | Exit 0, native PostgreSQL PASS; prior settings/deletion/member/admission suites rerun |
+| Independent final review | No Critical/Important/Minor findings; reviewer separately ran focused guarded tests, 6/6 |
+| AST/dependency/diff checks | All non-creation model methods unchanged except timezone-ensure delegate; admin service/repository transport/model/configured-engine independent; diff check passes |
+
+[Native results/source hashes](evidence/mod-038-league-creation-postgres-2026-10-30.json) verify CTE/JSON/timestamps/sportinfo/member defaults, actor identity, trimmed name and explicit/default timezone. Real commissioner/member FK errors, missing Sport projection, failures after executed league/member inserts and deferred commit failure all preserve prior state and never invoke initializer. A supplied initializer uses a separate connection to observe committed league/member rows and create a synthetic Week. Initializer failure propagates and preserves committed creation (and any initializer writes), matching the original boundary. Trusted legacy creator and all preceding native suites pass. Combined report supersedes prior league/member/admission source hashes; historical reports retained.
+
+Scope: scheduling capability boundary is verified; ScheduleModel week-generation algorithms are unchanged and not reimplemented by the native fixture. No new atomic scheduling/recovery/idempotency guarantee. Harness accepts no configured DSN/.env and used only marked loopback PostgreSQL and one owned random database. Database and task-owned container `otm-mod038-league-creation-20261030` removed. Reads/lifecycle remain separate. Checkout uncommitted; no schema, hosted DB, frontend, dependency, listener or deployment changes.
+
 ## MOD-038 league settings/metadata updates — 2026-10-30
 
 HTTP update now calls the actor-requiring LeagueAdminService. It preserves initial authority before validation, separate read/write transaction scopes, settings replacement/version pinning, timezone precedence/aliases, allowed fields, unknown-key ignore/empty rejection and commissioner-scoped write. Repository contains original read and update CTE/projection; shared timezone bodies moved unchanged to leagueRules, with model compatibility helper delegates. Trusted and private optional-commissioner methods preserve context-free behavior and original error types.

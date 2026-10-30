@@ -1,5 +1,4 @@
 import datetime as dt
-import json
 import logging
 import os
 from typing import Any, Dict, List, Optional
@@ -14,7 +13,7 @@ from .member_service import MemberService
 from .league_admin_service import LeagueAdminService
 from .member_repository import ALLOWED_LEAGUE_MEMBER_FIELDS
 from .contracts import AdmissionDenied, AdmissionRejected
-from rules.leagueRules import settings_for_creation, describe_rules, get_timezone_name_from_settings, validate_timezone_name
+from rules.leagueRules import describe_rules, get_timezone_name_from_settings, validate_timezone_name, ensure_timezone_in_settings
 
 
 
@@ -152,14 +151,7 @@ class LeagueModel:
         validate_timezone_name(tz_name)
 
     def _ensure_timezone_in_settings(self, settings: Dict[str, Any]) -> Dict[str, Any]:
-        tz_name = self._get_timezone_name_from_settings(settings)
-        if tz_name:
-            self._validate_timezone_name(tz_name)
-            return settings
-
-        updated = dict(settings or {})
-        updated["timezone"] = "UTC"
-        return updated
+        return ensure_timezone_in_settings(settings)
 
     def get_league(self, leagueId, reader_user_id: Optional[int] = None):
         scope, reader_params = self._league_read_scope(leagueId, reader_user_id)
@@ -216,63 +208,9 @@ class LeagueModel:
 
     def create_league(self, league: Dict[str, Any]) -> Dict[str, Any]:
         # Make a copy so we don't mutate the original dict
-        league = dict(league)
-
-        team_name = league.get("teamName")
-        if not isinstance(team_name, str) or not team_name.strip():
-            raise ValueError("Team name is required.")
-        team_name = team_name.strip()
-
-        settings = settings_for_creation(league['sport'], league.get('settings'))
-        league['settings'] = json.dumps(self._ensure_timezone_in_settings(settings))
-
-        sql = text("""
-            WITH created AS (
-            INSERT INTO "League"
-                ("name", sport, "numPlayers", status, settings, "updatedAt", "draftDate", "commissioner", "seasonYear", "isDiscoverable")
-            VALUES
-                (:name, :sport, :numPlayers, :status, cast(:settings as jsonb), now(), :draftDate, :commissioner, :seasonYear, :isDiscoverable)
-            RETURNING
-                id, "createdAt", name, sport, "numPlayers", status, settings, "updatedAt", "draftDate", commissioner, "seasonYear", "isDiscoverable"
-            )
-            SELECT
-            c.*,
-            to_jsonb(s.*) AS sportInfo
-            FROM created c
-            JOIN "Sport" s ON s.id = c.sport;
-        """)
-
-        with self.db.begin() as conn:
-            created_row = conn.execute(sql, league).mappings().first()
-
-            if not created_row:
-                raise RuntimeError("Failed to create League")
-
-            created = dict(created_row)
-
-            # Create LeagueMember for commissioner
-            lm_sql = text("""
-                INSERT INTO "LeagueMember"
-                    ("leagueId", "userId", "teamName", "seasonPoints", "draftOrder")
-                VALUES
-                    (:leagueId, :userId, :teamName, 0, 1)
-                RETURNING id
-            """)
-
-            lm_row = conn.execute(
-                lm_sql,
-                {
-                    "leagueId": created["id"],
-                    "userId": created["commissioner"],
-                    "teamName": team_name,
-                },
-            ).fetchone()
-
-            created["creatorMemberId"] = lm_row._mapping["id"]
-
-        self.scheduleModel.ensure_weeks_for_league(created['id'])
-
-        return created
+        return LeagueAdminService(self.db).create_for_job(
+            league, lambda league_id: self.scheduleModel.ensure_weeks_for_league(league_id),
+        )
     
     def update_league(self, league_id: int, patch: Dict[str, Any]) -> Dict[str, Any]:
         """Trusted model entry point; interactive HTTP must use the checked variant."""

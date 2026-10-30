@@ -60,3 +60,33 @@ class LeagueAdminRepository:
         """)
         row = conn.execute(sql, update_data).mappings().first()
         return dict(row) if row else None
+
+    def insert_league(self, conn, league):
+        row = conn.execute(text("""
+            WITH created AS (
+            INSERT INTO "League"
+                ("name", sport, "numPlayers", status, settings, "updatedAt", "draftDate", "commissioner", "seasonYear", "isDiscoverable")
+            VALUES
+                (:name, :sport, :numPlayers, :status, cast(:settings as jsonb), now(), :draftDate, :commissioner, :seasonYear, :isDiscoverable)
+            RETURNING
+                id, "createdAt", name, sport, "numPlayers", status, settings, "updatedAt", "draftDate", commissioner, "seasonYear", "isDiscoverable"
+            )
+            SELECT
+            c.*,
+            to_jsonb(s.*) AS sportInfo
+            FROM created c
+            JOIN "Sport" s ON s.id = c.sport;
+        """), league).mappings().first()
+        return dict(row) if row else None
+
+    def insert_creator_member(self, conn, league_id, user_id, team_name):
+        row = conn.execute(text("""
+                INSERT INTO "LeagueMember"
+                    ("leagueId", "userId", "teamName", "seasonPoints", "draftOrder")
+                VALUES
+                    (:leagueId, :userId, :teamName, 0, 1)
+                RETURNING id
+            """), {
+            'leagueId': league_id, 'userId': user_id, 'teamName': team_name,
+        }).fetchone()
+        return row._mapping['id']
