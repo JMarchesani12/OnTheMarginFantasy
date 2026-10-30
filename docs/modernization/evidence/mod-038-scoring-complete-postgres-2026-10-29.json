@@ -1,0 +1,36 @@
+{
+  "result": "PASS",
+  "scope": "Synthetic marked loopback PostgreSQL; schedule read port supplied facts, no provider/network calls",
+  "weekly_points_rerun": {
+    "expanding_week_bind_normalization_and_order": "PASS",
+    "native_projection_dates_and_numeric": "PASS",
+    "league_isolation_and_member_commissioner_policy": "PASS",
+    "empty_list_access_policy": "PASS",
+    "separate_connection_revocation_scores_and_empty_lists": "PASS",
+    "legacy_trusted_read": "PASS"
+  },
+  "remaining_scoring": {
+    "atomic_replacement_statement_and_commit_rollback": "PASS",
+    "scoped_repeat_convergence_week_zero": "PASS",
+    "weekly_tiebreaks_and_waterfall": "PASS",
+    "all_season_tiebreak_query_families": "PASS",
+    "all_bonus_families_and_primary_phase_filter": "PASS",
+    "actor_standings_and_revocation": "PASS",
+    "empty_phase_facts": "PASS",
+    "split_and_future_final_period_guards": "PASS"
+  },
+  "sha256": {
+    "api/endpoints/scoring/service.py": "81ff1b3fa3325a4a6dfb84c266c37d1a2b6af3181f241415dedc0d6997a38734",
+    "api/endpoints/scoring/repository.py": "1ee04125db47ebb09f5924d192dae73521f1990c41c54fcc0798c80b79ea0306",
+    "api/endpoints/scoring/rules.py": "0887d100552042048e0b783e3b79bb1c9b1acae095a36b1176b3eeb1035da348",
+    "api/endpoints/scoring/contracts.py": "79c0b8d8bf5b2bcd8f11ae5aa5804aa3d45f515ea18cab6eecb43fe954255b6f",
+    "api/endpoints/scoring/scoringModel.py": "f597f111d7bc4d92349d6558d8cde5cf33d495868fc54a70c7dea69c9247c0f8",
+    "api/endpoints/scoring/scoringEndpoints.py": "a92060d108cb4e35c81a07e641db6f0671e0b6539df747a8f467ace1bcfa315e",
+    "api/cronJobs/cronComputeWeeklyScores.py": "8e3df33f8b76c6ec8ef1fa492da7dd3fe062198e9aaff680c7d0f5a40e2222a6",
+    "api/cronJobs/cronComputeFinalScoreboard.py": "3db2485b5f40a43971cbecf56484d39efeb2387d2ab87b40782468671452cf24",
+    "api/actors.py": "6b0ea454e1227c2e9fe94cb3ca76db15a799ec3b5481a063b0fd2705318b789f",
+    "api/utils/authorization.py": "76bd2e7086a2ef1086987feb1e461e53944ba6a290970aee74715d03b64bbecb",
+    "scripts/modernization/verify_scoring_complete.py": "1f34c779502cc6a1fde777797916c0490429f1707c79dd0c4899ff5b3c6d9771",
+    "scripts/modernization/verify_scoring_read.py": "b38653557718d94b889964868703cf780a29d9fef19017fc0132b2d296a6f6cf"
+  }
+}

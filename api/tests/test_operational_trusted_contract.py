@@ -62,7 +62,7 @@ class TrustedOperationalTests(unittest.TestCase):
         tree=ast.parse(path.read_text(),filename=str(path))
         module=ast.Module(body=[node for node in tree.body if isinstance(node,ast.FunctionDef) and node.name=='main'],type_ignores=[])
         namespace=dict(engine=db,datetime=dt.datetime,timezone=dt.timezone,text=text,
-                       build_scoring=lambda engine:SimpleNamespace(scoringModel=base.model))
+                       build_scoring=lambda engine:base.model)
         exec(compile(module,str(path),'exec'),namespace)
         with redirect_stdout(io.StringIO()):
             namespace['main']()

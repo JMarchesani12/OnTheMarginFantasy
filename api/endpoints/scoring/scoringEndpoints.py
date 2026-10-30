@@ -2,8 +2,7 @@
 from flask import jsonify, request
 from authenticatedPrincipal import PrincipalResolutionError, resolve_authenticated_principal
 from utils.requestValidation import integer_list_field
-from .scoringModel import ScoringModel
-from .service import ScoringReadService
+from .service import ScoringReadService, ScoringService
 from .contracts import ScoringReadDenied
 from actors import UserActor
 
@@ -12,7 +11,7 @@ class ScoringEndpoints:
     def __init__(self, db_engine, schedule_model):
         self.db_engine = db_engine
         self.scoring_read_service = ScoringReadService(db_engine)
-        self.scoringModel = ScoringModel(db_engine, schedule_model)
+        self.scoring_service = ScoringService(db_engine, schedule_model)
 
     def score_week(self, league_id: int, week_number: int):
         # Approved internal-only operation. Middleware still authenticates HTTP.
@@ -27,7 +26,6 @@ class ScoringEndpoints:
     def _scoring_read_response(self, league_id: int, view: str):
         try:
             principal = resolve_authenticated_principal(self.db_engine)
-            reader = {'reader_user_id': principal.user_id}
             if view == 'points':
                 payload = request.get_json(silent=True)
                 if not isinstance(payload, dict):
@@ -39,7 +37,9 @@ class ScoringEndpoints:
                     UserActor(principal.user_id, principal.subject), league_id, weeks,
                 )
                 return jsonify({'weekNumbers': weeks, 'results': result}), 200
-            result = self.scoringModel.compute_end_of_year_season_standings(league_id, **reader)
+            result = self.scoring_service.get_season_standings(
+                UserActor(principal.user_id, principal.subject), league_id,
+            )
             return jsonify(result), 200
         except PrincipalResolutionError as exc:
             return jsonify({'error': exc.code}), exc.status_code

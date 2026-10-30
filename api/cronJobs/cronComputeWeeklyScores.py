@@ -7,14 +7,14 @@ from dotenv import load_dotenv
 from sqlalchemy import text
 
 from endpoints.schedule.scheduleModel import ScheduleModel
-from endpoints.scoring.scoringEndpoints import ScoringEndpoints
+from endpoints.scoring.service import ScoringService
 from endpoints.transaction.transactionModel import TransactionModel
 
 def build_scoring(engine):
     load_dotenv()
     espn_base_url = os.getenv("ESPN_BASE_URL")
     schedule_model = ScheduleModel(engine, espn_base_url)
-    scoring = ScoringEndpoints(engine, schedule_model)
+    scoring = ScoringService(engine, schedule_model)
     return scoring
 
 
@@ -80,8 +80,8 @@ def main():
 
         # If scoring throws, we do NOT want to mark complete or lock next week.
         try:
-            # Avoid Flask jsonify/app context; run scoring model directly.
-            scoring.scoringModel.compute_weekly_scores(
+            # Trusted service call; no HTTP adapter or Flask context.
+            scoring.compute_weekly_scores_for_job(
                 league_id=league_id,
                 week_number=week_number,
             )

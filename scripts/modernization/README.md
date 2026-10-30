@@ -114,7 +114,19 @@ before the final check. It writes
 overwriting earlier reports. It accepts no DSN and never loads `.env`. Stop only
 the task-owned container afterward.
 
-### Baseline suite execution
+### MOD-038 remaining scoring
+
+With the marked disposable server ready, run
+`python3 scripts/modernization/verify_scoring_complete.py`. It reruns weekly-read
+checks, then verifies score replacement and real statement/deferred-commit
+rollback, week zero/convergence, bonus/season tiebreak query families, actor
+revocation and final-period guards. Schedule read facts are injected; no provider
+requests are made. It creates/removes only its random database and writes
+`docs/modernization/evidence/mod-038-scoring-complete-postgres-2026-10-29.json`.
+Earlier scoring reports remain historical. No `.env` or arbitrary DSN is used.
+Stop only the task-owned container afterward.
+
+### Baseline suite run
 
 After the same marked container is ready, run this separate suite sequentially
 with other assessment suites:

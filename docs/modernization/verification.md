@@ -1,5 +1,26 @@
 # Regression verification baseline
 
+## MOD-038 remaining scoring domain — 2026-10-29
+
+Extracted all remaining scoring SQL into named supplied-connection repository methods; services own weekly/season orchestration and transaction scopes; bonus award loops are pure functions. ScoringModel inherits the domain service solely to retain existing helper/subclass dispatch. HTTP season reads require UserActor and retain pre/post full-read checks. Weekly/final scoreboard builders now return services and use explicit trusted job methods. Job completion/locking/finalization state SQL is unchanged; MOD-013/014 recovery acceptance and MOD-034 configured startup are not claimed complete.
+
+| Verification | Fresh result |
+| --- | --- |
+| Baseline guarded backend | Exit 0, 396/396 |
+| New core/rules/actor/native-row + builder suites | 10 tests pass after expected initial failures |
+| `python3 api/tests/run_isolated.py` | Exit 0, 406/406 |
+| `python3 scripts/modernization/verify_scoring_complete.py` | Exit 0, native full-scoring + previous weekly-read checks pass |
+| Independent final review | No Critical/Important/Minor findings; reviewer separately ran the 10 new tests |
+| Dependency/diff checks | Service/rules/model contain no SQL; repository acquires no connections/commits; no service→Flask/model/configured engine imports; diff check passes |
+
+Existing weekly atomicity/week-zero, basketball final-period, weekly tiebreak, HTTP authorization/disabled-command and operational tests remain active. Only the existing finalizer test's injected builder fixture changed to return the new service interface directly. New tests cover scoped repeat replacement, rollback on second insertion, pure bonus ties/zero exclusions, season actors/revocation, true SQLAlchemy rows and HTTP-free job builders.
+
+**Separate demonstrated correctness repair:** original depth/latest-week helpers used `row['max_round']`, `w['id']` and rank string indexing on SQLAlchemy Row, which raises TypeError with the installed library. Three new real-Row regressions reproduced failures after extraction, then passed using `_mapping`. SQL, scoring formulas, bonus/tie order and waterfall awards are otherwise preserved. Independent review compared normalized SQL against the original model and found no changed or missing query predicates; duplicate identical queries were consolidated.
+
+[Native PostgreSQL evidence/source hashes](evidence/mod-038-scoring-complete-postgres-2026-10-29.json) reruns weekly-points projection/normalization/revocation checks, then exercises real week/season/phase/ownership/game/score fixtures. It verifies delete+all-insert rollback on statement and deferred-commit failures; scoped repeat convergence/week zero; weekly head-to-head/waterfall; all five season tiebreak query families; all three bonus families and exclusion of non-primary postseason phases; empty phase facts; actor standings and separate-connection revocation; split/future final-period guards. Schedule reads are supplied synthetic facts, not live provider requests or new schedule-query verification.
+
+Current full-scoring report supersedes the earlier weekly-read report's source hashes; historical evidence remains unchanged. The runner refuses unmarked servers/DSNs and uses no `.env`. Random database and task-owned container `otm-mod038-scoring-full-20261029` were removed. Existing containers untouched. No new isolation/concurrency/recovery claim, schema migration, hosted DB, frontend checks, dependency, listener startup or deployment.
+
 ## MOD-038 scoring weekly-points read — 2026-10-29
 
 Extracted only `get_weekly_points_awarded_for_league` into an actor-requiring ScoringReadService and supplied-connection ScoringRepository. Model signature, trusted calls and PermissionError compatibility remain. HTTP original weekNumbers/results envelope is unchanged; integer conversion/deduplication/sorting/nonnegative filtering remain service behavior. Initial and final league-read checks cover empty/negative-only lists as well as scored results. Final denial occurs after closing the read connection, matching the previous guard's concealed-denial contract.
