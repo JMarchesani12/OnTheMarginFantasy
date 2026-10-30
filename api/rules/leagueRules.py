@@ -1,5 +1,6 @@
 """Versioned scoring definitions. Never edit a published version; add a new one."""
 import json
+from zoneinfo import ZoneInfo
 from copy import deepcopy
 from types import MappingProxyType
 
@@ -131,3 +132,23 @@ def describe_rules(sport_id, settings, teams):
             'summary': rule_summary(rules), 'sections': sections,
             'settings': {key: settings[key] for key in ('bonuses', 'draft', 'transactions', 'timezone', 'subdivision') if key in settings},
             'tiers': tiers, 'examples': examples}
+
+
+def get_timezone_name_from_settings(settings):
+    if not isinstance(settings, dict):
+        return None
+
+    schedule_cfg = settings.get("schedule") or {}
+    if isinstance(schedule_cfg, dict):
+        tz_name = schedule_cfg.get("timezone") or schedule_cfg.get("timeZone")
+        if tz_name:
+            return tz_name
+
+    return settings.get("timezone") or settings.get("timeZone")
+
+
+def validate_timezone_name(tz_name):
+    try:
+        ZoneInfo(tz_name)
+    except Exception as exc:
+        raise ValueError(f"Invalid timezone: {tz_name}") from exc

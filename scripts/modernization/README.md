@@ -194,6 +194,35 @@ superseding previous member/admission hashes while retaining historical reports.
 No configured DSN or `.env` is accepted. The harness removes its database; stop
 only the task-owned container afterward. No removal-policy redesign is implied.
 
+### MOD-038 commissioner league deletion
+
+With the marked disposable server ready, run
+`python3 scripts/modernization/verify_league_delete.py` sequentially with other
+assessment suites. It reruns all admission/member checks, then resets only its
+owned random schema for deletion authority/projection, synthetic direct/multilevel
+cascades, FK restriction, post-delete/deferred-commit rollback and suppressed-delete
+guard. Service/facade lock waits cover competing deletion and authority revocation.
+Results/source hashes go to
+`docs/modernization/evidence/mod-038-league-delete-postgres-2026-10-30.json`,
+superseding previous member/admission hashes while retaining historical reports.
+No configured DSN or `.env` is accepted. The harness removes its database; stop
+only the task-owned container afterward. No configured application data is deleted.
+
+### MOD-038 league settings and metadata updates
+
+With the marked disposable server ready, run
+`python3 scripts/modernization/verify_league_settings.py` sequentially with other
+assessment suites. It reruns league deletion/member/admission checks, then resets
+only its own random schema for native update CTE/JSON/projection/deadlines,
+statement/post-update/deferred-commit rollback, separate-connection late authority
+change and trusted/private/helper compatibility. Original lowercase PostgreSQL
+sportinfo alias and empty-Sport post-commit result guards are preserved explicitly.
+Results/source hashes go to
+`docs/modernization/evidence/mod-038-league-settings-postgres-2026-10-30.json`,
+superseding previous league/member/admission hashes while retaining historical
+reports. No configured DSN or `.env` is accepted. It removes its database; stop
+only the task-owned container afterward. No lost-update or merge guarantee added.
+
 ### Baseline suite
 
 After the same marked container is ready, run this separate suite sequentially

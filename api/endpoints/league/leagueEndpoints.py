@@ -4,6 +4,7 @@ from flask import request, jsonify
 from .leagueModel import LeagueModel
 from .admission_service import AdmissionService
 from .member_service import MemberService
+from .league_admin_service import LeagueAdminService
 from .contracts import AdmissionDenied, AdmissionRejected
 from actors import UserActor
 from authenticatedPrincipal import PrincipalResolutionError, resolve_authenticated_principal
@@ -14,6 +15,7 @@ class LeagueEndpoints:
         self.db_engine = db_engine
         self.admission_service = AdmissionService(db_engine)
         self.member_service = MemberService(db_engine)
+        self.league_admin_service = LeagueAdminService(db_engine)
 
     def get_league(self, league_id):
         return self._league_read_response(league_id, 'details')
@@ -110,8 +112,8 @@ class LeagueEndpoints:
             patch = request.get_json(silent=True)
             if not isinstance(patch, dict):
                 return jsonify({"message": "Expected a JSON object"}), 400
-            updated = self.leagueModel.update_league_as_commissioner(
-                league_id=league_id, user_id=principal.user_id, patch=patch,
+            updated = self.league_admin_service.update(
+                UserActor(principal.user_id, principal.subject), league_id=league_id, patch=patch,
             )
             return jsonify(updated), 200
         except PrincipalResolutionError as e:
@@ -402,8 +404,8 @@ class LeagueEndpoints:
             if requested_actor != principal.user_id:
                 return jsonify({"error": "actor_identity_mismatch"}), 403
 
-            result = self.leagueModel.delete_league(
-                league_id=league_id, acting_user_id=principal.user_id,
+            result = self.league_admin_service.delete(
+                UserActor(principal.user_id, principal.subject), league_id=league_id,
             )
             return jsonify(result), 200
         except PrincipalResolutionError as e:

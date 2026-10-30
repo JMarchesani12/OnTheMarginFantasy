@@ -1,5 +1,42 @@
 # Regression verification baseline
 
+## MOD-038 league settings/metadata updates — 2026-10-30
+
+HTTP update now calls the actor-requiring LeagueAdminService. It preserves initial authority before validation, separate read/write transaction scopes, settings replacement/version pinning, timezone precedence/aliases, allowed fields, unknown-key ignore/empty rejection and commissioner-scoped write. Repository contains original read and update CTE/projection; shared timezone bodies moved unchanged to leagueRules, with model compatibility helper delegates. Trusted and private optional-commissioner methods preserve context-free behavior and original error types.
+
+| Verification | Fresh result |
+| --- | --- |
+| Guarded baseline | Exit 0, 442/442 |
+| New direct-service tests | Initial RED six missing-operation assertions plus one passing legacy case; GREEN 7/7 |
+| Existing full-suite regression | First full run had two test_league_rules_api errors after read accessor changed; original fetchone/_mapping restored, existing tests unchanged and GREEN |
+| `python3 api/tests/run_isolated.py` | Exit 0, 449/449 including final fresh rerun |
+| `python3 scripts/modernization/verify_league_settings.py` | Exit 0, native PostgreSQL PASS; prior deletion/member/admission checks rerun |
+| Independent final review | No Critical/Important/Minor findings; reviewer separately ran focused guarded suite, 7/7 |
+| AST/dependency/diff checks | Non-target model methods unchanged; timezone bodies identical to original; admin service/repository transport/model/configured-engine independent; diff check passes |
+
+[Native results/source hashes](evidence/mod-038-league-settings-postgres-2026-10-30.json) verify actual UPDATE CTE, bound names, JSON replacement/version, native deadlines/nulls, sport projection and input immutability. Real integer statement failure, executed-update failure and deferred commit failure roll back checked and trusted writes. Separate connections change commissioner after the initial SELECT; both direct actor and legacy facade reject the later write without mutation. All prior league deletion/member/admission native checks pass again. This combined report supersedes their source hashes; historical reports retained.
+
+Compatibility limits preserved explicitly: original unquoted `AS sportInfo` returns `sportinfo` on PostgreSQL (SQLite adapter synthesizes `sportInfo`); native fixture expectation was corrected, production SQL unchanged. If the synthetic Sport join has no row, the existing update commits before the checked PermissionError/trusted RuntimeError result guard; native tests pin that preexisting behavior. No new lost-update protection, merge/retry or transaction consolidation is claimed.
+
+Harness used only a marked loopback server and owned random database, never configured DSN/.env. Database and task-owned container `otm-mod038-league-settings-20261030` removed. Creation/read/lifecycle extraction remain separate. Checkout uncommitted; no schema, hosted DB, frontend, dependency, listener or deployment changes.
+
+## MOD-038 commissioner league deletion — 2026-10-30
+
+Deletion now calls LeagueAdminService with UserActor from HTTP; its legacy method still requires commissioner authority. Service owns one transaction, league lock, integer-coerced commissioner comparison, missing-league/error guards and final result. Repository owns unchanged SELECT FOR UPDATE and commissioner-scoped DELETE RETURNING. Existing identity assertion order, model db-only construction, response and operational failures remain compatible. Database constraints continue to define cascades; no schema or manual cascading added.
+
+| Verification | Fresh result |
+| --- | --- |
+| Guarded baseline | Exit 0, 437/437 |
+| New direct-service tests | Initial RED: four missing-module errors and one existing compatibility case passed; GREEN 5/5 |
+| `python3 api/tests/run_isolated.py` | Exit 0, 442/442 including final fresh rerun; existing authorization suites unchanged |
+| `python3 scripts/modernization/verify_league_delete.py` | Exit 0, native PostgreSQL PASS; prior admission/member suites rerun |
+| Independent final review | No Critical/Important/Minor findings; reviewer separately ran focused guarded suite, 5/5 |
+| AST/dependency/diff checks | All other model methods unchanged; admin service/repository have no transport/model/configured-engine imports; diff check passes |
+
+[Native results/source hashes](evidence/mod-038-league-delete-postgres-2026-10-30.json) verify authority/missing/projection, synthetic direct and multilevel cascades (members/requests/weeks/scores), unrelated league preservation, actual FK restriction and post-delete/deferred-commit rollback. A synthetic suppressing trigger confirms missing DELETE RETURNING raises the existing RuntimeError and rolls back trigger side effects. Service/facade competing deletions observe a PostgreSQL lock wait and reject replay; a deletion waiting behind commissioner change observes new authority and rejects without deleting dependents. Legacy ID coercion and every preceding admission/member native check pass. Combined report supersedes their source hashes; historical reports retained.
+
+Only the marked loopback server and an owned random database were used; no configured DSN/.env. Database and task-owned container `otm-mod038-league-delete-20261030` removed. Settings/creation/read/lifecycle extraction remain separate. Checkout uncommitted; no schema, hosted DB, frontend, dependency, listener or deployment changes.
+
 ## MOD-038 member removal and draft-order shifting — 2026-10-30
 
 MemberService now owns actor validation, locked commissioner authority, URL-scoped target and commissioner protection, optional shifting and one transaction. MemberRepository owns original league→member locks and SQL. HTTP still parses identity assertion and strict boolean shift before invoking the actor service. The legacy context-free model method keeps integer coercion and shift truthiness. Exact errors and response projections/order remain unchanged; removal still does not recalculate draft-round settings or restrict league status.

@@ -6,15 +6,15 @@ from typing import Any, Dict, List, Optional
 
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
-from zoneinfo import ZoneInfo
 
 from endpoints.schedule.scheduleModel import ScheduleModel
 from utils.authorization import league_read_scope
 from .admission_service import AdmissionService
 from .member_service import MemberService
+from .league_admin_service import LeagueAdminService
 from .member_repository import ALLOWED_LEAGUE_MEMBER_FIELDS
 from .contracts import AdmissionDenied, AdmissionRejected
-from rules.leagueRules import settings_for_creation, settings_for_update, describe_rules
+from rules.leagueRules import settings_for_creation, describe_rules, get_timezone_name_from_settings, validate_timezone_name
 
 
 
@@ -146,22 +146,10 @@ class LeagueModel:
             )
 
     def _get_timezone_name_from_settings(self, settings: Dict[str, Any]) -> Optional[str]:
-        if not isinstance(settings, dict):
-            return None
-
-        schedule_cfg = settings.get("schedule") or {}
-        if isinstance(schedule_cfg, dict):
-            tz_name = schedule_cfg.get("timezone") or schedule_cfg.get("timeZone")
-            if tz_name:
-                return tz_name
-
-        return settings.get("timezone") or settings.get("timeZone")
+        return get_timezone_name_from_settings(settings)
 
     def _validate_timezone_name(self, tz_name: str) -> None:
-        try:
-            ZoneInfo(tz_name)
-        except Exception as exc:
-            raise ValueError(f"Invalid timezone: {tz_name}") from exc
+        validate_timezone_name(tz_name)
 
     def _ensure_timezone_in_settings(self, settings: Dict[str, Any]) -> Dict[str, Any]:
         tz_name = self._get_timezone_name_from_settings(settings)
@@ -299,113 +287,10 @@ class LeagueModel:
     def _update_league(
         self, league_id: int, patch: Dict[str, Any], commissioner_id: int | None = None,
     ) -> Dict[str, Any]:
-        """
-        Partially updates a League row.
-
-        - Only updates fields present in `patch`.
-        - JSON-encodes settings if dict/list.
-        - Always updates "updatedAt" = now().
-        """
-
-        # Fetch current settings and check authority before settings validation.
-        with self.db.begin() as conn:
-            league_row = conn.execute(
-                text("""
-                    SELECT id, sport, settings, commissioner
-                    FROM "League"
-                    WHERE id = :leagueId
-                """),
-                {"leagueId": league_id},
-            ).fetchone()
-
-        if not league_row:
-            raise ValueError(f"League {league_id} not found")
-
-        if commissioner_id is not None and league_row._mapping['commissioner'] != commissioner_id:
-            raise PermissionError("Only the commissioner can perform this action")
-
-        # 2) Allowlist fields you actually want to update
-        allowed_fields = {
-            "name",
-            "numPlayers",
-            "status",
-            "settings",
-            "draftDate",
-            "tradeDeadline",
-            "freeAgentDeadline"
-        }
-
-        patch = dict(patch)
-        if "settings" in patch:
-            if not isinstance(patch['settings'], dict):
-                raise ValueError('League settings must be an object')
-            current = dict(league_row._mapping)
-            patch['settings'] = settings_for_update(current['sport'], current.get('settings'), patch['settings'])
-
-        if "settings" in patch and isinstance(patch.get("settings"), dict):
-            tz_name = self._get_timezone_name_from_settings(patch["settings"])
-            if tz_name:
-                self._validate_timezone_name(tz_name)
-
-        update_data: Dict[str, Any] = {"leagueId": league_id}
-        set_clauses = []
-
-        for key, value in patch.items():
-            if key not in allowed_fields:
-                continue  # silently ignore unknown fields (or raise)
-
-            if key == "settings" and isinstance(value, (dict, list)):
-                value = json.dumps(value)
-
-            update_data[key] = value
-
-            if key == "settings":
-                set_clauses.append('settings = cast(:settings as jsonb)')
-            else:
-                # quote any mixed-case columns
-                if key in {"numPlayers", "draftDate", "tradeDeadline", "freeAgentDeadline"}:
-                    set_clauses.append(f'"{key}" = :{key}')
-                else:
-                    set_clauses.append(f'{key} = :{key}')
-
-        # Always update updatedAt
-        set_clauses.append('"updatedAt" = now()')
-
-        if len(set_clauses) == 1:
-            # Only updatedAt, nothing meaningful to update
-            # You can choose to return the current league instead.
-            raise ValueError("No valid fields to update")
-
-        ownership_clause = ''
-        if commissioner_id is not None:
-            update_data['actingUserId'] = commissioner_id
-            ownership_clause = 'AND commissioner = :actingUserId'
-
-        sql = text(f"""
-            WITH updated AS (
-            UPDATE "League"
-            SET {", ".join(set_clauses)}
-            WHERE id = :leagueId {ownership_clause}
-            RETURNING
-                id, "createdAt", name, sport, "numPlayers", status, settings, "updatedAt",
-                "draftDate", "freeAgentDeadline", "tradeDeadline", commissioner
-            )
-            SELECT
-            u.*,
-            to_jsonb(s.*) AS sportInfo
-            FROM updated u
-            JOIN "Sport" s ON s.id = u.sport;
-        """)
-
-        with self.db.begin() as conn:
-            updated_row = conn.execute(sql, update_data).mappings().first()
-
-        if not updated_row:
-            if commissioner_id is not None:
-                raise PermissionError("Only the commissioner can perform this action")
-            raise RuntimeError("Failed to update League")
-
-        return dict(updated_row)
+        service = LeagueAdminService(self.db)
+        if commissioner_id is None:
+            return service.update_for_job(league_id, patch)
+        return service.update_for_legacy_commissioner(league_id, commissioner_id, patch)
 
     
     # 1) All leagues a user is in
@@ -865,48 +750,7 @@ class LeagueModel:
         return [dict(r) for r in rows]
 
     def delete_league(self, league_id: int, acting_user_id: int) -> Dict[str, Any]:
-        """
-        Deletes a league and all dependent data (via ON DELETE CASCADE).
-
-        Only the commissioner is allowed to delete a league.
-        This operation is atomic.
-        """
-
-        with self.db.begin() as conn:
-            # Lock league row
-            league = conn.execute(
-                text("""
-                    SELECT id, name, commissioner
-                    FROM "League"
-                    WHERE id = :leagueId
-                    FOR UPDATE
-                """),
-                {"leagueId": league_id},
-            ).mappings().first()
-
-            if not league:
-                raise ValueError("League not found")
-
-            if int(league["commissioner"]) != int(acting_user_id):
-                raise PermissionError("Only the commissioner can delete this league")
-
-            # Delete league (cascades to members, join requests, weeks, etc.)
-            deleted = conn.execute(
-                text("""
-                    DELETE FROM "League"
-                    WHERE id = :leagueId AND commissioner = :actingUserId
-                    RETURNING id, name
-                """),
-                {"leagueId": league_id, "actingUserId": acting_user_id},
-            ).mappings().first()
-
-            if not deleted:
-                raise RuntimeError("Failed to delete league")
-
-        return {
-            "deletedLeagueId": deleted["id"],
-            "deletedLeagueName": deleted["name"],
-        }
+        return LeagueAdminService(self.db).delete_for_legacy_commissioner(league_id, acting_user_id)
     
     def update_owned_league_member(
         self, member_id: int, user_id: int, team_name: str,
