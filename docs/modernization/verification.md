@@ -1,5 +1,58 @@
 # Regression verification baseline
 
+## MOD-038 league discovery/access/previews/search — 2026-10-30
+
+LeagueReadService now owns actor/legacy reader selection, one transaction per access/preview/search query and public search strip/short-circuit/pagination bounds. Repository owns unchanged metadata, preview visibility/entitlement and pg_trgm search SQL. HTTP retains private concealment, full/preview choices and separate fresh metadata recheck; it constructs actor from principal and search remains anonymous. Access metadata remains internal entitlement facts, including a private outsider's fullAccess=false; HTTP controls visibility. Preview results remain names-only. Legacy model signatures/input behavior retained.
+
+| Verification | Fresh result |
+| --- | --- |
+| Guarded baseline | Exit 0, 465/465 |
+| New direct-service tests | Initial RED five missing-operation assertions plus one legacy case passed; GREEN 6/6 |
+| Adapter-unit wiring | Metadata mock target changed to service access; existing assertions retained |
+| `python3 api/tests/run_isolated.py` | Exit 0, 471/471 including final fresh rerun; end-to-end JWT/public search tests unchanged |
+| `python3 scripts/modernization/verify_league_discovery.py` | Exit 0, native PostgreSQL PASS; preceding league/member/admission suites rerun |
+| Independent final review | No Critical/Important/Minor findings; reviewer separately ran focused guarded suite, 6/6 |
+| AST/dependency/diff checks | Non-discovery model methods unchanged; read modules remain transport/model/configured-engine independent; diff check passes |
+
+[Native results/source hashes](evidence/mod-038-league-discovery-postgres-2026-10-30.json) verify exact metadata/private/member/commissioner entitlement and names-only projection, real pg_trgm ranking/tie order, discoverability/sport filters, paging, limit clamps/offset floor, quoted bound query values and short-query no I/O before invalid pagination conversion. Separate connections revoke discoverability/membership, including immediately before preview SELECT; metadata rechecks and preview predicates observe revocation, and hidden league disappears from search. Legacy model paths and all earlier league/member/admission native suites pass. Combined report supersedes previous hashes; historical reports retained.
+
+Only marked loopback PostgreSQL and one owned random database were used; pg_trgm extension created solely in synthetic DB, no configured DSN/.env. Database and task-owned container `otm-mod038-league-discovery-20261030` removed. Three planned league slices remain: details/my leagues, member lists/daily summaries and lifecycle synchronization. Checkout uncommitted; no application schema, hosted DB, frontend, dependency, listener or deployment changes.
+
+## MOD-038 league conference read — 2026-10-30
+
+LeagueReadService now owns actor/trusted selection, one begin scope, missing/scoped-out league and null-season validation, and result envelope. Repository owns original scoped league read and sport-local conference counts, including null-season plus requested-season memberships, zero fallback, owner limit and name order. Original fetchone/_mapping and fetchall accessors and legacy optional-reader/db-only calls remain compatible. HTTP retains discovery/full-access gates, with the full conference branch invoking actor service. Late scoped-out read remains ValueError→400, distinct from rules-read None→404.
+
+| Verification | Fresh result |
+| --- | --- |
+| Guarded baseline | Exit 0, 460/460 |
+| New direct-service tests | Initial RED five missing-operation assertions; GREEN 5/5 |
+| `python3 api/tests/run_isolated.py` | Exit 0, 465/465 including final fresh rerun; existing tests unchanged |
+| `python3 scripts/modernization/verify_league_conferences.py` | Exit 0, native PostgreSQL PASS; preceding league/member/admission suites rerun |
+| Independent final review | No Critical/Important/Minor findings; reviewer separately ran focused guarded suite, 5/5 |
+| AST/dependency/diff checks | All other model methods unchanged; read modules independent of transport/model/configured-engine imports; diff check passes |
+
+[Native results/source hashes](evidence/mod-038-league-conferences-postgres-2026-10-30.json) verify exact conference projection, null+matching-season counts, exclusion of other seasons/sports, zero fallback, name order and empty conferences. Denied/missing/null-season reads execute no aggregate query. Separate connections revoke membership immediately before scoped league SELECT; service and legacy facade raise the original ValueError and skip aggregate. Trusted/legacy reads and all preceding native suites pass. Combined report supersedes previous league/member/admission hashes; historical reports retained.
+
+Only marked loopback PostgreSQL and one owned random database were used; no configured DSN/.env. Database and task-owned container `otm-mod038-league-conferences-20261030` removed. Four planned league slices remain: discovery/access/previews/search, details/my leagues, member lists/daily summaries and lifecycle synchronization. No new post-SELECT final recheck/snapshot guarantee. Checkout uncommitted; no schema, hosted DB, frontend, dependency, listener or deployment changes.
+
+## MOD-038 league rules read — 2026-10-30
+
+LeagueReadService now owns actor/trusted reader selection, one connect scope, describe_rules and deadline ISO/string/null conversion. Repository owns original scoped league query, sport-local tier fallback query, fetchone/_mapping and fetchall accessors. Missing/scoped-out league returns None before any team query. Model retains optional reader and trusted context-free behavior. HTTP retains existing metadata/discovery gates and response errors; only its full rules branch changes dependency to actor service. Details/member/conference reads and lifecycle behavior are unchanged.
+
+| Verification | Fresh result |
+| --- | --- |
+| Guarded baseline | Exit 0, 455/455 |
+| New direct-service tests | Initial RED five missing-module errors; GREEN 5/5 |
+| Adapter-unit fixture migration | Initial full run: two failures/one error from __new__ endpoint fixtures still mocking old dependency; inject read-service mock instead, original missing/version/serialization assertions retained |
+| `python3 api/tests/run_isolated.py` | Exit 0, 460/460 including final fresh rerun; JWT/SQL authorization suites unchanged |
+| `python3 scripts/modernization/verify_league_rules_read.py` | Exit 0, native PostgreSQL PASS; preceding league/member/admission suites rerun |
+| Independent final review | No Critical/Important/Minor findings; reviewer separately ran focused guarded suite, 5/5 |
+| AST/dependency/diff checks | All other model methods unchanged; read service/repository independent of transport/model/configured-engine imports; diff check passes |
+
+[Native results/source hashes](evidence/mod-038-league-rules-read-postgres-2026-10-30.json) verify native rules projection/deadlines/nulls/version, case-insensitive team sorting, tier fallback with and without explicit tiers and isolation from other sports. Denied/missing reads execute no team query. Separate connections revoke membership immediately before scoped SELECT; service and legacy facade return None and skip teams. Trusted model/service paths and invalid stored-version error pass. All preceding native suites rerun. Combined report supersedes their source hashes; historical reports retained.
+
+Scope remains original query-time access: no post-SELECT final recheck or stronger read snapshot guarantee is added. Harness accepts no configured DSN/.env, using only marked loopback PostgreSQL and an owned random database. Database and task-owned container `otm-mod038-league-rules-20261030` removed. Other reads/discovery/lifecycle remain separate. Checkout uncommitted; no schema, hosted DB, frontend, dependency, listener or deployment changes.
+
 ## MOD-038 league creation — 2026-10-30
 
 Creation now calls LeagueAdminService with UserActor. Service binds commissioner to actor, copies input, trims required team name, pins rules version and validates/defaults timezone. Repository contains unchanged league INSERT CTE and member INSERT/fetchone/_mapping, preserving native unquoted sportinfo projection and creatorMemberId. HTTP retains commissioner assertion parsing/order and supplies existing ScheduleModel.ensure_weeks_for_league as a public capability; service imports no compatibility model. Trusted model delegate retains supplied commissioner and defers schedule attribute access until the original post-commit execution point. Pure timezone ensure is shared with a legacy helper delegate.

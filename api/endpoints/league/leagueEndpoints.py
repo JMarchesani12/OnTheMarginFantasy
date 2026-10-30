@@ -5,6 +5,7 @@ from .leagueModel import LeagueModel
 from .admission_service import AdmissionService
 from .member_service import MemberService
 from .league_admin_service import LeagueAdminService
+from .league_read_service import LeagueReadService
 from .contracts import AdmissionDenied, AdmissionRejected
 from actors import UserActor
 from authenticatedPrincipal import PrincipalResolutionError, resolve_authenticated_principal
@@ -16,6 +17,7 @@ class LeagueEndpoints:
         self.admission_service = AdmissionService(db_engine)
         self.member_service = MemberService(db_engine)
         self.league_admin_service = LeagueAdminService(db_engine)
+        self.league_read_service = LeagueReadService(db_engine)
 
     def get_league(self, league_id):
         return self._league_read_response(league_id, 'details')
@@ -26,7 +28,8 @@ class LeagueEndpoints:
     def _league_read_response(self, league_id: int, view: str):
         try:
             principal = resolve_authenticated_principal(self.db_engine)
-            access = self.leagueModel.get_league_read_access(league_id, principal.user_id)
+            actor = UserActor(principal.user_id, principal.subject)
+            access = self.league_read_service.access(actor, league_id)
             if not access or (not access['fullAccess'] and not access['isDiscoverable']):
                 return jsonify({'message': 'League not found'}), 404
             full_access = bool(access['fullAccess'])
@@ -34,12 +37,12 @@ class LeagueEndpoints:
                 return jsonify({'message': 'League membership required'}), 403
             if view == 'details' and (not full_access or request.args.get('view') == 'preview'):
                 # Recheck metadata entitlement instead of loading a full league row.
-                preview = self.leagueModel.get_league_read_access(league_id, principal.user_id)
+                preview = self.league_read_service.access(actor, league_id)
                 if not preview or (not preview['fullAccess'] and not preview['isDiscoverable']):
                     return jsonify({'message': 'League not found'}), 404
                 payload = {key: preview[key] for key in ('id', 'name', 'sport', 'commissionerDisplayName')}
             elif view == 'members' and (not full_access or request.args.get('view') == 'preview'):
-                payload = self.leagueModel.get_member_previews_for_user(league_id, principal.user_id)
+                payload = self.league_read_service.member_previews(actor, league_id)
             elif not full_access:
                 return jsonify({'message': 'League membership required'}), 403
             else:
@@ -47,11 +50,15 @@ class LeagueEndpoints:
                 if view == 'details':
                     payload = self.leagueModel.get_league(league_id, **reader)
                 elif view == 'rules':
-                    payload = self.leagueModel.get_league_rules(league_id, **reader)
+                    payload = self.league_read_service.rules(
+                        UserActor(principal.user_id, principal.subject), league_id,
+                    )
                 elif view == 'members':
                     payload = self.leagueModel.get_members_for_league(league_id, **reader)
                 else:
-                    payload = self.leagueModel.get_league_conferences(league_id, **reader)
+                    payload = self.league_read_service.conferences(
+                        UserActor(principal.user_id, principal.subject), league_id,
+                    )
             if payload is None:
                 return jsonify({'message': 'League not found'}), 404
             return jsonify(payload), 200
@@ -374,7 +381,7 @@ class LeagueEndpoints:
             limit = int(request.args.get("limit", 20))
             offset = int(request.args.get("offset", 0))
 
-            results = self.leagueModel.search_leagues(
+            results = self.league_read_service.search_public(
                 q=q,
                 sport_id=int(sport_id) if sport_id is not None else None,
                 limit=limit,

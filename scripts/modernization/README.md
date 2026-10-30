@@ -238,6 +238,46 @@ superseding prior league/member/admission hashes while retaining historical repo
 No configured DSN or `.env` is accepted. It removes its database; stop only the
 task-owned container afterward. Initializer failure still preserves saved creation.
 
+### MOD-038 league rules read
+
+With the marked disposable server ready, run
+`python3 scripts/modernization/verify_league_rules_read.py` sequentially with other
+assessment suites. It reruns creation/settings/deletion/member/admission checks
+before resetting only its own random schema for native rules/tier fallback/sport
+isolation/deadlines, denied/missing no-team-query, trusted compatibility and
+separate-connection membership revocation before scoped SELECT. Results/source
+hashes go to `docs/modernization/evidence/mod-038-league-rules-read-postgres-2026-10-30.json`,
+superseding prior league/member/admission hashes while retaining historical reports.
+No configured DSN or `.env` is accepted. It removes its database; stop only the
+task-owned container afterward. No new post-SELECT/snapshot guarantee is claimed.
+
+### MOD-038 league conference reads
+
+With the marked disposable server ready, run
+`python3 scripts/modernization/verify_league_conferences.py` sequentially with other
+assessment suites. It reruns all earlier league/member/admission checks, then
+resets only its own random schema for conference season/null counts, sport
+isolation, zero/order/projection/empty results, guarded missing-season reads and
+separate-connection membership revocation with skipped aggregation. Results/source
+hashes go to `docs/modernization/evidence/mod-038-league-conferences-postgres-2026-10-30.json`,
+superseding prior league/member/admission hashes while retaining historical reports.
+No configured DSN or `.env` is accepted. It removes its database; stop only the
+task-owned container afterward. No stronger post-SELECT guarantee is added.
+
+### MOD-038 league discovery/access/previews/search
+
+With the marked disposable server ready, run
+`python3 scripts/modernization/verify_league_discovery.py` sequentially with other
+assessment suites. It reruns all earlier league/member/admission checks, then
+resets only its random schema and creates pg_trgm in that owned synthetic DB
+for real ranking/tie order/filter/pagination/bounds, metadata/preview projection
+and independent visibility/membership revocation including the pre-query gap.
+Results/source hashes go to
+`docs/modernization/evidence/mod-038-league-discovery-postgres-2026-10-30.json`,
+superseding prior hashes while retaining historical reports. No configured DSN
+or `.env` is accepted. It removes its database; stop only the task-owned container
+afterward. Anonymous public search and existing wildcard behavior are preserved.
+
 ### Baseline suite
 
 After the same marked container is ready, run this separate suite sequentially

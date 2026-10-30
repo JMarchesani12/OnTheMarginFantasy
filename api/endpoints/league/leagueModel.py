@@ -11,9 +11,10 @@ from utils.authorization import league_read_scope
 from .admission_service import AdmissionService
 from .member_service import MemberService
 from .league_admin_service import LeagueAdminService
+from .league_read_service import LeagueReadService
 from .member_repository import ALLOWED_LEAGUE_MEMBER_FIELDS
 from .contracts import AdmissionDenied, AdmissionRejected
-from rules.leagueRules import describe_rules, get_timezone_name_from_settings, validate_timezone_name, ensure_timezone_in_settings
+from rules.leagueRules import get_timezone_name_from_settings, validate_timezone_name, ensure_timezone_in_settings
 
 
 
@@ -27,37 +28,10 @@ class LeagueModel:
         return league_read_scope(league_id, reader_user_id)
 
     def get_league_read_access(self, league_id: int, user_id: int):
-        """Fetch only discovery metadata and the caller's full-read entitlement."""
-        with self.db.begin() as conn:
-            row = conn.execute(text('''
-                SELECT l.id, l.name, l.sport, l."isDiscoverable",
-                       u."displayName" AS "commissionerDisplayName",
-                       CASE WHEN l.commissioner = :userId OR EXISTS (
-                           SELECT 1 FROM "LeagueMember" lm
-                           WHERE lm."leagueId" = l.id AND lm."userId" = :userId
-                       ) THEN true ELSE false END AS "fullAccess"
-                FROM "League" l LEFT JOIN "User" u ON u.id = l.commissioner
-                WHERE l.id = :leagueId
-            '''), {'leagueId': league_id, 'userId': user_id}).mappings().first()
-        return dict(row) if row else None
+        return LeagueReadService(self.db).access_for_reader_id(league_id, user_id)
 
     def get_member_previews_for_user(self, league_id: int, user_id: int):
-        """Names only; query rechecks discoverability or caller's own full access."""
-        with self.db.begin() as conn:
-            rows = conn.execute(text('''
-                SELECT lm.id, lm."teamName", u."displayName"
-                FROM "LeagueMember" lm
-                JOIN "User" u ON u.id = lm."userId"
-                JOIN "League" l ON l.id = lm."leagueId"
-                WHERE l.id = :leagueId AND (
-                    l."isDiscoverable" = true OR l.commissioner = :userId OR EXISTS (
-                        SELECT 1 FROM "LeagueMember" reader
-                        WHERE reader."leagueId" = l.id AND reader."userId" = :userId
-                    )
-                )
-                ORDER BY lm.id
-            '''), {'leagueId': league_id, 'userId': user_id}).mappings().all()
-        return [dict(row) for row in rows]
+        return LeagueReadService(self.db).member_previews_for_reader_id(league_id, user_id)
 
     def sync_due_league_statuses(self) -> None:
         """
@@ -185,26 +159,10 @@ class LeagueModel:
         return dict(league._mapping) if league else None
 
     def get_league_rules(self, league_id, reader_user_id: Optional[int] = None):
-        scope, reader_params = self._league_read_scope(league_id, reader_user_id)
-        with self.db.connect() as conn:
-            row = conn.execute(text(f'SELECT id, name, sport, "seasonYear", settings, "tradeDeadline", "freeAgentDeadline", "draftDate" FROM "League" WHERE id = :leagueId {scope}'),
-                               {'leagueId': league_id, **reader_params}).fetchone()
-            if not row:
-                return None
-            league = dict(row._mapping)
-            teams = conn.execute(text("""
-                SELECT st.id AS "teamId", st."displayName" AS "teamName",
-                    COALESCE(st.tier, (SELECT COALESCE(MAX(t.tier), 0) + 1
-                        FROM "SportTeam" t WHERE t."sportId" = :sportId)) AS tier
-                FROM "SportTeam" st WHERE st."sportId" = :sportId
-                ORDER BY tier, st."displayName"
-            """), {'sportId': league['sport']}).fetchall()
-        payload = describe_rules(league['sport'], league.get('settings'), [dict(t._mapping) for t in teams])
-        payload.update(leagueId=league_id, leagueName=league['name'], seasonYear=league['seasonYear'])
-        for key in ('tradeDeadline', 'freeAgentDeadline', 'draftDate'):
-            value = league.get(key)
-            payload['settings'][key] = value.isoformat() if hasattr(value, 'isoformat') else value
-        return payload
+        service = LeagueReadService(self.db)
+        if reader_user_id is None:
+            return service.rules_for_job(league_id)
+        return service.rules_for_reader_id(league_id, reader_user_id)
 
     def create_league(self, league: Dict[str, Any]) -> Dict[str, Any]:
         # Make a copy so we don't mutate the original dict
@@ -462,70 +420,10 @@ class LeagueModel:
         return members
 
     def get_league_conferences(self, league_id: int, reader_user_id: Optional[int] = None) -> Dict[str, Any]:
-        """
-        For a leagueId, returns all SportConference rows for that league's sport,
-        joined to base Conference for displayName, plus team counts.
-        """
-
-        # IMPORTANT: adjust these column names if your League schema differs
-        scope, reader_params = self._league_read_scope(league_id, reader_user_id)
-        league_sql = text(f"""
-            SELECT
-              id AS "leagueId",
-              sport AS "sportId",
-              "seasonYear" AS "seasonYear"
-            FROM "League"
-            WHERE id = :leagueId
-            {scope}
-            LIMIT 1
-        """)
-
-        with self.db.begin() as conn:
-            league_row = conn.execute(league_sql, {"leagueId": league_id, **reader_params}).fetchone()
-
-            if not league_row:
-                raise ValueError(f"League {league_id} not found")
-
-            league = dict(league_row._mapping)
-            sport_id = league["sportId"]
-            season_year = league.get("seasonYear")
-
-            if season_year is None:
-                # If your League table truly doesn't store seasonYear, you can:
-                # 1) require it as a query param, OR
-                # 2) decide a default.
-                # I'm not going to guess—so we fail loudly.
-                raise ValueError("League.seasonYear is null/missing; cannot compute season-scoped memberships")
-
-            conf_sql = text("""
-                SELECT
-                  sc.id AS "sportConferenceId",
-                  sc."conferenceId" AS "conferenceId",
-                  c.name AS "displayName",
-                  sc."maxTeamsPerOwner" AS "maxTeamsPerOwner",
-                  COALESCE(t."teamsInConference", 0) AS "teamsInConference"
-                FROM "SportConference" sc
-                JOIN "Conference" c ON c.id = sc."conferenceId"
-                LEFT JOIN (
-                  SELECT
-                    cm."sportConferenceId",
-                    COUNT(*) AS "teamsInConference"
-                  FROM "ConferenceMembership" cm
-                  WHERE (cm."seasonYear" IS NULL OR cm."seasonYear" = :seasonYear)
-                  GROUP BY cm."sportConferenceId"
-                ) t ON t."sportConferenceId" = sc.id
-                WHERE sc."sportId" = :sportId
-                ORDER BY c.name;
-            """)
-
-            rows = conn.execute(conf_sql, {"sportId": sport_id, "seasonYear": season_year}).fetchall()
-
-        return {
-            "leagueId": league_id,
-            "sportId": sport_id,
-            "seasonYear": season_year,
-            "conferences": [dict(r._mapping) for r in rows],
-        }
+        service = LeagueReadService(self.db)
+        if reader_user_id is None:
+            return service.conferences_for_job(league_id)
+        return service.conferences_for_reader_id(league_id, reader_user_id)
     
     def _get_league_commissioner(self, league_id: int) -> Optional[int]:
         return AdmissionService(self.db).get_commissioner_for_job(league_id)
@@ -641,51 +539,7 @@ class LeagueModel:
         limit: int = 20,
         offset: int = 0,
     ):
-        q = (q or "").strip()
-        if len(q) < 2:
-            return []
-
-        limit = max(1, min(int(limit), 50))
-        offset = max(0, int(offset))
-
-        pattern = f"%{q}%"
-
-        params = {
-            "pattern": pattern,
-            "q": q,
-            "limit": limit,
-            "offset": offset,
-        }
-
-        sport_clause = ""
-        if sport_id is not None:
-            sport_clause = "AND l.sport = :sportId"
-            params["sportId"] = sport_id
-
-        sql = text(f"""
-            SELECT
-            l.id,
-            l.name,
-            l.sport,
-            l."numPlayers",
-            l.status,
-            l."draftDate",
-            l."isDiscoverable",
-            l.commissioner,
-            u."displayName" AS "commissionerDisplayName"
-            FROM "League" l
-            JOIN "User" u ON u.id = l.commissioner
-            WHERE l."isDiscoverable" = true
-            AND l.name ILIKE :pattern
-            {sport_clause}
-            ORDER BY similarity(l.name, :q) DESC, l.name ASC
-            LIMIT :limit OFFSET :offset
-        """)
-
-        with self.db.begin() as conn:
-            rows = conn.execute(sql, params).mappings().all()
-
-        return [dict(r) for r in rows]
+        return LeagueReadService(self.db).search_public(q, sport_id, limit, offset)
 
     def delete_league(self, league_id: int, acting_user_id: int) -> Dict[str, Any]:
         return LeagueAdminService(self.db).delete_for_legacy_commissioner(league_id, acting_user_id)

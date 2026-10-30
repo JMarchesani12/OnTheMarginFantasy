@@ -29,7 +29,8 @@ class LeagueRulesApiTests(unittest.TestCase):
     def setUp(self):
         self.endpoint=LeagueEndpoints.__new__(LeagueEndpoints)
         self.endpoint.leagueModel=Mock()
-        self.endpoint.leagueModel.get_league_read_access.return_value = {
+        self.endpoint.league_read_service=Mock()
+        self.endpoint.league_read_service.access.return_value = {
             'fullAccess': True, 'isDiscoverable': False,
         }
         self.endpoint.db_engine = ProfileDatabase()
@@ -43,17 +44,17 @@ class LeagueRulesApiTests(unittest.TestCase):
         self.client.environ_base['HTTP_AUTHORIZATION'] = f'Bearer {token}'
 
     def test_missing_league(self):
-        self.endpoint.leagueModel.get_league_rules.return_value=None
+        self.endpoint.league_read_service.rules.return_value=None
         self.assertEqual(self.client.get('/rules/1').status_code,404)
 
     def test_invalid_version_is_visible(self):
-        self.endpoint.leagueModel.get_league_rules.side_effect=ValueError('Unsupported league rules version')
+        self.endpoint.league_read_service.rules.side_effect=ValueError('Unsupported league rules version')
         response=self.client.get('/rules/1')
         self.assertEqual(response.status_code,400)
         self.assertIn('Unsupported',response.json['message'])
 
     def test_payload_serializes(self):
-        self.endpoint.leagueModel.get_league_rules.return_value={'version':'v1','tiers':[{'tier':1,'teams':[]}]}
+        self.endpoint.league_read_service.rules.return_value={'version':'v1','tiers':[{'tier':1,'teams':[]}]}
         self.assertEqual(self.client.get('/rules/1').json['version'],'v1')
 
 class ScheduleRulesIntegrationTests(unittest.TestCase):
