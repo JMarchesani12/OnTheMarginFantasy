@@ -2,12 +2,16 @@ from typing import Any, Dict
 from venv import logger
 from flask import request, jsonify
 from .leagueModel import LeagueModel
+from .admission_service import AdmissionService
+from .contracts import AdmissionDenied, AdmissionRejected
+from actors import UserActor
 from authenticatedPrincipal import PrincipalResolutionError, resolve_authenticated_principal
 
 class LeagueEndpoints:
     def __init__(self, db_engine):
         self.leagueModel = LeagueModel(db_engine)
         self.db_engine = db_engine
+        self.admission_service = AdmissionService(db_engine)
 
     def get_league(self, league_id):
         return self._league_read_response(league_id, 'details')
@@ -205,15 +209,15 @@ class LeagueEndpoints:
             if status is not None and not isinstance(status, str):
                 return jsonify({"message": "Invalid status"}), 400
 
-            rows = self.leagueModel.list_join_requests_as_commissioner(
-                league_id=league_id, user_id=principal.user_id, status=status,
+            rows = self.admission_service.list_requests(
+                UserActor(principal.user_id, principal.subject), league_id=league_id, status=status,
             )
             return jsonify(rows), 200
         except PrincipalResolutionError as e:
             return jsonify({"error": e.code}), e.status_code
-        except PermissionError as e:
+        except (PermissionError, AdmissionDenied) as e:
             return jsonify({"message": str(e)}), 403
-        except ValueError as e:
+        except (ValueError, AdmissionRejected) as e:
             return jsonify({"message": str(e)}), 400
         except Exception:
             logger.exception("Failed to list join requests")
@@ -304,15 +308,15 @@ class LeagueEndpoints:
             if requested_user_id != principal.user_id:
                 return jsonify({"error": "user_identity_mismatch"}), 403
 
-            updated = self.leagueModel.cancel_join_request(
-                league_id=league_id, request_id=request_id, user_id=principal.user_id,
+            updated = self.admission_service.cancel_request(
+                UserActor(principal.user_id, principal.subject), league_id=league_id, request_id=request_id,
             )
             return jsonify(updated), 200
         except PrincipalResolutionError as e:
             return jsonify({"error": e.code}), e.status_code
-        except PermissionError as e:
+        except (PermissionError, AdmissionDenied) as e:
             return jsonify({"message": str(e)}), 403
-        except ValueError as e:
+        except (ValueError, AdmissionRejected) as e:
             return jsonify({"message": str(e)}), 400
         except Exception:
             logger.exception("Failed to cancel join request")

@@ -126,7 +126,17 @@ requests are made. It creates/removes only its random database and writes
 Earlier scoring reports remain historical. No `.env` or arbitrary DSN is used.
 Stop only the task-owned container afterward.
 
-### Baseline suite run
+### MOD-038 admission listing and cancellation
+
+With the marked disposable server ready, run
+`python3 scripts/modernization/verify_admission_slice.py`. It creates/removes its
+random database and verifies commissioner listing/revocation, owner cancellation,
+URL scope, update/commit rollback and competing cancellation row-lock/replay
+behavior through service and facade. Results/source hashes go to
+`docs/modernization/evidence/mod-038-admission-postgres-2026-10-29.json`.
+No `.env` or arbitrary DSN is used. Stop only the task-owned container afterward.
+
+### Baseline suite
 
 After the same marked container is ready, run this separate suite sequentially
 with other assessment suites:

@@ -1,5 +1,24 @@
 # Regression verification baseline
 
+## MOD-038 admission listing/cancellation — 2026-10-29
+
+Extracted commissioner-only join-request listing and applicant-owned cancellation into league-local admission service/repository. New HTTP entry points require UserActor; compatibility methods use explicit verified-ID/trusted bridges. Model delegates construct a lightweight service from db so actual __new__ callers remain supported. The private listing helper preserves its scope-only query behavior without adding a new precheck.
+
+| Verification | Fresh result |
+| --- | --- |
+| Baseline guarded backend | Exit 0, 406/406 |
+| `python3 api/tests/run_isolated.py test_admission_service.py` | Exit 0, 6/6 after initial missing-module failure |
+| `python3 api/tests/run_isolated.py` | Exit 0, 412/412 |
+| `python3 scripts/modernization/verify_admission_slice.py` | Exit 0, native PostgreSQL listing/cancellation checks pass |
+| Independent final review | No Critical/Important/Minor findings; reviewer inspected SQL, callers and compatibility but did not separately run tests |
+| AST/import/diff checks | Untouched league method bodies match pre-extraction AST; no new service/repository transport/model/configured-engine imports; diff check passes |
+
+New direct tests verify actor requirement before I/O, one listing scope, projection/order/filter, commissioner denial/revocation, explicit trusted reads, owner cancellation/replay, wrong owner/league rejection and rollback after update. Existing listing/cancellation/creation/approval/denial and wider league tests remain unchanged. Missing league stays a client error, noncommissioner stays 403 and query-time commissioner loss still yields an empty listing. Commissioner status does not grant cancellation of someone else's request.
+
+[Native results/source hashes](evidence/mod-038-admission-postgres-2026-10-29.json) verify exact listing fields, native dates, status/order, separate-connection commissioner revocation, cancellation owner/URL scope/resolved state, rollback after executed UPDATE and at deferred commit. Competing cancellations through both direct service and legacy facade observe a PostgreSQL lock wait, one CANCELLED transition, null resolver preservation and defined replay rejection. Private scope-only listing and db-only legacy model construction are also exercised.
+
+Only a marked loopback server and random synthetic database were used; harness accepts no DSN/.env. Random database and task-owned container `otm-mod038-admission-20261029` were removed; other containers untouched. Creation/approval/denial and broader admission serialization are unchanged. No new admission-capacity/concurrent-approval guarantee, schema change, hosted DB, frontend checks, dependency, listener or deployment.
+
 ## MOD-038 remaining scoring domain — 2026-10-29
 
 Extracted all remaining scoring SQL into named supplied-connection repository methods; services own weekly/season orchestration and transaction scopes; bonus award loops are pure functions. ScoringModel inherits the domain service solely to retain existing helper/subclass dispatch. HTTP season reads require UserActor and retain pre/post full-read checks. Weekly/final scoreboard builders now return services and use explicit trusted job methods. Job completion/locking/finalization state SQL is unchanged; MOD-013/014 recovery acceptance and MOD-034 configured startup are not claimed complete.

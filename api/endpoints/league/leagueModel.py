@@ -10,6 +10,8 @@ from zoneinfo import ZoneInfo
 
 from endpoints.schedule.scheduleModel import ScheduleModel
 from utils.authorization import league_read_scope
+from .admission_service import AdmissionService
+from .contracts import AdmissionDenied, AdmissionRejected
 from rules.leagueRules import settings_for_creation, settings_for_update, describe_rules
 
 ALLOWED_LEAGUE_MEMBER_FIELDS = {
@@ -705,12 +707,7 @@ class LeagueModel:
         }
     
     def _get_league_commissioner(self, league_id: int) -> Optional[int]:
-        with self.db.begin() as conn:
-            row = conn.execute(
-                text('SELECT commissioner FROM "League" WHERE id = :leagueId'),
-                {"leagueId": league_id},
-            ).fetchone()
-        return row._mapping["commissioner"] if row else None
+        return AdmissionService(self.db).get_commissioner_for_job(league_id)
 
     def _ensure_commissioner(self, league_id: int, acting_user_id: int) -> None:
         commissioner = self._get_league_commissioner(league_id)
@@ -776,46 +773,20 @@ class LeagueModel:
     def list_join_requests_as_commissioner(
         self, league_id: int, user_id: int, status: Optional[str] = None,
     ) -> list[Dict[str, Any]]:
-        """Check verified caller and constrain the final read to that commissioner."""
-        self._ensure_commissioner(league_id, user_id)
-        return self._list_join_requests(league_id, status, commissioner_id=user_id)
+        try:
+            return AdmissionService(self.db).list_requests_for_legacy_reader(user_id, league_id, status)
+        except AdmissionDenied as exc:
+            raise PermissionError(str(exc)) from exc
+        except AdmissionRejected as exc:
+            raise ValueError(str(exc)) from exc
 
     def _list_join_requests(
         self, league_id: int, status: Optional[str], commissioner_id: int | None = None,
     ) -> list[Dict[str, Any]]:
-        params: Dict[str, Any] = {"leagueId": league_id}
-        where_status = ""
-        if status:
-            where_status = "AND r.status = :status"
-            params["status"] = status
-
-        ownership_clause = ''
-        if commissioner_id is not None:
-            params['actingUserId'] = commissioner_id
-            ownership_clause = '''AND EXISTS (
-                SELECT 1 FROM "League" l
-                WHERE l.id = r."leagueId" AND l.commissioner = :actingUserId
-            )'''
-
-        with self.db.begin() as conn:
-            rows = conn.execute(
-                text(f"""
-                    SELECT
-                      r.id, r."createdAt", r."leagueId", r."userId",
-                      r.status, r."message", r."resolvedAt", r."resolvedByUserId",
-                      u.email AS "userEmail",
-                      u."displayName" AS "userDisplayName"
-                    FROM "LeagueJoinRequest" r
-                    JOIN "User" u ON u.id = r."userId"
-                    WHERE r."leagueId" = :leagueId
-                    {where_status}
-                    {ownership_clause}
-                    ORDER BY r."createdAt" DESC
-                """),
-                params,
-            ).mappings().all()
-
-        return [dict(r) for r in rows]
+        service = AdmissionService(self.db)
+        if commissioner_id is None:
+            return service.list_requests_for_job(league_id, status)
+        return service.list_requests_for_legacy_scope(commissioner_id, league_id, status)
 
     def approve_join_request(self, league_id: int, request_id: int, acting_user_id: int) -> Dict[str, Any]:
         """Trusted model entry point; HTTP must use the checked variant."""
@@ -1013,39 +984,12 @@ class LeagueModel:
         return dict(updated)
 
     def cancel_join_request(self, league_id: int, request_id: int, user_id: int) -> Dict[str, Any]:
-        with self.db.begin() as conn:
-            req = conn.execute(
-                text("""
-                    SELECT id, status, "userId"
-                    FROM "LeagueJoinRequest"
-                    WHERE id = :requestId AND "leagueId" = :leagueId
-                    FOR UPDATE
-                """),
-                {"requestId": request_id, "leagueId": league_id},
-            ).mappings().first()
-
-            if not req:
-                raise ValueError("Join request not found")
-            if req["userId"] != user_id:
-                raise PermissionError("Cannot cancel another user's request")
-            if req["status"] != "PENDING":
-                raise ValueError("Only pending requests can be cancelled")
-
-            updated = conn.execute(
-                text("""
-                    UPDATE "LeagueJoinRequest"
-                    SET status = 'CANCELLED',
-                        "resolvedAt" = now()
-                    WHERE id = :requestId AND "leagueId" = :leagueId
-                      AND "userId" = :userId AND status = 'PENDING'
-                    RETURNING
-                        id, "createdAt", "leagueId", "userId", status, "message",
-                        "resolvedAt", "resolvedByUserId"
-                """),
-                {"requestId": request_id, "leagueId": league_id, "userId": user_id},
-            ).mappings().first()
-
-        return dict(updated)
+        try:
+            return AdmissionService(self.db).cancel_request_for_owner_id(user_id, league_id, request_id)
+        except AdmissionDenied as exc:
+            raise PermissionError(str(exc)) from exc
+        except AdmissionRejected as exc:
+            raise ValueError(str(exc)) from exc
     
     def remove_member_and_shift_draft_order(
         self,
