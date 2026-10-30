@@ -1,0 +1,34 @@
+{
+  "result": "PASS",
+  "scope": "Marked owned synthetic loopback PostgreSQL; no configured DB/app/provider/jobs startup",
+  "calendar": {
+    "json_dates_timezone_weekday_subdivision_and_missing_guards": "PASS",
+    "basketball_opening_dst_persisted_plan_and_existing_week_reuse": "PASS",
+    "football_week_zero_original_projection_and_defaults": "PASS",
+    "all_subdivisions_continuous_postseason_and_phase_final_calendar_join": "PASS",
+    "numbered_batch_rollback_preserves_prior_week_zero_commit": "PASS",
+    "native_statement_deferred_commit_rollback": "PASS",
+    "legacy_db_only_helpers_and_no_provider_client": "PASS",
+    "repository_queries_exercised": [
+      "insert_week",
+      "insert_week_zero",
+      "league",
+      "season_for_league",
+      "season_phases",
+      "subdivisions",
+      "weeks_for_league"
+    ],
+    "scope_limit": "Calendar only; original helper transaction boundaries preserved. Remaining schedule reads, ingestion/bootstrap and composition are later slices."
+  },
+  "sha256": {
+    "api/endpoints/schedule/calendar_service.py": "6bb6cd15679419d3bf3bfbfa20f405d91c5d709ae0698d025a835a7ce31e363d",
+    "api/endpoints/schedule/calendar_repository.py": "252bf08e3ba5aea831cb4c03294e00a44789cef10bedc0019aba76ce850318d8",
+    "api/endpoints/schedule/scheduleModel.py": "d6e508d8765821c50dabc9245817ebbce098ce958814cc4063d9db9ea5212aa0",
+    "api/endpoints/schedule/scheduleEndpoints.py": "04f1a9a08b53e0c083a3d6b6809d891e889247fb80f3e4aafd2d5da0873386ac",
+    "api/endpoints/schedule/routes.py": "49a50d6c737c0ef0dc5bfb4369726fa381a54b9117d02508b67feb9269763021",
+    "api/endpoints/schedule/helpers/weekHelper.py": "5d36eba963f796d85581a006faabf13623749a9750cc2e453620797b9885ef05",
+    "api/rules/tournamentRules.py": "d2f100bed2f52bbf0a5b14354d717979d89065e46d34e7158775327cb2ffdd85",
+    "api/tests/test_schedule_calendar_service.py": "5ad43675dad5ab9a38ea4a8c2d5621d048e7091aab6505bd751a33cf5d19f1f0",
+    "scripts/modernization/verify_schedule_calendar.py": "5d109bc5c51c420c09a912a4623c3c9c233d7b62d84f14164a34a0d2c2639f12"
+  }
+}

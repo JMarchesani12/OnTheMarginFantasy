@@ -1,0 +1,29 @@
+{
+  "result": "PASS",
+  "scope": "Sport public catalog extraction; real in-memory SQLite only, guarded runtime; no configured DB/network/app startup",
+  "baseline_commit": "cd44f0752d1295176f82737aa3a64ca9cdd4e2b7",
+  "verification": {
+    "guarded_baseline": "518/518 PASS",
+    "test_first_red": "3 expected missing-service errors; 3 original HTTP/legacy cases passed",
+    "focused_green": "6/6 PASS",
+    "guarded_full_suite": "524/524 PASS",
+    "independent_final_review": "No findings; reviewer independently ran focused6/6",
+    "sql_ast": "Original SELECT text-call AST identical",
+    "boundaries": "Canonical service/repository independent of HTTP/model/configured engine; facade has no SQL/connection acquisition",
+    "behavior": "Public real route, four plain-dict fields, nulls, empty list, scope commit/failure unwind, generic500, constructor/db-only legacy"
+  },
+  "native_postgres": {
+    "run": false,
+    "reason": "Unchanged provider-neutral SELECT without parameter/type/alias/concurrency changes; real SQLite and exact SQL AST comparison used. No native verification claimed."
+  },
+  "sha256": {
+    "api/endpoints/sport/service.py": "74719baebe470d2f7d35c0a0c4c9f708ab3df9dfc6a16888caec035f189a25e5",
+    "api/endpoints/sport/repository.py": "5bac6ffa36018508556d4b6e9c49bc24917b6cf5f54193b6b0ee773da5abfedd",
+    "api/endpoints/sport/sportModel.py": "be6c5c0b26a44f53287e36d33e3f58532d0ea3a9997189eba946ed6388fad3b7",
+    "api/endpoints/sport/sportEndpoints.py": "b0d22b506be0066ab266d03bf593cf35bfc2e487787f390b3da52ef654432305",
+    "api/endpoints/sport/routes.py": "097323a770baea4db25ae2c7135dff7250ef72f11b1cd9cd37b0f7c096a95d0c",
+    "api/tests/test_sport_service.py": "573f042e78254b51eb654093a8d67d2907c744c97872931812fc9b3c93a8acb6",
+    "api/authMiddleware.py": "63f4b476b4f329c49a828fdbf4f33ff562b7830d59e67bfb8a5e82ec50f3ac5f",
+    "api/api.py": "3a52433cd20c6cfcf07aac5ef392026c7fb5e72f103ba07c64481a69f58d2589"
+  }
+}

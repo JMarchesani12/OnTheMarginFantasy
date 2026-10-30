@@ -1,5 +1,40 @@
 # Regression verification baseline
 
+## MOD-038 schedule calendar/week foundations — 2026-10-30
+
+First schedule slice extracts13 calendar methods and seven named queries. ScheduleModel inherits legacy methods/helper dispatch and keeps original constructor and remaining22 methods; constants are shared aliases. Canonical service needs no provider URL/client and exposes trusted week-generation/boundary/timezone capabilities. HTTP generation stays410; other reads/ingestion/bootstrap/composition remain separate.
+
+| Verification | Fresh result |
+| --- | --- |
+| Guarded baseline | 524/524, exit0; prior sport work preserved |
+| Direct-service tests | RED7 missing calendar service; GREEN7/7, real SQLite |
+| `python3 api/tests/run_isolated.py` | 531/531, exit0 |
+| Calendar behavior | Basketball opening/DST UTC plan equals persisted weeks; football Tuesday/Week0, JSON timezone precedence/fallback/weekday validation, ALL/explicit/missing subdivisions, existing reuse, missing league/season/subdivision, bulk rollback/legacy override |
+| `python3 scripts/modernization/verify_schedule_calendar.py` | PASS7/7 queries, native JSON/date/timestamptz/RETURNING/phase joins, continuous ALL/postseason/final period, actual statement/deferred-commit rollback and db-only compatibility |
+| `python3 scripts/modernization/verify_league_folders.py` | PASS full prior league/lifecycle suites and actual calendar-dependent callbacks; refreshed changed ScheduleModel dependency hash |
+| Independent final review | No findings, reviewer independently ran7/7 |
+| One-off AST/dependency checks | All13 migrated algorithms identical after query substitution; remaining22 methods including constructor unchanged; all7 SQL text-call ASTs identical; canonical layers import no configured engine/HTTP/model/provider client; diff check passes |
+
+[Native calendar results/current hashes](evidence/mod-038-schedule-calendar-postgres-2026-10-30.json), [refreshed league report](evidence/mod-040-league-folders-postgres-2026-10-30.json), [plan/ledger](../superpowers/plans/2026-10-30-mod-038-schedule-calendar-implementation.md). Current seven completed-domain reports plus the scoped calendar report were hash-checked. Calendar report includes the still-partial schedule model; later schedule slices will supersede its source capture.
+
+Existing per-helper begin scopes are preserved: football Week0 remains committed if numbered-week insertion later fails. This is deliberate compatibility, not a new global transaction/concurrency guarantee. No actor/route/startup/cross-domain caller policy changes. Only a task-owned marked loopback database/container was used and removed; no hosted/schema/dependency/deployment work. Schedule reads/search, ingestion/bootstrap and final composition remain, with broader frontend/correctness/startup cards separate.
+
+## MOD-038 sport catalog — 2026-10-30
+
+SportService owns the existing begin scope and SportRepository owns the exact original SELECT/projection. HTTP calls the public service directly; SQL-free SportModel preserves db constructor, get_sports and db-only legacy construction. Routes/public allowlist stay unchanged, no actor/profile lookup is added. Four plain-dict keys, nulls/empty list, unspecified ordering and generic HTTP500 remain.
+
+| Verification | Fresh result |
+| --- | --- |
+| Guarded baseline | 518/518, exit0 |
+| Test first | RED3 expected missing-service errors, original HTTP/legacy3 pass; GREEN6/6 |
+| Real SQL/HTTP cases | Exact catalog projection/nulls, empty list, unauthenticated real GET200, sanitized failure500, service failure propagation/scope unwind, normal/db-only legacy |
+| `python3 api/tests/run_isolated.py` | 524/524, exit0 |
+| Independent final review | No findings, fresh focused6/6 |
+| AST/boundaries/diff | Original SQL text-call AST identical; canonical layers import no HTTP/model/configured engine; model contains no SQL/connection acquisition; diff check passes |
+| Native PostgreSQL | Not run: unchanged provider-neutral SELECT, no provider-specific parameter/type/alias/concurrency changes; guarded real SQLite plus exact SQL comparison. No PostgreSQL result claimed |
+
+[Evidence/source hashes](evidence/mod-038-sport-catalog-2026-10-30.json), [plan/ledger](../superpowers/plans/2026-10-30-mod-038-sport-implementation.md), [domain guide](../../api/endpoints/sport/README.md). No schema/dependency/hosted/deployment work or configured application/job/listener startup; changes remain uncommitted. Schedule is the remaining backend extraction domain; broader frontend/folder/correctness/startup work remains separate.
+
 ## MOD-038 draft content completion — 2026-10-30
 
 Remaining live picks, trusted manual allocation, timeout skip/auto-pick, conference caps/random buckets, membership and round lookups now live in service/repository layers. DraftModel retains SQL-free control/snapshot bridges and inherits pick behavior so legacy names, helper overrides and db-only construction work. HTTP picks receive UserActor; worker calls process_timeout_for_job, socket checks its verified subject before a trusted snapshot, listener calls snapshot service. Existing disabled manual HTTP410, default weeks, errors, policy and publication timing remain.

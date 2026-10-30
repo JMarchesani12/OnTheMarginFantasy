@@ -376,6 +376,14 @@ python3 scripts/modernization/verify_draft_complete.py
 
 Requires the marked synthetic loopback server above. Uses a uniquely owned database, never imports configured db/app/jobs, and drops its database in finally. Executes all40 named pick/timeout/deadline/notification repository operations (coverage asserted), live/trusted manual allocation/defaults/turn/expiry/grace/ownership/caps/season/conflict, skip rotation/unpicked holes/last-turn/no-ops, auto-pick bucket/cap/availability/sport/finalization, late ownership revocation, per-write/finalize/notification rollback and real statement/deferred-commit errors. Uses an owned native LISTEN connection to check committed notification delivery, and observes real pg_stat_activity lock contention between a live pick and timeout. Executes the actual worker deadline helper extracted without importing/starting worker. Earlier snapshot/finalization/controls/order suites rerun on current sources. Optional `timeout-probe` exercises the minimal expired rotation case used for native alias/cast RED→GREEN; it does not write evidence. Evidence: `docs/modernization/evidence/mod-038-draft-complete-postgres-2026-10-30.json`, which supersedes prior draft source hashes. Existing notification placement/restart/cap policy is preserved; no app/worker/listener process startup.
 
+### MOD-038 schedule calendar/week foundations
+
+```sh
+python3 scripts/modernization/verify_schedule_calendar.py
+```
+
+Uses only the marked loopback server and a uniquely owned database removed in finally. Exercises all seven calendar repository queries (coverage required), native JSON/date/timestamptz/RETURNING/phase joins, subdivision ALL/explicit/missing windows, timezone/weekday/DST, basketball persisted plan, football Week0, continuous postseason/final phase, existing-week reuse, original partial-commit behavior and actual statement/deferred-commit rollback. No provider client, configured engine, application or job process is started. Evidence: `docs/modernization/evidence/mod-038-schedule-calendar-postgres-2026-10-30.json`. This is calendar-only; other schedule reads/ingestion/bootstrap/composition remain. After this slice the existing `verify_league_folders.py` was also rerun to refresh and verify calendar-dependent league callbacks.
+
 ### Baseline suite
 
 After the same marked container is ready, run this separate suite sequentially

@@ -1,15 +1,11 @@
-from sqlalchemy import text
+"""Compatibility facade for historical SportModel callers."""
 from sqlalchemy.engine import Engine
+from .service import SportService
+
 
 class SportModel:
     def __init__(self, db: Engine):
         self.db = db
 
-
     def get_sports(self):
-        with self.db.begin() as conn:
-            sports = conn.execute(
-                text('SELECT id, name, "maxPlayersToHaveMaxRounds", "maxDraftRounds" FROM "Sport"'),
-            ).mappings().all()
-
-        return [dict(s) for s in sports]
+        return SportService(self.db).list_sports()
