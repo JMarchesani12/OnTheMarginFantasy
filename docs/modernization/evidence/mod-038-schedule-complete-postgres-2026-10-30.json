@@ -1,0 +1,118 @@
+{
+  "result": "PASS",
+  "scope": "Marked owned loopback PostgreSQL, synthetic fetches/actual parser, temporary owned checkpoints only; no live provider/app/jobs",
+  "ingestion": {
+    "all13_queries_native_json_groups_limit_team_phase_upsert_filters": "PASS",
+    "rich_phase_current_over_null_membership_and_exclusive_fallback": "PASS",
+    "game_conflict_update_null_team_mapping_and_statement_commit_caller_rollback": "PASS",
+    "actual_parser_fake_fetch_dedupe_counts_and_per_game_partial_commit": "PASS",
+    "team_failure_original_completion_semantics": "PASS",
+    "real_temp_checkpoint_partial_resume_force_failed_date_retry_and_skip": "PASS",
+    "checkpoint_before_metadata_commit_failure_and_retry_convergence": "PASS",
+    "active_league_date_status_filters_and_legacy_db_only": "PASS",
+    "repository_queries_exercised": [
+      "active_leagues",
+      "api_config",
+      "bootstrap_finish",
+      "bootstrap_start",
+      "fallback_phase",
+      "mark_team_bootstrapped",
+      "season_for_bootstrap",
+      "season_for_ingestion",
+      "shared_conferences",
+      "sport_teams",
+      "team_id",
+      "upsert_game",
+      "upsert_season"
+    ],
+    "scope_limit": "Original transaction, provider/parser, retry, dedupe/count, checkpoint and completion policies preserved; no live provider or configured application startup."
+  },
+  "calendar_rerun": {
+    "json_dates_timezone_weekday_subdivision_and_missing_guards": "PASS",
+    "basketball_opening_dst_persisted_plan_and_existing_week_reuse": "PASS",
+    "football_week_zero_original_projection_and_defaults": "PASS",
+    "all_subdivisions_continuous_postseason_and_phase_final_calendar_join": "PASS",
+    "numbered_batch_rollback_preserves_prior_week_zero_commit": "PASS",
+    "native_statement_deferred_commit_rollback": "PASS",
+    "legacy_db_only_helpers_and_no_provider_client": "PASS",
+    "repository_queries_exercised": [
+      "insert_week",
+      "insert_week_zero",
+      "league",
+      "season_for_league",
+      "season_phases",
+      "subdivisions",
+      "weeks_for_league"
+    ],
+    "scope_limit": "Calendar only; original helper transaction boundaries preserved. Remaining schedule reads, ingestion/bootstrap and composition are later slices."
+  },
+  "member_rerun": {
+    "native_member_ownership_week_season_sport_filters_and_order": "PASS",
+    "tier_perspectives_unranked_double_owned_and_tournament_math": "PASS",
+    "head_to_head_directions_week_and_owned_plain_projections": "PASS",
+    "acquisition_drop_boundaries_missing_rows_and_read_no_writes": "PASS",
+    "supplied_invalid_rules_failure_propagation_and_legacy_db_only": "PASS",
+    "original_null_start_h2h_null_score_and_membership_join_behavior": "PASS",
+    "repository_queries_exercised": [
+      "head_to_head_games",
+      "member_games",
+      "owned_teams",
+      "week"
+    ],
+    "scope_limit": "Member reads only; original query/policy/failure semantics preserved. Other views/search, ingestion/bootstrap and final composition remain."
+  },
+  "views_rerun": {
+    "conference_window_season_memberships_owners_flags_defaults_exact_projection": "PASS",
+    "team_season_home_away_opponent_optional_missing_league_and_nullable_binds": "PASS",
+    "native_lateral_current_before_latest_and_no_week_999_ownership": "PASS",
+    "search_abbreviation_rank_limits_owners_sport_season_global_memberships": "PASS",
+    "original_duplicate_rows_missing_guards_read_failure_no_writes_and_legacy": "PASS",
+    "repository_queries_exercised": [
+      "conference_games",
+      "search_league_context",
+      "search_teams",
+      "team_owner_context",
+      "team_season_games",
+      "week_window"
+    ],
+    "scope_limit": "Read views/search only; original SQL, context, duplicate, coercion and scope policies retained. Ingestion/bootstrap and final caller composition remain."
+  },
+  "repository_coverage": {
+    "calendar": 7,
+    "reads": 10,
+    "ingestion": 13
+  },
+  "sha256": {
+    "api/endpoints/schedule/calendar_repository.py": "252bf08e3ba5aea831cb4c03294e00a44789cef10bedc0019aba76ce850318d8",
+    "api/endpoints/schedule/calendar_service.py": "79665bdb4903b8f05cde3c65b8f4033a0cf014c9957084f88e5ffef0cab0e716",
+    "api/endpoints/schedule/helpers/bootstrapCheckpoint.py": "6ffc8d78e9da434a842649624ce19123b3c01ba7d35ea0c8725caba2ab64a36f",
+    "api/endpoints/schedule/helpers/espn/espnClient.py": "9ff20e4b7e950a0e5c14e65632a4c2af8dccc9b383b1e0532d7c8564d0eeb1bc",
+    "api/endpoints/schedule/helpers/espn/espnParser.py": "b99f964bced3c1aa43284230c42dab4e60e63835ba83a0af96d4d1b1136720c1",
+    "api/endpoints/schedule/helpers/ncaa/ncaaClient.py": "e17055785a5c88386575cd73b72593cc953dfd1722d758597cc0e9feab1eeee6",
+    "api/endpoints/schedule/helpers/ncaa/ncaaParser.py": "b99f964bced3c1aa43284230c42dab4e60e63835ba83a0af96d4d1b1136720c1",
+    "api/endpoints/schedule/helpers/weekHelper.py": "5d36eba963f796d85581a006faabf13623749a9750cc2e453620797b9885ef05",
+    "api/endpoints/schedule/ingestion_repository.py": "7cdfe3b1d5576d95d44da37a67aaaa77425deb2b6a2e8ae262fe93cdfa8aacda",
+    "api/endpoints/schedule/ingestion_service.py": "666b764e09bb87e519dcca73a811467d5d66d6ff97e45348ff6eb62037733190",
+    "api/endpoints/schedule/read_repository.py": "a2f109a185b8bbf86e8f4c58c52291c29f32f147228741f206275ece728d373f",
+    "api/endpoints/schedule/read_service.py": "de24a42a0e6e01ec867718f7aadedc57f6196fb0fef3b5d384a5bb059a9f256d",
+    "api/endpoints/schedule/routes.py": "a1e0db64f722d33952090740b12b55de32522c44516c0435eb4a05d6b21eddd4",
+    "api/endpoints/schedule/scheduleEndpoints.py": "3c663c1a98ff66666ebeaaf5d3535c6fb3c6ccc30efe865d8cd2e4f02459b99e",
+    "api/endpoints/schedule/scheduleModel.py": "1f4e809d3f54ac25f15eb1935c667335a8e9602b627b2745c9e872626271bc7e",
+    "api/endpoints/league/leagueModel.py": "36f430a3c946b5254f60f3f5ca243f032006e49966bd5b85265c61c0930797c2",
+    "api/endpoints/league/leagueEndpoints.py": "71a5fb3e9caa50f3b75092d62257fcbe0b8af7f6824921fa3c91aed6260a5483",
+    "api/endpoints/scoring/routes.py": "386ae66414e1064426a514e4e81d20efb9501d83882b153828209459ee93358f",
+    "api/cronJobs/cronIngestScoreboard.py": "07f62ac2dac6f12c27699fe8c2768a166a63514ade00cb247f5b3ab772dd1d7c",
+    "api/cronJobs/cronComputeWeeklyScores.py": "ca66c63494dfa3f2e938e0a17b81a1cdb314283cae937853340b0d67b5979eea",
+    "api/cronJobs/cronComputeFinalScoreboard.py": "a887b47fd728718d49d3a485911b01abfa8870059b1eb4f5afb27891e2b0f754",
+    "api/startSeasonJobs/startSeason.py": "78936029b61d55dccc200b0a9cca3e4ccdb34435c3ec6b8608449f206d064287",
+    "api/scripts/rebuild_weeks_and_rescore.py": "b1f445b69ad7e23724d07844b1eb3a23e56e9db7f03f9d3ace552452485788d4",
+    "api/rules/leagueRules.py": "b2e550cf2667318760af9d2731a4ffe64a0f7cea4da330469217272d680f1535",
+    "api/rules/tournamentRules.py": "d2f100bed2f52bbf0a5b14354d717979d89065e46d34e7158775327cb2ffdd85",
+    "api/tests/test_schedule_ingestion_service.py": "127cac5073bf149f6f6480d75aeb85a50ff30e0a2b63942871124728df6fb02b",
+    "api/tests/test_schedule_service_composition.py": "d361021917be5d8e4b4744acf6b62b368248c0b206ed4b0b5e83d932858e3226",
+    "scripts/modernization/verify_schedule_calendar.py": "5d109bc5c51c420c09a912a4623c3c9c233d7b62d84f14164a34a0d2c2639f12",
+    "scripts/modernization/verify_schedule_member_reads.py": "483d03c5c20f7118ea8178289a1e5f7809f3c334f0378dd139f942fd83691d61",
+    "scripts/modernization/verify_schedule_views_search.py": "37cb9abb3c7b24e20a7940a9c6ec2964fa652f7dd81a90bde49d273a517fce32",
+    "scripts/modernization/verify_schedule_complete.py": "cecb9359cb261a26b5864ed4c379b870e5f94bbefeab4d338852ab4ab4a33484"
+  }
+}

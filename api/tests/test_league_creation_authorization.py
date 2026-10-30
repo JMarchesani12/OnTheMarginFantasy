@@ -15,7 +15,7 @@ from flask import Flask
 
 from authMiddleware import install_auth_middleware
 from endpoints.league.routes import setup_routes
-from endpoints.schedule.scheduleModel import ScheduleModel
+from endpoints.schedule.read_service import ScheduleReadService
 from supabaseAuth import ISSUER, SUPABASE_JWT_SECRET
 from test_profile_regression import ALICE, BOB, ProfileDatabase
 
@@ -66,7 +66,7 @@ class LeagueCreationAuthorizationTests(unittest.TestCase):
                 "leagueId" INTEGER REFERENCES "League"(id), "userId" INTEGER REFERENCES "User"(id),
                 "teamName" TEXT, "seasonPoints" INTEGER, "draftOrder" INTEGER);
         ''')
-        self.weeks = self.enterContext(patch.object(ScheduleModel, 'ensure_weeks_for_league'))
+        self.weeks = self.enterContext(patch.object(ScheduleReadService, 'ensure_weeks_for_job'))
         app = Flask(__name__)
         app.config['TESTING'] = True
         install_auth_middleware(app)

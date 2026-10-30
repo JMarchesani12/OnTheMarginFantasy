@@ -1,5 +1,67 @@
 # Regression verification baseline
 
+## MOD-038 schedule completion and rollout audit — 2026-10-30
+
+ScheduleModel is a SQL-free facade with its original constructor/inherited helper dispatch. Canonical ingestion owns provider/config/phase/upsert/bootstrap/checkpoint operations and active-league facts; original SQL now lives in its repository. HTTP uses read service/member aggregate with original response/scopes; league callbacks/scoring builders/routes/rebuild receive canonical read/calendar capabilities without provider configuration. Season setup/ingest cron use trusted ingestion; metadata retains caller connection. Existing dotenv/startup policy and HTTP week-generation410 remain.
+
+| Verification | Fresh result |
+| --- | --- |
+| Guarded baseline | 545/545 |
+| Test first | Ingestion7 and composition5 cases RED for missing module/method/seam → GREEN12/12 |
+| Full guarded backend | 557/557; independent reviewer also557/557 |
+| Composition | Actual four read HTTP routes/envelopes/coercion/raw echoes, error mapping, disabled410 with no service call, member aggregate rule resolution/callback order; actual compiled scoring builders need no provider URL. Existing moved test seams updated without weakening assertions |
+| Complete native schedule | PASS all30 query operations:7 calendar,10 read,13 ingestion; actual JSON/groups/LIMIT/phase/shared-current-membership/ON CONFLICT/null team/supplied connection, statement/deferred/caller rollback and per-game partial commits |
+| Provider/checkpoint | Actual ESPN event parser with synthetic fetches only; group dedupe vs league counts, team fetch failure completion, real temporary partial/resume/force/skip/failed-day retry, complete-file-before-metadata-commit failure and retry convergence |
+| Native integrations | Full league/lifecycle/callback and scoring read/remaining suites PASS; affected source captures refreshed |
+| Independent final review | No Critical/Important/Minor findings; full557/557 and AST checks |
+| Original-source proof | All35 original model method ASTs preserved after query/client substitutions;29 original model plus1cron SQL text-call ASTs exact. Optional team LIMIT moved intact behind same maxTeams param presence. Exact facade constructor retained, no SQL/connection acquisition there; canonical dependencies and diff checks pass |
+
+[Complete schedule source hashes](evidence/mod-038-schedule-complete-postgres-2026-10-30.json), [refreshed league](evidence/mod-040-league-folders-postgres-2026-10-30.json), [refreshed scoring](evidence/mod-038-scoring-complete-postgres-2026-10-29.json), [plan/ledger](../superpowers/plans/2026-10-30-mod-038-schedule-complete-implementation.md). Complete report supersedes earlier calendar/member/views source captures; those remain historical. Eight domain reports are current, with transaction explicitly a partial pilot.
+
+Original policy retained: no new global/per-run transaction; Week0 and each game may remain committed after later failure. Team bootstrap still marks bootstrapped despite individual team fetch failure. League and sport-season event counting/dedupe differ. Checkpoints are not database-atomic. Prior NULL-score/H2H/membership-duplicate behavior remains. No actual provider request, configured app/job/listener startup, hosted/schema/dependency/deployment changes. Only owned marked loopback DBs/container and temporary checkpoint folders used and removed. Work uncommitted.
+
+**Corrected backend scope:** [Source audit](evidence/mod-038-backend-extraction-audit-2026-10-30.json) found seven SQL-free model facades and22 remaining SQL-bearing TransactionModel methods. The prior “only sport/schedule remain” count was incorrect: transaction listing/trusted-apply pilot was partial. Do not mark the backend migration or broader MOD-040 complete; remaining transaction trade/free-agency/dispatch/reads require follow-up. Audit records source hashes/method names, not a claim that every backend/job/frontend boundary has been refactored.
+
+## MOD-038 schedule conference/team views and search — 2026-10-30
+
+Six methods (week window, conference games, team-season games, normalization, rank and search) and six exact queries extend the existing read service/repository. Existing member/calendar behavior is unchanged; remaining12 model methods and constructor are identical. Three explicit trusted internal view/search capabilities retain caller policy. HTTP adapters, input coercion/envelopes/errors and disabled week generation are unchanged; final caller composition is separate.
+
+| Verification | Fresh result |
+| --- | --- |
+| Guarded baseline | 538/538, exit0 |
+| Test first | Seven tests: RED8 missing-method errors across cases/subtests, original legacy case passes; GREEN7/7 |
+| `python3 api/tests/run_isolated.py` | 545/545, exit0 |
+| Direct cases | Normalization/rank precedence, stable projection/limit clamp0/negative/50, short-query no-I/O and invalid limit ordering, missing league/window, separate conference scopes, optional team context/999 fallback, shared context scope, failure unwind and legacy classmethod/window overrides |
+| `python3 scripts/modernization/verify_schedule_views_search.py` | PASS6 new +4 earlier read queries (combined10/10) and all7 calendar queries; native LATERAL current before latest/no-week999, NULL optional league binds, actual conference/season/date/ownership/opponent/flags/projection, rank/limits/season-global membership duplicates/missing cases/read errors/no writes/legacy |
+| `python3 scripts/modernization/verify_league_folders.py` | PASS full prior league/lifecycle/callback suites; changed model dependency capture refreshed |
+| Independent final review | No findings; fresh focused7/7 and AST check |
+| AST/import/diff | Six moved algorithms and SQL text-call ASTs identical; existing read service/repository methods unchanged;12 remaining model methods including constructor unchanged; canonical imports independent of model/HTTP/provider/configured engine; diff check passes |
+
+[Current views+read+calendar source hashes](evidence/mod-038-schedule-views-postgres-2026-10-30.json), [refreshed league callbacks](evidence/mod-040-league-folders-postgres-2026-10-30.json), [plan/ledger](../superpowers/plans/2026-10-30-mod-038-schedule-views-search-implementation.md). Current report supersedes earlier member/calendar source captures; previous reports retained as history. Seven completed-domain reports plus this scoped combined report hash-checked.
+
+Original semantics retained: conference week-window lookup owns a separate transaction; team-season/search context+rows share one begin. Whole-season ownership uses current/latest/999 rather than game-date ownership. Missing optional team context falls back while search missing league raises. Season/global membership joins can duplicate search rows; no deduplication added. Limit conversion occurs before short-query guard. Prior NULL-score/H2H behavior is retained in the earlier suite rerun. Native member harness coverage is now explicitly scoped to its original4 methods; combined harness asserts all10, avoiding a false failure when the repository grows.
+
+Only marked task-owned loopback databases/container used and removed. No schema/dependency/hosted/deployment/startup or authorization-policy changes; work uncommitted. Ingestion/bootstrap and final HTTP/job/cross-domain caller composition remain.
+
+## MOD-038 schedule member/week reads — 2026-10-30
+
+Four related methods now use ScheduleReadService/Repository: member-week games with tier and tournament scoring, H2H games, week row and owned teams. Read service inherits calendar; ScheduleModel inherits read service and preserves constructor/helper overrides/db-only instances. Four named trusted capabilities retain internal caller policy; HTTP/job adapter wiring remains a later schedule slice.
+
+| Verification | Fresh result |
+| --- | --- |
+| Guarded baseline | 531/531, exit0 |
+| Test first | RED7 missing-service errors → GREEN7/7 policy/projection/failure/legacy tests |
+| `python3 api/tests/run_isolated.py` | 538/538, exit0 |
+| Direct policy | Home/away/double-owned perspectives, unchanged source facts, positive-only/multiplier phases, invalid rules before query (including empty), supplied rules bypass, plain/missing projections, read failure unwind, inherited overrides |
+| `python3 scripts/modernization/verify_schedule_member_reads.py` | PASS4/4 read queries plus all7 calendar queries rerun: actual ownership/league/week/season/sport/inclusive boundary filtering, acquisition/drop, tier fallback, both perspectives, double-owned, phase JSON/math, H2H direction, exact week/owned projections, missing rows, read errors/no writes and legacy |
+| `python3 scripts/modernization/verify_league_folders.py` | PASS full native league/callback/lifecycle suites; dependency source capture refreshed |
+| Independent final review | No findings; reviewer ran direct7/7, compared query strings and remaining methods |
+| AST/import/diff | Four migrated algorithms identical after named-query substitution;18 remaining methods including constructor unchanged;4 SQL text-call ASTs exact; canonical layers import no HTTP/model/provider/configured engine; diff check passes |
+
+[Current native read+calendar hashes](evidence/mod-038-schedule-member-reads-postgres-2026-10-30.json), [refreshed league callback report](evidence/mod-040-league-folders-postgres-2026-10-30.json), [plan/ledger](../superpowers/plans/2026-10-30-mod-038-schedule-member-reads-implementation.md). New scoped report supersedes the earlier calendar report's model source capture; earlier report retained as history. Seven completed-domain reports and the current read/calendar report are hash-checked.
+
+Original edge semantics deliberately retained and exercised natively: member/week queries supply a missing-start fallback while H2H does not; owned-team conference joins are not season-filtered and can duplicate rows; NULL game scores propagate the existing TypeError from scoring. This is extraction, not scoring/authorization/data-policy repair. No HTTP/actor/profile policy, dependency/schema/hosted/deployment or startup changes. Marked task-owned DB/container removed; prior work retained/uncommitted. Other views/search, ingestion/bootstrap and final composition remain.
+
 ## MOD-038 schedule calendar/week foundations — 2026-10-30
 
 First schedule slice extracts13 calendar methods and seven named queries. ScheduleModel inherits legacy methods/helper dispatch and keeps original constructor and remaining22 methods; constants are shared aliases. Canonical service needs no provider URL/client and exposes trusted week-generation/boundary/timezone capabilities. HTTP generation stays410; other reads/ingestion/bootstrap/composition remain separate.

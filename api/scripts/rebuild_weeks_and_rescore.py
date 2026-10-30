@@ -4,7 +4,7 @@ import datetime as dt
 
 from sqlalchemy import text
 
-from endpoints.schedule.scheduleModel import ScheduleModel
+from endpoints.schedule.read_service import ScheduleReadService
 from endpoints.scoring.scoringModel import ScoringModel
 
 
@@ -101,17 +101,17 @@ LOCK_NEXT_WEEK = text("""
 
 
 def _compute_week_boundaries(
-    schedule_model: ScheduleModel,
+    schedule_model: ScheduleReadService,
     league_id: int,
     season_year: int,
 ):
-    season = schedule_model._get_sport_season_for_league(league_id)
+    season = schedule_model.season_for_job(league_id)
     if int(season["seasonYear"]) != season_year:
         raise ValueError(
             f"League {league_id} belongs to seasonYear={season['seasonYear']}, "
             f"not requested seasonYear={season_year}"
         )
-    return schedule_model.get_week_boundaries(league_id)
+    return schedule_model.boundaries_for_job(league_id)
 
 
 def main():
@@ -121,7 +121,7 @@ def main():
     args = parser.parse_args()
     from db import engine
     season_year = args.season_year
-    schedule_model = ScheduleModel(engine, os.getenv("ESPN_BASE_URL", ""))
+    schedule_model = ScheduleReadService(engine)
     scoring_model = ScoringModel(engine, schedule_model)
 
     with engine.begin() as conn:

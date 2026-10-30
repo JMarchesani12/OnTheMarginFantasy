@@ -1,4 +1,4 @@
-from endpoints.schedule.scheduleModel import ScheduleModel
+from endpoints.schedule.read_service import ScheduleReadService
 from endpoints.scoring.scoringEndpoints import ScoringEndpoints
 import os
 from dotenv import load_dotenv
@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 def setup_routes(app, engine):
 
     load_dotenv()
-    scheduleModel = ScheduleModel(engine, os.getenv("ESPN_BASE_URL"))
+    scheduleModel = ScheduleReadService(engine)
     scoringEndpoints = ScoringEndpoints(engine, scheduleModel)
 
     app.add_url_rule("/api/league/<int:league_id>/scoreWeek/<int:week_number>", view_func=scoringEndpoints.score_week, methods=["POST"])

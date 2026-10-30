@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional
 
 from sqlalchemy.engine import Engine
 
-from endpoints.schedule.scheduleModel import ScheduleModel
+from endpoints.schedule.read_service import ScheduleReadService
 from utils.authorization import league_read_scope
 from .admission.service import AdmissionService
 from .members.service import MemberService
@@ -19,7 +19,7 @@ from rules.leagueRules import get_timezone_name_from_settings, validate_timezone
 class LeagueModel:
     def __init__(self, db: Engine):
         self.db = db
-        self.scheduleModel = ScheduleModel(db, os.getenv("ESPN_BASE_URL"))
+        self.scheduleModel = ScheduleReadService(db)
 
     @staticmethod
     def _league_read_scope(league_id: int, reader_user_id: Optional[int]):

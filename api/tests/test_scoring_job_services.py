@@ -15,7 +15,7 @@ class ScoringJobServiceTests(unittest.TestCase):
                 builder=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='build_scoring')
                 schedule=object()
                 namespace={'load_dotenv':lambda:None,'os':SimpleNamespace(getenv=lambda _: 'https://provider.example.test'),
-                           'ScheduleModel':lambda engine,url:schedule,'ScoringService':ScoringService}
+                           'ScheduleReadService':lambda engine:schedule,'ScoringService':ScoringService}
                 exec(compile(ast.Module(body=[builder],type_ignores=[]),str(path),'exec'),namespace)
                 engine=object()
                 service=namespace['build_scoring'](engine)

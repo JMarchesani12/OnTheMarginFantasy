@@ -56,8 +56,8 @@ class LeagueEndpoints:
                     )
                 elif view == 'members':
                     payload = self.league_read_service.members(
-                        actor, league_id, self.leagueModel.scheduleModel.get_league_timezone,
-                        self.leagueModel.scheduleModel.get_member_games_for_week,
+                        actor, league_id, self.leagueModel.scheduleModel.timezone_for_job,
+                        self.leagueModel.scheduleModel.member_games_for_job,
                     )
                 else:
                     payload = self.league_read_service.conferences(
@@ -110,7 +110,7 @@ class LeagueEndpoints:
             }
             created = self.league_admin_service.create(
                 UserActor(principal.user_id, principal.subject), league_data,
-                self.leagueModel.scheduleModel.ensure_weeks_for_league,
+                self.leagueModel.scheduleModel.ensure_weeks_for_job,
             )
             return jsonify(created), 201
         except PrincipalResolutionError as exc:

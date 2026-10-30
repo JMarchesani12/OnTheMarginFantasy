@@ -6,14 +6,13 @@ from datetime import datetime, timezone
 from dotenv import load_dotenv
 from sqlalchemy import text
 
-from endpoints.schedule.scheduleModel import ScheduleModel
+from endpoints.schedule.read_service import ScheduleReadService
 from endpoints.scoring.service import ScoringService
 from endpoints.transaction.transactionModel import TransactionModel
 
 def build_scoring(engine):
     load_dotenv()
-    espn_base_url = os.getenv("ESPN_BASE_URL")
-    schedule_model = ScheduleModel(engine, espn_base_url)
+    schedule_model = ScheduleReadService(engine)
     scoring = ScoringService(engine, schedule_model)
     return scoring
 

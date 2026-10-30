@@ -384,6 +384,30 @@ python3 scripts/modernization/verify_schedule_calendar.py
 
 Uses only the marked loopback server and a uniquely owned database removed in finally. Exercises all seven calendar repository queries (coverage required), native JSON/date/timestamptz/RETURNING/phase joins, subdivision ALL/explicit/missing windows, timezone/weekday/DST, basketball persisted plan, football Week0, continuous postseason/final phase, existing-week reuse, original partial-commit behavior and actual statement/deferred-commit rollback. No provider client, configured engine, application or job process is started. Evidence: `docs/modernization/evidence/mod-038-schedule-calendar-postgres-2026-10-30.json`. This is calendar-only; other schedule reads/ingestion/bootstrap/composition remain. After this slice the existing `verify_league_folders.py` was also rerun to refresh and verify calendar-dependent league callbacks.
 
+### MOD-038 schedule member/week reads
+
+```sh
+python3 scripts/modernization/verify_schedule_member_reads.py
+```
+
+Requires the marked synthetic loopback server; owns/removes a uniquely named database. Exercises all four member/H2H/week/owned repository queries, actual CTE/date/league/sport/season/ownership/acquisition/drop filters, inclusive boundaries, tier/unranked/double-owned and phase JSON scoring, exact/missing projections, supplied/invalid rules, read errors/no writes and legacy db-only calls. Preserves and verifies original H2H NULL-start behavior, unrestricted-season owned membership join and NULL-score TypeError. All calendar native cases rerun. No configured DB/app/provider/job startup. Evidence: `docs/modernization/evidence/mod-038-schedule-member-reads-postgres-2026-10-30.json` supersedes earlier calendar source capture. Existing native league callback suites also rerun after inheritance changed.
+
+### MOD-038 schedule conference/team views and search
+
+```sh
+python3 scripts/modernization/verify_schedule_views_search.py
+```
+
+Requires the marked loopback server; owns/removes a unique synthetic database. Exercises six remaining view/search queries and reruns all four member reads plus seven calendar queries; combined read coverage must equal all10 repository methods. Native LATERAL current/latest/no-week999 ownership, optional/missing league/NULL binds, conference/season/date/owner/opponent/exact projection, ranking/clamps/season-global duplicate joins, missing guards, read errors/no writes and legacy APIs are checked. Member harness coverage is scoped to its original4 methods; new combined harness checks the complete repository. Evidence: `docs/modernization/evidence/mod-038-schedule-views-postgres-2026-10-30.json` supersedes earlier member/calendar source captures. Existing native league callbacks rerun after model extraction. No configured DB/app/provider/job startup. Ingestion/bootstrap and final composition remain separate.
+
+### MOD-038 complete schedule verification
+
+```sh
+python3 scripts/modernization/verify_schedule_complete.py
+```
+
+Uses only a marked uniquely owned loopback database and temporary checkpoint directory, removed in finally/context exit. Requires all13 ingestion queries and all10 read/all7 calendar queries, exercising actual parser with replaced fetch methods (no provider requests), phase matching/upserts/null mapping/group types/LIMIT, real statement/deferred/caller rollback, per-game partial commits, partial/resume/force/skip/failed-day retries and checkpoint-file-before-metadata-commit convergence. Evidence: `docs/modernization/evidence/mod-038-schedule-complete-postgres-2026-10-30.json`, superseding earlier schedule source captures. Rerun affected `verify_league_folders.py` and `verify_scoring_complete.py` for integration/source capture. No actual application/job/provider startup. Broader transaction rollout remains partial; see backend extraction audit.
+
 ### Baseline suite
 
 After the same marked container is ready, run this separate suite sequentially

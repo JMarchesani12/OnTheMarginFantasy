@@ -316,3 +316,6 @@ class ScheduleCalendarService:
 
     def timezone_for_job(self, league_id):
         return self.get_league_timezone(league_id)
+
+    def season_for_job(self, league_id):
+        return self._get_sport_season_for_league(league_id)

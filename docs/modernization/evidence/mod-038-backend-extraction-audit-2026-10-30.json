@@ -1,0 +1,97 @@
+{
+  "scope": "Source audit of eight domain model files; SQL-free facades alone are not proof of all backend/job/frontend refactoring.",
+  "correction": "Earlier claim that only sport and schedule remained was incorrect. Transaction initial read/trusted-apply pilot is partial; trade/free-agency/dispatch/related reads still contain model SQL.",
+  "complete_domain_content_extractions": [
+    "roster",
+    "user",
+    "scoring",
+    "league",
+    "draft",
+    "sport",
+    "schedule"
+  ],
+  "partial_domain_content_extractions": [
+    "transaction"
+  ],
+  "models": [
+    {
+      "domain": "draft",
+      "model": "api/endpoints/draft/draftModel.py",
+      "direct_execute_calls": 0,
+      "sql_bearing_methods": [],
+      "sha256": "ee1606dd35543c10fff5b4e167a07fb8b2699a2324e2ac776feba38abb2cd335"
+    },
+    {
+      "domain": "league",
+      "model": "api/endpoints/league/leagueModel.py",
+      "direct_execute_calls": 0,
+      "sql_bearing_methods": [],
+      "sha256": "36f430a3c946b5254f60f3f5ca243f032006e49966bd5b85265c61c0930797c2"
+    },
+    {
+      "domain": "roster",
+      "model": "api/endpoints/roster/rosterModel.py",
+      "direct_execute_calls": 0,
+      "sql_bearing_methods": [],
+      "sha256": "cdce1acb9cd5e5e9c53c7812c199eb2e09549a295962e92c9371f061e6b02545"
+    },
+    {
+      "domain": "schedule",
+      "model": "api/endpoints/schedule/scheduleModel.py",
+      "direct_execute_calls": 0,
+      "sql_bearing_methods": [],
+      "sha256": "1f4e809d3f54ac25f15eb1935c667335a8e9602b627b2745c9e872626271bc7e"
+    },
+    {
+      "domain": "scoring",
+      "model": "api/endpoints/scoring/scoringModel.py",
+      "direct_execute_calls": 0,
+      "sql_bearing_methods": [],
+      "sha256": "f597f111d7bc4d92349d6558d8cde5cf33d495868fc54a70c7dea69c9247c0f8"
+    },
+    {
+      "domain": "sport",
+      "model": "api/endpoints/sport/sportModel.py",
+      "direct_execute_calls": 0,
+      "sql_bearing_methods": [],
+      "sha256": "be6c5c0b26a44f53287e36d33e3f58532d0ea3a9997189eba946ed6388fad3b7"
+    },
+    {
+      "domain": "transaction",
+      "model": "api/endpoints/transaction/transactionModel.py",
+      "direct_execute_calls": 31,
+      "sql_bearing_methods": [
+        "_get_league_settings",
+        "_get_member_swap_count",
+        "_validate_members_in_league",
+        "_assert_free_agent_deadline",
+        "_get_week_for_league",
+        "_get_pending_free_agent_team_ids_for_week",
+        "apply_free_agent_transaction",
+        "apply_pending_transaction",
+        "_get_next_unlocked_week_for_league",
+        "propose_trade",
+        "_trade_actor_transaction",
+        "respond_to_trade",
+        "cancel_trade_proposal",
+        "_is_team_owned_in_week",
+        "_is_team_owned_by_member_in_week",
+        "_get_team_conference_info",
+        "_get_member_conference_counts",
+        "_get_member_roster_team_ids_for_week",
+        "free_agency_add_drop",
+        "get_week_roster_violations",
+        "get_open_trade_transactions_for_member",
+        "veto_trade"
+      ],
+      "sha256": "92ec3dae2ea23a3705961d7379eb3d893cfca1b66a8a8ab882763cfa1c849342"
+    },
+    {
+      "domain": "user",
+      "model": "api/endpoints/user/userModel.py",
+      "direct_execute_calls": 0,
+      "sql_bearing_methods": [],
+      "sha256": "697d43d4119c3c793f6dcc47abad6e700c2a2cb7c5ffd0a2eb37b626f16f67e5"
+    }
+  ]
+}

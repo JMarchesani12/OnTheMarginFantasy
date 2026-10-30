@@ -199,10 +199,10 @@ class BasketballIntegrationTests(unittest.TestCase):
     def test_rebuild_uses_same_week_plan(self):
         from scripts.rebuild_weeks_and_rescore import _compute_week_boundaries
         model = Mock()
-        model._get_sport_season_for_league.return_value = {'seasonYear': 2026}
-        model.get_week_boundaries.return_value = [(20, '2027-03-16', '2027-04-06')]
-        self.assertEqual(_compute_week_boundaries(model, 1, 2026), model.get_week_boundaries.return_value)
-        model.get_week_boundaries.assert_called_once_with(1)
+        model.season_for_job.return_value = {'seasonYear': 2026}
+        model.boundaries_for_job.return_value = [(20, '2027-03-16', '2027-04-06')]
+        self.assertEqual(_compute_week_boundaries(model, 1, 2026), model.boundaries_for_job.return_value)
+        model.boundaries_for_job.assert_called_once_with(1)
 
     def test_phase_setup_repairs_dates_rules_and_definition_names(self):
         from startSeasonJobs.startSeason import load_manifest, configure_manifest_phases, SPORT_CONFIGS
