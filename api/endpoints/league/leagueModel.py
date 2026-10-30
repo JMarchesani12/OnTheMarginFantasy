@@ -718,53 +718,10 @@ class LeagueModel:
         
 
     def create_join_request(self, league_id: int, user_id: int, message: Optional[str] = None, team_name: Optional[str] = None) -> Dict[str, Any]:
-        if not isinstance(team_name, str) or not team_name.strip():
-            raise ValueError("Team name is required.")
-        team_name = team_name.strip()
-        with self.db.begin() as conn:
-            # Already a member?
-            member = conn.execute(
-                text("""
-                    SELECT 1
-                    FROM "LeagueMember"
-                    WHERE "leagueId" = :leagueId AND "userId" = :userId
-                """),
-                {"leagueId": league_id, "userId": user_id},
-            ).fetchone()
-            if member:
-                raise ValueError("Already a member of this league")
-
-            # If a pending request exists, return it (idempotent UX)
-            existing = conn.execute(
-                text("""
-                    SELECT id, "createdAt", "leagueId", "userId", status, "message",
-                           "resolvedAt", "resolvedByUserId"
-                    FROM "LeagueJoinRequest"
-                    WHERE "leagueId" = :leagueId AND "userId" = :userId AND status = 'PENDING'
-                """),
-                {"leagueId": league_id, "userId": user_id},
-            ).mappings().first()
-
-            if existing:
-                return dict(existing)
-
-            row = conn.execute(
-                text("""
-                    INSERT INTO "LeagueJoinRequest"
-                        ("leagueId", "userId", status, "message", "teamName")
-                    VALUES
-                        (:leagueId, :userId, 'PENDING', :message, :teamName)
-                    RETURNING
-                        id, "createdAt", "leagueId", "userId", status, "message",
-                        "resolvedAt", "resolvedByUserId"
-                """),
-                {"leagueId": league_id, "userId": user_id, "message": message, "teamName": team_name},
-            ).mappings().first()
-
-            if not row:
-                raise RuntimeError("Failed to create join request")
-
-            return dict(row)
+        try:
+            return AdmissionService(self.db).create_request_for_user_id(user_id, league_id, message, team_name)
+        except AdmissionRejected as exc:
+            raise ValueError(str(exc)) from exc
 
     def list_join_requests(self, league_id: int, status: Optional[str] = None) -> list[Dict[str, Any]]:
         """Trusted model listing; HTTP must use the commissioner-checked variant."""
@@ -789,199 +746,53 @@ class LeagueModel:
         return service.list_requests_for_legacy_scope(commissioner_id, league_id, status)
 
     def approve_join_request(self, league_id: int, request_id: int, acting_user_id: int) -> Dict[str, Any]:
-        """Trusted model entry point; HTTP must use the checked variant."""
-        with self.db.begin() as conn:
-            # Keep lock order aligned with the checked HTTP entry point.
-            conn.execute(text('''
-                SELECT id FROM "League" WHERE id = :leagueId FOR UPDATE
-            '''), {'leagueId': league_id}).fetchone()
-            return self._approve_join_request(conn, league_id, request_id, acting_user_id)
+        try:
+            return AdmissionService(self.db).approve_request_for_job(league_id, request_id, acting_user_id)
+        except AdmissionRejected as exc:
+            raise ValueError(str(exc)) from exc
 
     def approve_join_request_as_commissioner(
         self, league_id: int, request_id: int, user_id: int,
     ) -> Dict[str, Any]:
-        """Authorize verified caller under league lock before approval mutations."""
-        with self.db.begin() as conn:
-            league = conn.execute(text('''
-                SELECT commissioner FROM "League" WHERE id = :leagueId FOR UPDATE
-            '''), {'leagueId': league_id}).mappings().first()
-            if not league:
-                raise ValueError(f"League {league_id} not found")
-            if league['commissioner'] != user_id:
-                raise PermissionError("Only the commissioner can perform this action")
-            return self._approve_join_request(conn, league_id, request_id, user_id)
+        try:
+            return AdmissionService(self.db).approve_request_for_legacy_commissioner(user_id, league_id, request_id)
+        except AdmissionDenied as exc:
+            raise PermissionError(str(exc)) from exc
+        except AdmissionRejected as exc:
+            raise ValueError(str(exc)) from exc
 
     def _approve_join_request(
         self, conn, league_id: int, request_id: int, acting_user_id: int,
     ) -> Dict[str, Any]:
         # lock the request row to prevent double-approval races
-        req = conn.execute(
-            text("""
-                SELECT id, "leagueId", "userId", status, "teamName"
-                FROM "LeagueJoinRequest"
-                WHERE id = :requestId AND "leagueId" = :leagueId
-                FOR UPDATE
-            """),
-            {"requestId": request_id, "leagueId": league_id},
-        ).mappings().first()
-
-        if not req:
-            raise ValueError("Join request not found")
-        if req["status"] != "PENDING":
-            raise ValueError("Join request is not pending")
-
-        # create membership (unique index should prevent duplicates)
-        conn.execute(
-            text("""
-                INSERT INTO "LeagueMember"
-                    ("leagueId", "userId", "teamName", "draftOrder", "seasonPoints")
-                SELECT
-                    :leagueId,
-                    :userId,
-                    :teamName,
-                    COALESCE(MAX(lm."draftOrder"), 0) + 1,
-                    0
-                FROM "LeagueMember" lm
-                WHERE lm."leagueId" = :leagueId
-            """),
-            {
-                "leagueId": league_id,
-                "userId": req["userId"],
-                "teamName": req.get("teamName") or "My Team",
-            },
-        )
-
-        conn.execute(
-            text("""
-                WITH locked_league AS (
-                    SELECT l.id,
-                        l."sport",
-                        l."numPlayers" AS cur_players,
-                        l.settings AS cur_settings
-                    FROM "League" l
-                    WHERE l.id = :leagueId
-                    FOR UPDATE
-                ),
-                sport_cfg AS (
-                    SELECT s.id,
-                        s."maxDraftRounds" AS max_rounds,
-                        s."maxPlayersToHaveMaxRounds" AS max_players_full
-                    FROM "Sport" s
-                    JOIN locked_league ll ON ll."sport" = s.id
-                ),
-                computed AS (
-                    SELECT
-                        ll.id AS league_id,
-                        (ll.cur_players + 1) AS new_players,
-                        GREATEST(
-                            1,
-                            CASE
-                                WHEN (ll.cur_players + 1) <= sc.max_players_full
-                                    THEN sc.max_rounds
-                                ELSE sc.max_rounds - ((ll.cur_players + 1) - sc.max_players_full)
-                            END
-                        ) AS new_num_rounds
-                    FROM locked_league ll
-                    JOIN sport_cfg sc ON true
-                )
-                UPDATE "League" l
-                SET
-                    "numPlayers" = c.new_players,
-                    settings = jsonb_set(
-                        COALESCE(l.settings, '{}'::jsonb),
-                        '{draft,numberOfRounds}',
-                        to_jsonb(c.new_num_rounds),
-                        true
-                    ),
-                    "updatedAt" = now()
-                FROM computed c
-                WHERE l.id = c.league_id
-                RETURNING l.id, l."numPlayers", l.settings
-            """),
-            {"leagueId": league_id},
-        ).mappings().first()
-
-        updated = conn.execute(
-            text("""
-                UPDATE "LeagueJoinRequest"
-                SET status = 'APPROVED',
-                    "resolvedAt" = now(),
-                    "resolvedByUserId" = :actingUserId
-                WHERE id = :requestId AND "leagueId" = :leagueId
-                RETURNING
-                    id, "createdAt", "leagueId", "userId", status, "message",
-                    "resolvedAt", "resolvedByUserId"
-            """),
-            {"requestId": request_id, "leagueId": league_id, "actingUserId": acting_user_id},
-        ).mappings().first()
-
-        # Return the new member too (handy for UI)
-        member = conn.execute(
-            text("""
-                SELECT id, "leagueId", "userId", "teamName", "seasonPoints", "createdAt"
-                FROM "LeagueMember"
-                WHERE "leagueId" = :leagueId AND "userId" = :userId
-            """),
-            {"leagueId": league_id, "userId": req["userId"]},
-        ).mappings().first()
-
-        return {"request": dict(updated), "member": dict(member) if member else None}
+        try:
+            return AdmissionService(self.db).approve_request_in_transaction(conn, league_id, request_id, acting_user_id)
+        except AdmissionRejected as exc:
+            raise ValueError(str(exc)) from exc
 
     def deny_join_request(self, league_id: int, request_id: int, acting_user_id: int) -> Dict[str, Any]:
-        """Trusted model entry point; HTTP must use the checked variant."""
-        with self.db.begin() as conn:
-            conn.execute(text('''
-                SELECT id FROM "League" WHERE id = :leagueId FOR UPDATE
-            '''), {'leagueId': league_id}).fetchone()
-            return self._deny_join_request(conn, league_id, request_id, acting_user_id)
+        try:
+            return AdmissionService(self.db).deny_request_for_job(league_id, request_id, acting_user_id)
+        except AdmissionRejected as exc:
+            raise ValueError(str(exc)) from exc
 
     def deny_join_request_as_commissioner(
         self, league_id: int, request_id: int, user_id: int,
     ) -> Dict[str, Any]:
-        """Authorize verified caller under league lock before resolving request."""
-        with self.db.begin() as conn:
-            league = conn.execute(text('''
-                SELECT commissioner FROM "League" WHERE id = :leagueId FOR UPDATE
-            '''), {'leagueId': league_id}).mappings().first()
-            if not league:
-                raise ValueError(f"League {league_id} not found")
-            if league['commissioner'] != user_id:
-                raise PermissionError("Only the commissioner can perform this action")
-            return self._deny_join_request(conn, league_id, request_id, user_id)
+        try:
+            return AdmissionService(self.db).deny_request_for_legacy_commissioner(user_id, league_id, request_id)
+        except AdmissionDenied as exc:
+            raise PermissionError(str(exc)) from exc
+        except AdmissionRejected as exc:
+            raise ValueError(str(exc)) from exc
 
     def _deny_join_request(
         self, conn, league_id: int, request_id: int, acting_user_id: int,
     ) -> Dict[str, Any]:
-        req = conn.execute(
-            text("""
-                SELECT id, status
-                FROM "LeagueJoinRequest"
-                WHERE id = :requestId AND "leagueId" = :leagueId
-                FOR UPDATE
-            """),
-            {"requestId": request_id, "leagueId": league_id},
-        ).mappings().first()
-
-        if not req:
-            raise ValueError("Join request not found")
-        if req["status"] != "PENDING":
-            raise ValueError("Join request is not pending")
-
-        updated = conn.execute(
-            text("""
-                UPDATE "LeagueJoinRequest"
-                SET status = 'DENIED',
-                    "resolvedAt" = now(),
-                    "resolvedByUserId" = :actingUserId
-                WHERE id = :requestId AND "leagueId" = :leagueId AND status = 'PENDING'
-                RETURNING
-                    id, "createdAt", "leagueId", "userId", status, "message",
-                    "resolvedAt", "resolvedByUserId"
-            """),
-            {"requestId": request_id, "leagueId": league_id, "actingUserId": acting_user_id},
-        ).mappings().first()
-
-        return dict(updated)
+        try:
+            return AdmissionService(self.db).deny_request_in_transaction(conn, league_id, request_id, acting_user_id)
+        except AdmissionRejected as exc:
+            raise ValueError(str(exc)) from exc
 
     def cancel_join_request(self, league_id: int, request_id: int, user_id: int) -> Dict[str, Any]:
         try:

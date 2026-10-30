@@ -136,6 +136,37 @@ behavior through service and facade. Results/source hashes go to
 `docs/modernization/evidence/mod-038-admission-postgres-2026-10-29.json`.
 No `.env` or arbitrary DSN is used. Stop only the task-owned container afterward.
 
+### MOD-038 admission creation and denial
+
+With the marked disposable server ready, run
+`python3 scripts/modernization/verify_admission_create_deny.py` sequentially with
+other assessment suites. It reruns listing/cancellation checks, then resets only
+its own random database schema for creation/repeat, real FK/statement/commit
+failures, denial authority/resolver/rollback and competing league→request locks
+through service and facade. Trusted/private helper compatibility is included.
+Results/source hashes go to
+`docs/modernization/evidence/mod-038-admission-create-deny-postgres-2026-10-29.json`,
+superseding earlier admission source hashes while retaining historical reports.
+It accepts no configured DSN or `.env`; it removes its database. Stop only the
+task-owned container afterward. Approval/capacity and concurrent-creation
+uniqueness are outside this verification.
+
+### MOD-038 complete admission, including approval
+
+With the marked disposable server ready, run
+`python3 scripts/modernization/verify_admission_approval.py` sequentially with
+other assessment suites. It reruns all preceding admission checks, then resets
+only its random database schema to verify approval authority/projections,
+membership/draft-order/count/round/JSON behavior, real uniqueness/FK failures,
+post-write/deferred-commit rollback and observed competing approval lock waits.
+Same-request replay and distinct-request allocation run through service and
+legacy facade. Results/source hashes go to
+`docs/modernization/evidence/mod-038-admission-complete-postgres-2026-10-29.json`,
+superseding previous admission hashes while retaining historical reports.
+No configured DSN or `.env` is accepted. The harness removes its database;
+stop only the task-owned container afterward. No new capacity policy or
+concurrent-creation uniqueness guarantee is implied.
+
 ### Baseline suite
 
 After the same marked container is ready, run this separate suite sequentially

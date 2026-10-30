@@ -174,14 +174,14 @@ class LeagueEndpoints:
             if requested_user_id != principal.user_id:
                 return jsonify({"error": "user_identity_mismatch"}), 403
 
-            created = self.leagueModel.create_join_request(
-                league_id=league_id, user_id=principal.user_id,
+            created = self.admission_service.create_request(
+                UserActor(principal.user_id, principal.subject), league_id=league_id,
                 message=body.get('message'), team_name=body.get('teamName'),
             )
             return jsonify(created), 201
         except PrincipalResolutionError as e:
             return jsonify({"error": e.code}), e.status_code
-        except ValueError as e:
+        except (ValueError, AdmissionRejected) as e:
             return jsonify({"message": str(e)}), 400
         except Exception:
             logger.exception("Failed to create join request")
@@ -242,15 +242,16 @@ class LeagueEndpoints:
             if requested_actor != principal.user_id:
                 return jsonify({"error": "actor_identity_mismatch"}), 403
 
-            result = self.leagueModel.approve_join_request_as_commissioner(
-                league_id=league_id, request_id=request_id, user_id=principal.user_id,
+            result = self.admission_service.approve_request(
+                UserActor(principal.user_id, principal.subject),
+                league_id=league_id, request_id=request_id,
             )
             return jsonify(result), 200
         except PrincipalResolutionError as e:
             return jsonify({"error": e.code}), e.status_code
-        except PermissionError as e:
+        except (PermissionError, AdmissionDenied) as e:
             return jsonify({"message": str(e)}), 403
-        except ValueError as e:
+        except (ValueError, AdmissionRejected) as e:
             return jsonify({"message": str(e)}), 400
         except Exception:
             logger.exception("Failed to approve join request")
@@ -275,15 +276,15 @@ class LeagueEndpoints:
             if requested_actor != principal.user_id:
                 return jsonify({"error": "actor_identity_mismatch"}), 403
 
-            updated = self.leagueModel.deny_join_request_as_commissioner(
-                league_id=league_id, request_id=request_id, user_id=principal.user_id,
+            updated = self.admission_service.deny_request(
+                UserActor(principal.user_id, principal.subject), league_id=league_id, request_id=request_id,
             )
             return jsonify(updated), 200
         except PrincipalResolutionError as e:
             return jsonify({"error": e.code}), e.status_code
-        except PermissionError as e:
+        except (PermissionError, AdmissionDenied) as e:
             return jsonify({"message": str(e)}), 403
-        except ValueError as e:
+        except (ValueError, AdmissionRejected) as e:
             return jsonify({"message": str(e)}), 400
         except Exception:
             logger.exception("Failed to deny join request")

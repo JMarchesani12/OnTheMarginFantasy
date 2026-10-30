@@ -1,5 +1,39 @@
 # Regression verification baseline
 
+## MOD-038 admission approval; admission extraction complete — 2026-10-29
+
+Approval now calls the actor-requiring admission service from HTTP. The service verifies commissioner under League FOR UPDATE, then locks the URL-scoped request, requires PENDING and owns one transaction for membership, capacity/draft rounds and request resolution. Repository SQL preserves MAX(draftOrder)+1, fallback team, zero points, original JSON CTE behavior, resolver attribution and projections. Trusted legacy approval remains explicit; model and supplied-connection private helper signatures remain compatible.
+
+| Verification | Fresh result |
+| --- | --- |
+| Guarded baseline backend | Exit 0, 419/419 |
+| New direct-service tests | Initial RED: six missing-operation assertion failures and one passing trusted compatibility case; GREEN 7/7 |
+| `python3 api/tests/run_isolated.py` | Exit 0, 426/426, including final fresh rerun; existing authorization suites unchanged |
+| `python3 scripts/modernization/verify_admission_approval.py` | Exit 0, native PostgreSQL PASS; all preceding admission checks rerun |
+| Independent final review | No Critical/Important/Minor findings; reviewer separately ran focused guarded suite, 7/7 |
+| AST/dependency/diff checks | Non-approval model methods unchanged from slice baseline; transport/model/configured-engine dependencies absent from admission service/repository; diff check passes |
+
+[Native results and source hashes](evidence/mod-038-admission-complete-postgres-2026-10-29.json) verify exact request/member projections and native timestamps, authority/URL/state rejection, count/round thresholds/floor, unrelated JSON preservation, team fallback and actual jsonb_set behavior for null settings or missing draft parent. Real unique-member and resolver-FK failures roll back all tables; failures after each executed mutation and at deferred commit do likewise. Through both direct service and legacy facade, same-request competitors wait on PostgreSQL locks and reject replay without duplicate membership; distinct-request competitors wait and produce consecutive draft positions plus consistent count/round updates. Trusted audit actor and private supplied-connection compatibility also pass. Listing/cancellation/creation/denial checks rerun unchanged.
+
+Only the marked loopback server and owned random database were used; harness accepts no configured DSN/.env. Database and task-owned container `otm-mod038-admission-complete-20261029` removed. New report supersedes prior admission source hashes; earlier evidence retained. All admission request operations are now extracted; wider league methods and MOD-012 correctness work remain separate. No new capacity limit/concurrent-creation uniqueness guarantee, schema, hosted DB, frontend, dependency, listener or deployment changes.
+
+## MOD-038 admission creation/denial — 2026-10-29
+
+Extended league-local admission services/repositories to creation and denial. Creation validates/trims team name before persistence, checks membership first and returns existing pending requests unchanged, including the existing 201 HTTP response. Database/FK failures retain operational-failure behavior. Commissioner denial locks league then request, verifies authority/scope/PENDING and records resolver. Trusted legacy denial remains an explicit job path unavailable through HTTP flags. Model signatures, db-only construction and supplied-connection private helper remain compatible.
+
+| Verification | Fresh result |
+| --- | --- |
+| Baseline guarded backend | Exit 0, 412/412 |
+| Focused direct-service tests | 7/7; initial RED was six missing-method errors, one existing trusted compatibility case passed |
+| `python3 api/tests/run_isolated.py` | Exit 0, 419/419, including final fresh rerun |
+| `python3 scripts/modernization/verify_admission_create_deny.py` | Exit 0, native PostgreSQL PASS; also reruns prior listing/cancellation checks |
+| Independent final code review | No Critical/Important/Minor findings; reviewer's separate test import lacked SUPABASE_PROJECT_ID, so guarded parent runs supply execution evidence |
+| AST/import/diff checks | All non-target league methods unchanged; service/repository remain independent of transport/model/configured-engine imports; diff check passes |
+
+[Native results/source hashes](evidence/mod-038-admission-create-deny-postgres-2026-10-29.json) verify exact creation projection, normalization, sequential repeat without overwrite, membership and actual FK failures, insertion statement/deferred-commit rollback, denial authority/URL scope/resolver, executed-update/deferred-commit rollback and trusted/private-helper compatibility. Competing denials through direct service and legacy facade observe a PostgreSQL lock wait, league→request lock order, one DENIED transition and defined replay rejection. Listing/cancellation projection, revocation, rollback and competing lock tests also pass again. This report supersedes previous admission source hashes; earlier reports remain historical evidence.
+
+Harness uses only the marked loopback server and its own random synthetic database, never configured DSNs/.env. Database and task-owned container `otm-mod038-admission-next-20261029` removed. Approval and capacity remain unchanged; no new concurrent-creation uniqueness guarantee, schema, hosted DB, frontend, dependencies, listener or deployment changes.
+
 ## MOD-038 admission listing/cancellation — 2026-10-29
 
 Extracted commissioner-only join-request listing and applicant-owned cancellation into league-local admission service/repository. New HTTP entry points require UserActor; compatibility methods use explicit verified-ID/trusted bridges. Model delegates construct a lightweight service from db so actual __new__ callers remain supported. The private listing helper preserves its scope-only query behavior without adding a new precheck.
