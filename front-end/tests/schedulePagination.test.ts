@@ -3,6 +3,16 @@ import test from "node:test";
 import { buildSchedulePages, getSchedulePageIndex, moveSchedulePage } from "../src/utils/schedulePagination.ts";
 import { buildDateHeadersFromWeek } from "../src/utils/scheduleTable.ts";
 
+test("football Tuesday through Monday stays on one page and advances to the next scoring week", () => {
+  const pages = buildSchedulePages(buildDateHeadersFromWeek("2026-10-27T05:00:00Z", "2026-11-03T05:59:59.999Z", "America/Chicago"));
+  assert.deepEqual(pages.map(page => [page[0].key, page.at(-1)?.key]), [
+    ["2026-10-27", "2026-11-02"],
+  ]);
+  assert.equal(pages[0].length, 7);
+  assert.equal(getSchedulePageIndex(pages, null, "2026-11-02"), 0);
+  assert.deepEqual(moveSchedulePage(9, 0, pages.length, 1, 1, 20), { weekNumber: 10, pageIndex: 0 });
+});
+
 test("opening dates paginate without advancing the scoring week", () => {
   const pages = buildSchedulePages(buildDateHeadersFromWeek("2026-10-26T00:00:00Z", "2026-11-08T23:59:59Z"));
   assert.deepEqual(pages.map(page => [page[0].key, page.at(-1)?.key]), [

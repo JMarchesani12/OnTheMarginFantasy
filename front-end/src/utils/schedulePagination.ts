@@ -1,6 +1,10 @@
 import type { DateHeader } from "./scheduleTable";
 
 export function buildSchedulePages(headers: DateHeader[]): DateHeader[][] {
+  // Keep a single scoring week intact, including football's Tuesday–Monday window.
+  // Only longer periods need calendar-week pagination.
+  if (headers.length <= 7) return headers.length ? [headers] : [];
+
   const pages: DateHeader[][] = [];
   for (const header of headers) {
     const isMonday = new Date(`${header.key}T00:00:00Z`).getUTCDay() === 1;
