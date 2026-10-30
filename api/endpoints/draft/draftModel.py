@@ -12,6 +12,7 @@ from sqlalchemy.engine import Engine
 from endpoints.draft.notifyChannel import notify_draft_updated
 from .snapshot_service import DraftSnapshotService
 from .control_service import DraftControlService
+from .draft_rules import compute_round_and_pos, draft_order_for_pick
 
 
 class DraftModel:
@@ -59,74 +60,13 @@ class DraftModel:
             return row is not None
 
     def _get_draft_settings(self, conn, league_id: int) -> Dict[str, Any]:
-        row = conn.execute(
-            text('SELECT settings, "numPlayers" FROM "League" WHERE id = :leagueId'),
-            {"leagueId": league_id},
-        ).fetchone()
-        if not row:
-            raise ValueError(f"League {league_id} not found")
-
-        settings = row._mapping["settings"] or {}
-        draft = (settings.get("draft") or {})
-
-        # Exact keys based on what you provided
-        draft_type_raw = (draft.get("draftType") or "SNAKE")
-        selection_time = draft.get("selectionTime")
-        number_of_rounds = draft.get("numberOfRounds")
-        timeout_action_raw = (draft.get("timeoutAction") or "AUTO-SKIP")
-        grace_seconds = draft.get("graceSeconds", 0)
-
-        try:
-            selection_time = int(selection_time)
-            number_of_rounds = int(number_of_rounds)
-            grace_seconds = int(grace_seconds)
-        except Exception as e:
-            raise ValueError("Invalid draft settings types. Expected integers for selectionTime/numberOfRounds/graceSeconds.") from e
-
-        if selection_time <= 0:
-            raise ValueError("League settings draft.selectionTime must be > 0")
-        if number_of_rounds <= 0:
-            raise ValueError("League settings draft.numberOfRounds must be > 0")
-        if grace_seconds < 0:
-            raise ValueError("League settings draft.graceSeconds must be >= 0")
-
-        draft_type = str(draft_type_raw).upper()
-        if draft_type not in ("SNAKE", "STRAIGHT"):
-            raise ValueError("League settings draft.draftType must be SNAKE or STRAIGHT")
-
-        timeout_action = str(timeout_action_raw).upper()
-        if timeout_action not in ("AUTO-PICK", "AUTO-SKIP"):
-            raise ValueError("League settings draft.timeoutAction must be AUTO-PICK or AUTO-SKIP")
-
-        num_players = int(row._mapping["numPlayers"])
-        if num_players <= 0:
-            raise ValueError("League numPlayers must be > 0")
-
-        return {
-            "draftType": draft_type,                 # "SNAKE" | "STRAIGHT"
-            "selectionTime": selection_time,         # seconds
-            "numberOfRounds": number_of_rounds,
-            "timeoutAction": timeout_action,         # "AUTO-PICK" | "AUTO-SKIP"
-            "graceSeconds": grace_seconds,
-            "numPlayers": num_players,
-        }
+        return DraftControlService(None).draft_settings(conn, league_id)
 
     def _compute_round_and_pos(self, overall_pick: int, num_players: int) -> tuple[int, int]:
-        """round_number is 1-indexed; pos_in_round is 1..num_players"""
-        round_number = math.ceil(overall_pick / num_players)
-        pos_in_round = overall_pick - (round_number - 1) * num_players
-        return round_number, pos_in_round
+        return compute_round_and_pos(overall_pick, num_players)
 
     def _draft_order_for_pick(self, draft_type: str, round_number: int, pos_in_round: int, num_players: int) -> int:
-        """
-        Returns the draftOrder (1..num_players) who is on the clock for this pick.
-        """
-        if draft_type == "STRAIGHT":
-            return pos_in_round
-        # SNAKE
-        if round_number % 2 == 1:
-            return pos_in_round
-        return num_players - pos_in_round + 1
+        return draft_order_for_pick(draft_type, round_number, pos_in_round, num_players)
 
     def _member_id_for_draft_order(self, conn, league_id: int, draft_order: int) -> int:
         row = conn.execute(
@@ -927,189 +867,29 @@ class DraftModel:
         return rounds
     
     def start_draft(self, league_id: int, *, acting_user_id: Optional[int] = None) -> Dict[str, Any]:
-        """
-        Sets DraftState to live and initializes:
-        - currentOverallPickNumber = 1
-        - currentMemberId = member with draftOrder=1
-        - expiresAt = now + selectionTime
-        """
-        with self._draft_control_transaction(league_id, acting_user_id) as conn:
-            cfg = self._get_draft_settings(conn, league_id)
-            selection_time = cfg["selectionTime"]
-            num_players = cfg["numPlayers"]
-
-            # Validate draft order is complete (has 1..num_players)
-            missing = conn.execute(
-                text("""
-                    SELECT gs AS missingOrder
-                    FROM generate_series(1, :numPlayers) gs
-                    LEFT JOIN "LeagueMember" lm
-                      ON lm."leagueId" = :leagueId AND lm."draftOrder" = gs
-                    WHERE lm.id IS NULL
-                    ORDER BY gs
-                """),
-                {"leagueId": league_id, "numPlayers": num_players},
-            ).mappings().all()
-
-            if missing:
-                missing_orders = [int(r["missingOrder"]) for r in missing]
-                raise ValueError(f"Draft order incomplete. Missing draftOrder values: {missing_orders}")
-
-            self.seed_draft_turns(conn, league_id)
-
-            first_member_id = self._get_expected_member_for_overall(conn, league_id, 1)
-            if not first_member_id:
-                raise ValueError("DraftTurn not seeded correctly (missing overallPickNumber=1)")
-
-            # Upsert DraftState row
-            conn.execute(
-                text("""
-                    INSERT INTO "DraftState"
-                        ("leagueId", status, "currentOverallPickNumber", "currentMemberId", "expiresAt", "updatedAt")
-                    VALUES
-                        (:leagueId, 'live', 1, :currentMemberId, now() + (:selectionTime || ' seconds')::interval, now())
-                    ON CONFLICT ("leagueId") DO UPDATE
-                    SET status = 'live',
-                        "currentOverallPickNumber" = 1,
-                        "currentMemberId" = EXCLUDED."currentMemberId",
-                        "expiresAt" = EXCLUDED."expiresAt",
-                        "updatedAt" = now()
-                """),
-                {
-                    "leagueId": league_id,
-                    "currentMemberId": first_member_id,
-                    "selectionTime": selection_time,
-                },
-            )
-
-            conn.execute(
-                text("""
-                    UPDATE "League"
-                    SET status = 'Drafting',
-                        "updatedAt" = now()
-                    WHERE id = :leagueId
-                """),
-                {"leagueId": league_id},
-            )
-
-            return self.get_draft_state_snapshot(league_id, conn=conn)
+        service = DraftControlService(self.db)
+        if acting_user_id is None:
+            return service.start_for_job(league_id)
+        return service.start_for_legacy_user_id(league_id, acting_user_id)
 
     def pause_draft(self, league_id: int, *, acting_user_id: Optional[int] = None) -> Dict[str, Any]:
-        with self._draft_control_transaction(league_id, acting_user_id) as conn:
-            state = conn.execute(
-                text("""
-                    SELECT status FROM "DraftState"
-                    WHERE "leagueId" = :leagueId
-                    FOR UPDATE
-                """),
-                {"leagueId": league_id},
-            ).fetchone()
-
-            if not state:
-                raise ValueError("DraftState not found. Start draft first.")
-
-            if str(state._mapping["status"]) == "complete":
-                raise ValueError("Draft is complete")
-
-            conn.execute(
-                text("""
-                    UPDATE "DraftState"
-                    SET status = 'paused',
-                        "expiresAt" = NULL,
-                        "updatedAt" = now()
-                    WHERE "leagueId" = :leagueId
-                """),
-                {"leagueId": league_id},
-            )
-
-            return self.get_draft_state_snapshot(league_id, conn=conn)
+        service = DraftControlService(self.db)
+        if acting_user_id is None:
+            return service.pause_for_job(league_id)
+        return service.pause_for_legacy_user_id(league_id, acting_user_id)
 
     def resume_draft(self, league_id: int, *, acting_user_id: Optional[int] = None) -> Dict[str, Any]:
-        with self._draft_control_transaction(league_id, acting_user_id) as conn:
-            cfg = self._get_draft_settings(conn, league_id)
-            selection_time = cfg["selectionTime"]
-
-            state = conn.execute(
-                text("""
-                    SELECT status FROM "DraftState"
-                    WHERE "leagueId" = :leagueId
-                    FOR UPDATE
-                """),
-                {"leagueId": league_id},
-            ).fetchone()
-
-            if not state:
-                raise ValueError("DraftState not found. Start draft first.")
-
-            if str(state._mapping["status"]) == "complete":
-                raise ValueError("Draft is complete")
-
-            conn.execute(
-                text("""
-                    UPDATE "DraftState"
-                    SET status = 'live',
-                        "expiresAt" = now() + (:selectionTime || ' seconds')::interval,
-                        "updatedAt" = now()
-                    WHERE "leagueId" = :leagueId
-                """),
-                {"leagueId": league_id, "selectionTime": selection_time},
-            )
-
-            return self.get_draft_state_snapshot(league_id, conn=conn)
+        service = DraftControlService(self.db)
+        if acting_user_id is None:
+            return service.resume_for_job(league_id)
+        return service.resume_for_legacy_user_id(league_id, acting_user_id)
         
     def seed_draft_turns(self, conn, league_id: int) -> None:
-        """
-        Seeds DraftTurn for ALL overall pick numbers (1..total_picks) based on your
-        draft settings and LeagueMember.draftOrder.
-        Idempotent: ON CONFLICT DO NOTHING.
-        """
-        cfg = self._get_draft_settings(conn, league_id)
-        num_players = int(cfg["numPlayers"])
-        rounds = int(cfg["numberOfRounds"])
-        draft_type = cfg["draftType"]
-        total_picks = rounds * num_players
-
-        # Build draftOrder -> memberId map
-        members = conn.execute(
-            text("""
-                SELECT id AS "memberId", "draftOrder"
-                FROM "LeagueMember"
-                WHERE "leagueId" = :leagueId
-                ORDER BY "draftOrder" ASC
-            """),
-            {"leagueId": league_id},
-        ).fetchall()
-
-        order_to_member = {int(r._mapping["draftOrder"]): int(r._mapping["memberId"]) for r in members}
-
-        rows = []
-        for overall in range(1, total_picks + 1):
-            rnd, pos = self._compute_round_and_pos(overall, num_players)
-            draft_order = self._draft_order_for_pick(draft_type, rnd, pos, num_players)
-            member_id = order_to_member[draft_order]
-            rows.append({"leagueId": league_id, "overallPickNumber": overall, "memberId": member_id})
-
-        conn.execute(
-            text("""
-                INSERT INTO "DraftTurn" ("leagueId","overallPickNumber","memberId")
-                VALUES (:leagueId, :overallPickNumber, :memberId)
-                ON CONFLICT ("leagueId","overallPickNumber") DO NOTHING
-                """),
-                rows,
-            )
+        return DraftControlService(None).seed_turns(conn, league_id)
 
 
     def _get_expected_member_for_overall(self, conn, league_id: int, overall_pick_number: int) -> Optional[int]:
-        row = conn.execute(
-            text("""
-                SELECT "memberId"
-                FROM "DraftTurn"
-                WHERE "leagueId" = :leagueId
-                AND "overallPickNumber" = :overall
-            """),
-            {"leagueId": league_id, "overall": overall_pick_number},
-        ).fetchone()
-        return int(row._mapping["memberId"]) if row else None
+        return DraftControlService(None).expected_member(conn, league_id, overall_pick_number)
 
 
     def _get_next_unpicked_turn_from(self, conn, league_id: int, start_overall: int) -> Optional[tuple[int, int]]:

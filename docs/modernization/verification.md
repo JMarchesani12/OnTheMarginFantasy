@@ -1,5 +1,23 @@
 # Regression verification baseline
 
+## MOD-038 draft start/pause/resume — 2026-10-30
+
+Control service now owns actor/trusted paths, pre/post commissioner checks, one transaction and same-connection trusted snapshot for start/pause/resume. Repository owns settings/turn/control SQL; draft_rules contains original settings validation and snake/straight arithmetic. Model settings/seed/expected-member/math/control helpers delegate; other commands unchanged. Start still reads settings again during seeding; resume validates config before state lock, pause does not. Original clocks/current pointer/repeated-start/upsert semantics preserved. HTTP publishes after successful commit as before.
+
+| Verification | Fresh result |
+| --- | --- |
+| Guarded baseline | Exit 0, 501/501 |
+| Direct-service tests | RED five missing-operation assertions plus one passing legacy case; GREEN 6/6 |
+| `python3 api/tests/run_isolated.py` | Exit 0, 507/507 including final fresh rerun after alias repair; existing tests unchanged |
+| `python3 scripts/modernization/verify_draft_controls.py` | Exit 0, native PostgreSQL PASS; prior snapshot/finalization suites rerun |
+| Native correctness regression | RED real incomplete-order case raised KeyError(missingOrder); quote original unquoted alias, GREEN intended ValueError missing-order validation and rollback |
+| Independent review | No Critical/Important/Minor findings; focused guarded suite 6/6; alias repair reviewed |
+| AST/dependency/diff checks | Other model methods unchanged; control/rules independent of transport/model/configured-engine imports; diff check passes |
+
+[Native results/source hashes](evidence/mod-038-draft-controls-postgres-2026-10-30.json) verify actual generate_series, intervals, upsert and snake/straight rows, turn seeding, missing/complete/config guards and original restart behavior. The single SQL correctness repair quotes internal "missingOrder" so PostgreSQL returns the consumer's expected key instead of lowercase; incomplete order now raises intended ValueError/HTTP400, not KeyError/500. Failures after seed/state/league writes and deferred commit roll back all rows; separate-connection commissioner changes reject at post-check and preserve only independent ownership change. Two service/facade pause→resume cases observe actual PostgreSQL row-lock waits and end paused→live. Prior native snapshot/finalization checks pass; current report supersedes earlier draft hashes, history retained.
+
+Original pre/post authority and state locks remain; no new replay/concurrency policy added and start can still reset state. Order/picks/timeouts remain separate. Harness uses marked loopback server/owned random DB only, no configured DSN/.env. Database/container `otm-mod038-draft-controls-20261030` removed. Checkout uncommitted; no schema, hosted DB, frontend, dependency, listener or deployment changes.
+
 ## MOD-038 draft finalization — 2026-10-30
 
 DraftControlService owns actor validation, pre/post commissioner authority, central finalization and transaction ownership. Repository contains original commissioner read, state update and season-derived league status update. Model finalizer supports trusted/caller connection, force-finalize retains None guard/integer legacy coercion and assertion facade supports remaining original controls. HTTP finalize uses actor service, then original trusted snapshot and broadcast after commit. No new lock, status/replay guard or notification.

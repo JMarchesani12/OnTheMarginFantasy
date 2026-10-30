@@ -345,6 +345,18 @@ and caller rollback, trusted/legacy paths. Results/source hashes:
 Prior draft source hashes superseded; history retained. No configured DSN/.env;
 owned random DB removed. Stop only the task-owned container afterward.
 
+### MOD-038 draft start/pause/resume
+
+Run `python3 scripts/modernization/verify_draft_controls.py` on the marked server,
+sequentially with other suites. It reruns snapshot/finalization, then tests real
+generate_series/interval/upsert/snake/straight SQL, incomplete order/config/state
+guards, write/commit/authority rollback and observed pause/resume state locks
+through service/facade. Results/source hashes:
+`docs/modernization/evidence/mod-038-draft-controls-postgres-2026-10-30.json`.
+The missing-order case guards PostgreSQL alias folding. Prior draft hashes
+superseded; history retained. No configured DSN/.env; owned random DB removed.
+Stop only the task-owned container afterward. Existing restart behavior retained.
+
 ### Baseline suite
 
 After the same marked container is ready, run this separate suite sequentially

@@ -1,0 +1,58 @@
+{
+  "result": "PASS",
+  "scope": "Synthetic marked loopback PostgreSQL; no configured/hosted database",
+  "snapshot_rerun": {
+    "member_only_scope_before_repair": "PASS",
+    "native_json_timestamps_picks_season_join_turn_skipping": "PASS",
+    "missing_state_trusted_legacy_supplied_connection": "PASS",
+    "repair_post_read_commit_caller_rollback": "PASS",
+    "separate_connection_pre_query_revocation": "PASS"
+  },
+  "finalization_rerun": {
+    "native_final_state_season_date_boundaries_projection_timestamps": "PASS",
+    "no_season_and_missing_state_compatibility": "PASS",
+    "post_write_real_statement_commit_and_caller_rollback": "PASS",
+    "separate_connection_pre_post_authority_rejection": "PASS",
+    "trusted_and_legacy_supplied_connection": "PASS",
+    "scope_limit": "Original pre/post authority checks add no locks or replay/concurrency guarantee"
+  },
+  "controls": {
+    "native_generate_series_snake_straight_interval_upsert": "PASS",
+    "incomplete_order_config_missing_complete_guards": "PASS",
+    "post_write_deferred_commit_and_authority_rollback": "PASS",
+    "concurrent_pause_resume": [
+      {
+        "path": "service",
+        "observed_lock_wait": true,
+        "outcomes": {
+          "first": "paused",
+          "second": "live"
+        }
+      },
+      {
+        "path": "legacy_facade",
+        "observed_lock_wait": true,
+        "outcomes": {
+          "first": "paused",
+          "second": "live"
+        }
+      }
+    ],
+    "legacy_trusted_reset_compatibility": "PASS",
+    "scope_limit": "Existing restart/ON CONFLICT behavior preserved; no new replay guarantee"
+  },
+  "sha256": {
+    "api/endpoints/draft/draft_rules.py": "ff00676d5c367a65cf116743bf061918be41c86b537b7c9f5f2f2bc9118b8158",
+    "api/endpoints/draft/control_service.py": "d54ee4f2f82e70f8a7c3d011f30d388f8d6b7b00fe4fb4dcf0594673442f5542",
+    "api/endpoints/draft/control_repository.py": "1b19ff168cbc3c361628df214ab4d0c408dfb6159a67a9a706bd3895acc33501",
+    "api/endpoints/draft/snapshot_service.py": "671165c3af27febb9a239bacf31bde2694462287cf0143b31ba12ffc796d56e4",
+    "api/endpoints/draft/snapshot_repository.py": "46fe264b9986c2268f104465649c8ee1387c75f32b684b0d6f4f20e4998f9be2",
+    "api/endpoints/draft/draftModel.py": "c52ec159ba27f3b81041f796c956c7a0b38343efce58d2718eb474e1dd7704cf",
+    "api/endpoints/draft/draftEndpoints.py": "0ad132d8da2bac2fc73288c5bdc5af19dc05ee669e496f64d5205230131ac8fb",
+    "api/endpoints/draft/routes.py": "10f373a7205d38a05ce4ff2e82464d6af9ac795cf342b9d918c4eb3b3644f1e9",
+    "api/actors.py": "6b0ea454e1227c2e9fe94cb3ca76db15a799ec3b5481a063b0fd2705318b789f",
+    "scripts/modernization/verify_draft_snapshot.py": "b0e970d84d574fb489cd69feae5b104d7d46c50c967671715054e41759eeabc8",
+    "scripts/modernization/verify_draft_finalization.py": "4c97a527bf34c827ce4fefae534b3e8ee0a72544c8d2fdcc6e150475ba691dce",
+    "scripts/modernization/verify_draft_controls.py": "592c257e550bcfddc6234fa525dd31ee4138e5a1b7fc0dac346aa9e8f8d82c02"
+  }
+}

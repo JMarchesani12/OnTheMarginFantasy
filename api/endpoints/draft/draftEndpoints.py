@@ -135,11 +135,11 @@ class DraftEndpoints:
                 broadcast_draft_update(league_id, {'type': action, 'snapshot': snapshot})
             else:
                 method = {
-                    'start': self.draftModel.start_draft,
-                    'pause': self.draftModel.pause_draft,
-                    'resume': self.draftModel.resume_draft,
+                    'start': self.control_service.start,
+                    'pause': self.control_service.pause,
+                    'resume': self.control_service.resume,
                 }[action]
-                result = method(league_id, acting_user_id=principal.user_id)
+                result = method(UserActor(principal.user_id, principal.subject), league_id)
                 broadcast_draft_update(league_id, {'type': action, 'snapshot': result})
             return jsonify(result), 200
         except PrincipalResolutionError as exc:
