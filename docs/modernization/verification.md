@@ -1,5 +1,22 @@
 # Regression verification baseline
 
+## MOD-038 draft-order control — 2026-10-30
+
+Control service owns actor/trusted order selection, original empty-input-before-legacy-DB guard, pre/post commissioner checks, state/member validation and one bump/assign/projection transaction. Repository owns original unlocked state query, ANY bigint-array selection/count, +100000 bump, unnest/generate_series assignment and ordered member projection. Model signatures/defaults/coercion retained; HTTP uses actor service and preserves URL/body parsing and no broadcast.
+
+| Verification | Fresh result |
+| --- | --- |
+| Guarded baseline | Exit 0, 507/507 |
+| Direct-service tests | RED four missing-operation assertions plus one passing legacy case; GREEN 5/5 |
+| `python3 api/tests/run_isolated.py` | Exit 0, 512/512 including final fresh rerun; existing tests unchanged |
+| `python3 scripts/modernization/verify_draft_order.py` | Exit 0, native PostgreSQL PASS; earlier snapshot/finalization/control suites rerun |
+| Independent review | No Critical/Important/Minor findings; focused guarded suite 5/5 |
+| AST/dependency/diff checks | All other model methods unchanged; control imports transport/model/configured-engine independent; diff check passes |
+
+[Native results/source hashes](evidence/mod-038-draft-order-postgres-2026-10-30.json) verify real bigint arrays/ANY/unnest/generate_series with actual unique-order index, exact swap/partial projection and other league isolation. Empty/foreign/duplicate/missing/started/authority guards preserved. Failure after bump/assignment/member read, actual assignment statement error and deferred commit restore prior state. Separate connection changes commissioner before bump; final check rejects and rolls back member changes while preserving independent ownership change. Legacy trusted/coercion paths and prior draft suites pass; report supersedes previous draft source hashes while retaining history.
+
+Original partial lists keep omitted orders bumped; no full-permutation, new lock or concurrent-start guard introduced. Those remain MOD-025/correctness work; picks/timeouts decomposition separate. Harness uses marked loopback server/owned random DB only, no configured DSN/.env. Database/container `otm-mod038-draft-order-20261030` removed. Checkout uncommitted; no schema, hosted DB, frontend, dependency, listener or deployment changes.
+
 ## MOD-038 draft start/pause/resume — 2026-10-30
 
 Control service now owns actor/trusted paths, pre/post commissioner checks, one transaction and same-connection trusted snapshot for start/pause/resume. Repository owns settings/turn/control SQL; draft_rules contains original settings validation and snake/straight arithmetic. Model settings/seed/expected-member/math/control helpers delegate; other commands unchanged. Start still reads settings again during seeding; resume validates config before state lock, pause does not. Original clocks/current pointer/repeated-start/upsert semantics preserved. HTTP publishes after successful commit as before.

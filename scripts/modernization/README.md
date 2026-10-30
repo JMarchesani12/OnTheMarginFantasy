@@ -357,6 +357,17 @@ The missing-order case guards PostgreSQL alias folding. Prior draft hashes
 superseded; history retained. No configured DSN/.env; owned random DB removed.
 Stop only the task-owned container afterward. Existing restart behavior retained.
 
+### MOD-038 draft order
+
+Run `python3 scripts/modernization/verify_draft_order.py` on the marked server,
+sequentially with other suites. It reruns snapshot/finalization/controls, then
+verifies real arrays/ANY/unnest/generate_series/unique-order swaps, original guards
+and partial lists, bump/assignment/read/statement/commit rollback and independent
+authority revocation. Results/source hashes:
+`docs/modernization/evidence/mod-038-draft-order-postgres-2026-10-30.json`.
+Prior draft hashes superseded; history retained. No configured DSN/.env; owned
+random DB removed. Stop only the task-owned container afterward.
+
 ### Baseline suite
 
 After the same marked container is ready, run this separate suite sequentially

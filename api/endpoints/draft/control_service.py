@@ -144,3 +144,27 @@ class DraftControlService:
         self._require_active_state(state)
         self.repository.resume_state(conn, league_id, cfg['selectionTime'])
         return DraftSnapshotService(self.engine).snapshot_for_job(league_id, conn)
+
+    def set_order(self, actor, league_id, member_ids):
+        if not isinstance(actor, UserActor):
+            raise TypeError('A verified UserActor is required')
+        return self.set_order_for_legacy_user_id(league_id, member_ids, actor.user_id)
+
+    def set_order_for_job(self, league_id, member_ids):
+        return self.set_order_for_legacy_user_id(league_id, member_ids, None)
+
+    def set_order_for_legacy_user_id(self, league_id, member_ids, user_id):
+        if not member_ids:
+            raise ValueError('memberIdsInOrder is required')
+        return self._with_control(league_id, user_id, lambda conn, league: self._set_order(conn, league, member_ids))
+
+    def _set_order(self, conn, league_id, member_ids):
+        state = self.repository.order_state(conn, league_id)
+        if state and str(state['status']) in ('live', 'paused', 'complete'):
+            raise ValueError('Cannot change draft order after draft has started')
+        members = self.repository.order_members(conn, league_id, member_ids)
+        if len(members) != len(member_ids):
+            raise ValueError('One or more memberIds are not in this league')
+        self.repository.bump_orders(conn, league_id)
+        self.repository.assign_order(conn, league_id, member_ids)
+        return {'members': self.repository.ordered_members(conn, league_id)}

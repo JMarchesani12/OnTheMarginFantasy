@@ -125,3 +125,46 @@ class DraftControlRepository:
                         "updatedAt" = now()
                     WHERE "leagueId" = :leagueId
                 """), {'leagueId': league_id, 'selectionTime': selection_time})
+
+    def order_state(self, conn, league_id):
+        row = conn.execute(text("""SELECT status FROM "DraftState" WHERE "leagueId" = :leagueId"""), {'leagueId': league_id}).fetchone()
+        return dict(row._mapping) if row else None
+
+    def order_members(self, conn, league_id, member_ids):
+        rows = conn.execute(text("""
+                    SELECT id
+                    FROM "LeagueMember"
+                    WHERE "leagueId" = :leagueId
+                      AND id = ANY(CAST(:ids AS bigint[]))
+                """), {'leagueId': league_id , 'ids': member_ids}).fetchall()
+        return [dict(row._mapping) for row in rows]
+
+    def bump_orders(self, conn, league_id):
+        conn.execute(text("""
+                    UPDATE "LeagueMember"
+                    SET "draftOrder" = "draftOrder" + 100000
+                    WHERE "leagueId" = :leagueId
+                """), {'leagueId': league_id})
+
+    def assign_order(self, conn, league_id, member_ids):
+        conn.execute(text("""
+                    WITH input AS (
+                        SELECT
+                            unnest(CAST(:ids AS bigint[])) AS member_id,
+                            generate_series(1, array_length(CAST(:ids AS bigint[]), 1)) AS new_order
+                    )
+                    UPDATE "LeagueMember" lm
+                    SET "draftOrder" = i.new_order
+                    FROM input i
+                    WHERE lm.id = i.member_id
+                      AND lm."leagueId" = :leagueId
+                """), {'leagueId': league_id , 'ids': member_ids})
+
+    def ordered_members(self, conn, league_id):
+        rows = conn.execute(text("""
+                    SELECT id AS "memberId", "userId", "teamName", "draftOrder"
+                    FROM "LeagueMember"
+                    WHERE "leagueId" = :leagueId
+                    ORDER BY "draftOrder", id
+                """), {'leagueId': league_id}).mappings().all()
+        return [dict(row) for row in rows]

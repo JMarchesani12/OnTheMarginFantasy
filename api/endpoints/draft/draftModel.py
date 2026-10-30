@@ -906,70 +906,10 @@ class DraftModel:
 
     # Optional but recommended: prevent changing order mid-live draft
     def set_draft_order(self, league_id: int, member_ids_in_order: List[int], *, acting_user_id: Optional[int] = None) -> Dict[str, Any]:
-        if not member_ids_in_order:
-            raise ValueError("memberIdsInOrder is required")
-
-        with self._draft_control_transaction(league_id, acting_user_id) as conn:
-            # Block re-ordering once draft is live/paused/complete
-            state = conn.execute(
-                text('SELECT status FROM "DraftState" WHERE "leagueId" = :leagueId'),
-                {"leagueId": league_id},
-            ).fetchone()
-            if state and str(state._mapping["status"]) in ("live", "paused", "complete"):
-                raise ValueError("Cannot change draft order after draft has started")
-
-            # Ensure all ids belong to this league
-            rows = conn.execute(
-                text("""
-                    SELECT id
-                    FROM "LeagueMember"
-                    WHERE "leagueId" = :leagueId
-                      AND id = ANY(CAST(:ids AS bigint[]))
-                """),
-                {"leagueId": league_id, "ids": member_ids_in_order},
-            ).fetchall()
-
-            if len(rows) != len(member_ids_in_order):
-                raise ValueError("One or more memberIds are not in this league")
-
-            # 1) bump everything out of the way
-            conn.execute(
-                text("""
-                    UPDATE "LeagueMember"
-                    SET "draftOrder" = "draftOrder" + 100000
-                    WHERE "leagueId" = :leagueId
-                """),
-                {"leagueId": league_id},
-            )
-
-            # 2) set final order
-            conn.execute(
-                text("""
-                    WITH input AS (
-                        SELECT
-                            unnest(CAST(:ids AS bigint[])) AS member_id,
-                            generate_series(1, array_length(CAST(:ids AS bigint[]), 1)) AS new_order
-                    )
-                    UPDATE "LeagueMember" lm
-                    SET "draftOrder" = i.new_order
-                    FROM input i
-                    WHERE lm.id = i.member_id
-                      AND lm."leagueId" = :leagueId
-                """),
-                {"leagueId": league_id, "ids": member_ids_in_order},
-            )
-
-            updated_members = conn.execute(
-                text("""
-                    SELECT id AS "memberId", "userId", "teamName", "draftOrder"
-                    FROM "LeagueMember"
-                    WHERE "leagueId" = :leagueId
-                    ORDER BY "draftOrder", id
-                """),
-                {"leagueId": league_id},
-            ).mappings().all()
-
-        return {"members": [dict(m) for m in updated_members]}
+        service = DraftControlService(getattr(self, "db", None))
+        if acting_user_id is None:
+            return service.set_order_for_job(league_id, member_ids_in_order)
+        return service.set_order_for_legacy_user_id(league_id, member_ids_in_order, acting_user_id)
     
     def _get_league_sport_id(self, conn, league_id: int) -> int:
         row = conn.execute(

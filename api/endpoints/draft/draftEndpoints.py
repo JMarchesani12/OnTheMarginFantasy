@@ -124,10 +124,9 @@ class DraftEndpoints:
                 ids = body.get('memberIdsInOrder')
                 if not isinstance(ids, list) or not ids:
                     return jsonify({'message': 'memberIdsInOrder must be a non-empty array'}), 400
-                result = self.draftModel.set_draft_order(
-                    league_id=league_id,
-                    member_ids_in_order=[integer(value, 'memberId') for value in ids],
-                    acting_user_id=principal.user_id,
+                result = self.control_service.set_order(
+                    UserActor(principal.user_id, principal.subject), league_id,
+                    [integer(value, 'memberId') for value in ids],
                 )
             elif action == 'finalize':
                 result = self.control_service.finalize(UserActor(principal.user_id, principal.subject), league_id)
