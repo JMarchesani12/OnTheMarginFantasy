@@ -278,6 +278,41 @@ superseding prior hashes while retaining historical reports. No configured DSN
 or `.env` is accepted. It removes its database; stop only the task-owned container
 afterward. Anonymous public search and existing wildcard behavior are preserved.
 
+### MOD-038 league details and own listings
+
+Run `python3 scripts/modernization/verify_league_details.py` on the marked
+synthetic server, sequentially with other suites. It reruns preceding league/member/
+admission checks before resetting only its owned schema for native interval/week
+selection, scores/stages/membership/projections, original overlap behavior and
+explicit pre-read synchronization/revocation. Lifecycle algorithm remains unchanged.
+Results/source hashes: `docs/modernization/evidence/mod-038-league-details-postgres-2026-10-30.json`.
+This supersedes prior league hashes while retaining history. No configured DSN/.env;
+it removes its random database. Stop only the task-owned container afterward.
+
+### MOD-038 member lists and daily summaries
+
+Run `python3 scripts/modernization/verify_member_summary.py` on the marked
+synthetic server, sequentially with other suites. It reruns previous suites then
+resets its own schema for actual member/week/score SQL, public timezone lookup,
+week-zero/local/naive/aware date totals, null-start/no-week behavior, supplied game
+failure and pre-query membership revocation. Scheduling game algorithms are
+unchanged; supplied facts verify summary orchestration. Results/source hashes:
+`docs/modernization/evidence/mod-038-member-summary-postgres-2026-10-30.json`.
+Prior hashes superseded; history retained. No configured DSN/.env; random database
+removed. Stop only the task-owned container afterward.
+
+### MOD-038 complete league, including lifecycle
+
+Run `python3 scripts/modernization/verify_league_lifecycle.py` on the marked
+synthetic server, sequentially with other suites. It reruns all preceding league/
+member/admission checks before resetting its owned schema for lifecycle matrix,
+date boundaries/precedence, five post-phase/actual statement/deferred-commit
+rollback and real model/read callback integration. Results/source hashes:
+`docs/modernization/evidence/mod-038-league-complete-postgres-2026-10-30.json`.
+This supersedes prior league evidence hashes, retaining history. No configured
+DSN/.env; random DB removed. Stop only the task-owned container afterward.
+Existing global read-time synchronization and timestamp behavior are preserved.
+
 ### Baseline suite
 
 After the same marked container is ready, run this separate suite sequentially

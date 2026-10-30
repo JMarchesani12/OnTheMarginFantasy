@@ -1,9 +1,6 @@
-import datetime as dt
-import logging
 import os
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
 from endpoints.schedule.scheduleModel import ScheduleModel
@@ -12,6 +9,7 @@ from .admission_service import AdmissionService
 from .member_service import MemberService
 from .league_admin_service import LeagueAdminService
 from .league_read_service import LeagueReadService
+from .league_lifecycle_service import LeagueLifecycleService
 from .member_repository import ALLOWED_LEAGUE_MEMBER_FIELDS
 from .contracts import AdmissionDenied, AdmissionRejected
 from rules.leagueRules import get_timezone_name_from_settings, validate_timezone_name, ensure_timezone_in_settings
@@ -34,89 +32,7 @@ class LeagueModel:
         return LeagueReadService(self.db).member_previews_for_reader_id(league_id, user_id)
 
     def sync_due_league_statuses(self) -> None:
-        """
-        Keep League.status aligned with draft state and season dates.
-
-        DraftState live/paused owns Drafting. Completed seasons win last so old
-        leagues cannot be moved back by a stale draft state.
-        """
-        with self.db.begin() as conn:
-            conn.execute(
-                text("""
-                    UPDATE "League" l
-                    SET status = 'Pre-Draft',
-                        "updatedAt" = now()
-                    WHERE l."draftDate" IS NOT NULL
-                      AND now() < l."draftDate"
-                      AND l.status <> 'Pre-Draft'
-                      AND NOT EXISTS (
-                        SELECT 1
-                        FROM "DraftState" ds
-                        WHERE ds."leagueId" = l.id
-                          AND ds.status IN ('live', 'paused', 'complete')
-                      )
-                """)
-            )
-
-            conn.execute(
-                text("""
-                    UPDATE "League" l
-                    SET status = 'Drafting',
-                        "updatedAt" = now()
-                    FROM "DraftState" ds
-                    WHERE ds."leagueId" = l.id
-                      AND ds.status IN ('live', 'paused')
-                      AND l.status <> 'Drafting'
-                """)
-            )
-
-            conn.execute(
-                text("""
-                    UPDATE "League" l
-                    SET status = 'Post-Draft',
-                        "updatedAt" = now()
-                    FROM "DraftState" ds, "SportSeason" ss
-                    WHERE ds."leagueId" = l.id
-                      AND ss."sportId" = l.sport
-                      AND ss."seasonYear" = l."seasonYear"
-                      AND ds.status = 'complete'
-                      AND now()::date < ss."seasonStart"::date
-                      AND l.status <> 'Post-Draft'
-                """)
-            )
-
-            conn.execute(
-                text("""
-                    UPDATE "League" l
-                    SET status = 'In-Season',
-                        "updatedAt" = now()
-                    FROM "SportSeason" ss
-                    WHERE ss."sportId" = l.sport
-                      AND ss."seasonYear" = l."seasonYear"
-                      AND now()::date >= ss."seasonStart"::date
-                      AND now()::date <= ss."seasonEnd"::date
-                      AND l.status NOT IN ('Drafting', 'In-Season', 'Completed')
-                      AND NOT EXISTS (
-                        SELECT 1
-                        FROM "DraftState" ds
-                        WHERE ds."leagueId" = l.id
-                          AND ds.status IN ('live', 'paused')
-                      )
-                """)
-            )
-
-            conn.execute(
-                text("""
-                    UPDATE "League" l
-                    SET status = 'Completed',
-                        "updatedAt" = now()
-                    FROM "SportSeason" ss
-                    WHERE ss."sportId" = l.sport
-                      AND ss."seasonYear" = l."seasonYear"
-                      AND now()::date > ss."seasonEnd"::date
-                      AND l.status <> 'Completed'
-                """)
-            )
+        return LeagueLifecycleService(self.db).synchronize_for_job()
 
     def _get_timezone_name_from_settings(self, settings: Dict[str, Any]) -> Optional[str]:
         return get_timezone_name_from_settings(settings)
@@ -128,35 +44,11 @@ class LeagueModel:
         return ensure_timezone_in_settings(settings)
 
     def get_league(self, leagueId, reader_user_id: Optional[int] = None):
-        scope, reader_params = self._league_read_scope(leagueId, reader_user_id)
-        self.sync_due_league_statuses()
-
-        with self.db.begin() as conn:
-            league = conn.execute(
-                text(f"""
-                    SELECT
-                        l.*,
-                        w.id AS "currentWeekId",
-                        w."weekNumber" AS "currentWeekNumber",
-                        w."startDate" AS "currentWeekStartDate",
-                        w."endDate" AS "currentWeekEndDate"
-                    FROM "League" l
-                    LEFT JOIN "Week" w
-                      ON w."leagueId" = l.id
-                     AND now() >= COALESCE(
-                        w."startDate",
-                        w."endDate" + interval '1 microsecond' - interval '7 days'
-                     )
-                     AND now() <= w."endDate"
-                    WHERE l.id = :leagueId
-                    {scope}
-                    ORDER BY w."weekNumber" DESC NULLS LAST
-                    LIMIT 1
-                """),
-                {"leagueId": leagueId, **reader_params}
-            ).fetchone()
-
-        return dict(league._mapping) if league else None
+        service = LeagueReadService(self.db)
+        sync = lambda: self.sync_due_league_statuses()
+        if reader_user_id is None:
+            return service.details_for_job(leagueId, sync)
+        return service.details_for_reader_id(leagueId, reader_user_id, sync)
 
     def get_league_rules(self, league_id, reader_user_id: Optional[int] = None):
         service = LeagueReadService(self.db)
@@ -191,233 +83,18 @@ class LeagueModel:
     
     # 1) All leagues a user is in
     def get_leagues_for_user(self, user_id: int, stage: str = "all") -> List[Dict[str, Any]]:
-        """
-        stage: "all" | "active" | "completed"
-        - all: no additional status filter
-        - active: status != 'completed'
-        - completed: status = 'completed'
-        """
-
-        stage = (stage or "all").lower()
-        if stage not in ("all", "active", "completed"):
-            stage = "all"
-
-        self.sync_due_league_statuses()
-
-        base_sql = """
-            SELECT
-            -- League fields
-            l.id                AS "leagueId",
-            l."createdAt"       AS "leagueCreatedAt",
-            l."name"            AS "leagueName",
-            l."numPlayers"      AS "numPlayers",
-            l.status            AS "status",
-            l."updatedAt"       AS "updatedAt",
-            l."draftDate"       AS "draftDate",
-            l."tradeDeadline"   AS "tradeDeadline",
-            l."freeAgentDeadline" AS "freeAgentDeadline",
-            l."seasonYear"      AS "seasonYear",
-            l."settings"        AS "settings",
-
-            -- Commissioner info
-            cu."displayName"    AS "commissionerDisplayName",
-            cu."id"             AS "commissionerId",
-
-            -- Sport info
-            s.name              AS "sport",
-            s."maxPlayersToHaveMaxRounds" AS "maxPlayersToHaveMaxRounds",
-
-            -- Member-specific fields for this user
-            lm.id               AS "memberId",
-            lm."teamName"       AS "teamName",
-            lm."draftOrder"     AS "draftOrder",
-            COALESCE(sp."seasonPoints", lm."seasonPoints", 0) AS "seasonPoints",
-
-            -- Current week info (nullable if no matching week)
-            w.id                AS "currentWeekId",
-            w."weekNumber"      AS "currentWeekNumber",
-            w."startDate"       AS "currentWeekStartDate",
-            w."endDate"         AS "currentWeekEndDate"
-
-            FROM "LeagueMember" lm
-            JOIN "League"      l  ON l.id = lm."leagueId"
-            JOIN "Sport"       s  ON s.id = l."sport"
-            JOIN "User"        cu ON cu.id = l.commissioner
-            LEFT JOIN (
-                SELECT
-                    wts."leagueId",
-                    wts."memberId",
-                    SUM(wts."pointsAwarded") AS "seasonPoints"
-                FROM "WeeklyTeamScore" wts
-                JOIN "Week" w
-                  ON w.id = wts."weekId"
-                 AND w."weekNumber" >= 0
-                GROUP BY wts."leagueId", wts."memberId"
-            ) sp
-            ON sp."leagueId" = lm."leagueId"
-            AND sp."memberId" = lm.id
-
-            LEFT JOIN "Week"   w
-            ON w."leagueId" = l.id
-            AND now() >= COALESCE(
-                w."startDate",
-                w."endDate" + interval '1 microsecond' - interval '7 days'
-            )
-            AND now() <= w."endDate"
-
-            WHERE lm."userId" = :user_id
-        """
-
-        if stage == "active":
-            base_sql += " AND l.status <> 'Completed'"
-        elif stage == "completed":
-            base_sql += " AND l.status = 'Completed'"
-
-        base_sql += ' ORDER BY l.id, lm."draftOrder"'
-
-        sql = text(base_sql)
-
-        with self.db.connect() as conn:
-            result = conn.execute(sql, {"user_id": user_id})
-            rows = [dict(r._mapping) for r in result]
-
-        logging.debug(
-            "get_leagues_for_user(user_id=%s, stage=%s) -> %d rows",
-            user_id,
-            stage,
-            len(rows),
+        return LeagueReadService(self.db).mine_for_user_id(
+            user_id, lambda: self.sync_due_league_statuses(), stage,
         )
-        return rows
 
 
     def get_members_for_league(self, league_id: int, reader_user_id: Optional[int] = None) -> List[Dict[str, Any]]:
-        scope, reader_params = self._league_read_scope(league_id, reader_user_id)
-        sql = text(
-            f"""
-            SELECT
-              lm.id               AS "memberId",
-              lm."createdAt"      AS "memberCreatedAt",
-              lm."leagueId"       AS "leagueId",
-              lm."userId"         AS "userId",
-              lm."teamName"       AS "teamName",
-              lm."draftOrder"     AS "draftOrder",
-              COALESCE(sp."seasonPoints", lm."seasonPoints", 0) AS "seasonPoints",
-              u."displayName"     AS "displayName"
-            FROM "LeagueMember" lm
-            JOIN "User" u on u.id = lm."userId"
-            LEFT JOIN (
-                SELECT
-                    wts."leagueId",
-                    wts."memberId",
-                    SUM(wts."pointsAwarded") AS "seasonPoints"
-                FROM "WeeklyTeamScore" wts
-                JOIN "Week" w
-                  ON w.id = wts."weekId"
-                 AND w."weekNumber" >= 0
-                GROUP BY wts."leagueId", wts."memberId"
-            ) sp
-            ON sp."leagueId" = lm."leagueId"
-            AND sp."memberId" = lm.id
-            WHERE lm."leagueId" = :league_id
-            {scope}
-            ORDER BY lm."draftOrder", lm.id
-            """
-        )
-
-        current_week_sql = text(f"""
-            SELECT w."weekNumber", w."startDate", w."endDate"
-            FROM "Week" w
-            WHERE w."leagueId" = :league_id
-              {scope}
-              AND now() >= COALESCE(
-                w."startDate",
-                w."endDate" + interval '1 microsecond' - interval '7 days'
-              )
-              AND now() <= w."endDate"
-            ORDER BY w."weekNumber" DESC
-            LIMIT 1
-        """)
-
-        with self.db.connect() as conn:
-            result = conn.execute(sql, {"league_id": league_id, **reader_params})
-            rows = [dict(r._mapping) for r in result]
-            current_week_row = conn.execute(
-                current_week_sql,
-                {"league_id": league_id, **reader_params},
-            ).fetchone()
-
-        current_week_number = None
-        current_week_start = None
-        current_week_end = None
-        if current_week_row:
-            current_week_number = int(current_week_row[0])
-            current_week_start = current_week_row[1]
-            current_week_end = current_week_row[2]
-
-        members: List[Dict[str, Any]] = []
-        local_tz = self.scheduleModel._get_league_timezone(league_id)
-        date_keys: List[dt.date] = []
-        if current_week_start and current_week_end:
-            start_dt = current_week_start
-            end_dt = current_week_end
-            if isinstance(start_dt, str):
-                start_dt = dt.datetime.fromisoformat(start_dt)
-            if isinstance(end_dt, str):
-                end_dt = dt.datetime.fromisoformat(end_dt)
-            if start_dt.tzinfo is None:
-                start_dt = start_dt.replace(tzinfo=dt.timezone.utc)
-            if end_dt.tzinfo is None:
-                end_dt = end_dt.replace(tzinfo=dt.timezone.utc)
-            cur_date = start_dt.astimezone(local_tz).date()
-            end_date = end_dt.astimezone(local_tz).date()
-            while cur_date <= end_date:
-                date_keys.append(cur_date)
-                cur_date = cur_date + dt.timedelta(days=1)
-
-        for r in rows:
-            member_id = r["memberId"]
-            current_week_point_differential = 0
-            daily_point_differentials: List[Dict[str, Any]] = []
-            if current_week_number is not None:
-                games = self.scheduleModel.get_member_games_for_week(
-                    league_id=league_id,
-                    member_id=member_id,
-                    week_number=current_week_number,
-                )
-                daily_totals = {d: 0 for d in date_keys}
-                for g in games:
-                    current_week_point_differential += int(g["memberPointDiff"])
-                    game_dt = g.get("date")
-                    if game_dt is None:
-                        continue
-                    if isinstance(game_dt, str):
-                        game_dt = dt.datetime.fromisoformat(game_dt)
-                    if game_dt.tzinfo is None:
-                        game_dt = game_dt.replace(tzinfo=dt.timezone.utc)
-                    game_date = game_dt.astimezone(local_tz).date()
-                    if game_date in daily_totals:
-                        daily_totals[game_date] += int(g["memberPointDiff"])
-                daily_point_differentials = [
-                    {"date": d.isoformat(), "pointDifferential": daily_totals[d]}
-                    for d in date_keys
-                ]
-
-            members.append(
-                {
-                    "id": r["memberId"],
-                    "createdAt": r["memberCreatedAt"],
-                    "leagueId": r["leagueId"],
-                    "userId": r["userId"],
-                    "teamName": r["teamName"],
-                    "draftOrder": r["draftOrder"],
-                    "seasonPoints": r["seasonPoints"],
-                    "displayName": r['displayName'],
-                    "currentWeekPointDifferential": current_week_point_differential,
-                    "dailyPointDifferentials": daily_point_differentials,
-                }
-            )
-
-        return members
+        service = LeagueReadService(self.db)
+        timezone_for_league = lambda league: self.scheduleModel._get_league_timezone(league)
+        games = lambda **kwargs: self.scheduleModel.get_member_games_for_week(**kwargs)
+        if reader_user_id is None:
+            return service.members_for_job(league_id, timezone_for_league, games)
+        return service.members_for_reader_id(league_id, reader_user_id, timezone_for_league, games)
 
     def get_league_conferences(self, league_id: int, reader_user_id: Optional[int] = None) -> Dict[str, Any]:
         service = LeagueReadService(self.db)

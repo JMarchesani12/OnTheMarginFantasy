@@ -1,5 +1,56 @@
 # Regression verification baseline
 
+## MOD-038 lifecycle; planned league extraction complete — 2026-10-30
+
+LeagueLifecycleService owns one transaction and ordered pre-draft/drafting/post-draft/in-season/completed phases; repository contains original five SQL strings verbatim. Model sync delegates and retains None/error behavior; existing actor reads still invoke the same callback/facade at their original point. LeagueModel now contains no SQL literals/execution/connection acquisition. Public/helper signatures, composition and callback overrides retained; folder moves are separate.
+
+| Verification | Fresh result |
+| --- | --- |
+| Guarded baseline | Exit 0, 482/482 |
+| Direct-service tests | RED three missing-module errors and one passing legacy SQL case; GREEN 4/4 |
+| `python3 api/tests/run_isolated.py` | Exit 0, 486/486 including final fresh rerun; existing tests unchanged |
+| `python3 scripts/modernization/verify_league_lifecycle.py` | Exit 0, native PostgreSQL PASS; all preceding league/member/admission suites rerun |
+| Independent review | No Critical/Important/Minor findings; reviewer focused guarded suite 4/4; SQL strings/order match baseline |
+| AST/dependency/diff checks | Other model methods unchanged; model SQL/connection-free; lifecycle service/repository independent of transport/model/configured engines; diff check passes |
+
+[Complete native league results/source hashes](evidence/mod-038-league-complete-postgres-2026-10-30.json) verify transition matrix, future draft/live/paused/complete guards, inclusive season-start/end dates, sport/year matching, null/unchanged rows and completed-season precedence over stale draft state. Statuses converge on repeat. Injected post-update failures after each of five phases, actual PostgreSQL trigger failure and deferred commit failure each preserve entire previous state. Db-only facade returns None and real actor details/model reads invoke synchronization correctly. All earlier native league/member/admission checks pass. Combined report supersedes their source hashes; older reports historical.
+
+Scope: league extraction complete; existing global read-time writes and possible intermediate updatedAt rewrites preserved. No concurrency/status redesign or MOD-020 completion claimed. Broader MOD-040 domains/frontend and recommended import-only subfolder pass remain separate. Harness used only marked loopback PostgreSQL and owned random DB, no configured DSN/.env. Database/container `otm-mod038-league-lifecycle-20261030` removed. Checkout uncommitted; no schema, hosted DB, frontend, dependency, listener or deployment changes.
+
+## MOD-038 member lists and daily score summaries — 2026-10-30
+
+Read service owns actor/trusted selection, original two scoped queries in one read connection, current-week handling and unchanged timezone/date/game aggregation. Repository owns original score/member/week SQL and row accessors. HTTP wires public ScheduleModel timezone/game capabilities; model delegates preserve optional reader and deferred legacy callbacks. All original schedule methods are AST-identical; public timezone wrapper delegates to the existing implementation. Timezone still resolves after connection close even for empty/no-week results; game calls retain original kwargs.
+
+| Verification | Fresh result |
+| --- | --- |
+| Guarded baseline | Exit 0, 476/476 |
+| Direct-service tests | RED five missing-operation assertions plus one passing legacy case; GREEN 6/6 |
+| `python3 api/tests/run_isolated.py` | Exit 0, 482/482 including final fresh rerun; existing tests unchanged |
+| `python3 scripts/modernization/verify_member_summary.py` | Exit 0, native PostgreSQL PASS; all preceding league/member/admission suites rerun |
+| Independent review | No Critical/Important/Minor findings; focused guarded suite 6/6 |
+| AST/dependency/diff checks | Other league methods and all existing schedule methods unchanged; service/repository transport/model/configured-engine independent; diff check passes |
+
+[Native results/source hashes](evidence/mod-038-member-summary-postgres-2026-10-30.json) verify exact member projection, native scores/negative-week exclusion/fallback, week zero, actual public timezone lookup, local-date/naive UTC/aware/undated/out-of-range aggregation and zero fills. Null start preserves empty daily keys while weekly total remains; no current week skips games. Supplied game failure propagates, separate connection revocation before member query returns empty, legacy methods pass. Scheduling game algorithms remain unchanged; supplied facts verify summary orchestration. Existing snapshot behavior/callbacks preserved, no final access guard or batching added. All preceding native suites pass; combined report supersedes old hashes, historical evidence retained.
+
+Harness uses marked loopback server/owned random DB only, no configured DSN/.env. Database/container `otm-mod038-member-summary-20261030` removed. Lifecycle is final planned league extraction slice. Follow-up recommendation: cohesive admission/members/administration/reads/lifecycle subfolders via import-only move preserving compatibility imports/composition; no folder move performed. Checkout uncommitted; no schema, hosted DB, frontend, dependency, listener or deployment changes.
+
+## MOD-038 league details and own listings — 2026-10-30
+
+Read service owns actor/trusted selection, original stage normalization, explicit lifecycle synchronization before read and original transaction scopes. Repository owns unchanged scoped details SQL (highest matching week) and membership-only listing SQL with score fallback, negative-week exclusion and original overlapping-week rows. HTTP discovery/identity assertions and model signatures/deferred callback overrides remain compatible. Lifecycle algorithm unchanged; its callback still precedes the query outside its scope.
+
+| Verification | Fresh result |
+| --- | --- |
+| Guarded baseline | Exit 0, 471/471 |
+| Direct-service tests | RED three missing-operation assertions plus two passing legacy cases; GREEN 5/5 |
+| `python3 api/tests/run_isolated.py` | Exit 0, 476/476 including final fresh rerun; existing tests unchanged |
+| `python3 scripts/modernization/verify_league_details.py` | Exit 0, native PostgreSQL PASS; all preceding league/member/admission suites rerun |
+| Independent review | No Critical/Important/Minor findings; reviewer focused guarded suite 5/5 |
+| AST/dependency/diff checks | Only two intended model read methods changed; read modules remain transport/model/configured-engine independent; diff check passes |
+
+[Native results/source hashes](evidence/mod-038-league-details-postgres-2026-10-30.json) verify original interval fallback, highest current week for details, native projection/nulls, stage normalization/filtering, member-specific score sum/fallback excluding negative weeks and overlapping listing rows. Commissioner without membership remains excluded from own listings. Separate committed sync is visible in the subsequent read; revocation prevents details/list membership, and sync failure prevents SQL read. Legacy methods and all preceding native suites pass. Combined report supersedes previous league/member/admission hashes; historical reports retained.
+
+Scope: lifecycle callback boundary verified, algorithm unchanged. Existing read-time global synchronization and overlapping-week duplication remain; no policy/concurrency redesign. Harness uses marked loopback server/owned random database only, no configured DSN/.env. Database and task-owned container `otm-mod038-league-details-20261030` removed. Two planned slices remain: member lists/daily summaries and lifecycle synchronization. Checkout uncommitted; no schema, hosted DB, frontend, dependency, listener or deployment changes.
+
 ## MOD-038 league discovery/access/previews/search — 2026-10-30
 
 LeagueReadService now owns actor/legacy reader selection, one transaction per access/preview/search query and public search strip/short-circuit/pagination bounds. Repository owns unchanged metadata, preview visibility/entitlement and pg_trgm search SQL. HTTP retains private concealment, full/preview choices and separate fresh metadata recheck; it constructs actor from principal and search remains anonymous. Access metadata remains internal entitlement facts, including a private outsider's fullAccess=false; HTTP controls visibility. Preview results remain names-only. Legacy model signatures/input behavior retained.

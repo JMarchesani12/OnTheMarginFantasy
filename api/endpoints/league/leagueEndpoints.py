@@ -46,15 +46,19 @@ class LeagueEndpoints:
             elif not full_access:
                 return jsonify({'message': 'League membership required'}), 403
             else:
-                reader = {'reader_user_id': principal.user_id}
                 if view == 'details':
-                    payload = self.leagueModel.get_league(league_id, **reader)
+                    payload = self.league_read_service.details(
+                        actor, league_id, self.leagueModel.sync_due_league_statuses,
+                    )
                 elif view == 'rules':
                     payload = self.league_read_service.rules(
                         UserActor(principal.user_id, principal.subject), league_id,
                     )
                 elif view == 'members':
-                    payload = self.leagueModel.get_members_for_league(league_id, **reader)
+                    payload = self.league_read_service.members(
+                        actor, league_id, self.leagueModel.scheduleModel.get_league_timezone,
+                        self.leagueModel.scheduleModel.get_member_games_for_week,
+                    )
                 else:
                     payload = self.league_read_service.conferences(
                         UserActor(principal.user_id, principal.subject), league_id,
@@ -156,7 +160,10 @@ class LeagueEndpoints:
             stage = data.get('stage', 'all')
             if stage is not None and not isinstance(stage, str):
                 return jsonify({"message": "Invalid stage"}), 400
-            leagues = self.leagueModel.get_leagues_for_user(principal.user_id, stage=stage)
+            leagues = self.league_read_service.mine(
+                UserActor(principal.user_id, principal.subject),
+                self.leagueModel.sync_due_league_statuses, stage=stage,
+            )
             return jsonify(leagues), 200
         except PrincipalResolutionError as e:
             return jsonify({"error": e.code}), e.status_code

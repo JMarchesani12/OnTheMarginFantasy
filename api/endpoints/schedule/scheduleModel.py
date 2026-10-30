@@ -81,6 +81,10 @@ class ScheduleModel:
             settings = json.loads(settings)
         return settings or {}
     
+    def get_league_timezone(self, league_id: int) -> dt.tzinfo:
+        """Timezone capability for callers that compose schedule reads."""
+        return self._get_league_timezone(league_id)
+
     def _get_league_timezone(self, league_id: int) -> dt.tzinfo:
         settings = self._get_league_settings(league_id)
         schedule_cfg = settings.get("schedule") or {}

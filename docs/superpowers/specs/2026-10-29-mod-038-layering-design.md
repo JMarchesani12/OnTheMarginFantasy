@@ -2,6 +2,8 @@
 
 Date: 2026-10-29. Status: approved by the user's instruction to implement on 2026-10-29. The incremental hybrid, interfaces, file placement and pilot boundaries below are approved direction. MOD-041 is approved; its authentication slice is implemented locally. The transaction read/trusted-apply pilot is now implemented; see the [implementation plan and ledger](../plans/2026-10-29-mod-038-pilot-implementation.md) and [PostgreSQL evidence](../../modernization/evidence/mod-038-pilot-postgres-2026-10-29.json). Other domains remain incremental follow-up work.
 
+League rollout update — 2026-10-30: planned league content extraction is complete, with SQL-free LeagueModel compatibility/composition and services/repositories for admission, members, administration, reads and lifecycle. [Final plan/ledger](../plans/2026-10-30-mod-038-league-lifecycle-implementation.md), [native evidence](../../modernization/evidence/mod-038-league-complete-postgres-2026-10-30.json); guarded backend 486/486. Broader domain work, correctness/read-time write changes and an import-only subfolder pass remain separate.
+
 ## Intent, scope and constraints
 
 Separate transport, use cases and persistence so HTTP and jobs share domain operations without constructing HTTP adapters. Keep domain code together and migrate only when a bounded extraction improves ownership. Retain Flask, SQLAlchemy/raw SQL, existing routes, table names and the current Render service. No new dependencies, paid infrastructure, schema changes or rate limiter.

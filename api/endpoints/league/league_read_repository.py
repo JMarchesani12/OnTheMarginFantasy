@@ -114,3 +114,160 @@ class LeagueReadRepository:
         """)
         rows = conn.execute(sql, params).mappings().all()
         return [dict(row) for row in rows]
+
+    def details(self, conn, league_id, reader_user_id=None):
+        leagueId = league_id
+        scope, reader_params = league_read_scope(league_id, reader_user_id)
+        league = conn.execute(
+            text(f"""
+                SELECT
+                    l.*,
+                    w.id AS "currentWeekId",
+                    w."weekNumber" AS "currentWeekNumber",
+                    w."startDate" AS "currentWeekStartDate",
+                    w."endDate" AS "currentWeekEndDate"
+                FROM "League" l
+                LEFT JOIN "Week" w
+                  ON w."leagueId" = l.id
+                 AND now() >= COALESCE(
+                    w."startDate",
+                    w."endDate" + interval '1 microsecond' - interval '7 days'
+                 )
+                 AND now() <= w."endDate"
+                WHERE l.id = :leagueId
+                {scope}
+                ORDER BY w."weekNumber" DESC NULLS LAST
+                LIMIT 1
+            """),
+            {"leagueId": leagueId, **reader_params}
+        ).fetchone()
+        return dict(league._mapping) if league else None
+
+    def own_leagues(self, conn, user_id, stage):
+        base_sql = """
+            SELECT
+            -- League fields
+            l.id                AS "leagueId",
+            l."createdAt"       AS "leagueCreatedAt",
+            l."name"            AS "leagueName",
+            l."numPlayers"      AS "numPlayers",
+            l.status            AS "status",
+            l."updatedAt"       AS "updatedAt",
+            l."draftDate"       AS "draftDate",
+            l."tradeDeadline"   AS "tradeDeadline",
+            l."freeAgentDeadline" AS "freeAgentDeadline",
+            l."seasonYear"      AS "seasonYear",
+            l."settings"        AS "settings",
+
+            -- Commissioner info
+            cu."displayName"    AS "commissionerDisplayName",
+            cu."id"             AS "commissionerId",
+
+            -- Sport info
+            s.name              AS "sport",
+            s."maxPlayersToHaveMaxRounds" AS "maxPlayersToHaveMaxRounds",
+
+            -- Member-specific fields for this user
+            lm.id               AS "memberId",
+            lm."teamName"       AS "teamName",
+            lm."draftOrder"     AS "draftOrder",
+            COALESCE(sp."seasonPoints", lm."seasonPoints", 0) AS "seasonPoints",
+
+            -- Current week info (nullable if no matching week)
+            w.id                AS "currentWeekId",
+            w."weekNumber"      AS "currentWeekNumber",
+            w."startDate"       AS "currentWeekStartDate",
+            w."endDate"         AS "currentWeekEndDate"
+
+            FROM "LeagueMember" lm
+            JOIN "League"      l  ON l.id = lm."leagueId"
+            JOIN "Sport"       s  ON s.id = l."sport"
+            JOIN "User"        cu ON cu.id = l.commissioner
+            LEFT JOIN (
+                SELECT
+                    wts."leagueId",
+                    wts."memberId",
+                    SUM(wts."pointsAwarded") AS "seasonPoints"
+                FROM "WeeklyTeamScore" wts
+                JOIN "Week" w
+                  ON w.id = wts."weekId"
+                 AND w."weekNumber" >= 0
+                GROUP BY wts."leagueId", wts."memberId"
+            ) sp
+            ON sp."leagueId" = lm."leagueId"
+            AND sp."memberId" = lm.id
+
+            LEFT JOIN "Week"   w
+            ON w."leagueId" = l.id
+            AND now() >= COALESCE(
+                w."startDate",
+                w."endDate" + interval '1 microsecond' - interval '7 days'
+            )
+            AND now() <= w."endDate"
+
+            WHERE lm."userId" = :user_id
+        """
+
+        if stage == "active":
+            base_sql += " AND l.status <> 'Completed'"
+        elif stage == "completed":
+            base_sql += " AND l.status = 'Completed'"
+
+        base_sql += ' ORDER BY l.id, lm."draftOrder"'
+
+        sql = text(base_sql)
+        result = conn.execute(sql, {'user_id': user_id})
+        return [dict(row._mapping) for row in result]
+
+    def member_rows(self, conn, league_id, reader_user_id=None):
+        scope, reader_params = league_read_scope(league_id, reader_user_id)
+        sql = text(
+            f"""
+            SELECT
+              lm.id               AS "memberId",
+              lm."createdAt"      AS "memberCreatedAt",
+              lm."leagueId"       AS "leagueId",
+              lm."userId"         AS "userId",
+              lm."teamName"       AS "teamName",
+              lm."draftOrder"     AS "draftOrder",
+              COALESCE(sp."seasonPoints", lm."seasonPoints", 0) AS "seasonPoints",
+              u."displayName"     AS "displayName"
+            FROM "LeagueMember" lm
+            JOIN "User" u on u.id = lm."userId"
+            LEFT JOIN (
+                SELECT
+                    wts."leagueId",
+                    wts."memberId",
+                    SUM(wts."pointsAwarded") AS "seasonPoints"
+                FROM "WeeklyTeamScore" wts
+                JOIN "Week" w
+                  ON w.id = wts."weekId"
+                 AND w."weekNumber" >= 0
+                GROUP BY wts."leagueId", wts."memberId"
+            ) sp
+            ON sp."leagueId" = lm."leagueId"
+            AND sp."memberId" = lm.id
+            WHERE lm."leagueId" = :league_id
+            {scope}
+            ORDER BY lm."draftOrder", lm.id
+            """
+        )
+        result = conn.execute(sql, {'league_id': league_id, **reader_params})
+        return [dict(row._mapping) for row in result]
+
+    def member_current_week(self, conn, league_id, reader_user_id=None):
+        scope, reader_params = league_read_scope(league_id, reader_user_id)
+        current_week_sql = text(f"""
+            SELECT w."weekNumber", w."startDate", w."endDate"
+            FROM "Week" w
+            WHERE w."leagueId" = :league_id
+              {scope}
+              AND now() >= COALESCE(
+                w."startDate",
+                w."endDate" + interval '1 microsecond' - interval '7 days'
+              )
+              AND now() <= w."endDate"
+            ORDER BY w."weekNumber" DESC
+            LIMIT 1
+        """)
+        return conn.execute(current_week_sql, {'league_id': league_id, **reader_params}).fetchone()
