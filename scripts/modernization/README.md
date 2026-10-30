@@ -80,7 +80,41 @@ Results and source hashes are written separately to
 overwriting the transaction pilot report. Stop only the task-owned container
 afterward.
 
-### Baseline suite commands
+### MOD-038 profile continuation
+
+With the same marked disposable loopback server ready, run
+`python3 scripts/modernization/verify_profile_pilot.py`. It creates/removes a
+random synthetic database and verifies profile read/update projections, bound
+values, field filtering, access denials, legacy facade behavior and rollback on
+real statement and deferred-commit failures. It never loads `.env` or accepts a
+DSN. Report/source hashes are written separately to
+`docs/modernization/evidence/mod-038-profile-postgres-2026-10-29.json`. Stop only
+the task-owned container afterward.
+
+### MOD-038 profile creation and UUID persistence
+
+With the same marked disposable server ready, run
+`python3 scripts/modernization/verify_profile_creation.py`. It reruns profile
+read/update checks, then creates synthetic Auth/User fixtures to verify native
+creation, email/FK failures, duplicate-subject ambiguity, insert statement/commit
+rollback and legacy UUID/creation compatibility. Minimal Auth fixtures do not
+establish full provider acceptance. The runner removes its random database and
+writes `docs/modernization/evidence/mod-038-profile-creation-postgres-2026-10-29.json`
+with current source hashes. Earlier profile reports remain historical. It never
+loads `.env` or accepts a DSN. Stop only the task-owned container afterward.
+
+### MOD-038 weekly-points scoring read
+
+With the marked disposable server ready, run
+`python3 scripts/modernization/verify_scoring_read.py`. It creates/removes a
+random database and checks native expanding-list SQL, score dates/numerics and
+ordering, league access, empty-list policy and separate-connection revocation
+before the final check. It writes
+`docs/modernization/evidence/mod-038-scoring-read-postgres-2026-10-29.json` without
+overwriting earlier reports. It accepts no DSN and never loads `.env`. Stop only
+the task-owned container afterward.
+
+### Baseline suite execution
 
 After the same marked container is ready, run this separate suite sequentially
 with other assessment suites:

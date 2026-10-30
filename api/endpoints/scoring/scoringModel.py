@@ -3,10 +3,12 @@ import datetime as dt
 from typing import Any, Dict, List, Optional
 from utils.authorization import league_read_access
 
-from sqlalchemy import bindparam, text
+from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
 from endpoints.schedule.scheduleModel import ScheduleModel
+from .service import ScoringReadService
+from .contracts import ScoringReadDenied
 
 
 class ScoringModel:
@@ -43,6 +45,7 @@ class ScoringModel:
     def __init__(self, db: Engine, schedule_model: ScheduleModel):
         self.db = db
         self.schedule_model = schedule_model
+        self._scoring_read_service = ScoringReadService(db)
 
     # ------------------------------------------------------------------
     # Basic helpers
@@ -1417,39 +1420,11 @@ class ScoringModel:
         week_numbers: List[int],
         *, reader_user_id: Optional[int] = None,
     ) -> List[Dict[str, Any]]:
-        with league_read_access(self.db, league_id, reader_user_id):
-            if not week_numbers:
-                return []
-
-            # normalize: int + unique + sorted (optional but nice)
-            week_numbers = sorted({int(w) for w in week_numbers if int(w) >= 0})
-            if not week_numbers:
-                return []
-
-            sql = text("""
-                SELECT
-                w."weekNumber",
-                w."startDate",
-                w."endDate",
-                wts."memberId",
-                lm."teamName",
-                wts."pointsAwarded",
-                wts."pointDifferential",
-                wts.rank
-                FROM "WeeklyTeamScore" wts
-                JOIN "Week" w
-                ON w.id = wts."weekId"
-                JOIN "LeagueMember" lm
-                ON lm.id = wts."memberId"
-                WHERE wts."leagueId" = :leagueId
-                AND w."weekNumber" IN :weekNumbers
-                ORDER BY w."weekNumber" ASC, wts.rank ASC;
-            """).bindparams(bindparam("weekNumbers", expanding=True))
-
-            with self.db.connect() as conn:
-                rows = conn.execute(
-                    sql,
-                    {"leagueId": league_id, "weekNumbers": week_numbers},
-                ).fetchall()
-
-            return [dict(r._mapping) for r in rows]
+        try:
+            if reader_user_id is None:
+                return self._scoring_read_service.get_weekly_points_for_job(league_id, week_numbers)
+            return self._scoring_read_service.get_weekly_points_for_legacy_reader(
+                reader_user_id, league_id, week_numbers,
+            )
+        except ScoringReadDenied as exc:
+            raise PermissionError(str(exc)) from exc

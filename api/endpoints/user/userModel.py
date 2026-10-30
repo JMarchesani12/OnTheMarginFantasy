@@ -1,56 +1,26 @@
-from sqlalchemy.exc import IntegrityError
 from typing import Any, Dict, Optional
 
-from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
-ALLOWED_USER_FIELDS = {
-    "displayName": '"displayName"'
-}
+from .contracts import ALLOWED_USER_FIELDS, ProfileNotFound, ProfileUpdateRejected, ProfileCreationRejected
+from .service import UserService
 
 class UserModel:
     def __init__(self, db: Engine):
         self.db = db
+        self._user_service = UserService(db)
 
     def get_user_by_id(self, user_id: int) -> Dict[str, Any]:
-        sql = text("""
-            SELECT
-                id,
-                uuid,
-                email,
-                "displayName",
-                "createdAt"
-            FROM "User"
-            WHERE id = :userId
-        """)
-
-        with self.db.begin() as conn:
-            row = conn.execute(sql, {"userId": user_id}).mappings().first()
-
-        if not row:
-            raise ValueError("User not found")
-
-        return dict(row)
+        try:
+            return self._user_service.get_profile_for_job(user_id)
+        except ProfileNotFound as exc:
+            raise ValueError(str(exc)) from exc
     
     def get_user_by_uuid(self, uuid: str) -> Dict[str, Any]:
-        sql = text("""
-            SELECT
-                id,
-                uuid,
-                email,
-                "displayName",
-                "createdAt"
-            FROM "User"
-            WHERE uuid = :uuid
-        """)
-
-        with self.db.begin() as conn:
-            row = conn.execute(sql, {"uuid": uuid}).mappings().first()
-
-        if not row:
-            raise ValueError("User not found")
-
-        return dict(row)
+        try:
+            return self._user_service.get_profile_by_uuid_for_job(uuid)
+        except ProfileNotFound as exc:
+            raise ValueError(str(exc)) from exc
 
 
     def create_user(
@@ -59,76 +29,13 @@ class UserModel:
         display_name: Optional[str] = None,
         uuid: str = None,
     ) -> Dict[str, Any]:
-        """
-        Inserts into public."User" (email, displayName, uuid).
-
-        - email is required + unique
-        - displayName optional
-        - uuid must exist in auth.users(id) due to FK
-        """
-
-        if not email or not email.strip():
-            raise ValueError("email is required")
-
-        email = email.strip()
-        display_name = (display_name or "").strip()
-
         try:
-            with self.db.begin() as conn:
-                row = conn.execute(
-                    text("""
-                        INSERT INTO "User" (email, "displayName", uuid)
-                        VALUES (:email, :displayName, :uuid)
-                        RETURNING
-                          id,
-                          "createdAt",
-                          email,
-                          "displayName",
-                          uuid
-                    """),
-                    {
-                        "email": email,
-                        "displayName": display_name,
-                        "uuid": uuid,
-                    },
-                ).fetchone()
-
-                if not row:
-                    raise RuntimeError("Failed to insert User")
-
-                user = dict(row._mapping)
-
-            return user
-
-        except IntegrityError as e:
-            # Could be: unique(email) violation OR FK(uuid->auth.users) violation
-            raise ValueError("User creation failed") from e
+            return self._user_service.create_profile_for_job(email, display_name, uuid)
+        except ProfileCreationRejected as exc:
+            raise ValueError(str(exc)) from exc
         
     def update_user(self, user_id: int, updates: Dict[str, Any]) -> Dict[str, Any]:
-        payload = {k: updates[k] for k in updates.keys() if k in ALLOWED_USER_FIELDS}
-
-        if not payload:
-            raise ValueError("No valid fields provided to update")
-
-        set_clauses = []
-        params: Dict[str, Any] = {"userId": user_id}
-
-        for i, (key, val) in enumerate(payload.items()):
-            param_name = f"v{i}"
-            set_clauses.append(f'{ALLOWED_USER_FIELDS[key]} = :{param_name}')
-            params[param_name] = val
-
-        sql = text(f"""
-            UPDATE "User"
-            SET {", ".join(set_clauses)}
-            WHERE id = :userId
-            RETURNING id, uuid, email, "displayName", "createdAt"
-        """)
-
-        with self.db.begin() as conn:
-            row = conn.execute(sql, params).mappings().first()
-
-        if not row:
-            raise ValueError("User not found")
-
-        return dict(row)
+        try:
+            return self._user_service.update_profile_for_job(user_id, updates)
+        except (ProfileNotFound, ProfileUpdateRejected) as exc:
+            raise ValueError(str(exc)) from exc

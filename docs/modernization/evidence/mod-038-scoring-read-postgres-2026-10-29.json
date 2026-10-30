@@ -1,0 +1,22 @@
+{
+  "result": "PASS",
+  "scope": "Synthetic marked loopback PostgreSQL; no configured/hosted database",
+  "weekly_points": {
+    "expanding_week_bind_normalization_and_order": "PASS",
+    "native_projection_dates_and_numeric": "PASS",
+    "league_isolation_and_member_commissioner_policy": "PASS",
+    "empty_list_access_policy": "PASS",
+    "separate_connection_revocation_scores_and_empty_lists": "PASS",
+    "legacy_trusted_read": "PASS"
+  },
+  "sha256": {
+    "api/endpoints/scoring/service.py": "0c517276ca96a5a92c39116c8f6fc3112d56708616a4fea22ea34e3de2a5b985",
+    "api/endpoints/scoring/repository.py": "71520af298d3e1ad816a3d90fd05da133d6cdf8a736cfbb369abc367d4b82398",
+    "api/endpoints/scoring/contracts.py": "3da434608acb299154dce3d5bf0a0d033bbfa7a649eff3a35e5838b395744bb9",
+    "api/endpoints/scoring/scoringModel.py": "b0172b339b6a2c4bfae672fc31ce4de18a7c4963d2b879e296df52fa975eea1d",
+    "api/endpoints/scoring/scoringEndpoints.py": "fad4ebe7e8215119809a6705a7078f7f8f2c13f20dcde85ce496601a3e031600",
+    "api/actors.py": "6b0ea454e1227c2e9fe94cb3ca76db15a799ec3b5481a063b0fd2705318b789f",
+    "api/utils/authorization.py": "76bd2e7086a2ef1086987feb1e461e53944ba6a290970aee74715d03b64bbecb",
+    "scripts/modernization/verify_scoring_read.py": "b38653557718d94b889964868703cf780a29d9fef19017fc0132b2d296a6f6cf"
+  }
+}

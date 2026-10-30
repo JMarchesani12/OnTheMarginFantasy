@@ -1,23 +1,27 @@
 from flask import request, jsonify, g
-from .userModel import UserModel
+from .service import UserService
+from .contracts import ProfileAccessDenied, ProfileNotFound, ProfileUpdateRejected
+from .contracts import (ProfileSubject, ProfileAlreadyExists, ProfileIdentityAmbiguous,
+                        ProfileCreationRejected)
+from actors import UserActor
 from authenticatedPrincipal import PrincipalResolutionError, resolve_authenticated_principal, verified_request_subject
 
 class UserEndpoints:
     def __init__(self, db_engine):
-        self.userModel = UserModel(db_engine)
         self.db_engine = db_engine
+        self.user_service = UserService(db_engine)
 
     # GET /api/user/<user_id>
     def get_user(self, user_id: int):
         try:
             principal = resolve_authenticated_principal(self.db_engine)
-            if user_id != principal.user_id:
-                return jsonify({"message": "User not found"}), 404
-            user = self.userModel.get_user_by_id(principal.user_id)
+            user = self.user_service.get_profile(
+                UserActor(principal.user_id, principal.subject), user_id,
+            )
             return jsonify(user), 200
         except PrincipalResolutionError as e:
             return jsonify({"error": e.code}), e.status_code
-        except ValueError as e:
+        except (ValueError, ProfileNotFound, ProfileAccessDenied) as e:
             return jsonify({"message": str(e)}), 404
         except Exception:
             return jsonify({"message": "Failed to fetch user"}), 500
@@ -29,14 +33,16 @@ class UserEndpoints:
             if uuid != subject:
                 return jsonify({"message": "User not found"}), 404
             principal = resolve_authenticated_principal(self.db_engine)
-            user = self.userModel.get_user_by_id(principal.user_id)
+            user = self.user_service.get_profile(
+                UserActor(principal.user_id, principal.subject), principal.user_id,
+            )
             return jsonify(user), 200
         except PrincipalResolutionError as e:
             # Only an authenticated subject's absent profile means "create it".
             if e.code == 'application_identity_not_found':
                 return jsonify({"message": "User not found"}), 404
             return jsonify({"error": e.code}), e.status_code
-        except ValueError as e:
+        except (ValueError, ProfileNotFound, ProfileAccessDenied) as e:
             return jsonify({"message": str(e)}), 404
         except Exception:
             return jsonify({"message": "Failed to fetch user"}), 500
@@ -60,21 +66,17 @@ class UserEndpoints:
             if display_name is not None and not isinstance(display_name, str):
                 return jsonify({"message": "displayName must be a string"}), 400
 
-            try:
-                resolve_authenticated_principal(self.db_engine)
-            except PrincipalResolutionError as e:
-                if e.code != 'application_identity_not_found':
-                    raise
-            else:
-                return jsonify({"message": "User already exists"}), 409
-
-            user = self.userModel.create_user(
-                email=email, display_name=display_name, uuid=subject,
+            user = self.user_service.create_profile(
+                ProfileSubject(subject, email), display_name,
             )
             return jsonify(user), 201
         except PrincipalResolutionError as e:
             return jsonify({"error": e.code}), e.status_code
-        except ValueError:
+        except ProfileAlreadyExists:
+            return jsonify({"message": "User already exists"}), 409
+        except ProfileIdentityAmbiguous as e:
+            return jsonify({"error": e.code}), 403
+        except (ValueError, ProfileCreationRejected):
             return jsonify({"message": "User creation failed"}), 400
         except Exception:
             return jsonify({"message": "Failed to create user"}), 500
@@ -83,14 +85,17 @@ class UserEndpoints:
     def update_user(self, user_id: int):
         try:
             principal = resolve_authenticated_principal(self.db_engine)
-            if user_id != principal.user_id:
-                return jsonify({"message": "User not found"}), 404
+            actor = UserActor(principal.user_id, principal.subject)
+            # Preserve concealed foreign-target denial before JSON parsing.
+            self.user_service.require_profile_owner(actor, user_id)
             body = request.get_json(force=True) or {}
-            updated = self.userModel.update_user(principal.user_id, body)
+            updated = self.user_service.update_profile(actor, user_id, body)
             return jsonify(updated), 200
         except PrincipalResolutionError as e:
             return jsonify({"error": e.code}), e.status_code
-        except ValueError as e:
+        except ProfileAccessDenied as e:
+            return jsonify({"message": str(e)}), 404
+        except (ValueError, ProfileNotFound, ProfileUpdateRejected) as e:
             return jsonify({"message": str(e)}), 400
         except Exception:
             return jsonify({"message": "Failed to update user"}), 500

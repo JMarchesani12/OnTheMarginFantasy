@@ -1,5 +1,62 @@
 # Regression verification baseline
 
+## MOD-038 scoring weekly-points read — 2026-10-29
+
+Extracted only `get_weekly_points_awarded_for_league` into an actor-requiring ScoringReadService and supplied-connection ScoringRepository. Model signature, trusted calls and PermissionError compatibility remain. HTTP original weekNumbers/results envelope is unchanged; integer conversion/deduplication/sorting/nonnegative filtering remain service behavior. Initial and final league-read checks cover empty/negative-only lists as well as scored results. Final denial occurs after closing the read connection, matching the previous guard's concealed-denial contract.
+
+| Verification | Fresh result |
+| --- | --- |
+| Baseline guarded backend | Exit 0, 389/389 |
+| `python3 api/tests/run_isolated.py test_scoring_read_service.py` | Exit 0, 7/7 after initial missing-module failure |
+| `python3 api/tests/run_isolated.py` | Exit 0, 396/396 |
+| `python3 scripts/modernization/verify_scoring_read.py` | Exit 0, native PostgreSQL weekly-points checks pass |
+| Independent final review | No Critical/Important/Minor findings; reviewer inspected code/callers but did not independently execute tests |
+| AST/import/diff checks | All non-pilot ScoringModel method bodies unchanged except constructor wiring; no new service/repository Flask/model/configured-engine dependency; diff whitespace check passes |
+
+New service tests cover required actor before I/O, one read connection, normalization/order/projection, commissioner-only access, denial before normalization/data SQL, late revocation, empty-list pre/post checks and trusted empty-list no-I/O behavior. Existing scoring authorization, atomic replacement, tiebreak, bootstrap/operational and disabled-HTTP suites remain unchanged and active.
+
+[Native PostgreSQL results/source hashes](evidence/mod-038-scoring-read-postgres-2026-10-29.json) verify expanding week binds, dates/numeric projection, ordering, league isolation, member/commissioner/outsider outcomes and legacy trusted reads. Separate-connection membership deletion before the data query and before the final empty-list check both yield ScoringReadDenied instead of private rows or empty success. These checks use PostgreSQL's default READ COMMITTED; no new isolation/snapshot or post-final-check revocation guarantee is claimed.
+
+Only a marked loopback server and random synthetic database were used; the harness never loads `.env` or accepts a DSN. Database and task-owned container `otm-mod038-scoring-20261029` were removed; existing containers and earlier pilot source files are unchanged. No score computation/standings/job migration, schema change, hosted DB, listener, dependencies, frontend changes/checks or deployment.
+
+## MOD-038 profile creation and UUID persistence — 2026-10-29
+
+Continued the approved hybrid by extracting the remaining user SQL. Interactive creation requires ProfileSubject populated by the adapter from verified JWT subject/email. Service owns the at-most-two mapped-ID check and insertion transaction; legacy creation intentionally has no new existing-subject precheck. Legacy UUID lookup retains first-row semantics; HTTP UUID lookup still uses the unchanged unique-principal resolver. UserModel now contains no SQL and preserves all signatures/ValueError translations.
+
+| Verification | Fresh result |
+| --- | --- |
+| Baseline guarded backend | Exit 0, 381/381 |
+| `python3 api/tests/run_isolated.py test_user_creation_service.py` | Exit 0, 8/8 after initial missing-contract failure |
+| `python3 api/tests/run_isolated.py` | Exit 0, 389/389 |
+| `python3 scripts/modernization/verify_profile_creation.py` | Exit 0; creation + prior profile read/update native checks pass |
+| Independent final review | No Critical/Important/Minor findings; reviewer independently ran 8/8 new service tests |
+| Dependency and diff checks | Shared principal unchanged, model SQL-free, service/repository have no Flask/model/configured-engine imports; `git diff --check` passes |
+
+New tests cover actor/identity requirements before I/O, one creation transaction, normalization/reload, existing/ambiguous rejection without overwrite, statement/exit integrity failure translation, unexpected failure rollback and legacy creation/UUID/missing outcomes. Existing bootstrap/profile/principal tests remain unchanged; exact HTTP validation order and response contracts stay covered.
+
+[Native evidence and current source hashes](evidence/mod-038-profile-creation-postgres-2026-10-29.json) first rerun the earlier profile read/update checks, including statement/deferred-commit update rollback. Creation fixtures then verify real email uniqueness and auth.users FK violations, duplicate-UUID ambiguity, claim normalization, insert projection/reload, repeat conflict, legacy duplicate-subject compatibility and insert failure rollback both before statement completion and at deferred commit. Auth definitions are minimal synthetic fixtures, not full provider acceptance.
+
+This new report supersedes the earlier profile slice's source hashes for changed user files; earlier reports remain historical and are not overwritten. No new uniqueness constraint or concurrent-bootstrap serialization is implemented. No app principal is fabricated for bootstrap; the typed ProfileSubject itself does not authenticate callers. Native harness refuses unmarked servers, accepts no DSN and uses no `.env`. Its random database and task-owned container `otm-mod038-creation-20261029` were removed; no hosted database, existing-container changes, dependencies, frontend work, listeners or deployment.
+
+## MOD-038 profile continuation — 2026-10-29
+
+User requested the next domain. Extracted own-profile ID reads/updates into service/repository ownership; creation, legacy UUID lookup SQL and the shared principal resolver remain unchanged. Current HTTP UUID reads still verify the subject and resolve exactly one profile before calling the actor service. Foreign-target PATCH denial occurs through service policy before JSON parsing and again before the update transaction.
+
+| Verification | Fresh result |
+| --- | --- |
+| Baseline guarded backend | Exit 0, 373/373 |
+| `python3 api/tests/run_isolated.py test_user_service.py` | Exit 0, 8/8 after initial missing-module failure |
+| `python3 api/tests/run_isolated.py` | Exit 0, 381/381 |
+| `python3 scripts/modernization/verify_profile_pilot.py` | Exit 0, native PostgreSQL profile checks pass |
+| Independent final review | No Critical, Important or Minor findings; reviewer separately ran 8/8 service/adapter tests |
+| AST/import inspection and diff check | Bootstrap creation and legacy UUID SQL unchanged; no new service/repository imports of Flask, model facades, dotenv or configured engine; `git diff --check` passes |
+
+New tests verify actors required before I/O, concealed foreign read/update denials even for malformed inputs, exact profile projection, allowed-field filtering, one transaction, empty update rejection, missing rows, post-update failure rollback, trusted facade compatibility and foreign HTTP denial before malformed JSON parsing. Existing profile/bootstrap/principal tests remain unchanged and active.
+
+[Native PostgreSQL report/source hashes](evidence/mod-038-profile-postgres-2026-10-29.json) verifies ID projection including UUID/timestamp types, bound string values, unchanged email/UUID/ID, own update, foreign/identity-only denial, missing profile and legacy facade outcomes. A BEFORE UPDATE trigger raises a real statement failure, and a deferred constraint trigger raises at commit; neither persists the attempted name. These are synthetic fixture triggers only, not schema migrations.
+
+Only marked loopback PostgreSQL was used; the runner creates/removes its own random database, never loads `.env` and accepts no DSN. Task-owned container `otm-mod038-profile-20261029` was stopped/removed. Existing containers and prior transaction/roster evidence remain unchanged. No frontend files/checks, hosted DB access, dependencies, listener startup or deployment. This verifies the read/update slice, not a profile-creation migration or new concurrent identity guarantee.
+
 ## MOD-038 roster continuation — 2026-10-29
 
 User requested another domain under the approved incremental hybrid. Roster was selected because its two reads combine policy and locked-week orchestration with SQL; the cohesive single-query sport model was deliberately left alone. Prior uncommitted transaction-pilot changes were preserved.
