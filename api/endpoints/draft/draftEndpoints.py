@@ -3,6 +3,8 @@ from sqlalchemy.exc import IntegrityError
 from flask import request, jsonify
 from endpoints.draft.draftBroadcast import broadcast_draft_update
 from endpoints.draft.draftModel import DraftModel
+from .snapshot_service import DraftSnapshotService
+from actors import UserActor
 from utils.jsonSafe import jsonSafe
 from authenticatedPrincipal import PrincipalResolutionError, resolve_authenticated_principal
 
@@ -10,6 +12,7 @@ class DraftEndpoints:
     def __init__(self, db_engine):
         self.draftModel = DraftModel(db_engine)
         self.db_engine = db_engine
+        self.snapshot_service = DraftSnapshotService(db_engine)
 
     # POST /api/draft/pick
     def create_pick(self):
@@ -150,8 +153,8 @@ class DraftEndpoints:
     def state(self, league_id: int):
         try:
             principal = resolve_authenticated_principal(self.db_engine)
-            snapshot = self.draftModel.get_draft_state_snapshot(
-                league_id, reader_user_id=principal.user_id,
+            snapshot = self.snapshot_service.snapshot(
+                UserActor(principal.user_id, principal.subject), league_id,
             )
             return jsonify(snapshot), 200
         except PrincipalResolutionError as exc:

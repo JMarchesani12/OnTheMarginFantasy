@@ -10,6 +10,7 @@ from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
 from endpoints.draft.notifyChannel import notify_draft_updated
+from .snapshot_service import DraftSnapshotService
 
 
 class DraftModel:
@@ -103,30 +104,7 @@ class DraftModel:
             return self.finalize_draft(league_id, conn=conn)
 
     def _repair_completed_draft_state(self, league_id: int, state: Dict[str, Any], conn) -> Dict[str, Any]:
-        if str(state.get("status")) != "complete":
-            return state
-
-        if state.get("currentMemberId") is None and state.get("expiresAt") is None:
-            return state
-
-        row = conn.execute(
-            text("""
-                UPDATE "DraftState"
-                SET "currentMemberId" = NULL,
-                    "expiresAt" = NULL,
-                    "updatedAt" = now()
-                WHERE "leagueId" = :leagueId
-                  AND status = 'complete'
-                RETURNING "leagueId", status, "currentOverallPickNumber",
-                          "currentMemberId", "expiresAt", "lastPickAt", "updatedAt"
-            """),
-            {"leagueId": league_id},
-        ).mappings().fetchone()
-
-        if not row:
-            return state
-
-        return dict(row._mapping) if hasattr(row, "_mapping") else dict(row)
+        return DraftSnapshotService(None).repair_completed(league_id, state, conn)
 
     def is_supabase_user_in_league(self, league_id: int, supabase_uuid: str) -> bool:
         """
@@ -1199,165 +1177,16 @@ class DraftModel:
 
 
     def _get_next_unpicked_turn_from(self, conn, league_id: int, start_overall: int) -> Optional[tuple[int, int]]:
-        """
-        Returns (overallPickNumber, memberId) for the next unpicked overall >= start_overall.
-        Unpicked = DraftTurn exists and no DraftPick exists for that overall.
-        """
-        row = conn.execute(
-            text("""
-                SELECT dt."overallPickNumber" AS "overall",
-                    dt."memberId"          AS "memberId"
-                FROM "DraftTurn" dt
-                LEFT JOIN "DraftPick" dp
-                ON dp."leagueId" = dt."leagueId"
-                AND dp."overallPickNumber" = dt."overallPickNumber"
-                WHERE dt."leagueId" = :leagueId
-                AND dt."overallPickNumber" >= :startOverall
-                AND dp.id IS NULL
-                ORDER BY dt."overallPickNumber" ASC
-                LIMIT 1
-            """),
-            {"leagueId": league_id, "startOverall": start_overall},
-        ).fetchone()
-
-        if not row:
-            return None
-
-        return int(row._mapping["overall"]), int(row._mapping["memberId"])
+        return DraftSnapshotService(None).next_unpicked_turn(conn, league_id, start_overall)
     
 
     def get_draft_state_snapshot(
         self, league_id: int, conn=None, *, reader_user_id: Optional[int] = None,
     ) -> Dict[str, Any]:
-        """
-        Snapshot for frontend reconnect:
-        - DraftState
-        - members in draft order
-        - picks so far
-        - league draft settings (draft object)
-        """
-        # HTTP supplies only the resolved principal ID. Default calls remain
-        # trusted model/socket/job calls, with no fabricated HTTP identity.
-        scope = ''
-        params = {'leagueId': league_id}
-        if reader_user_id is not None:
-            scope = '''AND EXISTS (
-                SELECT 1 FROM "LeagueMember" reader_member
-                WHERE reader_member."leagueId" = :leagueId
-                  AND reader_member."userId" = :readerUserId
-            )'''
-            params['readerUserId'] = reader_user_id
-
-        def _run(c):
-            league = c.execute(
-                text(f'SELECT id, "numPlayers", settings FROM "League" WHERE id = :leagueId {scope}'),
-                params,
-            ).fetchone()
-            if not league:
-                if reader_user_id is not None:
-                    raise PermissionError('League not found')
-                raise ValueError(f"League {league_id} not found")
-
-            settings = league._mapping["settings"] or {}
-            draft_settings = settings.get("draft") or {}
-
-            state = c.execute(
-                text("""
-                    SELECT "leagueId", status, "currentOverallPickNumber", "currentMemberId", "expiresAt", "lastPickAt", "updatedAt"
-                    FROM "DraftState"
-                    WHERE "leagueId" = :leagueId
-                """),
-                {"leagueId": league_id},
-            ).mappings().fetchone()
-
-            if state:
-                state = self._repair_completed_draft_state(league_id, dict(state), c)
-
-            members = c.execute(
-                text("""
-                    SELECT id AS "memberId", "userId", "teamName", "draftOrder"
-                    FROM "LeagueMember"
-                    WHERE "leagueId" = :leagueId
-                    ORDER BY "draftOrder", id
-                """),
-                {"leagueId": league_id},
-            ).mappings().all()
-
-            picks = c.execute(
-                text("""
-                    WITH league_info AS (
-                      SELECT "seasonYear"
-                      FROM "League"
-                      WHERE id = :leagueId
-                    )
-                    SELECT
-                      dp.id,
-                      dp."createdAt",
-                      dp."overallPickNumber",
-                      dp."roundNumber",
-                      dp."pickInRound",
-                      dp."memberId",
-                      lm."teamName" AS "memberTeamName",
-                      dp."sportTeamId",
-                      st."displayName" AS "sportTeamName",
-                      sc.id AS "sportConferenceId",
-                      conf.name AS "conferenceName"
-                    FROM "DraftPick" dp
-                    CROSS JOIN league_info li
-                    JOIN "LeagueMember" lm ON lm.id = dp."memberId"
-                    JOIN "SportTeam" st ON st.id = dp."sportTeamId"
-                    LEFT JOIN "ConferenceMembership" cm
-                      ON cm."sportTeamId" = st.id
-                     AND cm."sportId" = st."sportId"
-                     AND (cm."seasonYear" IS NULL OR cm."seasonYear" = li."seasonYear")
-                    LEFT JOIN "SportConference" sc
-                      ON sc.id = cm."sportConferenceId"
-                     AND sc."sportId" = st."sportId"
-                    LEFT JOIN "Conference" conf
-                      ON conf.id = sc."conferenceId"
-                    WHERE dp."leagueId" = :leagueId
-                    ORDER BY dp."overallPickNumber"
-                """),
-                {"leagueId": league_id},
-            ).mappings().all()
-
-            on_deck = None
-            in_the_hole = None
-            if state and state.get("currentOverallPickNumber") is not None:
-                current_overall = int(state["currentOverallPickNumber"])
-                on_deck = self._get_next_unpicked_turn_from(c, league_id, current_overall + 1)
-                if on_deck:
-                    in_the_hole = self._get_next_unpicked_turn_from(c, league_id, on_deck[0] + 1)
-
-            member_id_to_name = {int(m["memberId"]): m["teamName"] for m in members}
-
-            def _turn_payload(turn):
-                if not turn:
-                    return None
-                overall, member_id = turn
-                return {
-                    "overallPickNumber": overall,
-                    "memberId": member_id,
-                    "memberTeamName": member_id_to_name.get(member_id),
-                }
-
-            return {
-                "leagueId": league_id,
-                "draftSettings": draft_settings,
-                "serverNow": datetime.now(timezone.utc).isoformat(),
-                "state": dict(state) if state else None,
-                "members": [dict(m) for m in members],
-                "picks": [dict(p) for p in picks],
-                "onDeck": _turn_payload(on_deck),
-                "inTheHole": _turn_payload(in_the_hole),
-            }
-
-
-        if conn is not None:
-            return _run(conn)
-
-        with self.db.begin() as conn2:
-            return _run(conn2)
+        service = DraftSnapshotService(getattr(self, 'db', None))
+        if reader_user_id is None:
+            return service.snapshot_for_job(league_id, conn)
+        return service.snapshot_for_reader_id(league_id, reader_user_id, conn)
 
     # Optional but recommended: prevent changing order mid-live draft
     def set_draft_order(self, league_id: int, member_ids_in_order: List[int], *, acting_user_id: Optional[int] = None) -> Dict[str, Any]:

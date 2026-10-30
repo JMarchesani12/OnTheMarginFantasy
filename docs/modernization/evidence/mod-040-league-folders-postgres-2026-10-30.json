@@ -1,0 +1,544 @@
+{
+  "result": "PASS",
+  "scope": "Synthetic marked loopback PostgreSQL; no configured/hosted database",
+  "prior_slices_rerun": {
+    "listing_cancellation": {
+      "listing_projection_filter_and_commissioner_revocation": "PASS",
+      "cancellation_scope_owner_state": "PASS",
+      "post_update_and_deferred_commit_rollback": "PASS",
+      "legacy_helpers_and_new_only_db_models": "PASS",
+      "concurrent_cancellation": [
+        {
+          "path": "service",
+          "observed_lock_wait": true,
+          "outcomes": {
+            "first": [
+              "success",
+              "CANCELLED",
+              null
+            ],
+            "second": [
+              "AdmissionRejected",
+              "Only pending requests can be cancelled"
+            ]
+          }
+        },
+        {
+          "path": "legacy_facade",
+          "observed_lock_wait": true,
+          "outcomes": {
+            "first": [
+              "success",
+              "CANCELLED",
+              null
+            ],
+            "second": [
+              "ValueError",
+              "Only pending requests can be cancelled"
+            ]
+          }
+        }
+      ]
+    },
+    "creation_denial": {
+      "creation_projection_normalization_repeat": "PASS",
+      "membership_and_real_fk_failures": "PASS",
+      "insert_statement_and_commit_rollback": "PASS",
+      "denial_authority_scope_and_resolver": "PASS",
+      "denial_post_update_and_commit_rollback": "PASS",
+      "trusted_and_supplied_connection_compatibility": "PASS",
+      "concurrent_denial": [
+        {
+          "path": "service",
+          "observed_lock_wait": true,
+          "lock_order": [
+            "league",
+            "request"
+          ],
+          "outcomes": {
+            "first": [
+              "success",
+              "DENIED",
+              1
+            ],
+            "second": [
+              "AdmissionRejected",
+              "Join request is not pending"
+            ]
+          }
+        },
+        {
+          "path": "legacy_facade",
+          "observed_lock_wait": true,
+          "lock_order": [
+            "league",
+            "request"
+          ],
+          "outcomes": {
+            "first": [
+              "success",
+              "DENIED",
+              1
+            ],
+            "second": [
+              "ValueError",
+              "Join request is not pending"
+            ]
+          }
+        }
+      ]
+    },
+    "approval": {
+      "authority_scope_state_projection_resolver": "PASS",
+      "capacity_json_rounds_fallback": "PASS",
+      "real_unique_fk_rollback": "PASS",
+      "all_post_write_and_commit_rollback": "PASS",
+      "trusted_supplied_connection_compatibility": "PASS",
+      "concurrent_approval": [
+        {
+          "path": "service",
+          "requests": "same",
+          "observed_lock_wait": true,
+          "lock_order": [
+            "league",
+            "request"
+          ],
+          "outcomes": {
+            "first": [
+              "success",
+              "APPROVED",
+              1
+            ],
+            "second": [
+              "AdmissionRejected",
+              "Join request is not pending"
+            ]
+          }
+        },
+        {
+          "path": "service",
+          "requests": "distinct",
+          "observed_lock_wait": true,
+          "lock_order": [
+            "league",
+            "request"
+          ],
+          "outcomes": {
+            "first": [
+              "success",
+              "APPROVED",
+              1
+            ],
+            "second": [
+              "success",
+              "APPROVED",
+              1
+            ]
+          }
+        },
+        {
+          "path": "legacy_facade",
+          "requests": "same",
+          "observed_lock_wait": true,
+          "lock_order": [
+            "league",
+            "request"
+          ],
+          "outcomes": {
+            "first": [
+              "success",
+              "APPROVED",
+              1
+            ],
+            "second": [
+              "ValueError",
+              "Join request is not pending"
+            ]
+          }
+        },
+        {
+          "path": "legacy_facade",
+          "requests": "distinct",
+          "observed_lock_wait": true,
+          "lock_order": [
+            "league",
+            "request"
+          ],
+          "outcomes": {
+            "first": [
+              "success",
+              "APPROVED",
+              1
+            ],
+            "second": [
+              "success",
+              "APPROVED",
+              1
+            ]
+          }
+        }
+      ]
+    },
+    "member_profile": {
+      "projection_bound_values_owner_scope": "PASS",
+      "trusted_allowlist_and_legacy_compatibility": "PASS",
+      "post_update_and_deferred_commit_rollback": "PASS",
+      "ownership_revocation": [
+        {
+          "path": "service",
+          "observed_lock_wait": true,
+          "outcomes": [
+            "LookupError"
+          ]
+        },
+        {
+          "path": "legacy_facade",
+          "observed_lock_wait": true,
+          "outcomes": [
+            "LookupError"
+          ]
+        }
+      ]
+    },
+    "member_removal": {
+      "authority_scope_protection_projection_shift_floor": "PASS",
+      "real_fk_post_write_deferred_commit_rollback": "PASS",
+      "legacy_coercion_truthiness": "PASS",
+      "concurrent_removal": [
+        {
+          "path": "service",
+          "mode": "same_removal",
+          "observed_lock_wait": true,
+          "lock_order": [
+            "league",
+            "member"
+          ],
+          "outcomes": {
+            "first": [
+              "removed",
+              12
+            ],
+            "second": [
+              "ValueError",
+              "Member not found in this league"
+            ]
+          }
+        },
+        {
+          "path": "service",
+          "mode": "distinct_removal",
+          "observed_lock_wait": true,
+          "lock_order": [
+            "league",
+            "member"
+          ],
+          "outcomes": {
+            "first": [
+              "removed",
+              12
+            ],
+            "second": [
+              "removed",
+              13
+            ]
+          }
+        },
+        {
+          "path": "service",
+          "mode": "approval_after_removal",
+          "observed_lock_wait": true,
+          "lock_order": [
+            "league",
+            "member"
+          ],
+          "outcomes": {
+            "first": [
+              "removed",
+              12
+            ],
+            "second": [
+              "approved",
+              101
+            ]
+          }
+        },
+        {
+          "path": "legacy_facade",
+          "mode": "same_removal",
+          "observed_lock_wait": true,
+          "lock_order": [
+            "league",
+            "member"
+          ],
+          "outcomes": {
+            "first": [
+              "removed",
+              12
+            ],
+            "second": [
+              "ValueError",
+              "Member not found in this league"
+            ]
+          }
+        },
+        {
+          "path": "legacy_facade",
+          "mode": "distinct_removal",
+          "observed_lock_wait": true,
+          "lock_order": [
+            "league",
+            "member"
+          ],
+          "outcomes": {
+            "first": [
+              "removed",
+              12
+            ],
+            "second": [
+              "removed",
+              13
+            ]
+          }
+        },
+        {
+          "path": "legacy_facade",
+          "mode": "approval_after_removal",
+          "observed_lock_wait": true,
+          "lock_order": [
+            "league",
+            "member"
+          ],
+          "outcomes": {
+            "first": [
+              "removed",
+              12
+            ],
+            "second": [
+              "approved",
+              101
+            ]
+          }
+        }
+      ]
+    },
+    "league_deletion": {
+      "authority_scope_projection_direct_multilevel_cascades": "PASS",
+      "real_fk_post_delete_commit_rollback": "PASS",
+      "suppressed_delete_return_guard_rollback": "PASS",
+      "legacy_coercion": "PASS",
+      "concurrent_deletion": [
+        {
+          "path": "service",
+          "mode": "competing_deletion",
+          "observed_lock_wait": true,
+          "outcomes": {
+            "first": [
+              "deleted",
+              10
+            ],
+            "second": [
+              "ValueError",
+              "League not found"
+            ]
+          }
+        },
+        {
+          "path": "service",
+          "mode": "commissioner_revocation",
+          "observed_lock_wait": true,
+          "outcomes": {
+            "revoked": [
+              "PermissionError",
+              "Only the commissioner can delete this league"
+            ]
+          }
+        },
+        {
+          "path": "legacy_facade",
+          "mode": "competing_deletion",
+          "observed_lock_wait": true,
+          "outcomes": {
+            "first": [
+              "deleted",
+              10
+            ],
+            "second": [
+              "ValueError",
+              "League not found"
+            ]
+          }
+        },
+        {
+          "path": "legacy_facade",
+          "mode": "commissioner_revocation",
+          "observed_lock_wait": true,
+          "outcomes": {
+            "revoked": [
+              "PermissionError",
+              "Only the commissioner can delete this league"
+            ]
+          }
+        }
+      ]
+    },
+    "league_settings": {
+      "authority_validation_order_input_immutability": "PASS",
+      "native_cte_json_projection_deadlines_bound_fields": "PASS",
+      "real_statement_post_update_commit_rollback": "PASS",
+      "late_commissioner_revocation": [
+        {
+          "path": "service",
+          "separate_connection_change_after_read": true,
+          "rejected": "PermissionError"
+        },
+        {
+          "path": "legacy_facade",
+          "separate_connection_change_after_read": true,
+          "rejected": "PermissionError"
+        }
+      ],
+      "legacy_trusted_private_timezone_compatibility": "PASS",
+      "empty_result_compatibility": [
+        {
+          "path": "checked",
+          "empty_sport_join": "existing post-commit guard preserved"
+        },
+        {
+          "path": "trusted",
+          "empty_sport_join": "existing post-commit guard preserved"
+        }
+      ]
+    },
+    "league_creation": {
+      "native_cte_json_projection_member_defaults": "PASS",
+      "input_identity_timezone": "PASS",
+      "real_commissioner_member_fk_no_projection_post_write_commit_rollback": "PASS",
+      "supplied_initializer_separate_connection_visibility": "PASS",
+      "initializer_failure_preserves_committed_creation": "PASS",
+      "legacy_trusted_model": "PASS",
+      "scope_limit": "Scheduling capability boundary verified; ScheduleModel algorithms unchanged, not reimplemented in fixture"
+    },
+    "league_rules": {
+      "native_rules_projection_tiers_sport_isolation_deadlines": "PASS",
+      "denied_missing_skip_team_query": "PASS",
+      "stored_version_and_trusted_legacy": "PASS",
+      "query_time_member_revocation": [
+        {
+          "path": "service",
+          "separate_connection_revocation_before_select": true,
+          "result": null,
+          "team_query_skipped": true
+        },
+        {
+          "path": "legacy_facade",
+          "separate_connection_revocation_before_select": true,
+          "result": null,
+          "team_query_skipped": true
+        }
+      ],
+      "scope_limit": "No post-SELECT final access recheck or stronger snapshot guarantee added"
+    },
+    "league_conferences": {
+      "native_projection_season_null_counts_zero_order_sport_isolation": "PASS",
+      "denied_missing_null_season_skip_aggregate": "PASS",
+      "empty_trusted_legacy": "PASS",
+      "query_time_member_revocation": [
+        {
+          "path": "service",
+          "separate_connection_revocation_before_select": true,
+          "result": "ValueError",
+          "aggregate_query_skipped": true
+        },
+        {
+          "path": "legacy_facade",
+          "separate_connection_revocation_before_select": true,
+          "result": "ValueError",
+          "aggregate_query_skipped": true
+        }
+      ]
+    },
+    "league_discovery": {
+      "native_metadata_full_access_private_missing": "PASS",
+      "names_only_preview_entitlements": "PASS",
+      "pg_trgm_ranking_tie_order_sport_page_clamps_bound_values": "PASS",
+      "short_query_no_io": "PASS",
+      "separate_connection_visibility_membership_and_query_gap_revocation": "PASS",
+      "legacy_model_compatibility": "PASS"
+    },
+    "league_details": {
+      "native_details_current_week_intervals_scope": "PASS",
+      "own_projection_stage_scores_overlap_compatibility": "PASS",
+      "separate_committed_sync_and_membership_revocation": "PASS",
+      "sync_failure_before_read": "PASS",
+      "legacy_compatibility": "PASS",
+      "scope_limit": "Existing lifecycle callback boundary verified; lifecycle algorithm unchanged"
+    },
+    "member_summary": {
+      "native_projection_score_fallback_week_zero": "PASS",
+      "local_dates_naive_aware_undated_out_of_range_zero_fill": "PASS",
+      "null_start_and_no_week_compatibility": "PASS",
+      "game_capability_error_and_public_timezone": "PASS",
+      "separate_connection_pre_query_revocation_legacy": "PASS",
+      "scope_limit": "Scheduling game algorithm unchanged; supplied game facts verify summary orchestration"
+    }
+  },
+  "league_lifecycle": {
+    "native_order_precedence_date_boundaries_sport_year_null_unchanged": "PASS",
+    "repeat_status_convergence": "PASS",
+    "each_post_phase_statement_and_deferred_commit_rollback": "PASS",
+    "db_only_legacy_none_and_real_read_callback": "PASS",
+    "scope_limit": "Existing global read-time writes and intermediate timestamp updates preserved; no concurrency redesign"
+  },
+  "sha256": {
+    "api/endpoints/league/administration/__init__.py": "b9955f705e1da9dab558274f58b7a30221958e2e6265a96d437ec17cdb77ffb9",
+    "api/endpoints/league/administration/repository.py": "6114a2ee38ef6102b018944f8e6e6c972b6bc8953c2c2db05ffd77c73e03c3cc",
+    "api/endpoints/league/administration/service.py": "3a7bf149867513cd8d2322253bf15c3c740e9f53860414aca252c8adc594a9ab",
+    "api/endpoints/league/admission/__init__.py": "49b6eb546ae6ef5a1e076d8a1c424f9da9b2da56c7388b39cf24b94327757148",
+    "api/endpoints/league/admission/contracts.py": "b421a2acaaa9215bd6cd02c5b18e921747208ff7130fb4e68ccfd71651fa0a19",
+    "api/endpoints/league/admission/repository.py": "b0cfdfcbb64002b2664bacd32e0cc2cc29977a156101adeb4ce100e4be9af9c5",
+    "api/endpoints/league/admission/service.py": "677da582e7a37ff56ac1b81bed6cb90e5d1a2c806f67b61b22384f44ca8bee83",
+    "api/endpoints/league/admission_repository.py": "e08f86de38213e2e73029cf36f1f796c81dc39f29088c307867d7cc0ba7cab6a",
+    "api/endpoints/league/admission_service.py": "8bd781564be38b8102a02c7f962ad425e17d1573bcb8e4d0e66d39caa4688773",
+    "api/endpoints/league/contracts.py": "1ac4da137daf9f8e1d96179acfd52d2154db68fc92b20c4ecc661951b785851c",
+    "api/endpoints/league/leagueEndpoints.py": "d979cf5bea8909b31235c1fc781ee851209c6ded3733115e95455bd152acd58b",
+    "api/endpoints/league/leagueModel.py": "49ac37924eb6b2e026c8c79b6f924ddd240da4a4fcc2797dbac246ce2790a192",
+    "api/endpoints/league/league_admin_repository.py": "bd4a9e18741012aceb6d2efe7fafcb9e3c9b93bd08942b1ea13f85cc6efe3bb7",
+    "api/endpoints/league/league_admin_service.py": "6215835591ea705eabdf6d4297c01f0d784bce95008d106fdbf2eb46c7b69955",
+    "api/endpoints/league/league_lifecycle_repository.py": "c44541efe43328103439bd5c83b9f3678a3abd96b39898e9c45f4f312735e3fa",
+    "api/endpoints/league/league_lifecycle_service.py": "cf199ddc1964dad2cb239d9eec57a4748722a436a11cabccddd3052f552ac1ac",
+    "api/endpoints/league/league_read_repository.py": "74af856ac8bd181e5fe65141a3cd2f2bd498840088e17aed6a54b42bcdda8b26",
+    "api/endpoints/league/league_read_service.py": "0e266100b4572c8322a153c40a86ddabe412eca84a91ea3469bcead26bb17057",
+    "api/endpoints/league/lifecycle/__init__.py": "753bbe0b8dbde51534f659079007bc541080d9ad0adfd9505941e42db8afd0f5",
+    "api/endpoints/league/lifecycle/repository.py": "5f9f8db57eede01118bb56ca032f21f247981bdc0d80ad70d3cf52fecda4ef3d",
+    "api/endpoints/league/lifecycle/service.py": "499744d42f9ca797cdcec7abbd77f28c41a8a962d71f2d7032935b70e9cc1dad",
+    "api/endpoints/league/member_repository.py": "1c72fa971a3702fec7d95323244f6dd874fe2f11672d32f3a0170a6bcee8c1a7",
+    "api/endpoints/league/member_service.py": "a0cd5d89d03c7c23141c9bdf91d1a0d9f82d8a1761a2568d545cb6d1d48c350d",
+    "api/endpoints/league/members/__init__.py": "2a1eeceb37a17e0b45dbdf33a005a94a0acb5960fa6c7e4f56aff525914473b2",
+    "api/endpoints/league/members/repository.py": "19aa4eea01275ec9d5122a3f76d1ca21ae57fe3341cb081ecc1ba632b28ac5f2",
+    "api/endpoints/league/members/service.py": "e8f567c1412a986231b3c9f4139e7e3ce9b6db54dbc7f32940da816f96698be6",
+    "api/endpoints/league/reads/__init__.py": "11ab92623e8a8ef4dda0afb8cd6b365ab3a3f9442e95ecac0061b1b806768adc",
+    "api/endpoints/league/reads/repository.py": "d9103c080efc1a75717f696640e65606772bc0b5a4c2b3d5b2d687c0d1fdddaa",
+    "api/endpoints/league/reads/service.py": "5cdc1361a05cb9aab6f12a8639560acfbeabf7c590b672af91d50a09fee18cde",
+    "api/endpoints/league/routes.py": "69c69f042eaf8c9f353bf058554d88a994ceae8102219c2c5cfad045fc7c36fb",
+    "api/endpoints/league/README.md": "8a022b8046bd9e1e76e7b3c88d19b8ae88c04fb6bda853d6dcec3152fd439ff5",
+    "api/endpoints/schedule/scheduleModel.py": "1c6773c7b3fe285228b219eb6ed2cad5ff6863473ad7ff57b175b9cd0861f9f2",
+    "api/actors.py": "6b0ea454e1227c2e9fe94cb3ca76db15a799ec3b5481a063b0fd2705318b789f",
+    "api/rules/leagueRules.py": "b2e550cf2667318760af9d2731a4ffe64a0f7cea4da330469217272d680f1535",
+    "api/utils/authorization.py": "76bd2e7086a2ef1086987feb1e461e53944ba6a290970aee74715d03b64bbecb",
+    "scripts/modernization/verify_admission_slice.py": "4a1f92670ebd6bc31ab0bff131a82906e1843003042abdd57c0c72fbdd14abbf",
+    "scripts/modernization/verify_admission_create_deny.py": "343008b0a77871f22ba0b39ec4d5c9397ff7d146e6206b37022e4e3fe0303cfc",
+    "scripts/modernization/verify_admission_approval.py": "f8acad687f71ca9b1c8739fdb941cd13710f7a08d657065e8fe408ca92012a0e",
+    "scripts/modernization/verify_member_profile.py": "4169f0d21a496ad34282b981bf40915904bf1309005ffa4dd94127876e22a46f",
+    "scripts/modernization/verify_member_removal.py": "9fd4d064eb878498a13027cbd462f40d06644674671ea0a53698f5ba024d9e13",
+    "scripts/modernization/verify_league_delete.py": "6e02f6ff2e3b09ccd53b8b66bc460b969fbeedc52f4affef337c78f6cc0beff7",
+    "scripts/modernization/verify_league_settings.py": "fbc6074c28ab2057b92c6851ffd3033ae4a9324d4c5430e6c76d480d07c7bf6a",
+    "scripts/modernization/verify_league_creation.py": "6334cf903a4ff64c4cab2fc41dd5524d8c5a639705ee237822783ab2bc868d06",
+    "scripts/modernization/verify_league_rules_read.py": "14e2f1e8b3d1e4fae9dce4ae72b72fb0daa8e2fdfed94e52eb1dfc1383b52162",
+    "scripts/modernization/verify_league_conferences.py": "fd01567898c87817a1b0b9a7d7b6f3fe83ae49e43a619b07c5678dbf973f4ff8",
+    "scripts/modernization/verify_league_discovery.py": "4567059032e065affba83f07d731ac93051be6c1ed901f40eb535c29c74c7672",
+    "scripts/modernization/verify_league_details.py": "98f092d7d2e33557158d803f603617afed281d2f7d7053220b35be2e30704fef",
+    "scripts/modernization/verify_member_summary.py": "8b7277e5fd91ba5d3dd57dcd5d0766b9e213271f388af1b487757d9d0122188e",
+    "scripts/modernization/verify_league_lifecycle.py": "6a70da9842b137b97de4f08eb0fbbc3626d0e34a1cf381829cf9680be766162a",
+    "scripts/modernization/verify_league_folders.py": "b5e2abf064651e7d429c1e956ae09467b1adb6911b9a6caf273b4d16bc12ef48"
+  }
+}

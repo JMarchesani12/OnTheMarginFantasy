@@ -313,6 +313,27 @@ This supersedes prior league evidence hashes, retaining history. No configured
 DSN/.env; random DB removed. Stop only the task-owned container afterward.
 Existing global read-time synchronization and timestamp behavior are preserved.
 
+### MOD-040 complete league package organization
+
+Run `python3 scripts/modernization/verify_league_folders.py` on the marked
+synthetic server, sequentially with other suites. It reruns all previous league/
+member/admission/lifecycle verification through legacy imports after grouping.
+Results and complete canonical/alias/package manifest:
+`docs/modernization/evidence/mod-040-league-folders-postgres-2026-10-30.json`.
+Prior league source hashes are superseded; history retained. No configured DSN/
+.env; owned random database removed. Stop only the task-owned container afterward.
+
+### MOD-038 draft state snapshot
+
+Run `python3 scripts/modernization/verify_draft_snapshot.py` on the marked synthetic
+server, sequentially with other suites. It creates/removes its random database
+and tests actual snapshot/repair/turn SQL, member-only authorization, season joins,
+native JSON/timestamps, missing/trusted states, repair/caller/deferred-commit
+rollback and pre-query membership revocation. Results/source hashes:
+`docs/modernization/evidence/mod-038-draft-snapshot-postgres-2026-10-30.json`.
+No configured DSN/.env. Stop only the task-owned container afterward. Picks,
+controls, timeouts and realtime publication are outside this slice.
+
 ### Baseline suite
 
 After the same marked container is ready, run this separate suite sequentially

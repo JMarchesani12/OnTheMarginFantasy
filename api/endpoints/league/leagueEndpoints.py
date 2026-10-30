@@ -2,11 +2,11 @@ from typing import Any, Dict
 from venv import logger
 from flask import request, jsonify
 from .leagueModel import LeagueModel
-from .admission_service import AdmissionService
-from .member_service import MemberService
-from .league_admin_service import LeagueAdminService
-from .league_read_service import LeagueReadService
-from .contracts import AdmissionDenied, AdmissionRejected
+from .admission.service import AdmissionService
+from .members.service import MemberService
+from .administration.service import LeagueAdminService
+from .reads.service import LeagueReadService
+from .admission.contracts import AdmissionDenied, AdmissionRejected
 from actors import UserActor
 from authenticatedPrincipal import PrincipalResolutionError, resolve_authenticated_principal
 

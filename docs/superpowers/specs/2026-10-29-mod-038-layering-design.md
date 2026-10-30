@@ -4,6 +4,8 @@ Date: 2026-10-29. Status: approved by the user's instruction to implement on 202
 
 League rollout update — 2026-10-30: planned league content extraction is complete, with SQL-free LeagueModel compatibility/composition and services/repositories for admission, members, administration, reads and lifecycle. [Final plan/ledger](../plans/2026-10-30-mod-038-league-lifecycle-implementation.md), [native evidence](../../modernization/evidence/mod-038-league-complete-postgres-2026-10-30.json); guarded backend 486/486. Broader domain work, correctness/read-time write changes and an import-only subfolder pass remain separate.
 
+League organization update — 2026-10-30: import-only subfolder pass complete with admission/members/administration/reads/lifecycle implementations and root compatibility aliases. [Layout guide](../../../api/endpoints/league/README.md), [plan/ledger](../plans/2026-10-30-mod-040-league-folders-implementation.md), [native evidence](../../modernization/evidence/mod-040-league-folders-postgres-2026-10-30.json); backend 489/489. Existing definitions and behavior preserved.
+
 ## Intent, scope and constraints
 
 Separate transport, use cases and persistence so HTTP and jobs share domain operations without constructing HTTP adapters. Keep domain code together and migrate only when a bounded extraction improves ownership. Retain Flask, SQLAlchemy/raw SQL, existing routes, table names and the current Render service. No new dependencies, paid infrastructure, schema changes or rate limiter.

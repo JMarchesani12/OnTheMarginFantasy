@@ -1,9 +1,5 @@
-"""Admission failures independent of HTTP and legacy exception translation."""
+"""Legacy module alias; implementation lives in admission/contracts.py."""
+from importlib import import_module
+import sys
 
-
-class AdmissionDenied(Exception):
-    code = 'admission_denied'
-
-
-class AdmissionRejected(Exception):
-    code = 'admission_rejected'
+sys.modules[__name__] = import_module('.admission.contracts', __package__)

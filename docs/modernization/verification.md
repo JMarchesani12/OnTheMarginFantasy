@@ -1,5 +1,39 @@
 # Regression verification baseline
 
+## MOD-038 draft snapshot pilot — 2026-10-30
+
+DraftSnapshotService now owns actor/trusted member policy, authorized completed-state repair, snapshot/pick/upcoming-turn orchestration and transaction scope. Repository owns original scoped league/state/member/pick/repair/turn SQL. HTTP state constructs actor from principal. Member access remains mandatory even for commissioners; query authorization precedes repair. Existing model signatures and helper use by commands remain; caller-supplied connection never opens another transaction. No pick/control/broadcast changes.
+
+| Verification | Fresh result |
+| --- | --- |
+| Guarded baseline | Exit 0, 489/489 |
+| Direct-service tests | RED five missing-module errors plus one passing legacy case; GREEN 6/6 |
+| `python3 api/tests/run_isolated.py` | Exit 0, 495/495 including final fresh rerun; existing tests unchanged |
+| `python3 scripts/modernization/verify_draft_snapshot.py` | Exit 0, native PostgreSQL PASS |
+| Independent review | No Critical/Important/Minor findings; focused guarded suite 6/6 |
+| AST/dependency/diff checks | All other draft model methods unchanged; service/repository have no transport/model/configured-engine imports; diff check passes |
+
+[Native results/source hashes](evidence/mod-038-draft-snapshot-postgres-2026-10-30.json) verify member-only access before repair, commissioner-without-membership denial, original JSON/native timestamps/envelope, season/sport-specific conference joins, independent picks, ordered members and next-turn skipping. Missing state and trusted missing-league semantics retained. Failure after repair before final read, deferred repair commit failure and caller-owned rollback preserve prior state; successful repair clears original fields. Separate-connection membership revocation immediately before scoped query denies without repair or later snapshot queries. Legacy supplied-connection calls and private turn helper work even on models without db. Existing read-time repair remains; no stronger final access/locking/realtime recovery guarantee added.
+
+Harness used only marked loopback PostgreSQL and owned random DB, no configured DSN/.env. Database/container `otm-mod038-draft-snapshot-20261030` removed. League folder changes preserved; aliases remain for maintained legacy test/tool imports and can be retired after migration. Checkout uncommitted; no schema, hosted DB, frontend, dependency, listener or deployment changes.
+
+## MOD-040 league package organization — 2026-10-30
+
+Moved implementation into admission/{service,repository,contracts}, members/{service,repository}, administration/{service,repository}, reads/{service,repository} and lifecycle/{service,repository}. Package initializers are lightweight; composition imports canonical paths. Legacy flat modules are sys.modules aliases of canonical modules, retaining class/exception identity, global patch behavior and old exception lookup/pickle resolution. Routes/endpoints/model stay at package root; no behavior changes.
+
+| Verification | Fresh result |
+| --- | --- |
+| Guarded baseline | Exit 0, 486/486 |
+| Import compatibility tests | RED missing canonical packages (3 tests, 13 subtest/errors); GREEN 3/3 |
+| `python3 api/tests/run_isolated.py` | Exit 0, 489/489 including final fresh rerun; existing tests unchanged |
+| `python3 scripts/modernization/verify_league_folders.py` | Exit 0, complete native league PostgreSQL PASS through legacy harness imports |
+| Independent review | No Critical/Important/Minor findings; focused guarded suite 3/3 |
+| AST/dependency/diff checks | All 11 moved modules identical outside imports; model/endpoint definitions unchanged; acyclic lightweight packages and dependency boundaries preserved; diff check passes |
+
+[Native results/source manifest](evidence/mod-040-league-folders-postgres-2026-10-30.json) rerun all 13 earlier league/member/admission slices plus lifecycle against reorganized implementations reached through old imports. Manifest covers 50 canonical/alias/package/dependency files including initializers and layout guide. It supersedes prior league source hashes while retaining historical reports. Functional data/SQL/transaction tests remain unchanged; compatibility tests exercise import identity, old repository patch targeting and exception resolution.
+
+Harness accepts no configured DSN/.env; marked loopback server and owned random database only. Database/container `otm-mod040-league-folders-20261030` removed. League content/folder migration complete; wider domains/frontend and correctness remain separate. Checkout uncommitted; no API, behavior, schema, hosted DB, frontend, dependency, listener or deployment changes.
+
 ## MOD-038 lifecycle; planned league extraction complete — 2026-10-30
 
 LeagueLifecycleService owns one transaction and ordered pre-draft/drafting/post-draft/in-season/completed phases; repository contains original five SQL strings verbatim. Model sync delegates and retains None/error behavior; existing actor reads still invoke the same callback/facade at their original point. LeagueModel now contains no SQL literals/execution/connection acquisition. Public/helper signatures, composition and callback overrides retained; folder moves are separate.

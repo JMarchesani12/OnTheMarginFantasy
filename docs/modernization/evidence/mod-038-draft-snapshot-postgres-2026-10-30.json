@@ -1,0 +1,20 @@
+{
+  "result": "PASS",
+  "scope": "Synthetic marked loopback PostgreSQL; no configured/hosted database",
+  "snapshot": {
+    "member_only_scope_before_repair": "PASS",
+    "native_json_timestamps_picks_season_join_turn_skipping": "PASS",
+    "missing_state_trusted_legacy_supplied_connection": "PASS",
+    "repair_post_read_commit_caller_rollback": "PASS",
+    "separate_connection_pre_query_revocation": "PASS"
+  },
+  "sha256": {
+    "api/endpoints/draft/snapshot_service.py": "671165c3af27febb9a239bacf31bde2694462287cf0143b31ba12ffc796d56e4",
+    "api/endpoints/draft/snapshot_repository.py": "46fe264b9986c2268f104465649c8ee1387c75f32b684b0d6f4f20e4998f9be2",
+    "api/endpoints/draft/draftModel.py": "b526f51145066c2f8b3bd862706316c66befe4062148dd5d553c92933e8238f4",
+    "api/endpoints/draft/draftEndpoints.py": "d1cf85b836f29266893dba612178456d8f17888db305cabdc58dc25a144495ca",
+    "api/endpoints/draft/routes.py": "10f373a7205d38a05ce4ff2e82464d6af9ac795cf342b9d918c4eb3b3644f1e9",
+    "api/actors.py": "6b0ea454e1227c2e9fe94cb3ca76db15a799ec3b5481a063b0fd2705318b789f",
+    "scripts/modernization/verify_draft_snapshot.py": "b0e970d84d574fb489cd69feae5b104d7d46c50c967671715054e41759eeabc8"
+  }
+}

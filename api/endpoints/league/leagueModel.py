@@ -5,13 +5,13 @@ from sqlalchemy.engine import Engine
 
 from endpoints.schedule.scheduleModel import ScheduleModel
 from utils.authorization import league_read_scope
-from .admission_service import AdmissionService
-from .member_service import MemberService
-from .league_admin_service import LeagueAdminService
-from .league_read_service import LeagueReadService
-from .league_lifecycle_service import LeagueLifecycleService
-from .member_repository import ALLOWED_LEAGUE_MEMBER_FIELDS
-from .contracts import AdmissionDenied, AdmissionRejected
+from .admission.service import AdmissionService
+from .members.service import MemberService
+from .administration.service import LeagueAdminService
+from .reads.service import LeagueReadService
+from .lifecycle.service import LeagueLifecycleService
+from .members.repository import ALLOWED_LEAGUE_MEMBER_FIELDS
+from .admission.contracts import AdmissionDenied, AdmissionRejected
 from rules.leagueRules import get_timezone_name_from_settings, validate_timezone_name, ensure_timezone_in_settings
 
 

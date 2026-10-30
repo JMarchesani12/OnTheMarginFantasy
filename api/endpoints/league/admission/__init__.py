@@ -1,0 +1,1 @@
+"""League admission domain implementation."""
