@@ -183,13 +183,17 @@ class LeagueReadAuthorizationTests(unittest.TestCase):
         self.assertEqual(denied.status_code, 404)
 
     def test_auth_and_identity_errors_on_every_read(self):
-        for headers, status in (({}, 401), (self.headers(exp=1), 401), (self.headers(''), 401),
-                (self.headers('00000000-0000-4000-8000-000000000099'), 403)):
+        for headers, status, code in (({}, 401, 'auth_token_missing'), (self.headers(exp=1), 401, 'auth_token_invalid'), (self.headers(''), 401, None),
+                (self.headers('00000000-0000-4000-8000-000000000099'), 403, None)):
             for path in self.paths:
                 with self.subTest(status=status, path=path):
                     response = self.client.get('/api/league/10' + path, headers=headers)
                     self.assertEqual(response.status_code, status)
-                    self.assertEqual(set(response.json), {'error'})
+                    if code:
+                        self.assertEqual(set(response.json), {'error', 'requestId'})
+                        self.assertEqual(response.json['error']['code'], code)
+                    else:
+                        self.assertEqual(set(response.json), {'error'})
         self.db.connection.execute('ALTER TABLE "User" RENAME TO original_user')
         self.db.connection.execute('CREATE TABLE "User" AS SELECT * FROM original_user')
         self.db.connection.execute('INSERT INTO "User" (id, uuid) VALUES (?, ?)', (4, ALICE))

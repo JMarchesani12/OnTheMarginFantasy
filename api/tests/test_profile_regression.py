@@ -99,7 +99,9 @@ class ProfileRegressionTests(unittest.TestCase):
                 write = self.client.patch('/api/user/1', headers=headers, json={"displayName": "Changed"})
                 self.assertEqual(read.status_code, 401)
                 self.assertEqual(write.status_code, 401)
-                self.assertIsInstance(read.json.get("error"), str)
+                self.assertEqual(read.json['error']['code'],
+                    'auth_token_invalid' if authorization == 'Bearer not-a-jwt' else 'auth_token_missing')
+                self.assertEqual(read.json['requestId'], read.headers['X-Request-ID'])
                 self.assertNotIn("email", read.json)
                 self.assertEqual(self.db.profile(1)["displayName"], "Alice")
 
@@ -111,7 +113,8 @@ class ProfileRegressionTests(unittest.TestCase):
             with self.subTest(token=cases.index(headers)):
                 response = self.client.get('/api/user/1', headers=headers)
                 self.assertEqual(response.status_code, 401)
-                self.assertEqual(set(response.json), {"error"})
+                self.assertEqual(set(response.json), {'error', 'requestId'})
+                self.assertEqual(response.json['error']['code'], 'auth_token_invalid')
 
     def test_preflight_cannot_execute_a_profile_update(self):
         response = self.client.options('/api/user/1', json={"displayName": "Changed"})

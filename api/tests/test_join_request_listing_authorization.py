@@ -128,11 +128,15 @@ class JoinRequestListingAuthorizationTests(unittest.TestCase):
         self.assertEqual(response.json, [])
 
     def test_missing_invalid_expired_and_empty_subject_cannot_read(self):
-        for headers in ({}, {'Authorization': 'Bearer invalid'}, self.headers(exp=1), self.headers('')):
+        for headers, code in (({}, 'auth_token_missing'), ({'Authorization': 'Bearer invalid'}, 'auth_token_invalid'), (self.headers(exp=1), 'auth_token_invalid'), (self.headers(''), None)):
             with self.subTest(headers=headers):
                 response = self.client.post('/api/league/10/joinRequests', headers=headers, json={'actingUserId': 1})
                 self.assertEqual(response.status_code, 401)
-                self.assertEqual(set(response.json), {'error'})
+                if code:
+                    self.assertEqual(set(response.json), {'error', 'requestId'})
+                    self.assertEqual(response.json['error']['code'], code)
+                else:
+                    self.assertEqual(response.json, {'error': 'missing_authenticated_subject'})
 
     def test_missing_and_ambiguous_application_identity_cannot_read(self):
         response = self.client.post('/api/league/10/joinRequests',

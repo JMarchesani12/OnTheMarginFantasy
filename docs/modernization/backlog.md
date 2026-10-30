@@ -529,6 +529,7 @@ These conventions remain in force until MOD-038/041 decisions approve changes; t
 
 ### MOD-028A — Align bounded auth refresh with server error code
 
+- **Status — 2026-10-29: complete in bounded application scope.** MOD-041 auth slice adds structured pre-execution missing/invalid-token 401 codes and one browser refresh/replay only for `auth_token_invalid`. Origin/path scoping, redirect refusal, per-rejected-token refresh coordination, account continuity, cancellation and a configurable 30-second budget are implemented. Explicit bootstrap credentials never invoke SDK lookup/refresh. Permission/legacy errors, network failures and consumed/streaming bodies do not replay. Fresh backend 359/359, frontend 62/62, frontend build and changed-production-file ESLint pass; SDK/provider network and hosted/browser verification were not performed. [Implementation evidence](verification.md#mod-041-authentication-slice--2026-10-29).
 - **Priority / size / risk:** P1 / S–M / Medium.
 - **Features:** F-002, F-022.
 - **Problem / evidence:** FE D08 / B6: invalid session predicate misses Invalid or expired token.
@@ -665,6 +666,7 @@ These cards reflect the user's explicit new scope. They cross-cut existing featu
 
 ### MOD-038 — Decide API layering and dependency ownership
 
+- **Discussion status — 2026-10-29:** Incremental hybrid selected by the user; MOD-041 architecture approved and its first auth slice implemented. [Detailed MOD-038 draft](../superpowers/specs/2026-10-29-mod-038-layering-design.md) now covers responsibilities, explicit user/job entry points, read/command call graphs, service transactions, connection-scoped repositories, compatibility facades, policy ownership and transaction-domain pilot acceptance. Independent builder check found no important gaps. Draft awaits user approval; no structural application changes or new application verification performed for MOD-038.
 - **Priority / size / risk:** P1 / S for discussion/design; migration sized separately / Medium.
 - **Features:** Cross-cutting existing backend features.
 - **Problem / evidence:** Routes/endpoints/models exist, but model classes mix orchestration and SQL; job builders construct HTTP adapters. New shared auth/validation functions expose opportunities to clarify responsibilities.
@@ -698,6 +700,8 @@ These cards reflect the user's explicit new scope. They cross-cut existing featu
 
 ### MOD-041 — Decide incoming, response and outbound interceptor architecture
 
+- **Implementation follow-up — 2026-10-29:** User requested implementation; the [first auth slice](../superpowers/plans/2026-10-29-mod-041-auth-implementation.md) is implemented and independently reviewed in the current checkout. MOD-028A's bounded recovery contract and basic request IDs/no-store response handling are covered. This does not complete MOD-019/024/034, provider policy work or MOD-038/040 structural migration. Rate limiting remains deferred; no deployment or infrastructure changes.
+- **Status — 2026-10-29: complete in architecture-decision scope.** User approved the [architecture decision](../superpowers/specs/2026-10-29-mod-041-boundaries-design.md): Flask application hooks with explicit hosting and separate outbound-client ownership (option 3), existing Render hosting and rate limiting deferred. No required new paid infrastructure. Implementation remains in the mapped cards; deployment facts and concrete bounds/timeouts remain evidence tasks. MOD-038 incremental hybrid is the selected direction, pending its detailed architecture decision. [Follow-through sequence](../superpowers/plans/2026-10-29-mod-041-follow-through.md).
 - **Priority / size / risk:** P1 / S–M for decision / Medium.
 - **Features:** F-002, F-004, F-022–028, F-034; cross-cutting transport concerns.
 - **Problem / evidence:** authMiddleware.before_request, app CORS, endpoint principal/error handling, separate socket auth and frontend apiFetch form several boundaries without a documented common pipeline; rate/gateway policy remains unresolved.

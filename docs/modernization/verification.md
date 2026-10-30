@@ -1,5 +1,25 @@
 # Regression verification baseline
 
+## MOD-041 authentication slice — 2026-10-29
+
+User approved the architecture and requested implementation in the current checkout. First bounded slice covers MOD-028A plus basic HTTP correlation/cache behavior. Full architecture migration is not implemented.
+
+| Check | Fresh result |
+| --- | --- |
+| `python3 api/tests/run_isolated.py` | Exit 0, 359/359; baseline 354/354 |
+| frontend `node --test --experimental-strip-types tests/*.test.ts` | Exit 0, 62/62; baseline 45/45 |
+| frontend `npm run build` | Exit 0, TypeScript and Vite production build |
+| frontend `./node_modules/.bin/eslint src/api/client.ts src/api/authenticatedFetch.ts` | Exit 0; browser-mapping data freshness notice only |
+| `git diff --check` | Exit 0 |
+
+New auth-boundary tests initially failed against legacy string auth errors and absent response headers, then passed. Existing authorization tests were updated only where they asserted the intentionally replaced middleware error shape; resource/principal outcomes remain unchanged. Browser tests exercise the real transport with injected SDK/network boundaries and real Request/Response objects. They cover foreign origin/path/traversal and redirects, explicit bootstrap tokens, method/header/body preservation, shared/late refresh, one-retry budgets, no refresh for permission/legacy errors, no replay on ambiguous network failures, cancellation during refresh and after headers, and token-lookup timeout.
+
+One independent final reviewer found an Important account-switch race: pending A operations could replay with B's current SDK token. Three real-facade regressions reproduced switching before refresh, during refresh and before late cached replay. All passed after subject continuity and current-token checks before every replay. No Critical/Minor findings were reported. The token subject is parsed only for session continuity; server JWT verification remains authoritative.
+
+Limits: injected SDK/network tests do not establish live Supabase refresh behavior, deployed Render/CORS behavior or real browser compatibility. Native AbortSignal.timeout/any require modern browsers. Default total request timeout is 30 seconds, explicitly overridable with a finite positive timeoutMs. Endpoint errors remain legacy except missing/invalid middleware authentication denials; request IDs are response headers for all Flask responses and in the new auth body. Framework-wide safe-error envelopes, resource-size limits, telemetry, provider budgets and lifecycle migration remain separate work. No rate limiter, deployment, dependency installation, production process or database connection was used.
+
+## Earlier verification records
+
 Latest result: **MOD-003B complete** in bounded HTTP/application authorization scope. Final guarded backend **256/256 pass**, exit0, including prior profile/state/live/control/transport assertions. Diff check passes. No frontend changes/checks rerun; prior results are historical. PostgreSQL/RLS/concurrency/notification/browser/live-socket limits remain; no production used.
 
 2026-10-28. Read with [behavior checklist](behavior-checklist.md), [backlog](backlog.md), [database audit](database-audit.md), and [progress](progress.md). Baseline is checkout `162f89a` plus the pre-existing modification to `api/startSeasonJobs/configs/ncaa-mens-basketball-2026.json` and untracked modernization docs. This is not a clean-HEAD or deployed-production result.

@@ -1,6 +1,7 @@
 # auth_middleware.py
-from flask import request, jsonify, g
+from flask import request, g
 from supabaseAuth import verify_supabase_token
+from httpBoundary import authentication_error, install_http_boundary
 
 def install_auth_middleware(app, public_paths=None, public_prefixes=None):
     """
@@ -8,6 +9,7 @@ def install_auth_middleware(app, public_paths=None, public_prefixes=None):
     - Verifies Supabase JWT on every request
     - Skips allowlisted routes
     """
+    install_http_boundary(app)
     public_paths = set(public_paths or [])
     public_prefixes = list(public_prefixes or [])
 
@@ -31,15 +33,15 @@ def install_auth_middleware(app, public_paths=None, public_prefixes=None):
         # Require Bearer token for everything else
         auth = request.headers.get("Authorization", "")
         if not auth.startswith("Bearer "):
-            return jsonify({"error": "Unauthorized"}), 401
+            return authentication_error('auth_token_missing')
 
         token = auth.split(" ", 1)[1].strip()
         if not token:
-            return jsonify({"error": "Unauthorized"}), 401
+            return authentication_error('auth_token_missing')
 
         claims = verify_supabase_token(token)
         if not claims:
-            return jsonify({"error": "Invalid or expired token"}), 401
+            return authentication_error('auth_token_invalid')
 
         # Available in endpoints via g.user
         g.user = claims

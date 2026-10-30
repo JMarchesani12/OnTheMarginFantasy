@@ -3,11 +3,12 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { runInNewContext } from 'node:vm';
 import ts from 'typescript';
+import { createAuthenticatedFetch } from '../src/api/authenticatedFetch.ts';
 
 // Run real modules with SDK/transport substitutes; no env file or network.
 function loadModule(path: string, dependencies: Record<string, unknown>, globals: Record<string, unknown> = {}) {
   const source = readFileSync(new URL(path, import.meta.url), 'utf8')
-    .replace('import.meta.env.VITE_API_BASE_URL', 'undefined');
+    .replace('import.meta.env.VITE_API_BASE_URL', '"https://api.example.test"');
   const output = ts.transpileModule(source, {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
   }).outputText;
@@ -15,6 +16,7 @@ function loadModule(path: string, dependencies: Record<string, unknown>, globals
   runInNewContext(output, {
     exports, Headers, Response, ...globals,
     require: (id: string) => {
+      if (id === './authenticatedFetch') return { createAuthenticatedFetch };
       assert.ok(id in dependencies, `Unexpected dependency: ${id}`);
       return dependencies[id];
     },
@@ -66,8 +68,8 @@ test('explicit bootstrap token avoids SDK session lookup inside auth callbacks',
     '../lib/supabaseClient': { supabase: { auth: {
       getSession: async () => { throw new Error('Must not reenter session lookup'); },
     } } },
-    fetch: async (_url: string, init: RequestInit) => {
-      seen.push(new Headers(init.headers));
+    fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+      seen.push(new Request(input, init).headers);
       return new Response('{}', { status: 200 });
     },
   });
@@ -82,8 +84,8 @@ test('ordinary authenticated requests still use the SDK session token', async ()
     '../lib/supabaseClient': { supabase: { auth: {
       getSession: async () => ({ data: { session: { access_token: 'sdk-token' } } }),
     } } },
-    fetch: async (_url: string, init: RequestInit) => {
-      assert.equal(new Headers(init.headers).get('Authorization'), 'Bearer sdk-token');
+    fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+      assert.equal(new Request(input, init).headers.get('Authorization'), 'Bearer sdk-token');
       return new Response('{}', { status: 200 });
     },
   });
@@ -193,4 +195,72 @@ test('full-data league API functions explicitly request full responses', async (
     'https://api.example.test/api/league/10?view=full',
     'https://api.example.test/api/league/10/members?view=full',
   ]);
+});
+
+function syntheticToken(subject: string, marker: string) {
+  return `test.${Buffer.from(JSON.stringify({ sub: subject, marker })).toString('base64url')}.signature`;
+}
+for (const when of ['before-denial', 'during-refresh', 'unchanged'] as const) {
+  test(`refresh preserves the initiating account: ${when}`, async () => {
+    const old = syntheticToken('account-a', 'old');
+    const freshA = syntheticToken('account-a', 'new');
+    const freshB = syntheticToken('account-b', 'new');
+    let current = { access_token: old, user: { id: 'account-a' } };
+    const sent: string[] = [];
+    let refreshes = 0;
+    const api = loadModule('../src/api/client.ts', {
+      '../lib/supabaseClient': { supabase: { auth: {
+        getSession: async () => ({ data: { session: current } }),
+        refreshSession: async () => {
+          refreshes++;
+          current = when === 'during-refresh'
+            ? { access_token: freshB, user: { id: 'account-b' } }
+            : { access_token: freshA, user: { id: 'account-a' } };
+          return { data: { session: current }, error: null };
+        },
+      } } },
+      fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+        const req = new Request(input, init);
+        sent.push(req.headers.get('Authorization')!);
+        if (sent.length === 1) {
+          if (when === 'before-denial') current = { access_token: freshB, user: { id: 'account-b' } };
+          return Response.json({ error: { code: 'auth_token_invalid' } }, { status: 401 });
+        }
+        return Response.json({ saved: true });
+      },
+    }, { atob });
+    const response = await api.apiFetch('https://api.example.test/api/change', { method: 'POST', body: '{}' }) as Response;
+    assert.equal(response.status, when === 'unchanged' ? 200 : 401);
+    assert.deepEqual(sent, when === 'unchanged' ? [`Bearer ${old}`, `Bearer ${freshA}`] : [`Bearer ${old}`]);
+    assert.equal(refreshes, when === 'before-denial' ? 0 : 1);
+  });
+}
+
+test('late denial cannot replay a cached refreshed token after account switch', async () => {
+  const old = syntheticToken('account-a', 'old');
+  const fresh = syntheticToken('account-a', 'new');
+  let current = { access_token: old, user: { id: 'account-a' } };
+  let release!: (r: Response) => void;
+  const late = new Promise<Response>(resolve => { release = resolve; });
+  let replays = 0;
+  const api = loadModule('../src/api/client.ts', {
+    '../lib/supabaseClient': { supabase: { auth: {
+      getSession: async () => ({ data: { session: current } }),
+      refreshSession: async () => {
+        current = { access_token: fresh, user: { id: 'account-a' } };
+        return { data: { session: current }, error: null };
+      },
+    } } },
+    fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+      const req = new Request(input, init);
+      if (req.headers.get('Authorization') === `Bearer ${fresh}`) { replays++; return Response.json({}); }
+      return req.url.endsWith('/late') ? late : Response.json({ error: { code: 'auth_token_invalid' } }, { status: 401 });
+    },
+  }, { atob });
+  const pending = api.apiFetch('https://api.example.test/api/late');
+  await api.apiFetch('https://api.example.test/api/first');
+  current = { access_token: syntheticToken('account-b', 'new'), user: { id: 'account-b' } };
+  release(Response.json({ error: { code: 'auth_token_invalid' } }, { status: 401 }));
+  assert.equal((await pending as Response).status, 401);
+  assert.equal(replays, 1);
 });
