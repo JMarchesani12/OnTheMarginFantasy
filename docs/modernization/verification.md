@@ -1,5 +1,26 @@
 # Regression verification baseline
 
+## MOD-038 draft content completion — 2026-10-30
+
+Remaining live picks, trusted manual allocation, timeout skip/auto-pick, conference caps/random buckets, membership and round lookups now live in service/repository layers. DraftModel retains SQL-free control/snapshot bridges and inherits pick behavior so legacy names, helper overrides and db-only construction work. HTTP picks receive UserActor; worker calls process_timeout_for_job, socket checks its verified subject before a trusted snapshot, listener calls snapshot service. Existing disabled manual HTTP410, default weeks, errors, policy and publication timing remain.
+
+| Verification | Fresh result |
+| --- | --- |
+| Guarded baseline | Exit 0, 512/512 |
+| Direct-service tests | RED 6/6 missing new service; GREEN 6/6: actor-before-I/O, allocation/pointer, wrong owner/slot rollback, trusted manual/default notification, timeout no-ops, inherited overrides/db-only |
+| `python3 api/tests/run_isolated.py` | Exit 0, 518/518, including final post-facade run |
+| Native timeout RED → GREEN | Unquoted isExpired raised NoSuchColumnError; quoted alias exposed original :leagueId::bigint rotation SyntaxError; CAST(:... AS bigint) fixes all three bind casts; same expired rotation now passes |
+| `python3 scripts/modernization/verify_draft_complete.py` | Exit 0; 40/40 named repository operations exercised and asserted; previous snapshot/finalization/controls/order suites rerun |
+| Native correctness/atomicity | Live ownership/guarded INSERT revocation, turn/grace/expiry, active ownership/conflict/caps/distinct/season joins, manual/default, terminal/no-turn finalization, skip holes/last-turn/no-ops, auto buckets/caps/availability/sport, per-write/finalize/notify rollback, real statement/deferred-commit failure, actual pg_notify commit-only behavior |
+| Native concurrency/composition | Observed actual pg_stat_activity lock wait for competing live pick/timeout; timeout rereads advanced unexpired state and makes no second transition; native worker deadline helper executed without configured import or worker startup |
+| Independent final review | No Critical/Important/Minor findings; reviewer independently ran all518 tests |
+| One-off AST comparison | 34 legacy methods match original algorithm AST after named-query/notification substitution; all38 migrated query ASTs identical except two proven SQL fixes; injected constructor/new entry points intentional |
+| Boundaries/diff | Model SQL-free, canonical service/repository independent of model/transport/configured engine; original worker SQL moved unchanged; diff check and current source hashes pass |
+
+[Current native results/source hashes](evidence/mod-038-draft-complete-postgres-2026-10-30.json), [plan/ledger](../superpowers/plans/2026-10-30-mod-038-draft-complete-implementation.md), [domain boundaries](../../api/endpoints/draft/README.md). Completion report supersedes previous draft hashes; earlier evidence is retained as history. All six completed domain reports remain current (transaction, roster, user, scoring, league, draft).
+
+Known scope: ordinary nonterminal live picks still publish through HTTP after commit; ordinary auto-skip does not gain pg_notify. Existing restart/concurrent-start/cap/selection policies remain. MOD-023/025/034 and remaining domain/frontend architecture work are separate. No hosted/deployed/schema/dependency/frontend changes or app/worker/listener startup. Only a marked task-owned loopback PostgreSQL container/database was used and removed; work is uncommitted.
+
 ## MOD-038 draft-order control — 2026-10-30
 
 Control service owns actor/trusted order selection, original empty-input-before-legacy-DB guard, pre/post commissioner checks, state/member validation and one bump/assign/projection transaction. Repository owns original unlocked state query, ANY bigint-array selection/count, +100000 bump, unnest/generate_series assignment and ordered member projection. Model signatures/defaults/coercion retained; HTTP uses actor service and preserves URL/body parsing and no broadcast.

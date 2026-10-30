@@ -368,6 +368,14 @@ authority revocation. Results/source hashes:
 Prior draft hashes superseded; history retained. No configured DSN/.env; owned
 random DB removed. Stop only the task-owned container afterward.
 
+### MOD-038 remaining draft completion
+
+```sh
+python3 scripts/modernization/verify_draft_complete.py
+```
+
+Requires the marked synthetic loopback server above. Uses a uniquely owned database, never imports configured db/app/jobs, and drops its database in finally. Executes all40 named pick/timeout/deadline/notification repository operations (coverage asserted), live/trusted manual allocation/defaults/turn/expiry/grace/ownership/caps/season/conflict, skip rotation/unpicked holes/last-turn/no-ops, auto-pick bucket/cap/availability/sport/finalization, late ownership revocation, per-write/finalize/notification rollback and real statement/deferred-commit errors. Uses an owned native LISTEN connection to check committed notification delivery, and observes real pg_stat_activity lock contention between a live pick and timeout. Executes the actual worker deadline helper extracted without importing/starting worker. Earlier snapshot/finalization/controls/order suites rerun on current sources. Optional `timeout-probe` exercises the minimal expired rotation case used for native alias/cast RED→GREEN; it does not write evidence. Evidence: `docs/modernization/evidence/mod-038-draft-complete-postgres-2026-10-30.json`, which supersedes prior draft source hashes. Existing notification placement/restart/cap policy is preserved; no app/worker/listener process startup.
+
 ### Baseline suite
 
 After the same marked container is ready, run this separate suite sequentially

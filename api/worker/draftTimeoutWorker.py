@@ -2,9 +2,9 @@ import time
 import traceback
 from typing import Optional, Tuple
 
-from sqlalchemy import text
 
-from endpoints.draft.draftModel import DraftModel
+from endpoints.draft.pick_service import DraftPickService
+from endpoints.draft.pick_repository import DraftPickRepository
 from db import engine
 
 
@@ -20,22 +20,7 @@ def _get_next_expired_or_soonest_deadline(conn) -> Optional[Tuple[int, float]]:
     Where deadline = expiresAt + graceSeconds.
     If already expired, seconds_until_deadline will be <= 0.
     """
-    row = conn.execute(
-        text("""
-            SELECT
-                ds."leagueId" AS "leagueId",
-                EXTRACT(EPOCH FROM (
-                    (ds."expiresAt" + ((l.settings->'draft'->>'graceSeconds') || ' seconds')::interval)
-                    - now()
-                )) AS "secondsUntilDeadline"
-            FROM "DraftState" ds
-            JOIN "League" l ON l.id = ds."leagueId"
-            WHERE ds.status = 'live'
-              AND ds."expiresAt" IS NOT NULL
-            ORDER BY (ds."expiresAt" + ((l.settings->'draft'->>'graceSeconds') || ' seconds')::interval) ASC
-            LIMIT 1
-        """)
-    ).fetchone()
+    row = DraftPickRepository().next_timeout_deadline(conn).fetchone()
 
     if not row:
         return None
@@ -46,7 +31,7 @@ def _get_next_expired_or_soonest_deadline(conn) -> Optional[Tuple[int, float]]:
 
 
 def run():
-    model = DraftModel(engine)
+    service = DraftPickService(engine)
 
     while True:
         try:
@@ -67,12 +52,10 @@ def run():
                 continue
 
             # If we're here, it's expired now (or overdue): process it
-            action = model.process_expired_pick_if_needed(league_id)
+            action = service.process_timeout_for_job(league_id)
 
             # action may be None if it became unexpired / was picked manually meanwhile
-            # Broadcasting will be triggered by pg_notify inside process_expired_pick_if_needed
-            # (assuming you added self._notify_draft_updated calls in there).
-            # No socket code needed here.
+            # Existing timeout publication remains inside the service transaction.
 
             # Tiny pause to avoid tight loop if multiple expirations are at same instant
             time.sleep(MIN_SLEEP_SECONDS)

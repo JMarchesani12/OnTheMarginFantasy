@@ -2,7 +2,7 @@
 from sqlalchemy.exc import IntegrityError
 from flask import request, jsonify
 from endpoints.draft.draftBroadcast import broadcast_draft_update
-from endpoints.draft.draftModel import DraftModel
+from .pick_service import DraftPickService
 from .snapshot_service import DraftSnapshotService
 from .control_service import DraftControlService
 from actors import UserActor
@@ -11,7 +11,7 @@ from authenticatedPrincipal import PrincipalResolutionError, resolve_authenticat
 
 class DraftEndpoints:
     def __init__(self, db_engine):
-        self.draftModel = DraftModel(db_engine)
+        self.pick_service = DraftPickService(db_engine)
         self.db_engine = db_engine
         self.snapshot_service = DraftSnapshotService(db_engine)
         self.control_service = DraftControlService(db_engine)
@@ -40,15 +40,15 @@ class DraftEndpoints:
             member_id = integer(data['memberId'], 'memberId')
             sport_team_id = integer(data['sportTeamId'], 'sportTeamId')
             week_number = integer(data.get('weekNumber', 0), 'weekNumber')
-            draft_pick = self.draftModel.create_draft_pick_live(
+            draft_pick = self.pick_service.pick_live(
+                actor=UserActor(principal.user_id, principal.subject),
                 league_id=league_id,
                 member_id=member_id,
                 sport_team_id=sport_team_id,
                 acquired_week=week_number,
-                acting_user_id=principal.user_id,
             )
 
-            snapshot = self.draftModel.get_draft_state_snapshot(league_id)
+            snapshot = self.snapshot_service.snapshot_for_job(league_id)
             broadcast_draft_update(
                 league_id,
                 {"type": "pick", "snapshot": snapshot, "pick": draft_pick},
@@ -130,7 +130,7 @@ class DraftEndpoints:
                 )
             elif action == 'finalize':
                 result = self.control_service.finalize(UserActor(principal.user_id, principal.subject), league_id)
-                snapshot = self.draftModel.get_draft_state_snapshot(league_id)
+                snapshot = self.snapshot_service.snapshot_for_job(league_id)
                 broadcast_draft_update(league_id, {'type': action, 'snapshot': snapshot})
             else:
                 method = {
@@ -176,7 +176,7 @@ class DraftEndpoints:
     # GET /api/draft/rounds/<int:sportId>
     def get_rounds(self, sportId):
         try:
-            rounds = self.draftModel.get_rounds(sportId=sportId)
+            rounds = self.pick_service.get_rounds(sportId=sportId)
 
             if rounds is None:
                 return jsonify({"message": "Sport not found"}), 404

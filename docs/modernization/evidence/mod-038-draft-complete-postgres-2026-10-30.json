@@ -1,0 +1,134 @@
+{
+  "result": "PASS",
+  "scope": "Synthetic marked loopback PostgreSQL only; no configured DB or running jobs/listeners",
+  "remaining_draft": {
+    "native_live_manual_lookup_ownership_turn_grace_caps_season_defaults": "PASS",
+    "guarded_insert_rechecks_separate_transaction_revocation": "PASS",
+    "native_skip_rotation_unpicked_holes_last_turn_missing_turn_and_noops": "PASS",
+    "native_auto_random_buckets_caps_availability_sport_and_completion": "PASS",
+    "post_write_finalize_notify_statement_deferred_commit_rollback": "PASS",
+    "real_pick_timeout_lock_wait_rechecks_advanced_clock": "PASS",
+    "native_worker_deadline_without_worker_startup": "PASS",
+    "postgres_notify_commit_only_existing_branch_placement": "PASS",
+    "repository_queries_exercised": [
+      "auto_advance_next",
+      "auto_advance_past_end",
+      "auto_state_for_update",
+      "conference_cap",
+      "conference_info",
+      "insert_auto_pick",
+      "insert_auto_slot",
+      "insert_live_pick",
+      "insert_live_slot",
+      "insert_manual_pick",
+      "insert_manual_slot",
+      "league_sport",
+      "live_advance_next",
+      "live_advance_past_end",
+      "live_advance_without_turn",
+      "live_owned_member",
+      "live_state_for_update",
+      "live_team_ownership",
+      "manual_league",
+      "manual_pick_count",
+      "manual_team_ownership",
+      "member_conference_count",
+      "member_for_order",
+      "membership_for_subject",
+      "next_timeout_deadline",
+      "notify",
+      "owned_conference_count",
+      "random_conference_team",
+      "random_independent_team",
+      "sport_conference_ids",
+      "sport_rounds",
+      "timeout_advance",
+      "timeout_auto_member",
+      "timeout_expected_member",
+      "timeout_expired",
+      "timeout_extend_clock",
+      "timeout_last_unpicked",
+      "timeout_next_turn",
+      "timeout_rotate_turns",
+      "timeout_state_for_update"
+    ],
+    "scope_limit": "Original publication placement, restart and legacy cap/random policies preserved; this is extraction, not MOD-023/025/startup redesign"
+  },
+  "previous_slices_rerun": {
+    "snapshot": {
+      "member_only_scope_before_repair": "PASS",
+      "native_json_timestamps_picks_season_join_turn_skipping": "PASS",
+      "missing_state_trusted_legacy_supplied_connection": "PASS",
+      "repair_post_read_commit_caller_rollback": "PASS",
+      "separate_connection_pre_query_revocation": "PASS"
+    },
+    "finalization": {
+      "native_final_state_season_date_boundaries_projection_timestamps": "PASS",
+      "no_season_and_missing_state_compatibility": "PASS",
+      "post_write_real_statement_commit_and_caller_rollback": "PASS",
+      "separate_connection_pre_post_authority_rejection": "PASS",
+      "trusted_and_legacy_supplied_connection": "PASS",
+      "scope_limit": "Original pre/post authority checks add no locks or replay/concurrency guarantee"
+    },
+    "controls": {
+      "native_generate_series_snake_straight_interval_upsert": "PASS",
+      "incomplete_order_config_missing_complete_guards": "PASS",
+      "post_write_deferred_commit_and_authority_rollback": "PASS",
+      "concurrent_pause_resume": [
+        {
+          "path": "service",
+          "observed_lock_wait": true,
+          "outcomes": {
+            "first": "paused",
+            "second": "live"
+          }
+        },
+        {
+          "path": "legacy_facade",
+          "observed_lock_wait": true,
+          "outcomes": {
+            "first": "paused",
+            "second": "live"
+          }
+        }
+      ],
+      "legacy_trusted_reset_compatibility": "PASS",
+      "scope_limit": "Existing restart/ON CONFLICT behavior preserved; no new replay guarantee"
+    },
+    "order": {
+      "native_bigint_arrays_any_unnest_generate_series_unique_swap": "PASS",
+      "exact_projection_partial_guard_compatibility": "PASS",
+      "post_bump_assignment_read_statement_commit_rollback": "PASS",
+      "separate_connection_late_authority_rejection": "PASS",
+      "legacy_trusted_coercion": "PASS",
+      "scope_limit": "Original partial lists and unlocked state check preserved; no permutation/concurrent-start redesign"
+    }
+  },
+  "sha256": {
+    "api/endpoints/draft/draft_rules.py": "ff00676d5c367a65cf116743bf061918be41c86b537b7c9f5f2f2bc9118b8158",
+    "api/endpoints/draft/pick_service.py": "bd5e8fb4a0424f2e2571de89797e0cd6e7a7410e721aa87a489276e740267502",
+    "api/endpoints/draft/pick_repository.py": "baa6238f3ceb28c82da91f7b4718765f50fde0dbb084277906502817d9943d57",
+    "api/endpoints/draft/control_service.py": "6436943d70fd0317f37c0a4620ad4ff7395db492bb477247f4c59fbdb0ff57eb",
+    "api/endpoints/draft/control_repository.py": "afa46de9b111f63d63f50c1159d5f135efbbf396323ebe39fa5950c2caf009b1",
+    "api/endpoints/draft/snapshot_service.py": "671165c3af27febb9a239bacf31bde2694462287cf0143b31ba12ffc796d56e4",
+    "api/endpoints/draft/snapshot_repository.py": "46fe264b9986c2268f104465649c8ee1387c75f32b684b0d6f4f20e4998f9be2",
+    "api/endpoints/draft/draftModel.py": "ee1606dd35543c10fff5b4e167a07fb8b2699a2324e2ac776feba38abb2cd335",
+    "api/endpoints/draft/draftEndpoints.py": "8d3b5f953d178db3261a6615929e17971b6e55c2ddbf7c9cb2d35615e8195371",
+    "api/endpoints/draft/routes.py": "10f373a7205d38a05ce4ff2e82464d6af9ac795cf342b9d918c4eb3b3644f1e9",
+    "api/endpoints/draft/draftSocket.py": "e71f3fc450d8664a90ca9ae39e900f83ab9210ba563cba32c6738b21790ac989",
+    "api/endpoints/draft/startDraftNotifyListener.py": "01ba0c04c376c9abe906abd18db3e3929c81bcd6dcfe95e6b8ba2b27e4ac42c5",
+    "api/endpoints/draft/notifyChannel.py": "5b2bbcff7f14e98f27161564e43b1cef136d2b6efa1b18025fa46bb68ceac677",
+    "api/actors.py": "6b0ea454e1227c2e9fe94cb3ca76db15a799ec3b5481a063b0fd2705318b789f",
+    "api/worker/draftTimeoutWorker.py": "aff2738b084f7c79f1d9640b706a2c8828973e60dd5e5b7ee21a259608cfc599",
+    "scripts/modernization/verify_draft_snapshot.py": "b0e970d84d574fb489cd69feae5b104d7d46c50c967671715054e41759eeabc8",
+    "scripts/modernization/verify_draft_finalization.py": "4c97a527bf34c827ce4fefae534b3e8ee0a72544c8d2fdcc6e150475ba691dce",
+    "scripts/modernization/verify_draft_controls.py": "592c257e550bcfddc6234fa525dd31ee4138e5a1b7fc0dac346aa9e8f8d82c02",
+    "scripts/modernization/verify_draft_order.py": "91215e202cb7a49c46f72dab67536caa9238aac64252e03e03249bf5b6575048",
+    "scripts/modernization/verify_draft_complete.py": "5e5516b0e024507783bdfbc506e06b3c23f0c5e244ffadfc4e13d4849b591611"
+  },
+  "normalization_after_native_run": {
+    "path": "api/endpoints/draft/draftModel.py",
+    "native_sha256": "3bd7c07a4e69d56bc253b1f889bc311e6c6556e045e01213d89524c374a5fbff",
+    "change": "Removed one trailing blank line only; identical AST verified. sha256 contains the normalized source hash."
+  }
+}

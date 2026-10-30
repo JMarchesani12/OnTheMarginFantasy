@@ -4,7 +4,7 @@ import select
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
-from endpoints.draft.draftModel import DraftModel
+from endpoints.draft.snapshot_service import DraftSnapshotService
 from db import engine
 from utils.jsonSafe import jsonSafe
 
@@ -23,7 +23,7 @@ def start_draft_notify_listener(socketio):
         cur = conn.cursor()
         cur.execute(f"LISTEN {DRAFT_NOTIFY_CHANNEL};")
 
-        model = DraftModel(engine)
+        snapshots = DraftSnapshotService(engine)
 
         while True:
             # Wait up to 10s for a notify (keeps CPU low)
@@ -41,7 +41,7 @@ def start_draft_notify_listener(socketio):
 
                 # Build the latest snapshot and emit it
                 try:
-                    snapshot = model.get_draft_state_snapshot(league_id)
+                    snapshot = snapshots.snapshot_for_job(league_id)
                     socketio.emit(
                         "draft:updated",
                         {"type": "notify", "snapshot": jsonSafe(snapshot)},

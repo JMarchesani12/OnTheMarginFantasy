@@ -29,7 +29,8 @@ class DraftContractTests(unittest.TestCase):
         self.db = ProfileDatabase()
         self.addCleanup(self.db.connection.close)
         install_auth_middleware(app)
-        with patch('endpoints.draft.draftEndpoints.DraftModel', return_value=self.model):
+        with patch('endpoints.draft.draftEndpoints.DraftPickService', return_value=self.model), \
+             patch('endpoints.draft.draftEndpoints.DraftSnapshotService', return_value=self.model):
             setup_routes(app, self.db)
         self.client = app.test_client()
         token = jwt.encode(dict(sub=ALICE, aud='authenticated', iss=ISSUER,
@@ -41,12 +42,12 @@ class DraftContractTests(unittest.TestCase):
         self.addCleanup(self.emitter.stop)
 
     def test_committed_pick_returns_created_json_and_matching_league_event(self):
-        self.model.create_draft_pick_live.return_value = {
+        self.model.pick_live.return_value = {
             "id": 31, "leagueId": 7, "memberId": 11, "sportTeamId": 21,
             "overallPickNumber": 1, "roundNumber": 1, "pickInRound": 1,
             "createdAt": dt.datetime(2026, 1, 1, tzinfo=dt.timezone.utc),
         }
-        self.model.get_draft_state_snapshot.return_value = {
+        self.model.snapshot_for_job.return_value = {
             "leagueId": 7, "state": {"currentOverallPickNumber": 2},
         }
         response = self.client.post('/api/draft/pick', json=self.body)
@@ -69,7 +70,7 @@ class DraftContractTests(unittest.TestCase):
             (IntegrityError("synthetic statement", {}, Exception("synthetic unique violation")), 409),
         ]:
             with self.subTest(reason=type(error).__name__, status=status):
-                self.model.create_draft_pick_live.side_effect = error
+                self.model.pick_live.side_effect = error
                 response = self.client.post('/api/draft/pick', json=self.body)
                 self.assertEqual(response.status_code, status)
                 self.assertIsInstance(response.json.get("message"), str)
@@ -82,4 +83,4 @@ class DraftContractTests(unittest.TestCase):
         self.assertIn("memberId", response.json["message"])
         self.assertIn("sportTeamId", response.json["message"])
         self.emitted.assert_not_called()
-        self.model.create_draft_pick_live.assert_not_called()
+        self.model.pick_live.assert_not_called()

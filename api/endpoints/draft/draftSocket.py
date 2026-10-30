@@ -1,12 +1,14 @@
 from flask_socketio import disconnect, join_room, emit, leave_room
 from flask import request
 from socketioInstance import socketio
-from endpoints.draft.draftModel import DraftModel
+from endpoints.draft.pick_service import DraftPickService
+from endpoints.draft.snapshot_service import DraftSnapshotService
 from supabaseAuth import verify_supabase_token
 from utils.jsonSafe import jsonSafe
 
 def register_draft_socket_handlers(engine):
-    model = DraftModel(engine)
+    membership = DraftPickService(engine)
+    snapshots = DraftSnapshotService(engine)
 
     @socketio.on("connect")
     def on_connect(auth):
@@ -42,14 +44,14 @@ def register_draft_socket_handlers(engine):
 
             # ✅ Authorization: user must be a league member
             supabase_sub = user["sub"]
-            if not model.is_supabase_user_in_league(league_id, supabase_sub):
+            if not membership.is_supabase_user_in_league(league_id, supabase_sub):
                 emit("draft:error", {"message": "Forbidden: not a member of this league"})
                 return
 
             room = f"draft:{league_id}"
             join_room(room)
 
-            snapshot = model.get_draft_state_snapshot(league_id)
+            snapshot = snapshots.snapshot_for_job(league_id)
             emit("draft:snapshot", {"snapshot": jsonSafe(snapshot)})
 
         except Exception as e:
@@ -70,7 +72,7 @@ def register_draft_socket_handlers(engine):
             return
         league_id = int(league_id_raw)
         supabase_sub = user["sub"]
-        if not model.is_supabase_user_in_league(league_id, supabase_sub):
+        if not membership.is_supabase_user_in_league(league_id, supabase_sub):
             emit("draft:error", {"message": "Forbidden"})
             return
 
