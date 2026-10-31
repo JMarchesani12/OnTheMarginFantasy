@@ -8,7 +8,7 @@ from sqlalchemy.exc import DBAPIError
 from assess_postgres import LOCAL,ROOT,engine_for
 from verify_league_delete import listing_tests,creation_tests,approval_tests,profile_tests,removal_tests,tests as deletion_tests
 from actors import UserActor
-from endpoints.league.league_admin_service import LeagueAdminService
+from endpoints.league.administration.service import LeagueAdminService
 from endpoints.league.leagueModel import LeagueModel
 
 FIXTURE='''DROP SCHEMA public CASCADE; CREATE SCHEMA public;
@@ -138,7 +138,7 @@ def main():
         prior={'listing_cancellation':listing_tests(engine,name),'creation_denial':creation_tests(engine,name),
                'approval':approval_tests(engine,name),'member_profile':profile_tests(engine,name),'member_removal':removal_tests(engine,name),'league_deletion':deletion_tests(engine,name)}
         settings=tests(engine,name)
-        files=['api/endpoints/league/'+f for f in ('league_admin_service.py','league_admin_repository.py','member_service.py','member_repository.py','admission_service.py','admission_repository.py','contracts.py','leagueModel.py','leagueEndpoints.py')]
+        files=['api/endpoints/league/'+f for f in ('administration/service.py','administration/repository.py','members/service.py','members/repository.py','admission/service.py','admission/repository.py','admission/contracts.py','leagueModel.py','leagueEndpoints.py')]
         files+=['api/actors.py','api/rules/leagueRules.py']+['scripts/modernization/'+f for f in ('verify_admission_slice.py','verify_admission_create_deny.py','verify_admission_approval.py','verify_member_profile.py','verify_member_removal.py','verify_league_delete.py','verify_league_settings.py')]
         report={'result':'PASS','scope':'Synthetic marked loopback PostgreSQL; no configured/hosted database','prior_slices_rerun':prior,
                 'league_settings':settings,'sha256':{f:hashlib.sha256((ROOT/f).read_bytes()).hexdigest() for f in files}}

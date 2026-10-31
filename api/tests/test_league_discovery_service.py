@@ -1,7 +1,7 @@
 """Discovery entitlement, names-only previews and bounded anonymous search."""
 import unittest
 from actors import UserActor
-from endpoints.league.league_read_service import LeagueReadService
+from endpoints.league.reads.service import LeagueReadService
 from endpoints.league.leagueModel import LeagueModel
 import test_league_read_authorization as reads
 import test_public_league_search as searches

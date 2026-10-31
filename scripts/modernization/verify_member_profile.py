@@ -10,7 +10,7 @@ from verify_admission_slice import tests as listing_tests
 from verify_admission_create_deny import current_tests as creation_tests
 from verify_admission_approval import tests as approval_tests
 from actors import UserActor
-from endpoints.league.member_service import MemberService
+from endpoints.league.members.service import MemberService
 from endpoints.league.leagueModel import LeagueModel
 
 FIXTURE='''DROP SCHEMA public CASCADE; CREATE SCHEMA public;
@@ -106,7 +106,7 @@ def main():
         engine=engine_for(name,'otm-member-profile')
         prior={'listing_cancellation':listing_tests(engine,name),'creation_denial':creation_tests(engine,name),'approval':approval_tests(engine,name)}
         member=tests(engine,name)
-        files=['api/endpoints/league/'+f for f in ('member_service.py','member_repository.py','admission_service.py','admission_repository.py','contracts.py','leagueModel.py','leagueEndpoints.py')]
+        files=['api/endpoints/league/'+f for f in ('members/service.py','members/repository.py','admission/service.py','admission/repository.py','admission/contracts.py','leagueModel.py','leagueEndpoints.py')]
         files+=['api/actors.py','scripts/modernization/'+ 'verify_admission_slice.py','scripts/modernization/verify_admission_create_deny.py','scripts/modernization/verify_admission_approval.py','scripts/modernization/verify_member_profile.py']
         report={'result':'PASS','scope':'Synthetic marked loopback PostgreSQL; no configured/hosted database','admission_rerun':prior,'member_profile':member,
             'sha256':{f:hashlib.sha256((ROOT/f).read_bytes()).hexdigest() for f in files}}

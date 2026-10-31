@@ -43,7 +43,7 @@ class LeagueLifecycleServiceTests(unittest.TestCase):
     def setUp(self):
         self.db=LifecycleDatabase();self.addCleanup(self.db.connection.close)
     def service(self):
-        from endpoints.league.league_lifecycle_service import LeagueLifecycleService
+        from endpoints.league.lifecycle.service import LeagueLifecycleService
         return LeagueLifecycleService(self.db)
     def test_ordered_transitions_boundaries_and_completed_precedence(self):
         self.assertIsNone(self.service().synchronize_for_job())

@@ -11,8 +11,8 @@ from verify_admission_create_deny import current_tests as creation_tests
 from verify_admission_approval import tests as approval_tests
 from verify_member_profile import tests as profile_tests
 from actors import UserActor
-from endpoints.league.member_service import MemberService
-from endpoints.league.admission_service import AdmissionService
+from endpoints.league.members.service import MemberService
+from endpoints.league.admission.service import AdmissionService
 from endpoints.league.leagueModel import LeagueModel
 
 FIXTURE='''DROP SCHEMA public CASCADE; CREATE SCHEMA public;
@@ -174,7 +174,7 @@ def main():
         prior={'listing_cancellation':listing_tests(engine,name),'creation_denial':creation_tests(engine,name),
                'approval':approval_tests(engine,name),'member_profile':profile_tests(engine,name)}
         removal=tests(engine,name)
-        files=['api/endpoints/league/'+f for f in ('member_service.py','member_repository.py','admission_service.py','admission_repository.py','contracts.py','leagueModel.py','leagueEndpoints.py')]
+        files=['api/endpoints/league/'+f for f in ('members/service.py','members/repository.py','admission/service.py','admission/repository.py','admission/contracts.py','leagueModel.py','leagueEndpoints.py')]
         files+=['api/actors.py']+['scripts/modernization/'+f for f in ('verify_admission_slice.py','verify_admission_create_deny.py','verify_admission_approval.py','verify_member_profile.py','verify_member_removal.py')]
         report={'result':'PASS','scope':'Synthetic marked loopback PostgreSQL; no configured/hosted database','prior_slices_rerun':prior,
                 'member_removal':removal,'sha256':{f:hashlib.sha256((ROOT/f).read_bytes()).hexdigest() for f in files}}

@@ -1,4 +1,4 @@
-"""Legacy imports retain identity and dependency patch behavior after grouping."""
+"""Retired forwarding paths, canonical patching and retained exception pickle shim."""
 import importlib
 import io
 import pickle
@@ -13,17 +13,20 @@ PAIRS=(('admission_service','admission.service'),('admission_repository','admiss
 
 
 class LeagueImportCompatibilityTests(unittest.TestCase):
-    def test_legacy_and_canonical_imports_share_module_identity(self):
+    def test_retired_forwarding_imports_are_unavailable(self):
         for old,new in PAIRS:
+            if old == 'contracts':
+                continue
             with self.subTest(module=old):
-                legacy=importlib.import_module('endpoints.league.'+old)
-                canonical=importlib.import_module('endpoints.league.'+new)
-                self.assertIs(legacy,canonical)
-    def test_legacy_repository_patch_changes_canonical_service_composition(self):
-        legacy=importlib.import_module('endpoints.league.admission_service')
+                name = 'endpoints.league.'+old
+                with self.assertRaises(ModuleNotFoundError) as raised:
+                    importlib.import_module(name)
+                self.assertEqual(raised.exception.name,name)
+    def test_canonical_repository_patch_controls_service_composition(self):
+        service_module=importlib.import_module('endpoints.league.admission.service')
         canonical=importlib.import_module('endpoints.league.admission.service')
         class ReplacementRepository:pass
-        with patch.object(legacy,'AdmissionRepository',ReplacementRepository):
+        with patch.object(service_module,'AdmissionRepository',ReplacementRepository):
             self.assertIsInstance(canonical.AdmissionService(object()).repository,ReplacementRepository)
     def test_legacy_exception_resolution_and_cross_path_catch(self):
         legacy=importlib.import_module('endpoints.league.contracts')

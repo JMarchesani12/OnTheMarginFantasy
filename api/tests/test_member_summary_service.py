@@ -3,7 +3,7 @@ import datetime as dt
 import unittest
 from zoneinfo import ZoneInfo
 from actors import UserActor
-from endpoints.league.league_read_service import LeagueReadService
+from endpoints.league.reads.service import LeagueReadService
 from endpoints.league.leagueModel import LeagueModel
 import test_league_read_authorization as reads
 from test_transaction_service import ConnectionOwner

@@ -1,8 +1,8 @@
 """Admission policy/transaction contracts against actual synthetic SQL."""
 import unittest
 from actors import UserActor
-from endpoints.league.admission_service import AdmissionService
-from endpoints.league.contracts import AdmissionDenied, AdmissionRejected
+from endpoints.league.admission.service import AdmissionService
+from endpoints.league.admission.contracts import AdmissionDenied, AdmissionRejected
 import test_join_request_listing_authorization as listing
 import test_join_request_cancellation_authorization as cancellation
 from test_transaction_service import ConnectionOwner

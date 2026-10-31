@@ -1,7 +1,7 @@
 """Details/listing scopes, normalization and pre-read lifecycle capability."""
 import unittest
 from actors import UserActor
-from endpoints.league.league_read_service import LeagueReadService
+from endpoints.league.reads.service import LeagueReadService
 from endpoints.league.leagueModel import LeagueModel
 import test_league_read_authorization as reads
 import test_own_league_listing as listings

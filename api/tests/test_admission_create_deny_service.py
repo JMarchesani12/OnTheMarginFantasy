@@ -1,8 +1,8 @@
 """Admission creation/denial orchestration using actual disposable SQL."""
 import unittest
 from actors import UserActor
-from endpoints.league.admission_service import AdmissionService
-from endpoints.league.contracts import AdmissionDenied,AdmissionRejected
+from endpoints.league.admission.service import AdmissionService
+from endpoints.league.admission.contracts import AdmissionDenied,AdmissionRejected
 from endpoints.league.leagueModel import LeagueModel
 import test_join_request_authorization as creation
 import test_join_request_denial_authorization as denial

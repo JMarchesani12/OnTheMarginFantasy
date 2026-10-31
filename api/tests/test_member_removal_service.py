@@ -1,7 +1,7 @@
 """Removal policy and atomicity on synthetic real SQL; native locks separately."""
 import unittest
 from actors import UserActor
-from endpoints.league.member_service import MemberService
+from endpoints.league.members.service import MemberService
 from endpoints.league.leagueModel import LeagueModel
 import test_member_removal_authorization as removal
 from test_transaction_service import ConnectionOwner

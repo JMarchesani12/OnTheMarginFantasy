@@ -416,6 +416,10 @@ python3 scripts/modernization/verify_transaction_complete.py
 
 Requires the marked synthetic loopback server. Creates/removes a unique owned database, exercises all33 workflow repository operations (coverage required): actual arrays/JSONB/LATERAL/executemany, proposal/response/cancel/veto/free-agent/dispatch/apply/status/replay/roster/lock, actor role/ownership/pre+post and query-time revocation, mutation/statement/deferred rollback and observed native cancellation lock contention. Reruns the original direct/dispatcher trade concurrency and checked listing pilots. Evidence: `docs/modernization/evidence/mod-038-transaction-complete-postgres-2026-10-30.json` supersedes the old pilot source capture. The week-lock helper stays unregistered and trade-applyHTTP410 remains; no actual app/job/provider startup. After weekly dispatch wiring changed, complete schedule and scoring native suites were also rerun to refresh dependencies.
 
+### League forwarder retirement
+
+Standalone league harness imports/source-manifest paths now use canonical league packages. The 10 temporary root service/repository forwarders were removed; full `verify_league_folders.py` was rerun successfully with current source capture. Historical reports may still name retired files; current evidence is `mod-040-league-folders-postgres-2026-10-30.json` plus `mod-035-league-forwarder-retirement-2026-10-30.json`. Root `contracts.py` remains for the explicit old pickle exception path. Model facades remain while their consumers need them. Retirement tests and all 564 guarded backend tests pass. Independent review was unavailable due session usage limit; local diff/AST/hash checks passed.
+
 ### Baseline suite
 
 After the same marked container is ready, run this separate suite sequentially

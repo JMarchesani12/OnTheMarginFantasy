@@ -2,7 +2,7 @@
 import copy
 import unittest
 from actors import UserActor
-from endpoints.league.league_admin_service import LeagueAdminService
+from endpoints.league.administration.service import LeagueAdminService
 from endpoints.league.leagueModel import LeagueModel
 import test_league_creation_authorization as creation
 from test_transaction_service import ConnectionOwner

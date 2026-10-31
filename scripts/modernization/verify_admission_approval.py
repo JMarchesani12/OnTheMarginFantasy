@@ -12,8 +12,8 @@ from assess_postgres import LOCAL, ROOT, engine_for
 from verify_admission_slice import tests as listing_tests
 from verify_admission_create_deny import current_tests as creation_denial_tests
 from actors import UserActor
-from endpoints.league.admission_service import AdmissionService
-from endpoints.league.contracts import AdmissionDenied, AdmissionRejected
+from endpoints.league.admission.service import AdmissionService
+from endpoints.league.admission.contracts import AdmissionDenied, AdmissionRejected
 from endpoints.league.leagueModel import LeagueModel
 
 FIXTURE = '''
@@ -194,7 +194,7 @@ def main():
             cur.execute(sql.SQL('CREATE DATABASE {}').format(sql.Identifier(name))); created = True
         engine = engine_for(name,'otm-admission-complete')
         listing = listing_tests(engine,name); creation = creation_denial_tests(engine,name); approval = tests(engine,name)
-        files = ['api/endpoints/league/'+f for f in ('admission_service.py','admission_repository.py','contracts.py','leagueModel.py','leagueEndpoints.py')]
+        files = ['api/endpoints/league/'+f for f in ('admission/service.py','admission/repository.py','admission/contracts.py','leagueModel.py','leagueEndpoints.py')]
         files += ['api/actors.py','scripts/modernization/verify_admission_slice.py',
                   'scripts/modernization/verify_admission_create_deny.py','scripts/modernization/verify_admission_approval.py']
         report = {'result':'PASS','scope':'Synthetic marked loopback PostgreSQL; no configured/hosted database',

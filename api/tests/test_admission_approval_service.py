@@ -3,8 +3,8 @@ import json
 import sqlite3
 import unittest
 from actors import UserActor
-from endpoints.league.admission_service import AdmissionService
-from endpoints.league.contracts import AdmissionDenied, AdmissionRejected
+from endpoints.league.admission.service import AdmissionService
+from endpoints.league.admission.contracts import AdmissionDenied, AdmissionRejected
 from endpoints.league.leagueModel import LeagueModel
 import test_join_request_approval_authorization as approval
 from test_transaction_service import ConnectionOwner

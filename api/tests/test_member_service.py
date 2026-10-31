@@ -14,7 +14,7 @@ class MemberServiceTests(unittest.TestCase):
         self.engine = ConnectionOwner(self.db)
 
     def service(self):
-        from endpoints.league.member_service import MemberService
+        from endpoints.league.members.service import MemberService
         return MemberService(self.engine)
 
     def test_actor_and_name_required_before_io(self):

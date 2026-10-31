@@ -629,6 +629,7 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-035 — Resolve legacy/documentation ownership before retirement
 
+- **Bounded retirement — 2026-10-30:** User-authorized cleanup removed 10 temporary league root service/repository forwarders after migrating all first-party test/tool imports and source manifests to canonical packages. Canonical16 files unchanged, backend564/564, complete native league rerun PASS. Explicit old exception unpickling shim and 8 Model facades retained for known contracts. [Evidence](evidence/mod-035-league-forwarder-retirement-2026-10-30.json), [ledger](../superpowers/plans/2026-10-30-league-legacy-forwarder-retirement.md). Internal Python forwarder paths intentionally retired; HTTP unchanged. Independent review unavailable after session usage-limit failure; local audit passed. Wider legacy/ownership questions remain open.
 - **Priority / size / risk:** P3 / S–M / Low for investigation.
 - **Features:** F-026, F-028, F-032, F-038–041.
 - **Problem / evidence:** Inventory uncertain/obsolete labels; DB BonusPointEvent discrepancy; BE M01/M04, unregistered lock_week self.db mismatch.

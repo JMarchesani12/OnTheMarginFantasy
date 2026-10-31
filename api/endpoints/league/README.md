@@ -15,10 +15,18 @@ legacy method contracts and schedule composition. Services own policy/transactio
 scope; repositories receive connections and own SQL. Shared rules stay in
 `api/rules`; scheduling algorithms remain in the schedule domain.
 
-Root service/repository/contracts modules are compatibility aliases, not separate
-implementations. Old and canonical imports resolve to the same module objects,
-classes, exception types and patch targets. Prefer canonical package imports in
-new code. Keep aliases while existing callers/tests/tools use those paths.
+The 10 temporary root service/repository forwarders were retired after every
+first-party test/tool import and verification manifest moved to these packages.
+Use canonical package paths for imports and patch targets; the retired Python
+module paths intentionally no longer resolve. Canonical implementation/class
+module qualifications are unchanged.
+
+Root contracts.py remains an alias for admission.contracts because the explicit
+old exception pickle path is still supported/tested. leagueModel.py and the other
+domain Model facades remain while runtime/test/tool callers use their contracts.
+This cleanup does not retire those interfaces or unrelated dormant features.
 
 This organization does not change routes, authorization, lifecycle write timing,
 transactions, schema, scheduling or deployment.
+
+[Retirement ledger](../../../docs/superpowers/plans/2026-10-30-league-legacy-forwarder-retirement.md). Complete native league checks were rerun after retirement; current source capture is in the existing league-folders evidence report. Older per-slice reports are historical and may reference removed forwarders.

@@ -17,7 +17,7 @@ class LeagueRulesReadServiceTests(unittest.TestCase):
             UPDATE "League" SET "tradeDeadline"='2026-12-01T00:00:00Z' WHERE id=10;''')
 
     def service(self):
-        from endpoints.league.league_read_service import LeagueReadService
+        from endpoints.league.reads.service import LeagueReadService
         return LeagueReadService(self.engine)
 
     def test_actor_required_before_io(self):

@@ -14,7 +14,7 @@ class LeagueAdminServiceTests(unittest.TestCase):
         self.engine=ConnectionOwner(self.db)
 
     def service(self):
-        from endpoints.league.league_admin_service import LeagueAdminService
+        from endpoints.league.administration.service import LeagueAdminService
         return LeagueAdminService(self.engine)
 
     def test_actor_required_before_io(self):

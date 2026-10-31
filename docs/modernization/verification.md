@@ -1,5 +1,22 @@
 # Regression verification baseline
 
+## MOD-035 league forwarding module retirement — 2026-10-30
+
+Removed 10 pure module-alias forwarders after migrating every first-party caller to canonical package imports. Retired admission_service/repository, member_service/repository, league_admin_service/repository, league_read_service/repository and league_lifecycle_service/repository. Root contracts.py remains because the explicit old exception unpickling contract is still tested. All 8 Model facades remain for runtime/test/tool callers. Outside-repository Python consumers were not independently inventoried; these internal forwarding paths are intentionally retired. Public HTTP/data/schema/authorization/scoring behavior is unchanged.
+
+| Verification | Result |
+| --- | --- |
+| Guarded baseline and full suite | 564/564 before and after; no test-count reduction |
+| Test first | 10 expected retired-import subtest failures before deletion → focused3/3 GREEN |
+| Retained coverage | Canonical repository patch composition; old contracts.find_class exception resolution, cross-path catch, pickle roundtrip |
+| Source proof | All16 canonical implementation files byte-identical;28 migrated caller ASTs differ only in imports and league-rooted manifest literals; removed files contain only docstring/import/module-alias assignment |
+| Caller/manifest audit | No active api/scripts imports of deleted modules; standalone native source manifest targets all exist and scripts compile without configured imports |
+| Native league regression | Full verify_league_folders.py PASS including all admission/member/admin/read/lifecycle/callback suites; current report has40 source captures and no deleted paths |
+| Independent review | Attempted; subagent failed due session usage limit and returned no review. Local manual diff/source/hash audit completed; independent review unavailable |
+| Final checks | Current domain/retirement hashes, internal links and diff check pass |
+
+[Retirement evidence](evidence/mod-035-league-forwarder-retirement-2026-10-30.json), [fresh native league evidence](evidence/mod-040-league-folders-postgres-2026-10-30.json), [ledger](../superpowers/plans/2026-10-30-league-legacy-forwarder-retirement.md). Historical reports/plans may reference removed paths as prior source captures; they are not rewritten as fresh verification. No runtime implementation, route, deployment, schema or dependency change. Only a marked owned loopback DB/container was used and removed; checkout uncommitted. Cleanup is bounded to migration-created forwarders, not a claim that every legacy model/feature/operational path can be deleted.
+
 ## MOD-038 complete transaction workflow and final backend audit — 2026-10-30
 
 Remaining31 model SQL calls now use named workflow repository queries; fixed role/reader fragments and shared ownership routing reside there. Canonical workflow composes the untouched initial transaction pilot. Actor entry points reject missing/non-UserActor before I/O; HTTP resolves real principals, jobs call explicit trusted APIs. Model retains exact constructor/inherited helpers/constants/exception identity with no SQL. No route or policy is added.

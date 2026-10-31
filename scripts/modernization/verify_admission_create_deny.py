@@ -8,8 +8,8 @@ from sqlalchemy.exc import DBAPIError
 from assess_postgres import LOCAL,ROOT,engine_for
 from verify_admission_slice import tests as prior_tests
 from actors import UserActor
-from endpoints.league.admission_service import AdmissionService
-from endpoints.league.contracts import AdmissionDenied,AdmissionRejected
+from endpoints.league.admission.service import AdmissionService
+from endpoints.league.admission.contracts import AdmissionDenied,AdmissionRejected
 from endpoints.league.leagueModel import LeagueModel
 
 FIXTURE='''
@@ -142,7 +142,7 @@ def main():
             cur.execute(sql.SQL('CREATE DATABASE {}').format(sql.Identifier(name)));created=True
         engine=engine_for(name,'otm-admission-next')
         prior=prior_tests(engine,name);current=current_tests(engine,name)
-        files=['api/endpoints/league/'+f for f in ('admission_service.py','admission_repository.py','contracts.py','leagueModel.py','leagueEndpoints.py')]
+        files=['api/endpoints/league/'+f for f in ('admission/service.py','admission/repository.py','admission/contracts.py','leagueModel.py','leagueEndpoints.py')]
         files+=['api/actors.py','scripts/modernization/verify_admission_slice.py','scripts/modernization/verify_admission_create_deny.py']
         report={'result':'PASS','scope':'Synthetic marked loopback PostgreSQL; no configured/hosted database',
             'listing_cancellation_rerun':prior,'creation_denial':current,
