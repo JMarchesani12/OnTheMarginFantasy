@@ -88,7 +88,8 @@ export function getLocalDateKeyForGame(dateStr: string, timeZone?: string): stri
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
-export function formatLocalTime(dateStr: string | null | undefined): string | null {
+export function formatLocalTime(dateStr: string | null | undefined, timeTBD = false): string | null {
+  if (timeTBD) return "TBD";
   if (!dateStr) return null;
   const date = new Date(dateStr);
   if (Number.isNaN(date.getTime())) return null;

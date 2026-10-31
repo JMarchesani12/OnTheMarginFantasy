@@ -4,7 +4,7 @@ import type { League } from "../../types/league";
 import type { TeamSeasonSchedule } from "../../types/schedule";
 import { getScheduleForTeam } from "../../api/schedule";
 import { getLeague, getLeaguesForUser } from "../../api/leagues";
-import { LEAGUE_TIME_ZONE } from "../../utils/scheduleTable";
+import { LEAGUE_TIME_ZONE, formatLocalTime } from "../../utils/scheduleTable";
 import {
   mapLeagueFromResponse,
   normalizeLeaguesResponse,
@@ -29,19 +29,6 @@ const dateFormatter = new Intl.DateTimeFormat(undefined, {
   month: "short",
   day: "numeric",
 });
-
-const timeFormatter = new Intl.DateTimeFormat(undefined, {
-  hour: "numeric",
-  minute: "2-digit",
-  hour12: true,
-});
-
-const formatLocalTime = (dateStr: string | null | undefined) => {
-  if (!dateStr) return null;
-  const date = new Date(dateStr);
-  if (Number.isNaN(date.getTime())) return null;
-  return timeFormatter.format(date);
-};
 
 const TeamSchedulePage = () => {
   const navigate = useNavigate();
@@ -237,7 +224,7 @@ const TeamSchedulePage = () => {
             const teamScore = game.isHome ? game.homeScore : game.awayScore;
             const opponentScore = game.isHome ? game.awayScore : game.homeScore;
             const hasScore = !(teamScore === 0 && opponentScore === 0);
-            const localTime = formatLocalTime(game.date);
+            const localTime = formatLocalTime(game.date, game.timeTBD);
 
             let result: "win" | "loss" | "pending" = "pending";
             if (hasScore) {

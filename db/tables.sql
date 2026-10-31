@@ -113,6 +113,7 @@ create table public."GameResult" (
   "seasonPhaseId" bigint null,
   "roundOrder" integer null,
   broadcast text null,
+  "timeTBD" boolean NOT NULL DEFAULT false,
   constraint "GameResult_pkey" primary key (id),
   constraint gamer_esn_unique unique (sport, "sportSeasonId", "externalGameId"),
   constraint "GameResult_awayTeamId_fkey" foreign KEY ("awayTeamId") references "SportTeam" (id) on delete CASCADE,

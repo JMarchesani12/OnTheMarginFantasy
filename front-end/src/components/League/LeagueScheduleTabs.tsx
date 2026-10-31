@@ -202,7 +202,7 @@ export const LeagueScheduleTabs = ({
     // 2) Group games into rows by league-local calendar date
     for (const g of games) {
       const dateKey = getLocalDateKeyForGame(g.date, scheduleTimeZone);
-      const time = formatLocalTime(g.date);
+      const time = formatLocalTime(g.date, g.timeTBD);
 
       if (g.ownsHome) {
         addOwnedGame(
