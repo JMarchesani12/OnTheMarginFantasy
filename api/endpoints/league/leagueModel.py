@@ -29,15 +29,21 @@ class LeagueModel:
         DraftState live/paused owns Drafting. Completed seasons win last so old
         leagues cannot be moved back by a stale draft state.
         """
+        # Season boundaries are calendar dates in the league's timezone,
+        # not dates in the database session's (usually UTC) timezone.
+        local_today = """(now() AT TIME ZONE COALESCE(
+            NULLIF(l.settings #>> '{schedule,timezone}', ''),
+            NULLIF(l.settings #>> '{schedule,timeZone}', ''),
+            NULLIF(l.settings ->> 'timezone', ''),
+            NULLIF(l.settings ->> 'timeZone', ''), 'UTC'
+        ))::date"""
         with self.db.begin() as conn:
             conn.execute(
-                text("""
+                text(f"""
                     UPDATE "League" l
                     SET status = 'Pre-Draft',
                         "updatedAt" = now()
-                    WHERE l."draftDate" IS NOT NULL
-                      AND now() < l."draftDate"
-                      AND l.status <> 'Pre-Draft'
+                    WHERE l.status NOT IN ('Pre-Draft', 'Completed')
                       AND NOT EXISTS (
                         SELECT 1
                         FROM "DraftState" ds
@@ -48,7 +54,7 @@ class LeagueModel:
             )
 
             conn.execute(
-                text("""
+                text(f"""
                     UPDATE "League" l
                     SET status = 'Drafting',
                         "updatedAt" = now()
@@ -60,49 +66,52 @@ class LeagueModel:
             )
 
             conn.execute(
-                text("""
+                text(f"""
                     UPDATE "League" l
                     SET status = 'Post-Draft',
                         "updatedAt" = now()
-                    FROM "DraftState" ds, "SportSeason" ss
-                    WHERE ds."leagueId" = l.id
-                      AND ss."sportId" = l.sport
-                      AND ss."seasonYear" = l."seasonYear"
+                    FROM "League" source
+                    JOIN "SportSeason" ss
+                      ON ss."sportId" = source.sport
+                     AND ss."seasonYear" = source."seasonYear"
+                    LEFT JOIN "DraftState" ds ON ds."leagueId" = source.id
+                    WHERE source.id = l.id
                       AND ds.status = 'complete'
-                      AND now()::date < ss."seasonStart"::date
+                      AND {local_today} < ss."seasonStart"::date
+                      AND l.status <> 'Completed'
                       AND l.status <> 'Post-Draft'
                 """)
             )
 
             conn.execute(
-                text("""
+                text(f"""
                     UPDATE "League" l
                     SET status = 'In-Season',
                         "updatedAt" = now()
                     FROM "SportSeason" ss
                     WHERE ss."sportId" = l.sport
                       AND ss."seasonYear" = l."seasonYear"
-                      AND now()::date >= ss."seasonStart"::date
-                      AND now()::date <= ss."seasonEnd"::date
+                      AND {local_today} >= ss."seasonStart"::date
+                      AND {local_today} <= ss."seasonEnd"::date
                       AND l.status NOT IN ('Drafting', 'In-Season', 'Completed')
-                      AND NOT EXISTS (
+                      AND EXISTS (
                         SELECT 1
                         FROM "DraftState" ds
                         WHERE ds."leagueId" = l.id
-                          AND ds.status IN ('live', 'paused')
+                          AND ds.status = 'complete'
                       )
                 """)
             )
 
             conn.execute(
-                text("""
+                text(f"""
                     UPDATE "League" l
                     SET status = 'Completed',
                         "updatedAt" = now()
                     FROM "SportSeason" ss
                     WHERE ss."sportId" = l.sport
                       AND ss."seasonYear" = l."seasonYear"
-                      AND now()::date > ss."seasonEnd"::date
+                      AND {local_today} > ss."seasonEnd"::date
                       AND l.status <> 'Completed'
                 """)
             )
