@@ -1,9 +1,6 @@
-from bootstrap import *
 import os
-from db import engine
 from datetime import datetime, timezone
 
-from dotenv import load_dotenv
 from sqlalchemy import text
 
 from endpoints.schedule.read_service import ScheduleReadService
@@ -11,13 +8,15 @@ from endpoints.scoring.service import ScoringService
 
 
 def build_scoring(engine):
-    load_dotenv()
     schedule_model = ScheduleReadService(engine)
     scoring = ScoringService(engine, schedule_model)
     return scoring
 
 
-def main():
+def main(engine=None):
+    if engine is None:
+        from runtime import configured_engine
+        engine = configured_engine()
     scoring = build_scoring(engine)
     today = datetime.now(timezone.utc).date()
 

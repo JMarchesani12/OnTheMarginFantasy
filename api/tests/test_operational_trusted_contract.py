@@ -65,6 +65,6 @@ class TrustedOperationalTests(unittest.TestCase):
                        build_scoring=lambda engine:base.model)
         exec(compile(module,str(path),'exec'),namespace)
         with redirect_stdout(io.StringIO()):
-            namespace['main']()
+            namespace['main'](engine=db)
         self.assertEqual([row[0] for row in db.connection.execute('SELECT status FROM League')],['Completed']*3)
         self.assertTrue(db.connection.execute('SELECT seasonFinalized FROM SportSeason').fetchone()[0])

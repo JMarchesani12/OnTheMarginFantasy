@@ -5,7 +5,6 @@ from typing import Optional, Tuple
 
 from endpoints.draft.pick_service import DraftPickService
 from endpoints.draft.pick_repository import DraftPickRepository
-from db import engine
 
 
 # Safety bounds: never sleep longer than this without re-checking (handles config changes)
@@ -30,7 +29,10 @@ def _get_next_expired_or_soonest_deadline(conn) -> Optional[Tuple[int, float]]:
     return league_id, secs
 
 
-def run():
+def run(engine=None):
+    if engine is None:
+        from runtime import configured_engine
+        engine = configured_engine()
     service = DraftPickService(engine)
 
     while True:

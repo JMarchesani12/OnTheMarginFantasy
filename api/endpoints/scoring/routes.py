@@ -1,11 +1,9 @@
 from endpoints.schedule.read_service import ScheduleReadService
 from endpoints.scoring.scoringEndpoints import ScoringEndpoints
 import os
-from dotenv import load_dotenv
 
 def setup_routes(app, engine):
 
-    load_dotenv()
     scheduleModel = ScheduleReadService(engine)
     scoringEndpoints = ScoringEndpoints(engine, scheduleModel)
 

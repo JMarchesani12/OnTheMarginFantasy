@@ -5,14 +5,13 @@ import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 from endpoints.draft.snapshot_service import DraftSnapshotService
-from db import engine
 from utils.jsonSafe import jsonSafe
 
 DRAFT_NOTIFY_CHANNEL = "draft_updated"
 
-def start_draft_notify_listener(socketio):
+def start_draft_notify_listener(socketio, engine):
     """
-    Call once when your Flask app starts.
+    Called explicitly by the web runtime, once per serving process.
     Listens for pg_notify events and broadcasts snapshots to the league room.
     """
     def _listen():
@@ -51,4 +50,4 @@ def start_draft_notify_listener(socketio):
                     # Don't crash listener on snapshot errors
                     pass
 
-    socketio.start_background_task(_listen)
+    return socketio.start_background_task(_listen)

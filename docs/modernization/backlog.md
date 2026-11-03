@@ -627,6 +627,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-034 — Make startup/test dependencies explicit
 
+- **Status — 2026-11-02: complete in local startup/isolation scope.** Explicit web composition owns optional in-process listener startup; `create_app(engine=...)` starts no background activity or dotenv loading. Engine/auth configuration resolves at execution, runtime dotenv path is API-relative, cron/worker imports are inactive and jobs accept injected engines. Socket CORS resolves at composition, development reload supervisor starts no listener. Backend580/580 (14 startup tests), frontend62/62/build, shell syntax and diff checks pass; fresh review has no remaining material findings. Minimal isolated CI added; remote CI execution and hosted eventlet/listener/Render verification remain unverified. No hosted changes, schema changes, merge or deployment. [Run instructions](../../api/README.md), [plan/ledger](../superpowers/plans/2026-11-02-mod-034-startup.md).
+
 - **Priority / size / risk:** P1 / M / Medium.
 - **Features:** F-022–028, F-034, F-036, F-039, F-041.
 - **Problem / evidence:** BE M04: import-time engine/env, listener in create_app, wildcard bootstrap/path assumptions, venv logger import; architecture lacks CI/runtime pins.

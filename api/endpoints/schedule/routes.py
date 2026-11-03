@@ -1,9 +1,7 @@
 from endpoints.schedule.scheduleEndpoints import ScheduleEndpoints
-from dotenv import load_dotenv
 
 def setup_routes(app, engine):
 
-    load_dotenv()
     scheduleEndpoints = ScheduleEndpoints(engine)
 
     app.add_url_rule("/api/schedule/all", view_func=scheduleEndpoints.get_member_schedule, methods=["POST"])

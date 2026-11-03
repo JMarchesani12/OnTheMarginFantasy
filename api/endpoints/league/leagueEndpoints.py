@@ -1,5 +1,7 @@
 from typing import Any, Dict
-from venv import logger
+import logging
+
+logger = logging.getLogger(__name__)
 from flask import request, jsonify
 from .lifecycle.service import LeagueLifecycleService
 from endpoints.schedule.read_service import ScheduleReadService

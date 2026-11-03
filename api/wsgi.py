@@ -1,14 +1,7 @@
-# wsgi.py
+"""Explicit production entry point, loaded by gunicorn's eventlet worker."""
 import eventlet
 eventlet.monkey_patch()
 
-import os
-from dotenv import load_dotenv
+from runtime import create_web_app
 
-# load a single local .env (simple)
-load_dotenv(".env")
-
-from api import create_app
-from socketioInstance import socketio
-
-app = create_app()
+app = create_web_app()

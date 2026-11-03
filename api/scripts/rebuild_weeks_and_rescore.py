@@ -119,7 +119,8 @@ def main():
     parser.add_argument("--season-year", type=int, required=True)
     parser.add_argument("--league-id", type=int, action="append", help="Limit to specific league IDs")
     args = parser.parse_args()
-    from db import engine
+    from runtime import configured_engine
+    engine = configured_engine()
     season_year = args.season_year
     schedule_model = ScheduleReadService(engine)
     scoring_model = ScoringService(engine, schedule_model)

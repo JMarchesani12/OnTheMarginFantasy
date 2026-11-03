@@ -1,9 +1,6 @@
 from zoneinfo import ZoneInfo
-from bootstrap import *
 import datetime as dt
 import os
-from dotenv import load_dotenv
-from db import engine
 
 from endpoints.schedule.ingestion_service import ScheduleIngestionService
 
@@ -11,7 +8,10 @@ def get_active_leagues_for_date(engine, target_date: dt.date):
     return ScheduleIngestionService(engine, "").active_leagues_for_job(target_date)
 
 
-def main():
+def main(engine=None):
+    if engine is None:
+        from runtime import configured_engine
+        engine = configured_engine()
     central = ZoneInfo("America/Chicago")
     now = dt.datetime.now(central)
 
@@ -23,7 +23,6 @@ def main():
     if now.hour < LATE_WINDOW_HOUR:
         dates_to_ingest.append(now.date() - dt.timedelta(days=1))
 
-    load_dotenv()
 
     schedule_model = ScheduleIngestionService(engine, os.getenv("ESPN_BASE_URL"))
 

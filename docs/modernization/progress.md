@@ -1,5 +1,12 @@
 # Modernization progress
 
+## MOD-034 explicit runtime startup — 2026-11-02
+
+Implemented lazy engine/auth configuration, explicit web composition and injectable app/job engines. App construction starts no listener or dotenv loading. Web runtime preserves the in-process notification listener by default, supports `DRAFT_NOTIFY_LISTENER_ENABLED=false`, and suppresses listener launch in the development reloader supervisor. Runtime dotenv paths are API-relative; socket CORS resolves at composition. Cron/worker imports require no database configuration; touched bootstrap/logger imports corrected. Added isolated backend/frontend CI commands and [startup instructions](../../api/README.md).
+
+Baseline566/566 retained; final backend **580/580**, including14 startup regressions/fake launch tests. Frontend **62/62** and build pass; shell syntax/diff checks pass. Fresh review caught two configuration-timing defects, both reproduced and fixed; final review has no material findings. CI configuration is added, remote execution is unverified. Hosted eventlet/listener startup and Render roles/commands remain outside local verification. No hosted/schema/dependency changes, real jobs, merge, push or deployment. [Design](../superpowers/specs/2026-11-02-mod-034-startup-design.md), [plan/ledger](../superpowers/plans/2026-11-02-mod-034-startup.md). MOD-025 remains next separate pre-merge work.
+
+
 ## MOD-038 / MOD-035 Model facade retirement — 2026-11-02
 
 All eight domain `*Model.py` facades are retired after first-party runtime, test and verification-tool consumers moved to existing canonical services. League HTTP now composes schedule/lifecycle callbacks directly; roster drops unused facade construction; the rebuild/rescore script calls ScoringService's explicit job method. Domain policy, SQL, authorization and transaction scopes are unchanged. The league contracts exception pickle shim remains supported.

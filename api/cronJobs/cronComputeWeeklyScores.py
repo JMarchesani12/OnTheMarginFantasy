@@ -1,9 +1,6 @@
-from bootstrap import *
 import os
-from db import engine
 from datetime import datetime, timezone
 
-from dotenv import load_dotenv
 from sqlalchemy import text
 
 from endpoints.schedule.read_service import ScheduleReadService
@@ -11,7 +8,6 @@ from endpoints.scoring.service import ScoringService
 from endpoints.transaction.workflow_service import TransactionWorkflowService
 
 def build_scoring(engine):
-    load_dotenv()
     schedule_model = ScheduleReadService(engine)
     scoring = ScoringService(engine, schedule_model)
     return scoring
@@ -51,7 +47,10 @@ GET_PENDING_TRANSACTIONS = text("""
 """)
 
 
-def main():
+def main(engine=None):
+    if engine is None:
+        from runtime import configured_engine
+        engine = configured_engine()
     scoring = build_scoring(engine)
     transaction_model = TransactionWorkflowService(engine)
 
