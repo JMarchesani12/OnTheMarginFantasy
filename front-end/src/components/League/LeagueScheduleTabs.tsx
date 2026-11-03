@@ -1,5 +1,5 @@
 // src/components/League/LeagueScheduleTabs.tsx
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import type { LeagueMember } from "../../types/leagueMember";
 import type { MemberWeekSchedule } from "../../types/schedule";
 import { getScheduleForMemberForWeek } from "../../api/schedule";
@@ -34,7 +34,6 @@ type LeagueScheduleTabsProps = {
 
 type ScheduleCell = {
   hoverExplanation: string | null;
-  explanation: string | null;
   opponentName: string;
   opponentTierDisplayTone: TierDisplayTone;
   isHome: boolean;
@@ -166,7 +165,6 @@ export const LeagueScheduleTabs = ({
       memberPointDiff: number,
       broadcast: string | null,
       time: string | null,
-      explanation: string | null,
       tierAdjustment: Parameters<typeof getMatchupHoverExplanation>[1],
     ) => {
       let row = teamMap.get(teamId);
@@ -187,7 +185,6 @@ export const LeagueScheduleTabs = ({
 
       cellsByDate[dateKey].push({
         hoverExplanation: getMatchupHoverExplanation(opponentTierDisplayTone, tierAdjustment),
-        explanation,
         opponentName,
         opponentTierDisplayTone,
         isHome,
@@ -219,7 +216,6 @@ export const LeagueScheduleTabs = ({
           getTeamGamePointDiff(g, true),
           g.broadcast,
           time,
-          g.tierAdjustment?.applied ? g.tierAdjustment.explanation : null,
           g.tierAdjustment,
         );
       }
@@ -239,7 +235,6 @@ export const LeagueScheduleTabs = ({
           getTeamGamePointDiff(g, false),
           g.broadcast,
           time,
-          g.tierAdjustment?.applied ? g.tierAdjustment.explanation : null,
           g.tierAdjustment,
         );
       }
@@ -456,7 +451,7 @@ export const LeagueScheduleTabs = ({
               >
                 {section.label && <h3 className="league-schedule__tier-title">{section.label}</h3>}
                 <div className="league-schedule__table-wrapper">
-                  <table className="league-schedule__table">
+                  <table className="league-schedule__table" style={{ "--schedule-days": dateHeaders.length } as CSSProperties}>
               <thead>
                 <tr>
                   <th className="league-schedule__team-col">Team</th>
@@ -528,9 +523,6 @@ export const LeagueScheduleTabs = ({
                                     </div>
                                   </>
                                 )}
-                                {c.explanation && (
-                                  <p className="league-schedule__adjustment">{c.explanation}</p>
-                                )}
                                 {(c.time != null || c.broadcast != null) && (
                                   <div className="league-schedule__cell-meta">
                                     {c.time != null && (
@@ -538,7 +530,6 @@ export const LeagueScheduleTabs = ({
                                         {c.time}
                                       </div>
                                     )}
-                                    <br/>
                                     {c.broadcast != null && (
                                       <div className="league-schedule__cell-broadcast">
                                         {c.broadcast}
@@ -594,7 +585,7 @@ export const LeagueScheduleTabs = ({
               <section className="league-schedule__tier-card" aria-label="Overall daily totals">
                 <h3 className="league-schedule__tier-title">Overall daily totals</h3>
                 <div className="league-schedule__table-wrapper">
-                  <table className="league-schedule__table">
+                  <table className="league-schedule__table" style={{ "--schedule-days": dateHeaders.length } as CSSProperties}>
               <thead>
                 <tr>
                   <th className="league-schedule__team-col">Date</th>
@@ -652,7 +643,7 @@ export const LeagueScheduleTabs = ({
           )}
           {!loading && !error && dateHeaders.length > 0 && (
             <div className="league-schedule__table-wrapper">
-              <table className="league-schedule__table">
+              <table className="league-schedule__table" style={{ "--schedule-days": dateHeaders.length } as CSSProperties}>
                 <thead>
                   <tr>
                     <th className="league-schedule__team-col">Date</th>
