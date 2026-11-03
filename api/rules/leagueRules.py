@@ -105,7 +105,7 @@ def describe_rules(sport_id, settings, teams):
             'Weekly ties are checked by raw head-to-head differential, then the biggest absolute adjusted single-game margin (a win or a loss). The next check runs only if every member of the tied group has the same value. If a check distinguishes any members, members still equal on that check are ordered by member ID. Fully unresolved ties also retain member-ID order; points are not split.']},
         {'heading': 'Tier adjustments', 'paragraphs': [rule_summary(rules),
             'Lower tier numbers indicate stronger teams. Halved odd margins round away from zero: +21 becomes +11 and −21 becomes −11. Zero remains zero. Larger tier gaps do not compound the multiplier.',
-            'A team without a stored tier is treated as one tier below the highest numbered stored tier for that sport. If no tiers are stored, all such teams are treated as Tier 1.']},
+            'In basketball, an opponent without a stored tier always qualifies for the lower-tier adjustment. A team without a stored tier is treated as one tier below the highest numbered stored tier for that sport. If no tiers are stored, all such teams are treated as Tier 1.']},
         {'heading': 'Season standings and bonuses', 'paragraphs': [
             'Season standings include weekly points and the configured bonus awards. Bonus settings below are specific to this league.',
             'Season ties are checked using playoff depth, number of conference/segment championships, playoff head-to-head differential, conference postseason head-to-head differential, and the latest non-tied week, in that order.']},

@@ -58,6 +58,21 @@ class ScheduleReadServiceTests(unittest.TestCase):
         self.assertEqual(facts,before)
         self.assertEqual((len(engine.calls),engine.outcomes),(1,['commit']))
 
+    def test_basketball_unranked_opponent_always_uses_lower_tier_adjustment(self):
+        for owns_home in (True, False):
+            for margin, expected in ((21, 11), (20, 10), (-21, -42), (0, 0)):
+                with self.subTest(owns_home=owns_home, margin=margin):
+                    service, _ = self.service([self.game(
+                        sportId=1, ownsHome=owns_home, ownsAway=not owns_home,
+                        homeTeamTier=7 if owns_home else 8,
+                        awayTeamTier=8 if owns_home else 7,
+                        homeTeamUnranked=not owns_home, awayTeamUnranked=owns_home,
+                        rawMemberPointDiff=margin)])
+                    game = service.member_games_for_job(10, 11, 2)[0]
+                    self.assertEqual(game['memberPointDiff'], expected)
+                    adjustment = game['tierAdjustment']
+                    self.assertGreaterEqual(adjustment['tierGap'], adjustment['minimumTierGap'])
+
     def test_phase_positive_only_multiplier_and_non_owned_guard(self):
         phase = {'positiveOnly':True,'marginMultiplier':3}
         service, _ = self.service([self.game(phaseRules=phase),

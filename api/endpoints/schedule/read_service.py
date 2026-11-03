@@ -54,8 +54,14 @@ class ScheduleReadService(ScheduleCalendarService):
             owns_home, owns_away = game['ownsHome'], game['ownsAway']
             owned_tier = game.get('homeTeamTier') if owns_home else game.get('awayTeamTier')
             opponent_tier = game.get('awayTeamTier') if owns_home else game.get('homeTeamTier')
+            opponent_unranked = game.get('awayTeamUnranked') if owns_home else game.get('homeTeamUnranked')
+            # Unranked basketball opponents sit below D1 even when the fallback
+            # tier is adjacent to the owned team's tier.
+            matchup_rules = rules
+            if game.get('sportId') == 1 and opponent_unranked:
+                matchup_rules = {**rules, 'minimumTierGap': 1}
             adjustment = adjust_margin(game['rawMemberPointDiff'], owned_tier, opponent_tier,
-                                       rules, double_owned=owns_home and owns_away)
+                                       matchup_rules, double_owned=owns_home and owns_away)
             if not owns_home and not owns_away:
                 adjustment = adjust_margin(0, None, None, rules)
             game['memberPointDiff'] = score_margin(adjustment['adjustedMargin'], game.get('phaseRules') or {})
