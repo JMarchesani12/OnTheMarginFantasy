@@ -48,6 +48,7 @@ INSERT INTO "GameResult" VALUES
  (9,'other-season','2026-11-03T12:00Z',1,2,101,102,'Alpha','Beta',21,0,NULL,NULL),
  (10,'other-sport','2026-11-03T12:00Z',2,1,101,102,'Alpha','Beta',21,0,NULL,NULL),
  (11,'unowned','2026-11-03T12:00Z',1,1,103,104,'Gamma','Delta',21,0,NULL,NULL);
+ALTER TABLE "GameResult" ADD COLUMN "timeTBD" boolean NOT NULL DEFAULT false;
 '''
 
 

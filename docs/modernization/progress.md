@@ -1,5 +1,13 @@
 # Modernization progress
 
+## Main into audit integration — 2026-11-02
+
+Resolved README and retired Model modify/delete conflicts. Main's five lifecycle transitions are preserved in the canonical lifecycle repository; timezone regressions now use the service. Kickoff `timeTBD` flows through canonical ingestion and all four schedule read queries, retaining main's sort order. Refresh cron uses the ingestion service and explicit runtime engine initialization. Frontend/provider changes from main retained.
+
+Current schema snapshot and migration match main `ae8a103` byte-for-byte. Frozen October29 baseline/checksums remain unchanged; new local initialization applies the October30 kickoff migration afterward. Configured database column metadata checked read-only: `timeTBD boolean NOT NULL DEFAULT false` already exists; no hosted DDL required for that column and no full hosted-schema parity claim.
+
+Backend **593/593**, frontend **64/64**, frontend build and native PostgreSQL migration/replay/persistence/projection/lifecycle/timezone checks pass. [Native evidence](evidence/main-audit-merge-2026-11-02.json), [integration ledger](../superpowers/plans/2026-11-02-main-audit-integration.md). Merge remains uncommitted on audit; no main update/push/deployment. MOD-025 deferred by maintainer because no live drafts are planned. Production auto-deploy on main remains a separate rollout boundary.
+
 ## MOD-034 explicit runtime startup — 2026-11-02
 
 Implemented lazy engine/auth configuration, explicit web composition and injectable app/job engines. App construction starts no listener or dotenv loading. Web runtime preserves the in-process notification listener by default, supports `DRAFT_NOTIFY_LISTENER_ENABLED=false`, and suppresses listener launch in the development reloader supervisor. Runtime dotenv paths are API-relative; socket CORS resolves at composition. Cron/worker imports require no database configuration; touched bootstrap/logger imports corrected. Added isolated backend/frontend CI commands and [startup instructions](../../api/README.md).

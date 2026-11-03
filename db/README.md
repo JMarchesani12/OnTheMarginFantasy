@@ -394,3 +394,30 @@ The [browser privilege proposal](proposals/README.md) is separate and unapplied;
 baseline installation deliberately preserves observed grants. Full Supabase
 platform setup, runtime role alignment and deployment/recovery approval remain
 explicit prerequisites for operational use.
+
+## Current schema after the main/audit integration
+
+The current `db/tables.sql` and `api/migrations/20261030_game_kickoff_tbd.sql`
+are identical to main at merge parent `ae8a103`. `GameResult.timeTBD` is a boolean,
+NOT NULL, default false. A read-only configured-database catalog check on
+2026-11-02 confirmed that exact column definition; no hosted DDL was executed.
+This column check does not claim a fresh full hosted schema comparison.
+
+The frozen October 29 baseline intentionally predates this October 30 migration.
+For a new supported local database, initialize and verify the frozen baseline
+first, then apply the checked-in kickoff migration. Do not replay older historical
+migrations already incorporated in the baseline. Keep the baseline files and
+checksums unchanged. Its runner verifies only its historical expected state and
+will reject the post-migration extra column; it is not a current-schema deployment
+runner and must not be used to re-adopt an already upgraded database.
+
+The additive migration preserves existing rows with false as the initial flag;
+replaying it preserves existing true values. It does not reingest provider data.
+The refresh job is a separate explicit operation, and no refresh or automatic
+migration is added to web startup or deployment by this integration. Current
+hosted timeTBD already satisfies this prerequisite.
+
+Disposable PostgreSQL verification, including baseline-plus-migration, replay,
+read projections and actual parser/upsert transitions, is reproducible with
+`python3 scripts/modernization/verify_main_audit_merge.py` against the documented
+marked synthetic server on port 55439. See [merge evidence](../docs/modernization/evidence/main-audit-merge-2026-11-02.json).

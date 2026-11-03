@@ -1,5 +1,6 @@
 """Lifecycle policy matrix and rollback with adapted actual SQL on SQLite."""
 from endpoints.league.lifecycle.service import LeagueLifecycleService
+from endpoints.league.lifecycle.repository import LOCAL_TODAY
 import sqlite3
 import unittest
 from contextlib import contextmanager
@@ -16,9 +17,9 @@ INSERT INTO "League" VALUES
 (7,'Unknown','old','2026-11-01',3,2026),(8,'Completed','old',NULL,2,2026),
 (9,'Pre-Draft','old','2026-11-01',1,2026),(10,'Custom','old',NULL,99,2026),
 (11,'Custom','old',NULL,2,2025),(12,'Unknown','old',NULL,4,2026),(13,'Unknown','old',NULL,5,2026);
-INSERT INTO "DraftState" VALUES (2,'live'),(3,'paused'),(4,'complete'),(6,'live'),(7,'complete');'''
+INSERT INTO "DraftState" VALUES (2,'live'),(3,'paused'),(4,'complete'),(6,'live'),(7,'complete'),(5,'complete'),(12,'complete'),(13,'complete');'''
 EXPECTED={1:'Pre-Draft',2:'Drafting',3:'Drafting',4:'Post-Draft',5:'In-Season',6:'Completed',7:'Completed',
-          8:'Completed',9:'Pre-Draft',10:'Custom',11:'Custom',12:'In-Season',13:'In-Season'}
+          8:'Completed',9:'Pre-Draft',10:'Pre-Draft',11:'Pre-Draft',12:'In-Season',13:'In-Season'}
 
 
 class LifecycleDatabase:
@@ -31,7 +32,7 @@ class LifecycleDatabase:
         self.begins+=1
         with self.connection:yield self
     def execute(self,statement):
-        sql=str(statement).replace('UPDATE "League" l','UPDATE "League" AS l').replace('now()::date','date(now())')
+        sql=str(statement).replace(LOCAL_TODAY,'date(now())').replace('UPDATE "League" l','UPDATE "League" AS l').replace('now()::date','date(now())')
         sql=sql.replace('ss."seasonStart"::date','date(ss."seasonStart")').replace('ss."seasonEnd"::date','date(ss."seasonEnd")')
         result=self.connection.execute(sql);self.statements+=1
         if self.statements==self.fail_after:raise RuntimeError('synthetic post-phase failure')
@@ -49,7 +50,7 @@ class LeagueLifecycleServiceTests(unittest.TestCase):
         self.assertIsNone(self.service().synchronize_for_job())
         self.assertEqual({r['id']:r['status'] for r in self.db.rows()},EXPECTED)
         self.assertEqual(self.db.begins,1)
-        self.assertEqual([r['updatedAt'] for r in self.db.rows() if r['id'] in (8,9,10,11)],['old']*4)
+        self.assertEqual([r['updatedAt'] for r in self.db.rows() if r['id'] in (8,9)],['old']*2)
     def test_failure_after_every_phase_restores_entire_previous_state(self):
         service=self.service();before=self.db.rows()
         for phase in range(1,6):

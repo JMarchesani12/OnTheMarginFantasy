@@ -27,11 +27,12 @@ INSERT INTO "League" VALUES
 (9,'Pre-Draft','2000-01-01',now()+interval '2 days',1,2026,1),(10,'Custom','2000-01-01',NULL,99,2026,1),
 (11,'Custom','2000-01-01',NULL,2,2025,1),(12,'Unknown','2000-01-01',NULL,4,2026,1),
 (13,'Unknown','2000-01-01',NULL,5,2026,1),(14,NULL,'2000-01-01',NULL,3,2026,1);
-INSERT INTO "DraftState" VALUES (2,'live'),(3,'paused'),(4,'complete'),(6,'live'),(7,'complete');
+INSERT INTO "DraftState" VALUES (2,'live'),(3,'paused'),(4,'complete'),(6,'live'),(7,'complete'),(5,'complete'),(12,'complete'),(13,'complete');
+ALTER TABLE "League" ADD COLUMN settings jsonb DEFAULT '{}';
 CREATE TABLE "LeagueMember" ("leagueId" bigint,"userId" bigint);
 CREATE TABLE "Week" (id bigint,"leagueId" bigint,"weekNumber" integer,"startDate" timestamptz,"endDate" timestamptz);'''
 EXPECTED={1:'Pre-Draft',2:'Drafting',3:'Drafting',4:'Post-Draft',5:'In-Season',6:'Completed',7:'Completed',
-          8:'Completed',9:'Pre-Draft',10:'Custom',11:'Custom',12:'In-Season',13:'In-Season',14:None}
+          8:'Completed',9:'Pre-Draft',10:'Pre-Draft',11:'Pre-Draft',12:'In-Season',13:'In-Season',14:None}
 
 
 def tests(engine,database):
@@ -43,7 +44,7 @@ def tests(engine,database):
     reset();before=state();assert service.synchronize_for_job() is None
     after=state();assert {r['id']:r['status'] for r in after}==EXPECTED
     for row,old in zip(after,before):
-        if row['id'] in (8,9,10,11,14):assert row==old
+        if row['id'] in (8,9,14):assert row==old
         else:assert row['updatedAt']>old['updatedAt']
     service.synchronize_for_job();assert {r['id']:r['status'] for r in state()}==EXPECTED
     for phase in range(1,6):

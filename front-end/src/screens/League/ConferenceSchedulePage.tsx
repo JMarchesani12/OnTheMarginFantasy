@@ -369,7 +369,7 @@ const ConferenceSchedulePage = () => {
 
     schedule.games.forEach((game) => {
       const dateKey = getLocalDateKeyForGame(game.date);
-      const time = formatLocalTime(game.date);
+      const time = formatLocalTime(game.date, game.timeTBD);
 
       if (game.homeInConference) {
         addGame(

@@ -7,6 +7,7 @@ export type GameResult = {
   awayTeamTier: number | null;
   awayTeamId: number;
   awayTeamName: string;
+  timeTBD?: boolean;
   date: string; // ISO/string from API
   externalGameId: string;
   homeScore: number;

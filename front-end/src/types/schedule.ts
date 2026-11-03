@@ -40,6 +40,7 @@ type ConferenceGame = {
   seasonPhaseId: number | null;
   roundOrder: number | null;
 
+  timeTBD?: boolean;
   date: string;
 
   homeTeamId: number;
@@ -74,6 +75,7 @@ type TeamGameView = {
   seasonPhaseId: number | null;
   roundOrder: number | null;
 
+  timeTBD?: boolean;
   date: string;
 
   homeTeamId: number;

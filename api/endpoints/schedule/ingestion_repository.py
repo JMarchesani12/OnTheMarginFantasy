@@ -24,6 +24,7 @@ class ScheduleIngestionRepository:
                 "seasonPhaseId",
                 "externalGameId",
                 date,
+                "timeTBD",
                 "homeTeamId",
                 "awayTeamId",
                 "homeScore",
@@ -40,6 +41,7 @@ class ScheduleIngestionRepository:
                 :seasonPhaseId,
                 :externalGameId,
                 :date,
+                :timeTBD,
                 :homeTeamId,
                 :awayTeamId,
                 :homeScore,
@@ -54,6 +56,7 @@ class ScheduleIngestionRepository:
             DO UPDATE SET
                 "seasonPhaseId" = EXCLUDED."seasonPhaseId",
                 date = EXCLUDED.date,
+                "timeTBD" = EXCLUDED."timeTBD",
                 "homeTeamId" = EXCLUDED."homeTeamId",
                 "awayTeamId" = EXCLUDED."awayTeamId",
                 "homeScore" = EXCLUDED."homeScore",

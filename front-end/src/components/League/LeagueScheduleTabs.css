@@ -15,6 +15,8 @@
   background: linear-gradient(180deg, #0B0E1A 0%, #0E1230 100%);
   padding: 1.1rem 1.3rem 1.4rem;
   width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
@@ -222,7 +224,7 @@
 
 .league-schedule__table tr {
   display: grid;
-  grid-template-columns: 18% repeat(7, minmax(0, 1fr));
+  grid-template-columns: minmax(130px, 18%) repeat(var(--schedule-days, 7), minmax(0, 1fr));
 }
 
 /* Cells */
@@ -430,18 +432,30 @@
     font-size: 0.85rem;
   }
 
-  .league-schedule__team-col {
-    min-width: 130px;
-  }
 }
 
 @media (max-width: 800px) {
+  .league-schedule {
+    padding: 0.8rem;
+  }
+
+  .league-schedule__tier-card {
+    padding: 0.6rem;
+  }
+
   .league-schedule__table-wrapper {
     overflow-x: auto;
+    max-width: 100%;
   }
 
   .league-schedule__table {
-    min-width: 720px;
+    min-width: calc(130px + var(--schedule-days, 7) * 110px);
+  }
+
+  /* Scroll the team label with its row so it cannot cover Monday. */
+  .league-schedule .league-schedule__table .league-schedule__team-col {
+    position: static;
+    box-shadow: none;
   }
 
   .league-schedule__header {
@@ -489,4 +503,3 @@
 .league-schedule__rules-summary { color: #B7C2E6; font-size: 0.85rem; }
 .league-schedule__rules-summary p { margin: 0 0 0.4rem; }
 .league-schedule__rules-summary a { color: #67E8F9; }
-.league-schedule__adjustment { color: #FFD166; font-size: 0.75rem; line-height: 1.4; margin: 0.4rem 0; }

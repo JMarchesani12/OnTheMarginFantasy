@@ -60,7 +60,7 @@ def tests(engine):
     assert unowned['homeInConference'] is True and unowned['awayInConference'] is False
     assert unowned['homeOwnerMemberId'] is None and unowned['awayOwnerMemberId'] is None
     assert next(g for g in games if g['id']==3)['roundOrder']==2
-    assert set(games[0])=={'id','externalGameId','date','sport','sportSeasonId','seasonPhaseId','roundOrder',
+    assert set(games[0])=={'id','externalGameId','date','timeTBD','sport','sportSeasonId','seasonPhaseId','roundOrder',
         'homeTeamId','awayTeamId','broadcast','homeTeamName','awayTeamName','homeScore','awayScore',
         'homeOwnerMemberId','homeOwnerTeamName','homeOwnerDisplayName','awayOwnerMemberId','awayOwnerTeamName',
         'awayOwnerDisplayName','homeInConference','awayInConference'}
@@ -74,7 +74,7 @@ def tests(engine):
     assert [g['id'] for g in games]==[8,1,2,3,4,5,6,7]
     assert all(g['ownerMemberId'] is None for g in games)
     assert games[2]['isHome'] is False and games[2]['opponentTeamId']==102 and games[2]['opponentTeamName']=='Beta'
-    assert set(games[0])=={'id','externalGameId','date','sport','broadcast','sportSeasonId','seasonPhaseId','roundOrder',
+    assert set(games[0])=={'id','externalGameId','date','timeTBD','sport','broadcast','sportSeasonId','seasonPhaseId','roundOrder',
         'homeTeamId','awayTeamId','homeTeamName','awayTeamName','homeScore','awayScore','isHome',
         'opponentTeamId','opponentTeamName','ownerMemberId','ownerTeamName','ownerDisplayName'}
     assert all(g['ownerMemberId'] is None for g in service.team_games_for_job(101,2026,999))

@@ -1,5 +1,6 @@
 import datetime as dt
 import traceback
+from zoneinfo import ZoneInfo
 from typing import Any, Dict, List, Optional, Tuple
 
 import requests
@@ -108,7 +109,8 @@ class ESPNClient:
         datestr: 'YYYYMMDD'
         """
         url = f"{self.base_url}/{self.api_keyword}/scoreboard"
-        params = {"dates": datestr, "groups": group_id}
+        # ESPN falls back to its 25-game default for oversized limits (1000).
+        params = {"dates": datestr, "groups": group_id, "limit": 500}
         resp = requests.get(url, params=params, timeout=10)
         resp.raise_for_status()
         return resp.json()
@@ -162,6 +164,15 @@ class ESPNClient:
             if not competitions:
                 return None
             comp = competitions[0]
+            time_tbd = comp.get("timeValid") is False
+            if time_tbd:
+                # ESPN encodes date-only fixtures as midnight Eastern, which
+                # otherwise lands on the previous day in Central. Noon is a
+                # sorting anchor only; timeTBD prevents displaying it as kickoff.
+                source_day = event_dt.astimezone(ZoneInfo("America/New_York")).date()
+                event_dt = dt.datetime.combine(
+                    source_day, dt.time(12), ZoneInfo("America/New_York")
+                ).astimezone(dt.timezone.utc)
             broadcast = comp.get("broadcast")
             if not broadcast:
                 broadcasts = comp.get("broadcasts") or []
@@ -187,6 +198,7 @@ class ESPNClient:
             return {
                 "externalGameId": external_game_id,
                 "date": event_dt,
+                "timeTBD": time_tbd,
                 "homeEspnId": home_id,
                 "awayEspnId": away_id,
                 "homeName": home_name,

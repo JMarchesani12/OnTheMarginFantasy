@@ -20,7 +20,7 @@ import dotenv, sqlalchemy, psycopg2
 def forbidden(*a, **kw):
     raise AssertionError('Unexpected runtime activity during import')
 with patch.dict(os.environ, {}, clear=True), patch.object(dotenv, 'load_dotenv', forbidden), patch.object(sqlalchemy, 'create_engine', forbidden), patch.object(psycopg2, 'connect', forbidden), patch.object(socket.socket, 'connect', forbidden):
-    for name in ('db', 'supabaseAuth', 'bootstrap', 'api', 'dev', 'endpoints.draft.startDraftNotifyListener', 'worker.draftTimeoutWorker', 'cronJobs.cronComputeWeeklyScores', 'cronJobs.cronComputeFinalScoreboard', 'cronJobs.cronIngestScoreboard', 'startSeasonJobs.startSeason', 'scripts.rebuild_weeks_and_rescore'):
+    for name in ('db', 'supabaseAuth', 'bootstrap', 'api', 'dev', 'endpoints.draft.startDraftNotifyListener', 'worker.draftTimeoutWorker', 'cronJobs.cronComputeWeeklyScores', 'cronJobs.cronComputeFinalScoreboard', 'cronJobs.cronIngestScoreboard', 'cronJobs.cronRefreshSchedules', 'startSeasonJobs.startSeason', 'scripts.rebuild_weeks_and_rescore'):
         importlib.import_module(name)
 '''
         result = subprocess.run([sys.executable, '-c', script, str(API)], capture_output=True, text=True, timeout=30)
