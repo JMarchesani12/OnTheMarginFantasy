@@ -11,7 +11,6 @@ from assess_postgres import LOCAL,ROOT,engine_for
 from actors import UserActor
 from endpoints.scoring.service import ScoringReadService
 from endpoints.scoring.contracts import ScoringReadDenied
-from endpoints.scoring.scoringModel import ScoringModel
 
 FIXTURE='''
 CREATE TABLE "League" (id bigint PRIMARY KEY,commissioner bigint);
@@ -47,7 +46,7 @@ def scoring_tests(engine,database):
             pass
         else:
             raise AssertionError('Outsider read was allowed')
-    assert ScoringModel(engine,None).get_weekly_points_awarded_for_league(20,[1])[0]['pointsAwarded']==99
+    assert ScoringReadService(engine).get_weekly_points_for_job(20,[1])[0]['pointsAwarded']==99
     assert service.get_weekly_points_for_job(999,[])==[]
     revoker=engine_for(database,'otm-scoring-revoker')
     try:
@@ -97,7 +96,7 @@ def main():
             created=True
         engine=engine_for(name,'otm-scoring-read')
         results=scoring_tests(engine,name)
-        files=['api/endpoints/scoring/'+f for f in ('service.py','repository.py','contracts.py','scoringModel.py','scoringEndpoints.py')]
+        files=['api/endpoints/scoring/'+f for f in ('service.py','repository.py','contracts.py','service.py','scoringEndpoints.py')]
         files+=['api/actors.py','api/utils/authorization.py','scripts/modernization/verify_scoring_read.py']
         report={'result':'PASS','scope':'Synthetic marked loopback PostgreSQL; no configured/hosted database',
                 'weekly_points':results,'sha256':{f:hashlib.sha256((ROOT/f).read_bytes()).hexdigest() for f in files}}

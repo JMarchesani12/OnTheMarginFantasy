@@ -8,7 +8,6 @@ from assess_postgres import LOCAL,ROOT,engine_for
 from verify_league_discovery import listing_tests,creation_tests,approval_tests,profile_tests,removal_tests,deletion_tests,settings_tests,league_creation_tests,rules_tests,conference_tests,tests as discovery_tests
 from actors import UserActor
 from endpoints.league.reads.service import LeagueReadService
-from endpoints.league.leagueModel import LeagueModel
 
 FIXTURE='''DROP SCHEMA public CASCADE; CREATE SCHEMA public;
 CREATE TABLE "User" (id bigint PRIMARY KEY,"displayName" text); INSERT INTO "User" VALUES (1,'Alice'),(2,'Bob');
@@ -73,9 +72,9 @@ def tests(engine,database):
         finally:event.remove(engine,'before_cursor_execute',record)
         assert statements==[]
     finally:other.dispose()
-    model=LeagueModel.__new__(LeagueModel);model.db=engine;model.sync_due_league_statuses=sync
-    assert model.get_league(20)['id']==20 and model.get_league(20,reader_user_id=1) is None
-    assert [r['leagueId'] for r in model.get_leagues_for_user(2)]==[20]
+    model=engine;sync_statuses=sync
+    assert LeagueReadService(model).details_for_job(20, sync_statuses)['id']==20 and LeagueReadService(model).details_for_reader_id(20, 1, sync_statuses) is None
+    assert [r['leagueId'] for r in LeagueReadService(model).mine_for_user_id(2, sync_statuses, 'all')]==[20]
     return {'native_details_current_week_intervals_scope':'PASS','own_projection_stage_scores_overlap_compatibility':'PASS',
             'separate_committed_sync_and_membership_revocation':'PASS','sync_failure_before_read':'PASS','legacy_compatibility':'PASS',
             'scope_limit':'Existing lifecycle callback boundary verified; lifecycle algorithm unchanged'}
@@ -93,7 +92,7 @@ def main():
         prior={'listing_cancellation':listing_tests(engine,name),'creation_denial':creation_tests(engine,name),
                'approval':approval_tests(engine,name),'member_profile':profile_tests(engine,name),'member_removal':removal_tests(engine,name),'league_deletion':deletion_tests(engine,name),'league_settings':settings_tests(engine,name),'league_creation':league_creation_tests(engine,name),'league_rules':rules_tests(engine,name),'league_conferences':conference_tests(engine,name),'league_discovery':discovery_tests(engine,name)}
         details=tests(engine,name)
-        files=['api/endpoints/league/'+f for f in ('reads/service.py','reads/repository.py','administration/service.py','administration/repository.py','members/service.py','members/repository.py','admission/service.py','admission/repository.py','admission/contracts.py','leagueModel.py','leagueEndpoints.py')]
+        files=['api/endpoints/league/'+f for f in ('reads/service.py','reads/repository.py','administration/service.py','administration/repository.py','members/service.py','members/repository.py','admission/service.py','admission/repository.py','admission/contracts.py','leagueEndpoints.py')]
         files+=['api/actors.py','api/rules/leagueRules.py','api/utils/authorization.py']+['scripts/modernization/'+f for f in ('verify_admission_slice.py','verify_admission_create_deny.py','verify_admission_approval.py','verify_member_profile.py','verify_member_removal.py','verify_league_delete.py','verify_league_settings.py','verify_league_creation.py','verify_league_rules_read.py','verify_league_conferences.py','verify_league_discovery.py','verify_league_details.py')]
         report={'result':'PASS','scope':'Synthetic marked loopback PostgreSQL; no configured/hosted database','prior_slices_rerun':prior,
                 'league_details':details,'sha256':{f:hashlib.sha256((ROOT/f).read_bytes()).hexdigest() for f in files}}

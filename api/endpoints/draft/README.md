@@ -10,8 +10,8 @@ HTTP routes resolve a verified `UserActor` and call a service. Services own poli
 
 `DraftPickService.pick_live(actor, ...)` is the interactive allocation boundary. `pick_live_for_job`, `allocate_manual_for_job`, and `process_timeout_for_job` identify trusted operations. Manual HTTP allocation remains disabled (410). The timeout worker calls the trusted service; its deadline query is also in the repository. Listener snapshots call `snapshot_for_job`; sockets retain their verified-session membership check before a trusted snapshot. No worker/listener startup behavior changes here.
 
-`draftModel.py` is a SQL-free compatibility facade. It inherits pick behavior, preserving legacy public/private helper dispatch and db-only construction; existing control/snapshot wrappers remain. Keep it while tests/tools/jobs outside this domain still use its historical API. Do not add new SQL or transport policy to it.
+The former `draftModel.py` facade is retired. Tests and tools call pick, control and snapshot services directly, including explicit job and verified-user-ID operations. Pick helper overrides remain on `DraftPickService`; no replacement facade is introduced.
 
 Allocation, slot insertion, state advance and finalization use one connection/transaction. Existing notification placement is preserved: ordinary live pick publication remains HTTP post-commit; ordinary auto-skip does not gain notifications. MOD-023 publication reliability, MOD-025 replay/permutation/concurrent-start policy and MOD-034 startup ownership remain separate.
 
-Fresh backend/native verification and current source hashes: [completion evidence](../../../docs/modernization/evidence/mod-038-draft-complete-postgres-2026-10-30.json). Earlier reports are historical; the completion report reruns all prior draft slices.
+Fresh backend/native verification and current source hashes: [completion evidence](../../../docs/modernization/evidence/mod-038-draft-complete-postgres-2026-11-02.json). Earlier reports are historical; the completion report reruns all prior draft slices.

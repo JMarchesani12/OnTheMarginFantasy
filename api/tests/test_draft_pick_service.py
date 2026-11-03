@@ -1,7 +1,7 @@
 """Remaining draft allocation behavior and actor/job/facade compatibility."""
 import unittest
 from actors import UserActor
-from endpoints.draft.draftModel import DraftModel
+from endpoints.draft.pick_service import DraftPickService
 import test_live_pick_authorization as live
 from test_transaction_service import ConnectionOwner
 
@@ -45,10 +45,9 @@ class DraftPickServiceTests(unittest.TestCase):
         before=self.state();self.assertIsNone(service.process_timeout_for_job(10));self.assertEqual(self.state(),before)
         self.db.connection.execute('DELETE FROM "DraftState" WHERE "leagueId"=10');self.db.connection.commit()
         self.assertIsNone(service.process_timeout_for_job(10))
-    def test_inherited_helpers_keep_override_and_db_only_compatibility(self):
+    def test_service_helpers_keep_override_and_db_only_dispatch(self):
         from endpoints.draft.pick_service import DraftPickService
-        self.assertTrue(issubclass(DraftModel,DraftPickService))
-        class CustomModel(DraftModel):
+        class CustomModel(DraftPickService):
             def _get_expected_member_for_overall(self,conn,league_id,overall_pick_number):return 999
         model=CustomModel.__new__(CustomModel);model.db=self.engine
         with self.assertRaisesRegex(ValueError,'Not your turn'):model.create_draft_pick_live(10,12,102)

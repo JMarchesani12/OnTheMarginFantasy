@@ -1,7 +1,7 @@
 """Trusted calendar policy and original per-helper transaction boundaries.
 
 No provider client, HTTP adapter, configured engine or compatibility-model imports.
-Legacy method names remain inherited by ScheduleModel for helper overrides.
+Established helper names remain available to read/ingestion subclasses.
 """
 import datetime as dt
 import json

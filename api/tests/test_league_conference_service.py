@@ -2,7 +2,6 @@
 import unittest
 from actors import UserActor
 from endpoints.league.reads.service import LeagueReadService
-from endpoints.league.leagueModel import LeagueModel
 import test_league_read_authorization as reads
 from test_transaction_service import ConnectionOwner
 
@@ -54,7 +53,7 @@ class LeagueConferenceServiceTests(unittest.TestCase):
         self.assertTrue(hasattr(self.service,'conferences_for_job'), 'trusted conference operation missing')
         self.db.connection.execute('UPDATE "League" SET sport=3 WHERE id=30');self.db.connection.commit()
         self.assertEqual(self.service.conferences_for_job(30),{'leagueId':30,'sportId':3,'seasonYear':2026,'conferences':[]})
-        model=LeagueModel.__new__(LeagueModel);model.db=self.engine
-        self.assertEqual(model.get_league_conferences(30)['conferences'],[])
-        with self.assertRaises(ValueError):model.get_league_conferences(30,reader_user_id=1)
-        self.assertEqual(model.get_league_conferences(30,reader_user_id=2)['conferences'],[])
+        model=self.engine
+        self.assertEqual(LeagueReadService(model).conferences_for_job(30)['conferences'],[])
+        with self.assertRaises(ValueError):LeagueReadService(model).conferences_for_reader_id(30, 1)
+        self.assertEqual(LeagueReadService(model).conferences_for_reader_id(30, 2)['conferences'],[])

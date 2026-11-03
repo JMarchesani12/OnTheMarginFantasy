@@ -10,7 +10,7 @@ from assess_postgres import LOCAL, ROOT, engine_for
 from verify_schedule_member_reads import FIXTURE as MEMBER_FIXTURE, tests as member_tests, calendar_tests
 from endpoints.schedule.read_service import ScheduleReadService
 from endpoints.schedule.read_repository import ScheduleReadRepository
-from endpoints.schedule.scheduleModel import ScheduleModel
+from endpoints.schedule.ingestion_service import ScheduleIngestionService
 
 FIXTURE = MEMBER_FIXTURE + '''
 ALTER TABLE "GameResult" ADD COLUMN "roundOrder" integer DEFAULT 1;
@@ -119,7 +119,7 @@ def tests(engine):
     try:expect(RuntimeError,lambda:service.search_teams_for_job(10,'iowa'))
     finally:event.remove(engine,'after_cursor_execute',fail)
     assert triggered==[True] and state()==before
-    legacy=ScheduleModel.__new__(ScheduleModel);legacy.db=engine
+    legacy=ScheduleIngestionService.__new__(ScheduleIngestionService);legacy.db=engine
     assert legacy.search_teams_for_league(10,'iowa st',1)[0]['teamId']==101
     assert len(legacy.get_team_games_by_season(101,2026))==8
     expected={'week_window','conference_games','team_owner_context','team_season_games','search_league_context','search_teams'}
@@ -144,7 +144,7 @@ def main():
         engine=engine_for(name,'otm-schedule-views');calendar=calendar_tests(engine);member=member_tests(engine);views=tests(engine)
         declared={name for name,method in vars(ScheduleReadRepository).items() if callable(method) and not name.startswith('_')}
         assert set(member['repository_queries_exercised'])|set(views['repository_queries_exercised'])==declared
-        files=['api/endpoints/schedule/'+f for f in ('read_service.py','read_repository.py','calendar_service.py','calendar_repository.py','scheduleModel.py','scheduleEndpoints.py','routes.py','helpers/weekHelper.py')]
+        files=['api/endpoints/schedule/'+f for f in ('read_service.py','read_repository.py','calendar_service.py','calendar_repository.py','ingestion_service.py','scheduleEndpoints.py','routes.py','helpers/weekHelper.py')]
         files+=['api/rules/leagueRules.py','api/rules/tournamentRules.py','api/tests/test_schedule_views_search_service.py']
         files+=['scripts/modernization/'+f for f in ('verify_schedule_calendar.py','verify_schedule_member_reads.py','verify_schedule_views_search.py')]
         report={'result':'PASS','scope':'Marked owned synthetic loopback PostgreSQL; no configured app/DB/provider/jobs startup',

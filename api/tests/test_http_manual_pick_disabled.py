@@ -7,7 +7,7 @@ import jwt
 from flask import Flask
 
 from authMiddleware import install_auth_middleware
-from endpoints.draft.draftModel import DraftModel
+from endpoints.draft.pick_service import DraftPickService
 from endpoints.draft.routes import setup_routes
 from socketioInstance import socketio
 from supabaseAuth import ISSUER, SUPABASE_JWT_SECRET
@@ -18,7 +18,7 @@ class HttpManualPickDisabledTests(unittest.TestCase):
     def setUp(self):
         self.db = ProfileDatabase()
         self.addCleanup(self.db.connection.close)
-        self.pick = self.enterContext(patch.object(DraftModel, 'create_draft_pick', return_value={'id': 1}))
+        self.pick = self.enterContext(patch.object(DraftPickService, 'create_draft_pick', return_value={'id': 1}))
         self.database = self.enterContext(patch.object(self.db, 'begin', side_effect=AssertionError('HTTP manual picks must not access persistence')))
         self.emit = self.enterContext(patch.object(socketio, 'emit'))
         app = Flask(__name__)

@@ -13,7 +13,8 @@ from flask import Flask
 from sqlalchemy import text
 
 from authMiddleware import install_auth_middleware
-from endpoints.draft.draftModel import DraftModel
+from endpoints.draft.pick_service import DraftPickService
+from endpoints.draft.snapshot_service import DraftSnapshotService
 from endpoints.draft.routes import setup_routes
 from supabaseAuth import ISSUER, SUPABASE_JWT_SECRET
 from test_league_read_authorization import ReadDatabase
@@ -93,7 +94,7 @@ class DraftStateAuthorizationTests(unittest.TestCase):
             CREATE TABLE "Conference" (id INTEGER, name TEXT);
             INSERT INTO "Conference" VALUES (401, 'Synthetic Conference');
         ''')
-        self.model = DraftModel(self.db)
+        self.model = DraftPickService(self.db)
         app = Flask(__name__)
         app.config['TESTING'] = True
         install_auth_middleware(app)
@@ -210,12 +211,12 @@ class DraftStateAuthorizationTests(unittest.TestCase):
         self.assertEqual(state['updatedAt'], '2026-10-28T12:00:00Z')
 
     def test_trusted_snapshot_calls_remain_independent_of_http_context(self):
-        snapshot = self.model.get_draft_state_snapshot(20)
+        snapshot = DraftSnapshotService(self.model.db).snapshot_for_job(20)
         self.assertEqual(snapshot['members'][0]['memberId'], 21)
-        snapshot = self.model.get_draft_state_snapshot(20, conn=self.db)
+        snapshot = DraftSnapshotService(self.model.db).snapshot_for_job(20, conn=self.db)
         self.assertEqual(snapshot['state']['status'], 'paused')
         with self.assertRaises(PermissionError):
-            self.model.get_draft_state_snapshot(20, reader_user_id=1)
+            DraftSnapshotService(self.model.db).snapshot_for_reader_id(20, 1)
 
     def test_preflight_does_not_execute_snapshot(self):
         response = self.client.options('/api/draft/state/10', json={'userId': 1})

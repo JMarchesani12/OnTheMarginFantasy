@@ -8,7 +8,6 @@ from assess_postgres import LOCAL,ROOT,engine_for
 from verify_league_rules_read import listing_tests,creation_tests,approval_tests,profile_tests,removal_tests,deletion_tests,settings_tests,league_creation_tests,tests as rules_tests
 from actors import UserActor
 from endpoints.league.reads.service import LeagueReadService
-from endpoints.league.leagueModel import LeagueModel
 
 FIXTURE='''DROP SCHEMA public CASCADE; CREATE SCHEMA public;
 CREATE TABLE "League" (id bigint PRIMARY KEY,sport bigint,"seasonYear" integer,commissioner bigint,"isDiscoverable" boolean);
@@ -39,15 +38,15 @@ def tests(engine,database):
             else:raise AssertionError('Conference scope/missing-season guard bypass')
         finally:event.remove(engine,'after_cursor_execute',record)
         assert len(statements)==1 and 'FROM "SportConference"' not in statements[0]
-    model=LeagueModel.__new__(LeagueModel);model.db=engine
+    model=engine
     assert service.conferences_for_job(30)=={'leagueId':30,'sportId':3,'seasonYear':2026,'conferences':[]}
-    assert model.get_league_conferences(30)['conferences']==[]
-    assert model.get_league_conferences(30,reader_user_id=2)['conferences']==[]
-    try:model.get_league_conferences(30,reader_user_id=1)
+    assert LeagueReadService(model).conferences_for_job(30)['conferences']==[]
+    assert LeagueReadService(model).conferences_for_reader_id(30, 2)['conferences']==[]
+    try:LeagueReadService(model).conferences_for_reader_id(30, 1)
     except ValueError:pass
     else:raise AssertionError('Legacy scoped conference read bypass')
     revoked=[]
-    for facade in (False,True):
+    for user_id_service in (False,True):
         with engine.begin() as conn:conn.execute(text('INSERT INTO "LeagueMember" VALUES (12,10,2) ON CONFLICT (id) DO NOTHING'))
         other=engine_for(database,'otm-conferences-revoke');changed=[];statements=[]
         def revoke(conn,cursor,statement,params,context,many):
@@ -58,13 +57,13 @@ def tests(engine,database):
         event.listen(engine,'before_cursor_execute',revoke)
         try:
             try:
-                if facade:model.get_league_conferences(10,reader_user_id=2)
+                if user_id_service:LeagueReadService(model).conferences_for_reader_id(10, 2)
                 else:service.conferences(bob,10)
             except ValueError as exc:assert str(exc)=='League 10 not found'
             else:raise AssertionError('Late conference scope loss did not reject')
         finally:event.remove(engine,'before_cursor_execute',revoke);other.dispose()
         assert changed==[True] and len(statements)==1
-        revoked.append({'path':'legacy_facade' if facade else 'service','separate_connection_revocation_before_select':True,
+        revoked.append({'path':'user_id_service' if user_id_service else 'actor_service','separate_connection_revocation_before_select':True,
                         'result':'ValueError','aggregate_query_skipped':True})
     return {'native_projection_season_null_counts_zero_order_sport_isolation':'PASS',
             'denied_missing_null_season_skip_aggregate':'PASS','empty_trusted_legacy':'PASS','query_time_member_revocation':revoked}
@@ -82,7 +81,7 @@ def main():
         prior={'listing_cancellation':listing_tests(engine,name),'creation_denial':creation_tests(engine,name),
                'approval':approval_tests(engine,name),'member_profile':profile_tests(engine,name),'member_removal':removal_tests(engine,name),'league_deletion':deletion_tests(engine,name),'league_settings':settings_tests(engine,name),'league_creation':league_creation_tests(engine,name),'league_rules':rules_tests(engine,name)}
         conferences=tests(engine,name)
-        files=['api/endpoints/league/'+f for f in ('reads/service.py','reads/repository.py','administration/service.py','administration/repository.py','members/service.py','members/repository.py','admission/service.py','admission/repository.py','admission/contracts.py','leagueModel.py','leagueEndpoints.py')]
+        files=['api/endpoints/league/'+f for f in ('reads/service.py','reads/repository.py','administration/service.py','administration/repository.py','members/service.py','members/repository.py','admission/service.py','admission/repository.py','admission/contracts.py','leagueEndpoints.py')]
         files+=['api/actors.py','api/rules/leagueRules.py','api/utils/authorization.py']+['scripts/modernization/'+f for f in ('verify_admission_slice.py','verify_admission_create_deny.py','verify_admission_approval.py','verify_member_profile.py','verify_member_removal.py','verify_league_delete.py','verify_league_settings.py','verify_league_creation.py','verify_league_rules_read.py','verify_league_conferences.py')]
         report={'result':'PASS','scope':'Synthetic marked loopback PostgreSQL; no configured/hosted database','prior_slices_rerun':prior,
                 'league_conferences':conferences,'sha256':{f:hashlib.sha256((ROOT/f).read_bytes()).hexdigest() for f in files}}

@@ -2,7 +2,6 @@
 import unittest
 from actors import UserActor
 from endpoints.league.reads.service import LeagueReadService
-from endpoints.league.leagueModel import LeagueModel
 import test_league_read_authorization as reads
 import test_own_league_listing as listings
 from test_transaction_service import ConnectionOwner
@@ -29,9 +28,9 @@ class LeagueDetailsServiceTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):self.service.details(UserActor(1,'alice'),10,fail)
         self.assertEqual(self.engine.begins,0)
     def test_trusted_and_scoped_model_with_deferred_callback(self):
-        model=LeagueModel.__new__(LeagueModel);model.db=self.engine;model.sync_due_league_statuses=self.sync
-        self.assertEqual(model.get_league(30)['id'],30)
-        self.assertIsNone(model.get_league(30,reader_user_id=1))
+        model=self.engine;sync_statuses=self.sync
+        self.assertEqual(LeagueReadService(model).details_for_job(30, sync_statuses)['id'],30)
+        self.assertIsNone(LeagueReadService(model).details_for_reader_id(30, 1, sync_statuses))
         self.assertEqual(self.calls,['sync','sync'])
 
 
@@ -55,7 +54,7 @@ class OwnLeagueReadServiceTests(unittest.TestCase):
         self.assertEqual(self.service.mine(UserActor(3,'outsider'),self.sync),[])
         self.assertEqual(self.engine.connects,5)
     def test_invalid_legacy_stage_before_sync_and_legacy_listing(self):
-        model=LeagueModel.__new__(LeagueModel);model.db=self.engine;model.sync_due_league_statuses=self.sync
-        with self.assertRaises(AttributeError):model.get_leagues_for_user(2,stage=42)
+        model=self.engine;sync_statuses=self.sync
+        with self.assertRaises(AttributeError):LeagueReadService(model).mine_for_user_id(2, sync_statuses, 42)
         self.assertEqual(self.calls,[])
-        self.assertEqual([r['leagueId'] for r in model.get_leagues_for_user(2,None)],[10,20])
+        self.assertEqual([r['leagueId'] for r in LeagueReadService(model).mine_for_user_id(2, sync_statuses, None)],[10,20])

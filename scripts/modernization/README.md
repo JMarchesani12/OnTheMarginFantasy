@@ -1,5 +1,7 @@
 # Disposable PostgreSQL assessment
 
+Model facade retirement (2026-11-02): active harnesses import canonical services and capture existing service/repository files. All eight Model import paths are retired. The older Model/forwarder references below describe historical extraction stages. Current retirement evidence: `docs/modernization/evidence/mod-035-model-facade-retirement-2026-11-02.json`.
+
 `assess_postgres.py` verifies MOD-004/005/009 using installed Python dependencies
 and the cached Supabase PostgreSQL image. It never reads `.env`, accepts no DSN,
 and connects only to `127.0.0.1:55439`. It refuses a server without the explicit

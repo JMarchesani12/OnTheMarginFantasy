@@ -6,7 +6,7 @@ from contextlib import contextmanager
 from flask import Flask
 from authMiddleware import install_auth_middleware
 from endpoints.sport.routes import setup_routes
-from endpoints.sport.sportModel import SportModel
+from endpoints.sport.service import SportService
 
 
 class SportDatabase:
@@ -106,7 +106,11 @@ class SportServiceTests(unittest.TestCase):
             self.service().list_sports()
         self.assertEqual((self.db.outcomes, self.db.active), (['rollback'], False))
 
-    def test_legacy_constructor_and_db_only_instance_preserve_results(self):
-        for model in (SportModel(self.db), SportModel.__new__(SportModel)):
-            model.db = self.db
-            self.assertEqual(sorted(model.get_sports(), key=lambda row: row['id']), self.expected)
+    def test_injected_repository_receives_the_owned_connection(self):
+        class Repository:
+            def list_sports(repository, conn):
+                self.assertIs(conn, self.db)
+                self.assertTrue(self.db.active)
+                return self.expected
+        self.assertEqual(SportService(self.db, repository=Repository()).list_sports(), self.expected)
+        self.assertEqual((self.db.begins, self.db.outcomes, self.db.active), (1, ['commit'], False))

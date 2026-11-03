@@ -1,4 +1,5 @@
 """Denial auth/transition tests: real JWT/routes/SQL, synthetic SQLite only."""
+from endpoints.league.admission.service import AdmissionService
 import os
 import time
 import unittest
@@ -164,9 +165,8 @@ class JoinRequestDenialAuthorizationTests(unittest.TestCase):
         self.assertEqual(self.state(), before)
 
     def test_trusted_denial_remains_independent_of_http_identity(self):
-        from endpoints.league.leagueModel import LeagueModel
-        model = LeagueModel.__new__(LeagueModel)
-        model.db = self.db
-        result = model.deny_join_request(10, 101, 4)
+
+        model = self.db
+        result = AdmissionService(model).deny_request_for_job(10, 101, 4)
         self.assertEqual(result['status'], 'DENIED')
         self.assertEqual(result['resolvedByUserId'], 4)

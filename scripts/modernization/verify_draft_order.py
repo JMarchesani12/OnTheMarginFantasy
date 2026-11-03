@@ -9,7 +9,7 @@ from assess_postgres import LOCAL,ROOT,engine_for
 from verify_draft_controls import FIXTURE as CONTROL_FIXTURE,snapshot_tests,finalize_tests,tests as control_tests
 from actors import UserActor
 from endpoints.draft.control_service import DraftControlService
-from endpoints.draft.draftModel import DraftModel
+from endpoints.draft.pick_service import DraftPickService
 
 FIXTURE=CONTROL_FIXTURE+'''CREATE UNIQUE INDEX member_order_unique ON "LeagueMember" ("leagueId","draftOrder");'''
 
@@ -84,9 +84,9 @@ def tests(engine,database):
         else:raise AssertionError('Late order authority loss accepted')
     finally:event.remove(engine,'before_cursor_execute',revoke);other.dispose()
     before['League'][0]['commissioner']=2;assert changed==[True] and state()==before
-    reset();model=DraftModel.__new__(DraftModel);model.db=engine
-    assert model.set_draft_order(10,[12,11])['members'][0]['memberId']==12
-    assert model.set_draft_order(10,[11,12],acting_user_id='1')['members'][0]['memberId']==11
+    reset();model=DraftPickService(engine)
+    assert DraftControlService(model.db).set_order_for_job(10, [12, 11])['members'][0]['memberId']==12
+    assert DraftControlService(model.db).set_order_for_legacy_user_id(10, [11, 12], '1')['members'][0]['memberId']==11
     return {'native_bigint_arrays_any_unnest_generate_series_unique_swap':'PASS','exact_projection_partial_guard_compatibility':'PASS',
             'post_bump_assignment_read_statement_commit_rollback':'PASS','separate_connection_late_authority_rejection':'PASS',
             'legacy_trusted_coercion':'PASS','scope_limit':'Original partial lists and unlocked state check preserved; no permutation/concurrent-start redesign'}
@@ -101,7 +101,7 @@ def main():
             assert cur.fetchone()[0]=='otm-modernization-assessment-20261029-synthetic-only','Refusing unmarked server'
             cur.execute(sql.SQL('CREATE DATABASE {}').format(sql.Identifier(name)));created=True
         engine=engine_for(name,'otm-draft-order');snapshot=snapshot_tests(engine,name);finalization=finalize_tests(engine,name);controls=control_tests(engine,name);order=tests(engine,name)
-        files=['api/endpoints/draft/'+f for f in ('draft_rules.py','control_service.py','control_repository.py','snapshot_service.py','snapshot_repository.py','draftModel.py','draftEndpoints.py','routes.py')]
+        files=['api/endpoints/draft/'+f for f in ('draft_rules.py','control_service.py','control_repository.py','snapshot_service.py','snapshot_repository.py','draftEndpoints.py','routes.py')]
         files+=['api/actors.py']+['scripts/modernization/'+f for f in ('verify_draft_snapshot.py','verify_draft_finalization.py','verify_draft_controls.py','verify_draft_order.py')]
         report={'result':'PASS','scope':'Synthetic marked loopback PostgreSQL; no configured/hosted database','snapshot_rerun':snapshot,'finalization_rerun':finalization,'controls_rerun':controls,'order':order,
                 'sha256':{f:hashlib.sha256((ROOT/f).read_bytes()).hexdigest() for f in files}}

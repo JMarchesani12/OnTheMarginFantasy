@@ -1,6 +1,6 @@
 """MOD-007 real replacement SQL and rollback on disposable SQLite data."""
 import unittest
-from test_scoring_week_zero import WeekZeroScoringModel
+from test_scoring_week_zero import WeekZeroScoringService
 from test_league_read_authorization import ReadDatabase
 
 
@@ -15,7 +15,7 @@ class WeeklyScoreAtomicityTests(unittest.TestCase):
                 (33,100,1,99,1,2),(33,100,2,88,2,1),
                 (44,100,1,77,1,1),(33,200,1,66,1,1);
         ''')
-        self.model=WeekZeroScoringModel(self.db,None)
+        self.model=WeekZeroScoringService(self.db,None)
 
     def rows(self):
         return [tuple(row) for row in self.db.connection.execute(
@@ -32,7 +32,7 @@ class WeeklyScoreAtomicityTests(unittest.TestCase):
                     raise RuntimeError('injected replacement failure')
         self.db.before_query=fail
         with self.assertRaisesRegex(RuntimeError,'injected'):
-            self.model.compute_weekly_scores(33,0)
+            self.model.compute_weekly_scores_for_job(33,0)
         self.db.before_query=None
         self.assertEqual(self.rows(),before)
 
@@ -46,6 +46,6 @@ class WeeklyScoreAtomicityTests(unittest.TestCase):
         expected=[(33,100,1,5,1,2),(33,100,2,-2,2,1),
                   (33,200,1,66,1,1),(44,100,1,77,1,1)]
         for _ in range(2):
-            result=self.model.compute_weekly_scores(33,0)
+            result=self.model.compute_weekly_scores_for_job(33,0)
             self.assertEqual(self.rows(),expected)
             self.assertEqual((result['leagueId'],result['weekId'],result['weekNumber']),(33,100,0))

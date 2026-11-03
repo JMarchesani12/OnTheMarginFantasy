@@ -3,7 +3,6 @@ import unittest
 from actors import UserActor
 from endpoints.user.service import UserService
 from endpoints.user.contracts import ProfileAccessDenied, ProfileNotFound, ProfileUpdateRejected
-from endpoints.user.userModel import UserModel
 import test_profile_regression as profiles
 from test_profile_regression import ALICE, BOB
 from test_transaction_service import ConnectionOwner
@@ -49,14 +48,14 @@ class UserServiceTests(unittest.TestCase):
             self.service.update_profile(UserActor(1,ALICE),1,{'uuid':BOB,'email':'forged'})
         self.assertEqual(self.engine.begins,0)
 
-    def test_missing_profile_has_domain_failure_and_legacy_value_error(self):
+    def test_missing_profile_has_domain_failure_for_actor_and_job(self):
         with self.assertRaisesRegex(ProfileNotFound,'User not found'):
             self.service.get_profile(UserActor(999,'missing'),999)
         with self.assertRaises(ProfileNotFound):
             self.service.update_profile(UserActor(999,'missing'),999,{'displayName':'New'})
-        for operation,args in ((UserModel(self.db).get_user_by_id,(999,)),
-                               (UserModel(self.db).update_user,(999,{'displayName':'New'}))):
-            with self.assertRaisesRegex(ValueError,'User not found'):
+        for operation,args in ((UserService(self.db).get_profile_for_job,(999,)),
+                               (UserService(self.db).update_profile_for_job,(999,{'displayName':'New'}))):
+            with self.assertRaisesRegex(ProfileNotFound,'User not found'):
                 operation(*args)
 
     def test_failure_after_update_rolls_back_persisted_name(self):
@@ -73,11 +72,11 @@ class UserServiceTests(unittest.TestCase):
             self.service.update_profile(UserActor(1,ALICE),1,{'displayName':'Forbidden'})
         self.assertEqual(self.db.profile(1)['displayName'],'Alice')
 
-    def test_trusted_model_reads_and_updates_remain_context_free(self):
-        model=UserModel(self.db)
-        self.assertEqual(model.get_user_by_id(2)['uuid'],BOB)
-        self.assertEqual(model.update_user(2,{'displayName':'Trusted'})['displayName'],'Trusted')
-        self.assertEqual(model.get_user_by_uuid(BOB)['id'],2)
+    def test_trusted_service_reads_and_updates_remain_context_free(self):
+        model=UserService(self.db)
+        self.assertEqual(model.get_profile_for_job(2)['uuid'],BOB)
+        self.assertEqual(model.update_profile_for_job(2,{'displayName':'Trusted'})['displayName'],'Trusted')
+        self.assertEqual(model.get_profile_by_uuid_for_job(BOB)['id'],2)
 
 
 class ProfileAdapterOrderingTests(unittest.TestCase):

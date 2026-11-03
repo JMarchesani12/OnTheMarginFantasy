@@ -10,7 +10,6 @@ from verify_admission_slice import tests as prior_tests
 from actors import UserActor
 from endpoints.league.admission.service import AdmissionService
 from endpoints.league.admission.contracts import AdmissionDenied,AdmissionRejected
-from endpoints.league.leagueModel import LeagueModel
 
 FIXTURE='''
 DROP SCHEMA public CASCADE; CREATE SCHEMA public;
@@ -82,7 +81,7 @@ def current_tests(engine,database):
     assert state()==before
     with engine.begin() as conn:conn.exec_driver_sql('DROP TRIGGER deny_commit ON "LeagueJoinRequest"')
     concurrent=[]
-    for facade in (False,True):
+    for user_id_service in (False,True):
         with engine.begin() as conn:
             conn.execute(text('UPDATE "LeagueJoinRequest" SET status=\'PENDING\',"resolvedAt"=NULL,"resolvedByUserId"=NULL WHERE id=:id'),{'id':bob['id']})
         first=engine_for(database,'otm-deny-first');second=engine_for(database,'otm-deny-second')
@@ -94,9 +93,9 @@ def current_tests(engine,database):
         event.listen(first,'after_cursor_execute',hold)
         def deny(label,db):
             try:
-                if facade:
-                    model=LeagueModel.__new__(LeagueModel);model.db=db
-                    result=model.deny_join_request_as_commissioner(10,bob['id'],1)
+                if user_id_service:
+                    model=db
+                    result=AdmissionService(model).deny_request_for_legacy_commissioner(1, 10, bob['id'])
                 else:result=AdmissionService(db).deny_request(UserActor(1,'alice'),10,bob['id'])
                 outcomes[label]=['success',result['status'],result['resolvedByUserId']]
             except Exception as exc:outcomes[label]=[type(exc).__name__,str(exc)]
@@ -117,14 +116,14 @@ def current_tests(engine,database):
         assert not a.is_alive() and not b.is_alive()
         assert locks==['league','request'],locks
         assert outcomes=={'first':['success','DENIED',1],
-            'second':['ValueError' if facade else 'AdmissionRejected','Join request is not pending']},outcomes
-        concurrent.append({'path':'legacy_facade' if facade else 'service','observed_lock_wait':True,'lock_order':locks,'outcomes':outcomes})
-    model=LeagueModel.__new__(LeagueModel);model.db=engine
-    legacy=model.deny_join_request(10,other['id'],4)
+            'second':['AdmissionRejected','Join request is not pending']},outcomes
+        concurrent.append({'path':'user_id_service' if user_id_service else 'actor_service','observed_lock_wait':True,'lock_order':locks,'outcomes':outcomes})
+    model=engine
+    legacy=AdmissionService(model).deny_request_for_job(10, other['id'], 4)
     assert (legacy['status'],legacy['resolvedByUserId'])==('DENIED',4)
     pending=service.create_request(UserActor(3,'other'),10,team_name='Private helper')
     with engine.begin() as conn:
-        row=model._deny_join_request(conn,10,pending['id'],1)
+        row=AdmissionService(model).deny_request_in_transaction(conn, 10, pending['id'], 1)
         assert row['resolvedByUserId']==1
     return {'creation_projection_normalization_repeat':'PASS','membership_and_real_fk_failures':'PASS',
         'insert_statement_and_commit_rollback':'PASS','denial_authority_scope_and_resolver':'PASS',
@@ -142,7 +141,7 @@ def main():
             cur.execute(sql.SQL('CREATE DATABASE {}').format(sql.Identifier(name)));created=True
         engine=engine_for(name,'otm-admission-next')
         prior=prior_tests(engine,name);current=current_tests(engine,name)
-        files=['api/endpoints/league/'+f for f in ('admission/service.py','admission/repository.py','admission/contracts.py','leagueModel.py','leagueEndpoints.py')]
+        files=['api/endpoints/league/'+f for f in ('admission/service.py','admission/repository.py','admission/contracts.py','leagueEndpoints.py')]
         files+=['api/actors.py','scripts/modernization/verify_admission_slice.py','scripts/modernization/verify_admission_create_deny.py']
         report={'result':'PASS','scope':'Synthetic marked loopback PostgreSQL; no configured/hosted database',
             'listing_cancellation_rerun':prior,'creation_denial':current,

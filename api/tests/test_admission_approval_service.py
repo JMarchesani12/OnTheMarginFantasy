@@ -5,7 +5,6 @@ import unittest
 from actors import UserActor
 from endpoints.league.admission.service import AdmissionService
 from endpoints.league.admission.contracts import AdmissionDenied, AdmissionRejected
-from endpoints.league.leagueModel import LeagueModel
 import test_join_request_approval_authorization as approval
 from test_transaction_service import ConnectionOwner
 
@@ -73,11 +72,11 @@ class AdmissionApprovalServiceTests(unittest.TestCase):
         self.assertEqual(self.state(), before)
 
     def test_trusted_and_supplied_connection_facades_remain_context_free(self):
-        model = LeagueModel.__new__(LeagueModel); model.db = self.engine
-        result = model.approve_join_request(10, 101, 4)
+        model = self.engine
+        result = AdmissionService(model).approve_request_for_job(10, 101, 4)
         self.assertEqual(result['request']['resolvedByUserId'], 4)
         self.assertEqual(self.engine.begins, 1)
         with self.engine.begin() as conn:
-            result = model._approve_join_request(conn, 20, 201, 4)
+            result = AdmissionService(model).approve_request_in_transaction(conn, 20, 201, 4)
         self.assertEqual(result['request']['resolvedByUserId'], 4)
         self.assertEqual(self.engine.begins, 2)

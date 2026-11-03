@@ -1,9 +1,9 @@
 """League update authority, settings policy and transaction compatibility."""
+from rules.leagueRules import get_timezone_name_from_settings, validate_timezone_name, ensure_timezone_in_settings
 import copy
 import unittest
 from actors import UserActor
 from endpoints.league.administration.service import LeagueAdminService
-from endpoints.league.leagueModel import LeagueModel
 import test_league_settings_authorization as settings
 from test_transaction_service import ConnectionOwner
 
@@ -71,11 +71,11 @@ class LeagueSettingsServiceTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):self.service.update(self.actor,10,{'name':'Failed'})
         self.assertEqual(self.league(),before)
 
-    def test_db_only_trusted_private_and_timezone_helpers_remain_compatible(self):
-        model=LeagueModel.__new__(LeagueModel);model.db=self.engine
-        self.assertEqual(model.update_league(20,{'name':'Trusted'})['name'],'Trusted')
-        with self.assertRaises(PermissionError):model._update_league(10,{'name':'Denied'},commissioner_id=2)
-        self.assertEqual(model._update_league(10,{'name':'Private'})['name'],'Private')
-        self.assertEqual(model._get_timezone_name_from_settings({'schedule':{'timeZone':'UTC'},'timezone':'Invalid'}),'UTC')
-        with self.assertRaises(ValueError):model._validate_timezone_name('Invalid/Zone')
-        self.assertEqual(model._ensure_timezone_in_settings({}),{'timezone':'UTC'})
+    def test_trusted_private_and_timezone_helpers_remain_compatible(self):
+        model=self.engine
+        self.assertEqual(LeagueAdminService(model).update_for_job(20, {'name': 'Trusted'})['name'],'Trusted')
+        with self.assertRaises(PermissionError):LeagueAdminService(model).update_in_scope(10, {'name': 'Denied'}, commissioner_id=2)
+        self.assertEqual(LeagueAdminService(model).update_in_scope(10, {'name': 'Private'})['name'],'Private')
+        self.assertEqual(get_timezone_name_from_settings({'schedule': {'timeZone': 'UTC'}, 'timezone': 'Invalid'}),'UTC')
+        with self.assertRaises(ValueError):validate_timezone_name('Invalid/Zone')
+        self.assertEqual(ensure_timezone_in_settings({}),{'timezone':'UTC'})

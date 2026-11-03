@@ -12,7 +12,6 @@ from assess_postgres import LOCAL,ROOT,engine_for
 from actors import UserActor
 from endpoints.league.admission.service import AdmissionService
 from endpoints.league.admission.contracts import AdmissionDenied,AdmissionRejected
-from endpoints.league.leagueModel import LeagueModel
 
 FIXTURE='''
 CREATE TABLE "User" (id bigint PRIMARY KEY,email text,"displayName" text);
@@ -82,7 +81,7 @@ def tests(engine,database):
     assert state()==before
     with engine.begin() as conn: conn.exec_driver_sql('DROP TRIGGER cancel_commit ON "LeagueJoinRequest"')
     concurrent=[]
-    for facade in (False,True):
+    for user_id_service in (False,True):
         with engine.begin() as conn:
             conn.execute(text('UPDATE "LeagueJoinRequest" SET status=\'PENDING\',"resolvedAt"=NULL WHERE id=100'))
         first=engine_for(database,'otm-admission-first'); second=engine_for(database,'otm-admission-second')
@@ -93,9 +92,9 @@ def tests(engine,database):
         event.listen(first,'after_cursor_execute',hold)
         def cancel(label,db):
             try:
-                if facade:
-                    model=LeagueModel.__new__(LeagueModel); model.db=db
-                    result=model.cancel_join_request(10,100,2)
+                if user_id_service:
+                    model=db
+                    result=AdmissionService(model).cancel_request_for_owner_id(2, 10, 100)
                 else: result=AdmissionService(db).cancel_request(UserActor(2,'bob'),10,100)
                 outcomes[label]=['success',result['status'],result['resolvedByUserId']]
             except Exception as exc: outcomes[label]=[type(exc).__name__,str(exc)]
@@ -116,13 +115,13 @@ def tests(engine,database):
             first.dispose(); second.dispose()
         assert not a.is_alive() and not b.is_alive()
         assert outcomes=={'first':['success','CANCELLED',None],
-            'second':['ValueError' if facade else 'AdmissionRejected','Only pending requests can be cancelled']},outcomes
-        concurrent.append({'path':'legacy_facade' if facade else 'service','observed_lock_wait':True,'outcomes':outcomes})
-    model=LeagueModel.__new__(LeagueModel); model.db=engine
-    assert [r['id'] for r in model.list_join_requests(20)]==[200]
-    assert model._list_join_requests(10,None,commissioner_id=99)==[]
+            'second':['AdmissionRejected','Only pending requests can be cancelled']},outcomes
+        concurrent.append({'path':'user_id_service' if user_id_service else 'actor_service','observed_lock_wait':True,'outcomes':outcomes})
+    model=engine
+    assert [r['id'] for r in AdmissionService(model).list_requests_for_job(20)]==[200]
+    assert AdmissionService(model).list_requests_for_legacy_scope(99, 10, None)==[]
     return {'listing_projection_filter_and_commissioner_revocation':'PASS','cancellation_scope_owner_state':'PASS',
-            'post_update_and_deferred_commit_rollback':'PASS','legacy_helpers_and_new_only_db_models':'PASS',
+            'post_update_and_deferred_commit_rollback':'PASS','explicit_job_and_user_id_contracts':'PASS',
             'concurrent_cancellation':concurrent}
 
 
@@ -136,7 +135,7 @@ def main():
             cur.execute(sql.SQL('CREATE DATABASE {}').format(sql.Identifier(name))); created=True
         engine=engine_for(name,'otm-admission')
         results=tests(engine,name)
-        files=['api/endpoints/league/'+f for f in ('admission/service.py','admission/repository.py','admission/contracts.py','leagueModel.py','leagueEndpoints.py')]
+        files=['api/endpoints/league/'+f for f in ('admission/service.py','admission/repository.py','admission/contracts.py','leagueEndpoints.py')]
         files+=['api/actors.py','scripts/modernization/verify_admission_slice.py']
         report={'result':'PASS','scope':'Synthetic marked loopback PostgreSQL; no configured/hosted database',
                 'admission_listing_cancellation':results,'sha256':{f:hashlib.sha256((ROOT/f).read_bytes()).hexdigest() for f in files}}

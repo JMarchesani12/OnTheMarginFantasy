@@ -1,9 +1,9 @@
 """Member update ownership, allowlist and rollback against synthetic real SQL."""
+from endpoints.league.members.service import MemberService
 import unittest
 from actors import UserActor
 import test_member_profile_authorization as profile
 from test_transaction_service import ConnectionOwner
-from endpoints.league.leagueModel import LeagueModel
 
 
 class MemberServiceTests(unittest.TestCase):
@@ -56,8 +56,8 @@ class MemberServiceTests(unittest.TestCase):
             with self.assertRaises(RuntimeError): operation()
             self.assertEqual(self.member(11),before)
 
-    def test_db_only_legacy_facade_preserves_permissive_owner_and_trusted_semantics(self):
-        model = LeagueModel.__new__(LeagueModel); model.db = self.engine
-        self.assertEqual(model.update_owned_league_member(11,1,'')['teamName'],'')
-        self.assertEqual(model.update_league_member(12,{'seasonPoints':99})['seasonPoints'],99)
-        with self.assertRaises(LookupError): model.update_owned_league_member(12,1,'Stolen')
+    def test_canonical_facade_preserves_permissive_owner_and_trusted_semantics(self):
+        model = self.engine
+        self.assertEqual(MemberService(model).rename_for_owner_id(11, 1, '')['teamName'],'')
+        self.assertEqual(MemberService(model).update_for_job(12, {'seasonPoints': 99})['seasonPoints'],99)
+        with self.assertRaises(LookupError): MemberService(model).rename_for_owner_id(12, 1, 'Stolen')

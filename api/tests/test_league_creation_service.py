@@ -3,7 +3,6 @@ import copy
 import unittest
 from actors import UserActor
 from endpoints.league.administration.service import LeagueAdminService
-from endpoints.league.leagueModel import LeagueModel
 import test_league_creation_authorization as creation
 from test_transaction_service import ConnectionOwner
 
@@ -75,11 +74,11 @@ class LeagueCreationServiceTests(unittest.TestCase):
         self.assertEqual(len(self.rows('League')),1);self.assertEqual(len(self.rows('LeagueMember')),1)
         self.assertEqual(len(self.calls),1)
 
-    def test_legacy_trusted_creator_and_deferred_schedule_access(self):
-        model=LeagueModel.__new__(LeagueModel);model.db=self.engine
-        with self.assertRaises(ValueError):model.create_league({'teamName':' '})
+    def test_trusted_creator_and_deferred_schedule_access(self):
+        model=self.engine
+        with self.assertRaises(ValueError):LeagueAdminService(model).create_for_job({'teamName': ' '}, self.initialized)
         class Schedule:
             ensure_weeks_for_league=staticmethod(self.initialized)
-        model.scheduleModel=Schedule()
-        row=model.create_league(self.payload(2))
+        schedule=Schedule()
+        row=LeagueAdminService(model).create_for_job(self.payload(2), schedule.ensure_weeks_for_league)
         self.assertEqual(row['commissioner'],2);self.assertEqual(self.rows('LeagueMember')[0]['userId'],2)

@@ -7,7 +7,7 @@ import time
 import unittest
 import jwt
 from sqlalchemy import text
-from endpoints.roster.rosterModel import RosterModel
+from endpoints.roster.service import RosterService
 import test_roster_read_authorization as member_roster_tests
 from test_league_read_authorization import ReadDatabase
 from test_profile_regression import ALICE, BOB
@@ -85,10 +85,10 @@ class AvailableAuthorizationTests(unittest.TestCase):
         self.assertEqual(response.status_code,200)
         self.assertEqual(response.json,[])
 
-    def test_trusted_model_calls_remain_context_free(self):
-        rows=RosterModel(self.db).get_available_teams_for_week(20,1)
+    def test_trusted_service_calls_remain_context_free(self):
+        rows=RosterService(self.db).get_available_teams_for_job(20,1)
         self.assertEqual([row['id'] for row in rows],[103])
-        self.assertEqual(RosterModel(self.db).get_available_teams_for_week(999,1),[])
+        self.assertEqual(RosterService(self.db).get_available_teams_for_job(999,1),[])
 
     def test_invalid_integer_inputs_and_json_are_400(self):
         for value in (True,[],{},None,1.5,'bad'):

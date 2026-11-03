@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from endpoints.roster.rosterModel import RosterModel
+from endpoints.roster.service import RosterService
 
 
 class _FakeRow:
@@ -71,9 +71,9 @@ class _FakeDb:
 
 class RosterLockedWeekTests(unittest.TestCase):
     def test_member_teams_forward_locked_week_to_next_unlocked_week(self):
-        model = RosterModel(_FakeDb())
+        model = RosterService(_FakeDb())
 
-        model.get_member_teams_for_week(
+        model.get_member_teams_for_job(
             league_id=7,
             member_id=42,
             week_number=1,
@@ -81,7 +81,7 @@ class RosterLockedWeekTests(unittest.TestCase):
 
         roster_query_params = [
             params
-            for query, params in model.db.conn.executions
+            for query, params in model.engine.conn.executions
             if 'FROM "LeagueTeamSlot" lts' in query
         ]
         self.assertEqual(roster_query_params[0]["weekNumber"], 2)

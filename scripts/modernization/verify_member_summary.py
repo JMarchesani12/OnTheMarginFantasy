@@ -9,8 +9,7 @@ from assess_postgres import LOCAL,ROOT,engine_for
 from verify_league_details import listing_tests,creation_tests,approval_tests,profile_tests,removal_tests,deletion_tests,settings_tests,league_creation_tests,rules_tests,conference_tests,discovery_tests,tests as detail_tests
 from actors import UserActor
 from endpoints.league.reads.service import LeagueReadService
-from endpoints.league.leagueModel import LeagueModel
-from endpoints.schedule.scheduleModel import ScheduleModel
+from endpoints.schedule.ingestion_service import ScheduleIngestionService
 
 FIXTURE='''DROP SCHEMA public CASCADE; CREATE SCHEMA public;
 CREATE TABLE "User" (id bigint PRIMARY KEY,"displayName" text); INSERT INTO "User" VALUES (1,'Alice'),(2,'Bob');
@@ -29,7 +28,7 @@ INSERT INTO "WeeklyTeamScore" VALUES (10,12,1,999),(10,12,2,6);'''
 def tests(engine,database):
     with engine.begin() as conn:conn.exec_driver_sql(FIXTURE)
     with engine.connect() as conn:today=conn.execute(text('SELECT current_date')).scalar_one()
-    service=LeagueReadService(engine);schedule=ScheduleModel.__new__(ScheduleModel);schedule.db=engine;calls=[]
+    service=LeagueReadService(engine);schedule=ScheduleIngestionService.__new__(ScheduleIngestionService);schedule.db=engine;calls=[]
     def games(**kwargs):
         calls.append(kwargs);assert kwargs['week_number']==0
         if kwargs['member_id']!=12:return []
@@ -67,9 +66,9 @@ def tests(engine,database):
     try:assert service.members(bob,10,schedule.get_league_timezone,games)==[]
     finally:event.remove(engine,'before_cursor_execute',revoke);other.dispose()
     assert changed==[True] and calls==[]
-    model=LeagueModel.__new__(LeagueModel);model.db=engine;model.scheduleModel=schedule
-    assert len(model.get_members_for_league(10))==1
-    assert model.get_members_for_league(10,reader_user_id=2)==[]
+    model=engine;schedule=schedule
+    assert len(LeagueReadService(model).members_for_job(10, schedule._get_league_timezone, schedule.get_member_games_for_week))==1
+    assert LeagueReadService(model).members_for_reader_id(10, 2, schedule._get_league_timezone, schedule.get_member_games_for_week)==[]
     return {'native_projection_score_fallback_week_zero':'PASS','local_dates_naive_aware_undated_out_of_range_zero_fill':'PASS',
             'null_start_and_no_week_compatibility':'PASS','game_capability_error_and_public_timezone':'PASS',
             'separate_connection_pre_query_revocation_legacy':'PASS',
@@ -88,8 +87,8 @@ def main():
         prior={'listing_cancellation':listing_tests(engine,name),'creation_denial':creation_tests(engine,name),
                'approval':approval_tests(engine,name),'member_profile':profile_tests(engine,name),'member_removal':removal_tests(engine,name),'league_deletion':deletion_tests(engine,name),'league_settings':settings_tests(engine,name),'league_creation':league_creation_tests(engine,name),'league_rules':rules_tests(engine,name),'league_conferences':conference_tests(engine,name),'league_discovery':discovery_tests(engine,name),'league_details':detail_tests(engine,name)}
         summary=tests(engine,name)
-        files=['api/endpoints/league/'+f for f in ('reads/service.py','reads/repository.py','administration/service.py','administration/repository.py','members/service.py','members/repository.py','admission/service.py','admission/repository.py','admission/contracts.py','leagueModel.py','leagueEndpoints.py')]
-        files+=['api/endpoints/schedule/scheduleModel.py','api/actors.py','api/rules/leagueRules.py','api/utils/authorization.py']+['scripts/modernization/'+f for f in ('verify_admission_slice.py','verify_admission_create_deny.py','verify_admission_approval.py','verify_member_profile.py','verify_member_removal.py','verify_league_delete.py','verify_league_settings.py','verify_league_creation.py','verify_league_rules_read.py','verify_league_conferences.py','verify_league_discovery.py','verify_league_details.py','verify_member_summary.py')]
+        files=['api/endpoints/league/'+f for f in ('reads/service.py','reads/repository.py','administration/service.py','administration/repository.py','members/service.py','members/repository.py','admission/service.py','admission/repository.py','admission/contracts.py','leagueEndpoints.py')]
+        files+=['api/endpoints/schedule/ingestion_service.py','api/actors.py','api/rules/leagueRules.py','api/utils/authorization.py']+['scripts/modernization/'+f for f in ('verify_admission_slice.py','verify_admission_create_deny.py','verify_admission_approval.py','verify_member_profile.py','verify_member_removal.py','verify_league_delete.py','verify_league_settings.py','verify_league_creation.py','verify_league_rules_read.py','verify_league_conferences.py','verify_league_discovery.py','verify_league_details.py','verify_member_summary.py')]
         report={'result':'PASS','scope':'Synthetic marked loopback PostgreSQL; no configured/hosted database','prior_slices_rerun':prior,
                 'member_summary':summary,'sha256':{f:hashlib.sha256((ROOT/f).read_bytes()).hexdigest() for f in files}}
         (ROOT/'docs/modernization/evidence/mod-038-member-summary-postgres-2026-10-30.json').write_text(json.dumps(report,indent=2)+'\n')

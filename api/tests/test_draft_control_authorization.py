@@ -234,15 +234,17 @@ class DraftControlAuthorizationTests(unittest.TestCase):
         self.emit.assert_called_once()
 
     def test_trusted_calls_stay_outside_http_and_force_finalize_still_checks_actor(self):
+        from endpoints.draft.control_service import DraftControlService
+        service = DraftControlService(self.db)
         self.prepare('start')
-        self.assertEqual(self.model.start_draft(10)['state']['status'], 'live')
-        self.assertEqual(self.model.pause_draft(10)['state']['status'], 'paused')
-        self.assertEqual(self.model.resume_draft(10)['state']['status'], 'live')
+        self.assertEqual(service.start_for_job(10)['state']['status'], 'live')
+        self.assertEqual(service.pause_for_job(10)['state']['status'], 'paused')
+        self.assertEqual(service.resume_for_job(10)['state']['status'], 'live')
         with self.assertRaises(PermissionError):
-            self.model.force_finalize_draft(10, 2)
+            service.force_finalize_for_user_id(10, 2)
         with self.assertRaises((PermissionError, TypeError)):
-            self.model.force_finalize_draft(10, None)
-        self.assertTrue(self.model.force_finalize_draft(10, 1)['draftComplete'])
+            service.force_finalize_for_user_id(10, None)
+        self.assertTrue(service.force_finalize_for_user_id(10, 1)['draftComplete'])
         self.prepare('order')
-        self.assertEqual([m['memberId'] for m in self.model.set_draft_order(10, [12, 11])['members']], [12, 11])
+        self.assertEqual([m['memberId'] for m in service.set_order_for_job(10, [12, 11])['members']], [12, 11])
         self.emit.assert_not_called()

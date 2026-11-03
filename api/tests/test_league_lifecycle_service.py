@@ -1,8 +1,8 @@
 """Lifecycle policy matrix and rollback with adapted actual SQL on SQLite."""
+from endpoints.league.lifecycle.service import LeagueLifecycleService
 import sqlite3
 import unittest
 from contextlib import contextmanager
-from endpoints.league.leagueModel import LeagueModel
 
 FIXTURE='''CREATE TABLE "League" (id INTEGER PRIMARY KEY,status TEXT,"updatedAt" TEXT,"draftDate" TEXT,sport INTEGER,"seasonYear" INTEGER);
 CREATE TABLE "DraftState" ("leagueId" INTEGER,status TEXT);
@@ -59,7 +59,7 @@ class LeagueLifecycleServiceTests(unittest.TestCase):
     def test_repeated_statuses_converge(self):
         service=self.service();service.synchronize_for_job();service.synchronize_for_job()
         self.assertEqual({r['id']:r['status'] for r in self.db.rows()},EXPECTED)
-    def test_db_only_legacy_facade_none_success(self):
-        model=LeagueModel.__new__(LeagueModel);model.db=self.db
-        self.assertIsNone(model.sync_due_league_statuses())
+    def test_canonical_facade_none_success(self):
+        model=self.db
+        self.assertIsNone(LeagueLifecycleService(model).synchronize_for_job())
         self.assertEqual({r['id']:r['status'] for r in self.db.rows()},EXPECTED)

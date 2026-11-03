@@ -2,7 +2,7 @@
 import unittest
 from actors import UserActor
 from endpoints.draft.control_service import DraftControlService
-from endpoints.draft.draftModel import DraftModel
+from endpoints.draft.pick_service import DraftPickService
 import test_draft_control_authorization as controls
 from test_transaction_service import ConnectionOwner
 
@@ -54,7 +54,7 @@ class DraftOrderServiceTests(unittest.TestCase):
         self.db.before_query=revoke
         with self.assertRaises(PermissionError):self.service.set_order(self.actor,10,[12,11])
         self.assertEqual(self.state(),before)
-    def test_db_only_legacy_trusted_defaults_and_coercion(self):
-        model=DraftModel.__new__(DraftModel);model.db=self.engine
-        self.assertEqual(model.set_draft_order(10,[12,11])['members'][0]['memberId'],12)
-        self.assertEqual(model.set_draft_order(10,[11,12],acting_user_id='1')['members'][0]['memberId'],11)
+    def test_canonical_trusted_defaults_and_coercion(self):
+        model=DraftPickService(self.engine)
+        self.assertEqual(DraftControlService(model.db).set_order_for_job(10, [12, 11])['members'][0]['memberId'],12)
+        self.assertEqual(DraftControlService(model.db).set_order_for_legacy_user_id(10, [11, 12], '1')['members'][0]['memberId'],11)

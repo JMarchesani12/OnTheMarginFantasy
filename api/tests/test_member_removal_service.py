@@ -2,7 +2,6 @@
 import unittest
 from actors import UserActor
 from endpoints.league.members.service import MemberService
-from endpoints.league.leagueModel import LeagueModel
 import test_member_removal_authorization as removal
 from test_transaction_service import ConnectionOwner
 
@@ -57,8 +56,8 @@ class MemberRemovalServiceTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):self.service.remove(self.actor,10,12)
         self.assertEqual(self.state(),before)
 
-    def test_db_only_legacy_delegate_preserves_coercion_and_truthiness(self):
-        model=LeagueModel.__new__(LeagueModel);model.db=self.engine
-        row=model.remove_member_and_shift_draft_order(10,12,'1',0)
+    def test_canonical_delegate_preserves_coercion_and_truthiness(self):
+        model=self.engine
+        row=MemberService(model).remove_for_legacy_commissioner(10, 12, '1', 0)
         self.assertEqual([m['draftOrder'] for m in row['members']],[1,3])
         self.assertEqual(self.engine.begins,1)

@@ -5,7 +5,7 @@ import unittest
 from contextlib import contextmanager
 from types import SimpleNamespace
 from rules.leagueRules import resolve_rules
-from endpoints.schedule.scheduleModel import ScheduleModel
+from endpoints.schedule.ingestion_service import ScheduleIngestionService
 
 
 class ReadEngine:
@@ -101,12 +101,12 @@ class ScheduleReadServiceTests(unittest.TestCase):
 
     def test_legacy_db_only_inheritance_and_helper_override(self):
         from endpoints.schedule.read_service import ScheduleReadService
-        self.assertTrue(issubclass(ScheduleModel,ScheduleReadService))
-        class CustomModel(ScheduleModel):
+        self.assertTrue(issubclass(ScheduleIngestionService,ScheduleReadService))
+        class CustomModel(ScheduleIngestionService):
             def _get_league(self, league_id): return {'sport':1,'settings':{'ruleSetVersion':'bad'}}
         model = CustomModel.__new__(CustomModel)
         with self.assertRaisesRegex(ValueError,'Unsupported'):
             model.get_member_games_for_week(10,11,2)
-        legacy = ScheduleModel.__new__(ScheduleModel)
+        legacy = ScheduleIngestionService.__new__(ScheduleIngestionService)
         legacy.db = ReadEngine([])
         self.assertIsNone(legacy.get_week_for_league(10,99))

@@ -1,4 +1,5 @@
 """Commissioner member removal: actual JWT/routes/model SQL, synthetic data."""
+from endpoints.league.members.service import MemberService
 import os
 import time
 import unittest
@@ -196,11 +197,10 @@ class MemberRemovalAuthorizationTests(unittest.TestCase):
         self.assertEqual(repeat.status_code, 400)
         self.assertEqual(self.state(), after)
 
-    def test_direct_model_remains_http_independent_with_commissioner_check(self):
-        from endpoints.league.leagueModel import LeagueModel
-        model = LeagueModel.__new__(LeagueModel)
-        model.db = self.db
+    def test_direct_service_remains_http_independent_with_commissioner_check(self):
+
+        model = self.db
         with self.assertRaises(PermissionError):
-            model.remove_member_and_shift_draft_order(10, 13, 2)
-        result = model.remove_member_and_shift_draft_order(10, 13, 1)
+            MemberService(model).remove_for_legacy_commissioner(10, 13, 2)
+        result = MemberService(model).remove_for_legacy_commissioner(10, 13, 1)
         self.assertEqual(result['removedMemberId'], 13)

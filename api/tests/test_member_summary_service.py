@@ -4,7 +4,6 @@ import unittest
 from zoneinfo import ZoneInfo
 from actors import UserActor
 from endpoints.league.reads.service import LeagueReadService
-from endpoints.league.leagueModel import LeagueModel
 import test_league_read_authorization as reads
 from test_transaction_service import ConnectionOwner
 
@@ -53,11 +52,11 @@ class MemberSummaryServiceTests(unittest.TestCase):
         def fail(league):raise ValueError('synthetic timezone failure')
         with self.assertRaises(ValueError):self.service.members(UserActor(1,'alice'),10,fail,self.games)
         self.assertEqual(self.engine.active,0);self.assertEqual(self.engine.connects,1)
-    def test_db_only_legacy_optional_reader_and_callbacks(self):
-        model=LeagueModel.__new__(LeagueModel);model.db=self.engine
+    def test_canonical_optional_reader_and_callbacks(self):
+        model=self.engine
         class Schedule:
             _get_league_timezone=staticmethod(self.timezone)
             get_member_games_for_week=staticmethod(self.games)
-        model.scheduleModel=Schedule()
-        self.assertEqual(len(model.get_members_for_league(10)),2)
-        self.assertEqual(model.get_members_for_league(10,reader_user_id=3),[])
+        schedule=Schedule()
+        self.assertEqual(len(LeagueReadService(model).members_for_job(10, schedule._get_league_timezone, schedule.get_member_games_for_week)),2)
+        self.assertEqual(LeagueReadService(model).members_for_reader_id(10, 3, schedule._get_league_timezone, schedule.get_member_games_for_week),[])

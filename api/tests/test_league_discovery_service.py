@@ -2,7 +2,6 @@
 import unittest
 from actors import UserActor
 from endpoints.league.reads.service import LeagueReadService
-from endpoints.league.leagueModel import LeagueModel
 import test_league_read_authorization as reads
 import test_public_league_search as searches
 from test_transaction_service import ConnectionOwner
@@ -42,10 +41,10 @@ class LeagueDiscoveryServiceTests(unittest.TestCase):
         self.db.connection.execute('DELETE FROM "LeagueMember" WHERE id=12');self.db.connection.commit()
         self.assertEqual(self.service.member_previews(UserActor(2,'bob'),10),[])
 
-    def test_db_only_legacy_metadata_and_preview_methods(self):
-        model=LeagueModel.__new__(LeagueModel);model.db=self.engine
-        self.assertEqual(model.get_league_read_access(10,2)['fullAccess'],1)
-        self.assertEqual(len(model.get_member_previews_for_user(10,3)),2)
+    def test_canonical_metadata_and_preview_methods(self):
+        model=self.engine
+        self.assertEqual(LeagueReadService(model).access_for_reader_id(10, 2)['fullAccess'],1)
+        self.assertEqual(len(LeagueReadService(model).member_previews_for_reader_id(10, 3)),2)
 
 
 class LeaguePublicSearchServiceTests(unittest.TestCase):
@@ -65,6 +64,6 @@ class LeaguePublicSearchServiceTests(unittest.TestCase):
         self.assertEqual(set(rows[0]),{'id','name','sport','numPlayers','status','draftDate','isDiscoverable','commissioner','commissionerDisplayName'})
         self.assertEqual([r['id'] for r in self.service.search_public('Margin',sport_id=2)],[2])
         self.assertEqual([r['id'] for r in self.service.search_public('Margin',limit=0,offset=1)],[2])
-        model=LeagueModel.__new__(LeagueModel);model.db=self.engine
-        self.assertEqual(model.search_leagues('Margin'),rows)
+        model=self.engine
+        self.assertEqual(LeagueReadService(model).search_public('Margin'),rows)
         with self.assertRaises(ValueError):self.service.search_public('Margin',limit='bad')

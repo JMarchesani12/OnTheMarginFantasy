@@ -23,7 +23,7 @@ LOCAL = dict(host='127.0.0.1', port=55439, user='postgres', connect_timeout=3)
 # Model imports only; never import configured db/app/jobs or load dotenv.
 os.environ['PYTHON_DOTENV_DISABLED'] = '1'
 sys.path.insert(0, str(ROOT / 'api'))
-from endpoints.transaction.transactionModel import TransactionModel
+from endpoints.transaction.workflow_service import TransactionWorkflowService
 
 
 def candidate():
@@ -181,7 +181,7 @@ def trade_tests(engine, database):
         event.listen(first,'after_cursor_execute',after_lock)
         def apply(label,db):
             try:
-                model=TransactionModel(db)
+                model=TransactionWorkflowService(db)
                 value=(model.apply_pending_transaction if dispatch else model.apply_trade)(1)
                 outcomes[label]=('success',value)
             except Exception as exc:
@@ -231,7 +231,7 @@ def main():
     engines=[]
     report={'scope':'Synthetic PostgreSQL 17.6; no deployed changes; auth.users/auth.uid are minimal SQL test fixtures.',
             'sha256':{str(path.relative_to(ROOT)):hashlib.sha256(path.read_bytes()).hexdigest()
-                      for path in [ROOT/'db/tables.sql',ROOT/'api/endpoints/transaction/transactionModel.py',
+                      for path in [ROOT/'db/tables.sql',ROOT/'api/endpoints/transaction/workflow_service.py',
                                    *sorted((ROOT/'api/migrations').glob('*.sql'))]}}
     try:
         with admin.cursor() as cur:

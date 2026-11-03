@@ -5,7 +5,7 @@ from pathlib import Path
 from unittest.mock import Mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from endpoints.scoring.scoringModel import ScoringModel
+from endpoints.scoring.service import ScoringService
 
 
 class WeeklyTiebreakBaselineTests(unittest.TestCase):
@@ -24,7 +24,7 @@ class WeeklyTiebreakBaselineTests(unittest.TestCase):
         # Alpha's larger single-game margin must not override Beta's H2H win.
         schedule.get_member_games_for_week.side_effect = lambda **kw: [
             {"memberPointDiff": 100 if kw['member_id'] == 1 else 7}]
-        result = ScoringModel(None, schedule).apply_weekly_tiebreakers(7, 2, self.tied_members())
+        result = ScoringService(None, schedule).apply_weekly_tiebreakers(7, 2, self.tied_members())
         self.assertEqual([m["memberId"] for m in result], [2, 1, 3])
         self.assertEqual([m["pointDifferential"] for m in result], [10, 10, -5])
 
@@ -33,6 +33,6 @@ class WeeklyTiebreakBaselineTests(unittest.TestCase):
         schedule.get_head_to_head_games.return_value = []
         schedule.get_member_games_for_week.side_effect = lambda **kw: [
             {"memberPointDiff": 5 if kw['member_id'] == 1 else -12}]
-        result = ScoringModel(None, schedule).apply_weekly_tiebreakers(7, 2, self.tied_members())
+        result = ScoringService(None, schedule).apply_weekly_tiebreakers(7, 2, self.tied_members())
         self.assertEqual([m["memberId"] for m in result], [2, 1, 3])
         self.assertEqual(result[-1], {"memberId": 3, "teamName": "Gamma", "pointDifferential": -5})

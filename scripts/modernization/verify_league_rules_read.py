@@ -8,7 +8,6 @@ from assess_postgres import LOCAL,ROOT,engine_for
 from verify_league_creation import listing_tests,creation_tests,approval_tests,profile_tests,removal_tests,deletion_tests,settings_tests,tests as league_creation_tests
 from actors import UserActor
 from endpoints.league.reads.service import LeagueReadService
-from endpoints.league.leagueModel import LeagueModel
 
 FIXTURE='''DROP SCHEMA public CASCADE; CREATE SCHEMA public;
 CREATE TABLE "League" (id bigint PRIMARY KEY,name text,sport bigint,"seasonYear" integer,settings jsonb,
@@ -44,11 +43,11 @@ def tests(engine,database):
         try:assert service.rules(actor,league) is None
         finally:event.remove(engine,'after_cursor_execute',record)
         assert len(statements)==1 and 'FROM "SportTeam"' not in statements[0]
-    model=LeagueModel.__new__(LeagueModel);model.db=engine
-    assert model.get_league_rules(20)['leagueId']==20 and model.get_league_rules(20,reader_user_id=1) is None
-    assert model.get_league_rules(20,reader_user_id=2)['leagueId']==20
+    model=engine
+    assert LeagueReadService(model).rules_for_job(20)['leagueId']==20 and LeagueReadService(model).rules_for_reader_id(20, 1) is None
+    assert LeagueReadService(model).rules_for_reader_id(20, 2)['leagueId']==20
     revoked=[]
-    for facade in (False,True):
+    for user_id_service in (False,True):
         with engine.begin() as conn:conn.execute(text('INSERT INTO "LeagueMember" VALUES (12,10,2) ON CONFLICT (id) DO NOTHING'))
         other=engine_for(database,'otm-rules-revoke');changed=[];statements=[]
         def revoke(conn,cursor,statement,params,context,many):
@@ -59,11 +58,11 @@ def tests(engine,database):
                     separate.execute(text('DELETE FROM "LeagueMember" WHERE "leagueId"=10 AND "userId"=2'))
         event.listen(engine,'before_cursor_execute',revoke)
         try:
-            result=model.get_league_rules(10,reader_user_id=2) if facade else service.rules(bob,10)
+            result=LeagueReadService(model).rules_for_reader_id(10, 2) if user_id_service else service.rules(bob,10)
             assert result is None
         finally:event.remove(engine,'before_cursor_execute',revoke);other.dispose()
         assert changed==[True] and len(statements)==1
-        revoked.append({'path':'legacy_facade' if facade else 'service','separate_connection_revocation_before_select':True,'result':None,'team_query_skipped':True})
+        revoked.append({'path':'user_id_service' if user_id_service else 'actor_service','separate_connection_revocation_before_select':True,'result':None,'team_query_skipped':True})
     with engine.begin() as conn:conn.execute(text('UPDATE "League" SET settings=\'{"ruleSetVersion":"v2"}\'::jsonb WHERE id=10'))
     try:service.rules(UserActor(1,'alice'),10)
     except ValueError:pass
@@ -85,7 +84,7 @@ def main():
         prior={'listing_cancellation':listing_tests(engine,name),'creation_denial':creation_tests(engine,name),
                'approval':approval_tests(engine,name),'member_profile':profile_tests(engine,name),'member_removal':removal_tests(engine,name),'league_deletion':deletion_tests(engine,name),'league_settings':settings_tests(engine,name),'league_creation':league_creation_tests(engine,name)}
         rules=tests(engine,name)
-        files=['api/endpoints/league/'+f for f in ('reads/service.py','reads/repository.py','administration/service.py','administration/repository.py','members/service.py','members/repository.py','admission/service.py','admission/repository.py','admission/contracts.py','leagueModel.py','leagueEndpoints.py')]
+        files=['api/endpoints/league/'+f for f in ('reads/service.py','reads/repository.py','administration/service.py','administration/repository.py','members/service.py','members/repository.py','admission/service.py','admission/repository.py','admission/contracts.py','leagueEndpoints.py')]
         files+=['api/actors.py','api/rules/leagueRules.py','api/utils/authorization.py']+['scripts/modernization/'+f for f in ('verify_admission_slice.py','verify_admission_create_deny.py','verify_admission_approval.py','verify_member_profile.py','verify_member_removal.py','verify_league_delete.py','verify_league_settings.py','verify_league_creation.py','verify_league_rules_read.py')]
         report={'result':'PASS','scope':'Synthetic marked loopback PostgreSQL; no configured/hosted database','prior_slices_rerun':prior,
                 'league_rules':rules,'sha256':{f:hashlib.sha256((ROOT/f).read_bytes()).hexdigest() for f in files}}

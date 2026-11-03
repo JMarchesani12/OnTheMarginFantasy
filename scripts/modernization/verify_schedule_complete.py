@@ -16,7 +16,6 @@ from endpoints.schedule.ingestion_service import ScheduleIngestionService
 from endpoints.schedule.ingestion_repository import ScheduleIngestionRepository
 from endpoints.schedule.read_repository import ScheduleReadRepository
 from endpoints.schedule.helpers.espn.espnClient import ESPNClient
-from endpoints.schedule.scheduleModel import ScheduleModel
 
 FIXTURE = VIEWS_FIXTURE + '''
 ALTER TABLE "League" ADD COLUMN status text DEFAULT 'In-Season';
@@ -181,7 +180,7 @@ def tests(engine):
         VALUES (20,1,2026,'{}','Completed'),(21,1,1999,'{}','In-Season'),(22,1,2026,'{}',NULL)''')
     assert service.active_leagues_for_job(dt.date(2026,11,3))==[10]
     assert service.active_leagues_for_job(dt.date(2035,11,3))==[]
-    legacy=ScheduleModel.__new__(ScheduleModel);legacy.db=engine
+    legacy=ScheduleIngestionService.__new__(ScheduleIngestionService);legacy.db=engine
     assert legacy._get_sport_api_config(1)==('basketball',[50,55],'basketball')
     assert legacy._insert_or_update_game(1,1,parsed())>0
     declared={name for name,method in vars(ScheduleIngestionRepository).items() if callable(method) and not name.startswith('_')}
@@ -211,7 +210,7 @@ def main():
         reads={name for name,method in vars(ScheduleReadRepository).items() if callable(method) and not name.startswith('_')}
         assert set(member['repository_queries_exercised'])|set(views['repository_queries_exercised'])==reads
         files=sorted(str(p.relative_to(ROOT)) for p in (ROOT/'api/endpoints/schedule').rglob('*.py'))
-        files+=['api/endpoints/league/leagueModel.py','api/endpoints/league/leagueEndpoints.py','api/endpoints/scoring/routes.py',
+        files+=['api/endpoints/league/leagueEndpoints.py','api/endpoints/scoring/routes.py',
             'api/cronJobs/cronIngestScoreboard.py','api/cronJobs/cronComputeWeeklyScores.py','api/cronJobs/cronComputeFinalScoreboard.py',
             'api/startSeasonJobs/startSeason.py','api/scripts/rebuild_weeks_and_rescore.py','api/rules/leagueRules.py','api/rules/tournamentRules.py']
         files+=['api/tests/test_schedule_ingestion_service.py','api/tests/test_schedule_service_composition.py']

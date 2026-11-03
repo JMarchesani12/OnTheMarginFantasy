@@ -1,6 +1,5 @@
 # endpoints/roster/rosterEndpoints.py
 from flask import request, jsonify
-from .rosterModel import RosterModel
 from .service import RosterService
 from .contracts import RosterAccessDenied, RosterWeekUnavailable
 from actors import UserActor
@@ -9,7 +8,6 @@ from authenticatedPrincipal import PrincipalResolutionError, resolve_authenticat
 
 class RosterEndpoints:
     def __init__(self, db_engine):
-        self.rosterModel = RosterModel(db_engine)
         self.db_engine = db_engine
         self.roster_service = RosterService(db_engine)
 

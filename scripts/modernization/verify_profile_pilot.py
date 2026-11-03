@@ -12,7 +12,6 @@ from assess_postgres import LOCAL, ROOT, engine_for
 from actors import UserActor
 from endpoints.user.service import UserService
 from endpoints.user.contracts import ProfileAccessDenied, ProfileNotFound, ProfileUpdateRejected
-from endpoints.user.userModel import UserModel
 
 ALICE='00000000-0000-4000-8000-000000000001'
 BOB='00000000-0000-4000-8000-000000000002'
@@ -82,19 +81,19 @@ def profile_tests(engine):
         pass
     else:
         raise AssertionError('Missing profile was not reported')
-    model=UserModel(engine)
-    assert model.get_user_by_id(2)['displayName']=='Bob'
-    assert model.update_user(2,{'displayName':'Trusted'})['displayName']=='Trusted'
-    assert model.get_user_by_uuid(BOB)['id']==2
+    model=UserService(engine)
+    assert model.get_profile_for_job(2)['displayName']=='Bob'
+    assert model.update_profile_for_job(2,{'displayName':'Trusted'})['displayName']=='Trusted'
+    assert model.get_profile_by_uuid_for_job(BOB)['id']==2
     try:
-        model.get_user_by_id(999)
-    except ValueError:
+        model.get_profile_for_job(999)
+    except ProfileNotFound:
         pass
     else:
         raise AssertionError('Legacy missing profile did not raise ValueError')
     return {'projection_and_identity_fields':'PASS','own_update_and_bound_parameters':'PASS',
             'foreign_and_invalid_update_denials':'PASS','statement_failure_rollback':'PASS',
-            'deferred_commit_failure_rollback':'PASS','missing_profile_and_legacy_facade':'PASS'}
+            'deferred_commit_failure_rollback':'PASS','missing_profile_and_job_contracts':'PASS'}
 
 
 def main():
@@ -111,7 +110,7 @@ def main():
             created=True
         engine=engine_for(name,'otm-profile-pilot')
         results=profile_tests(engine)
-        files=['api/endpoints/user/'+f for f in ('service.py','repository.py','contracts.py','userModel.py','userEndpoints.py')]
+        files=['api/endpoints/user/'+f for f in ('service.py','repository.py','contracts.py','userEndpoints.py')]
         files+=['api/actors.py','api/authenticatedPrincipal.py','scripts/modernization/verify_profile_pilot.py']
         report={'result':'PASS','scope':'Synthetic marked loopback PostgreSQL, no configured/hosted database',
                 'profile_reads_updates':results,'sha256':{f:hashlib.sha256((ROOT/f).read_bytes()).hexdigest() for f in files}}

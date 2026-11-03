@@ -1,5 +1,14 @@
 # Modernization backlog
 
+## MOD-038 / MOD-035 Model facade retirement — 2026-11-02
+
+All eight domain `*Model.py` facades are retired after first-party runtime, test and verification-tool consumers moved to existing canonical services. League HTTP now composes schedule/lifecycle callbacks directly; roster drops unused facade construction; the rebuild/rescore script calls ScoringService's explicit job method. Domain policy, SQL, authorization and transaction scopes are unchanged. The league contracts exception pickle shim remains supported.
+
+Isolated suite: **566/566** (564 existing tests retained plus retired-import and standalone-harness regression tests). Native marked loopback PostgreSQL checks cover all seven SQL-backed domain harnesses; sport retains guarded real-SQLite tests. Old Model Python import paths and their wrapper-only built-in exception translations are intentionally retired; canonical domain exceptions now apply to direct consumers. Outside-repository Python callers were not independently inventoried. No app/job/provider startup, hosted data, schema, dependency or deployment change.
+
+[Plan and ledger](../superpowers/plans/2026-11-02-model-facade-retirement.md). [Retirement evidence](evidence/mod-035-model-facade-retirement-2026-11-02.json). Earlier facade inventories and per-slice reports are historical; use the retirement evidence for current paths and source hashes. Independent final review found one standalone harness import-order regression. The fix passed a three-case fresh-process RED→GREEN regression test and the full suite; no other findings. All prior evidence artifacts are preserved byte-for-byte, with fresh native reports dated 2026-11-02.
+
+
 Originally audited 2026-10-28; reprioritized 2026-10-29 after MOD-001–003 completion. Implementation status appears on the relevant cards. Synthesizes [architecture](architecture.md), [all 41 features](features.md), [behavior checklist](behavior-checklist.md), [frontend audit](frontend-audit.md), [backend audit](backend-audit.md) and [database audit](database-audit.md). FE/BE D/M/S references point to those audit sections; DB references point to the database audit. Feature ranges are inclusive stable inventory IDs, not file paths.
 
 ## Priorities, assumptions and sizing

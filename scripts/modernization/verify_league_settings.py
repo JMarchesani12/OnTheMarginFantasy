@@ -6,10 +6,10 @@ from psycopg2 import sql
 from sqlalchemy import event,text
 from sqlalchemy.exc import DBAPIError
 from assess_postgres import LOCAL,ROOT,engine_for
+from rules.leagueRules import get_timezone_name_from_settings, validate_timezone_name, ensure_timezone_in_settings
 from verify_league_delete import listing_tests,creation_tests,approval_tests,profile_tests,removal_tests,tests as deletion_tests
 from actors import UserActor
 from endpoints.league.administration.service import LeagueAdminService
-from endpoints.league.leagueModel import LeagueModel
 
 FIXTURE='''DROP SCHEMA public CASCADE; CREATE SCHEMA public;
 CREATE TABLE "Sport" (id bigint PRIMARY KEY,name text);
@@ -82,7 +82,7 @@ def tests(engine,database):
         assert state()==before
 
     revoked=[]
-    for facade in (False,True):
+    for user_id_service in (False,True):
         reset();before=state();other=engine_for(database,'otm-settings-revoke');observed=[]
         def revoke(conn,cursor,statement,params,context,many):
             if 'SELECT id, sport, settings, commissioner' in statement and not observed:
@@ -92,16 +92,16 @@ def tests(engine,database):
         event.listen(engine,'after_cursor_execute',revoke)
         try:
             try:
-                if facade:
-                    model=LeagueModel.__new__(LeagueModel);model.db=engine
-                    model.update_league_as_commissioner(10,1,{'name':'Stale'})
+                if user_id_service:
+                    model=engine
+                    LeagueAdminService(model).update_for_legacy_commissioner(10, 1, {'name': 'Stale'})
                 else:service.update(actor,10,{'name':'Stale'})
             except PermissionError:pass
             else:raise AssertionError('Late commissioner change allowed mutation')
         finally:event.remove(engine,'after_cursor_execute',revoke);other.dispose()
         assert observed==[True]
         before[0]['commissioner']=2;assert state()==before
-        revoked.append({'path':'legacy_facade' if facade else 'service','separate_connection_change_after_read':True,'rejected':'PermissionError'})
+        revoked.append({'path':'user_id_service' if user_id_service else 'actor_service','separate_connection_change_after_read':True,'rejected':'PermissionError'})
 
     # Preserve empty-result guards, including original commit-before-result-check semantics.
     empty=[]
@@ -116,11 +116,11 @@ def tests(engine,database):
         else:raise AssertionError('Empty Sport projection guard missing')
         assert state()[0]['name']=='Written before empty join'
         empty.append({'path':'trusted' if trusted else 'checked','empty_sport_join':'existing post-commit guard preserved'})
-    reset();model=LeagueModel.__new__(LeagueModel);model.db=engine
-    assert model.update_league(20,{'name':'Trusted'})['name']=='Trusted'
-    assert model._update_league(10,{'name':'Private'})['name']=='Private'
-    assert model._get_timezone_name_from_settings({'schedule':{'timeZone':'UTC'},'timezone':'Invalid'})=='UTC'
-    assert model._ensure_timezone_in_settings({})=={'timezone':'UTC'}
+    reset();model=engine
+    assert LeagueAdminService(model).update_for_job(20, {'name': 'Trusted'})['name']=='Trusted'
+    assert LeagueAdminService(model).update_in_scope(10, {'name': 'Private'})['name']=='Private'
+    assert get_timezone_name_from_settings({'schedule': {'timeZone': 'UTC'}, 'timezone': 'Invalid'})=='UTC'
+    assert ensure_timezone_in_settings({})=={'timezone':'UTC'}
     return {'authority_validation_order_input_immutability':'PASS','native_cte_json_projection_deadlines_bound_fields':'PASS',
             'real_statement_post_update_commit_rollback':'PASS','late_commissioner_revocation':revoked,
             'legacy_trusted_private_timezone_compatibility':'PASS','empty_result_compatibility':empty}
@@ -138,7 +138,7 @@ def main():
         prior={'listing_cancellation':listing_tests(engine,name),'creation_denial':creation_tests(engine,name),
                'approval':approval_tests(engine,name),'member_profile':profile_tests(engine,name),'member_removal':removal_tests(engine,name),'league_deletion':deletion_tests(engine,name)}
         settings=tests(engine,name)
-        files=['api/endpoints/league/'+f for f in ('administration/service.py','administration/repository.py','members/service.py','members/repository.py','admission/service.py','admission/repository.py','admission/contracts.py','leagueModel.py','leagueEndpoints.py')]
+        files=['api/endpoints/league/'+f for f in ('administration/service.py','administration/repository.py','members/service.py','members/repository.py','admission/service.py','admission/repository.py','admission/contracts.py','leagueEndpoints.py')]
         files+=['api/actors.py','api/rules/leagueRules.py']+['scripts/modernization/'+f for f in ('verify_admission_slice.py','verify_admission_create_deny.py','verify_admission_approval.py','verify_member_profile.py','verify_member_removal.py','verify_league_delete.py','verify_league_settings.py')]
         report={'result':'PASS','scope':'Synthetic marked loopback PostgreSQL; no configured/hosted database','prior_slices_rerun':prior,
                 'league_settings':settings,'sha256':{f:hashlib.sha256((ROOT/f).read_bytes()).hexdigest() for f in files}}

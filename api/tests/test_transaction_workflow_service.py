@@ -5,7 +5,7 @@ from unittest.mock import patch
 from flask import Flask
 from actors import UserActor
 import test_trade_veto_authorization as fixture
-from endpoints.transaction.transactionModel import TransactionModel
+from endpoints.transaction.workflow_service import TransactionWorkflowService
 from endpoints.transaction.transactionEndpoints import TransactionEndpoints
 
 
@@ -55,8 +55,7 @@ class TransactionWorkflowTests(unittest.TestCase):
         self.assertEqual((result['status'],result['weekNumber'],result['memberRosterTeamIds']),('PENDING_APPLY',1,[103]))
         self.assertEqual(self.state()['LeagueTeamSlot'],before)
         self.db.connection.execute('UPDATE "League" SET settings=? WHERE id=10',(json.dumps({'roster':{'maxSwaps':1}}),));self.db.connection.commit()
-        self.assertIs(TransactionModel.SwapLimitExceeded,service.SwapLimitExceeded)
-        with self.assertRaises(TransactionModel.SwapLimitExceeded):
+        with self.assertRaises(TransactionWorkflowService.SwapLimitExceeded):
             service.free_agency(UserActor(1,'alice'),10,100,1,11,None,101)
 
     def test_mutation_failure_restores_trade_state(self):
@@ -70,10 +69,9 @@ class TransactionWorkflowTests(unittest.TestCase):
             service.cancel(UserActor(1,'alice'),10,1,11)
         self.assertEqual(self.state(),before)
 
-    def test_legacy_helper_override_and_explicit_job_dispatch(self):
+    def test_service_helper_override_and_explicit_job_dispatch(self):
         from endpoints.transaction.workflow_service import TransactionWorkflowService
-        self.assertTrue(issubclass(TransactionModel,TransactionWorkflowService))
-        class Custom(TransactionModel):
+        class Custom(TransactionWorkflowService):
             def _get_week_for_league(self,*args):raise ValueError('custom week hook')
         model = Custom.__new__(Custom)
         with self.assertRaisesRegex(ValueError,'custom week hook'):
@@ -85,7 +83,7 @@ class TransactionWorkflowTests(unittest.TestCase):
 
     def test_unregistered_legacy_week_lock_has_a_working_connection_owner(self):
         endpoint = TransactionEndpoints(self.db);app = Flask(__name__)
-        with patch.object(TransactionModel,'assert_week_rosters_valid',return_value=None),app.app_context():
+        with patch.object(TransactionWorkflowService,'assert_week_rosters_valid',return_value=None),app.app_context():
             response,status = endpoint.lock_week(10,100)
         self.assertEqual((status,response.get_json()),(200,{'message':'Week locked successfully','leagueId':10,'weekId':100}))
         row = self.db.connection.execute('SELECT "isLocked" FROM "Week" WHERE id=100').fetchone()

@@ -1,4 +1,6 @@
 """Own-request cancellation: real JWT/routes/model and synthetic SQLite rows."""
+from endpoints.league.admission.service import AdmissionService
+from endpoints.league.admission.contracts import AdmissionDenied
 import os
 import time
 import unittest
@@ -170,12 +172,11 @@ class JoinRequestCancellationAuthorizationTests(unittest.TestCase):
         self.assertEqual(response.json, {'message': 'Failed to cancel join request'})
         self.assertEqual(self.state(), before)
 
-    def test_direct_model_preserves_owner_check_without_http_context(self):
-        from endpoints.league.leagueModel import LeagueModel
-        model = LeagueModel.__new__(LeagueModel)
-        model.db = self.db
-        with self.assertRaises(PermissionError):
-            model.cancel_join_request(10, 101, 1)
-        result = model.cancel_join_request(10, 101, 2)
+    def test_direct_service_preserves_owner_check_without_http_context(self):
+
+        model = self.db
+        with self.assertRaises(AdmissionDenied):
+            AdmissionService(model).cancel_request_for_owner_id(1, 10, 101)
+        result = AdmissionService(model).cancel_request_for_owner_id(2, 10, 101)
         self.assertEqual(result['status'], 'CANCELLED')
         self.assertEqual(result['userId'], 2)

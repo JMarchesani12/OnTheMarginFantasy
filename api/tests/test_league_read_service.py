@@ -1,7 +1,7 @@
 """Rules read scopes and projection on synthetic SQL; native types separately."""
+from endpoints.league.reads.service import LeagueReadService
 import unittest
 from actors import UserActor
-from endpoints.league.leagueModel import LeagueModel
 import test_league_read_authorization as reads
 from test_transaction_service import ConnectionOwner
 
@@ -57,7 +57,7 @@ class LeagueRulesReadServiceTests(unittest.TestCase):
     def test_named_trusted_and_db_only_legacy_methods_preserve_optional_scope(self):
         service=self.service()
         self.assertEqual(service.rules_for_job(30)['leagueId'],30)
-        model=LeagueModel.__new__(LeagueModel);model.db=self.engine
-        self.assertEqual(model.get_league_rules(30)['leagueId'],30)
-        self.assertIsNone(model.get_league_rules(30,reader_user_id=1))
-        self.assertEqual(model.get_league_rules(30,reader_user_id=2)['leagueId'],30)
+        model=self.engine
+        self.assertEqual(LeagueReadService(model).rules_for_job(30)['leagueId'],30)
+        self.assertIsNone(LeagueReadService(model).rules_for_reader_id(30, 1))
+        self.assertEqual(LeagueReadService(model).rules_for_reader_id(30, 2)['leagueId'],30)

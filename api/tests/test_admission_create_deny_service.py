@@ -1,9 +1,9 @@
 """Admission creation/denial orchestration using actual disposable SQL."""
+from endpoints.league.admission.contracts import AdmissionDenied, AdmissionRejected
 import unittest
 from actors import UserActor
 from endpoints.league.admission.service import AdmissionService
 from endpoints.league.admission.contracts import AdmissionDenied,AdmissionRejected
-from endpoints.league.leagueModel import LeagueModel
 import test_join_request_authorization as creation
 import test_join_request_denial_authorization as denial
 from test_transaction_service import ConnectionOwner
@@ -75,6 +75,6 @@ class AdmissionDenialServiceTests(unittest.TestCase):
         self.assertEqual(self.state(),before)
 
     def test_explicit_trusted_denial_and_db_only_facade_preserve_bypass(self):
-        model=LeagueModel.__new__(LeagueModel);model.db=self.db
-        row=model.deny_join_request(10,101,4)
+        model=self.db
+        row=AdmissionService(model).deny_request_for_job(10, 101, 4)
         self.assertEqual((row['status'],row['resolvedByUserId']),('DENIED',4))

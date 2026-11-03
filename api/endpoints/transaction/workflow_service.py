@@ -1,7 +1,7 @@
 """Trade/free-agent workflows, actor policy and original transaction scopes.
 
 The initial TransactionService read/apply pilot remains an independent capability.
-Legacy public/helpers remain inherited by the SQL-free TransactionModel facade.
+Established public/helpers remain available on this service.
 """
 import json
 from contextlib import contextmanager

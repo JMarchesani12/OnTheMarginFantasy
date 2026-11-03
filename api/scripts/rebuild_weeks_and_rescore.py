@@ -5,7 +5,7 @@ import datetime as dt
 from sqlalchemy import text
 
 from endpoints.schedule.read_service import ScheduleReadService
-from endpoints.scoring.scoringModel import ScoringModel
+from endpoints.scoring.service import ScoringService
 
 
 GET_ALL_LEAGUES = text("""
@@ -122,7 +122,7 @@ def main():
     from db import engine
     season_year = args.season_year
     schedule_model = ScheduleReadService(engine)
-    scoring_model = ScoringModel(engine, schedule_model)
+    scoring_model = ScoringService(engine, schedule_model)
 
     with engine.begin() as conn:
         league_rows = conn.execute(GET_ALL_LEAGUES).fetchall()
@@ -209,7 +209,7 @@ def main():
             week_id = int(row._mapping["id"])
 
             try:
-                scoring_model.compute_weekly_scores(
+                scoring_model.compute_weekly_scores_for_job(
                     league_id=league_id,
                     week_number=week_number,
                 )

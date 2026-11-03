@@ -9,7 +9,7 @@ from flask import Flask
 
 from authMiddleware import install_auth_middleware
 from endpoints.schedule.routes import setup_routes
-from endpoints.schedule.scheduleModel import ScheduleModel
+from endpoints.schedule.calendar_service import ScheduleCalendarService
 from supabaseAuth import ISSUER, SUPABASE_JWT_SECRET
 from test_profile_regression import ALICE, BOB, ProfileDatabase
 
@@ -18,7 +18,7 @@ class HttpWeekGenerationDisabledTests(unittest.TestCase):
     def setUp(self):
         self.db = ProfileDatabase()
         self.addCleanup(self.db.connection.close)
-        self.ensure = self.enterContext(patch.object(ScheduleModel, 'ensure_weeks_for_league', return_value=[]))
+        self.ensure = self.enterContext(patch.object(ScheduleCalendarService, 'ensure_weeks_for_league', return_value=[]))
         app = Flask(__name__)
         app.config['TESTING'] = True
         install_auth_middleware(app)

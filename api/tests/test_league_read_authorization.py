@@ -3,6 +3,7 @@
 No current Week rows. PostgreSQL interval syntax is adapted and lifecycle sync
 substituted; no date arithmetic, lock, RLS or lifecycle verification claimed.
 """
+from endpoints.league.lifecycle.service import LeagueLifecycleService
 import json
 import os
 import time
@@ -13,7 +14,6 @@ import jwt
 from flask import Flask
 
 from authMiddleware import install_auth_middleware
-from endpoints.league.leagueModel import LeagueModel
 from endpoints.league.routes import setup_routes
 from supabaseAuth import ISSUER, SUPABASE_JWT_SECRET
 from test_profile_regression import ALICE, BOB, ProfileDatabase
@@ -110,7 +110,7 @@ class LeagueReadAuthorizationTests(unittest.TestCase):
             CREATE TABLE "ConferenceMembership" ("sportConferenceId" INTEGER, "seasonYear" INTEGER);
             INSERT INTO "ConferenceMembership" VALUES (1, 2026);
         ''')
-        self.sync = self.enterContext(patch.object(LeagueModel, 'sync_due_league_statuses'))
+        self.sync = self.enterContext(patch.object(LeagueLifecycleService, 'synchronize_for_job'))
         app = Flask(__name__)
         app.config['TESTING'] = True
         install_auth_middleware(app)

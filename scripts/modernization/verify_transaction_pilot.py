@@ -76,7 +76,7 @@ def main():
         concurrency = trade_tests(engine, name)
         reads = read_tests(engine, name)
         files = ['api/actors.py', 'api/utils/authorization.py',
-                 'api/endpoints/transaction/transactionModel.py',
+                 'api/endpoints/transaction/workflow_service.py',
                  'api/endpoints/transaction/transactionEndpoints.py',
                  'api/endpoints/transaction/service.py', 'api/endpoints/transaction/repository.py',
                  'api/endpoints/transaction/contracts.py', 'scripts/modernization/verify_transaction_pilot.py']

@@ -3,6 +3,7 @@
 Global status sync is substituted; empty Week data and an adapted interval
 expression do not validate PostgreSQL date arithmetic or lifecycle transitions.
 """
+from endpoints.league.lifecycle.service import LeagueLifecycleService
 import os
 import time
 import unittest
@@ -13,7 +14,6 @@ import jwt
 from flask import Flask
 
 from authMiddleware import install_auth_middleware
-from endpoints.league.leagueModel import LeagueModel
 from endpoints.league.routes import setup_routes
 from supabaseAuth import ISSUER, SUPABASE_JWT_SECRET
 from test_profile_regression import ALICE, BOB, ProfileDatabase
@@ -73,7 +73,7 @@ class OwnLeagueListingTests(unittest.TestCase):
             CREATE TABLE "WeeklyTeamScore" ("leagueId" INTEGER, "memberId" INTEGER,
                 "weekId" INTEGER, "pointsAwarded" INTEGER);
         ''')
-        self.status_sync = self.enterContext(patch.object(LeagueModel, 'sync_due_league_statuses'))
+        self.status_sync = self.enterContext(patch.object(LeagueLifecycleService, 'synchronize_for_job'))
         app = Flask(__name__)
         app.config['TESTING'] = True
         install_auth_middleware(app)

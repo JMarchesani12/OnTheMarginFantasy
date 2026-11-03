@@ -112,7 +112,7 @@ def main():
             created=True
         engine=engine_for(name,'otm-roster-pilot')
         results=roster_tests(engine,name)
-        files=['api/endpoints/roster/'+f for f in ('service.py','repository.py','contracts.py','rosterModel.py','rosterEndpoints.py')]
+        files=['api/endpoints/roster/'+f for f in ('service.py','repository.py','contracts.py','rosterEndpoints.py')]
         files+=['api/actors.py','api/utils/authorization.py','scripts/modernization/verify_roster_pilot.py']
         report={'result':'PASS','scope':'Synthetic marked loopback PostgreSQL, no configured/hosted database',
                 'roster_reads':results,'sha256':{f:hashlib.sha256((ROOT/f).read_bytes()).hexdigest() for f in files}}

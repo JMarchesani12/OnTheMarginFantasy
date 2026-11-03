@@ -9,7 +9,7 @@ from assess_postgres import LOCAL,ROOT,engine_for
 from verify_draft_snapshot import FIXTURE as SNAPSHOT_FIXTURE,tests as snapshot_tests
 from actors import UserActor
 from endpoints.draft.control_service import DraftControlService
-from endpoints.draft.draftModel import DraftModel
+from endpoints.draft.pick_service import DraftPickService
 
 FIXTURE=SNAPSHOT_FIXTURE+'''
 ALTER TABLE "League" ADD COLUMN sport bigint DEFAULT 1;
@@ -100,7 +100,7 @@ def tests(engine,database):
         else:raise AssertionError('Post-check failed to reject lost commissioner')
     finally:event.remove(engine,'before_cursor_execute',revoke);other.dispose()
     before['League'][0]['commissioner']=2;assert changed==[True] and state()==before
-    reset();before=state();model=DraftModel.__new__(DraftModel)
+    reset();before=state();model=DraftPickService(None)
     try:
         with engine.begin() as conn:
             result=model.finalize_draft(10,conn=conn)
@@ -109,7 +109,7 @@ def tests(engine,database):
     except RuntimeError:pass
     assert state()==before
     model.db=engine
-    assert model.force_finalize_draft(10,'1')['draftComplete'] is True
+    assert DraftControlService(model.db).force_finalize_for_user_id(10, '1')['draftComplete'] is True
     return {'native_final_state_season_date_boundaries_projection_timestamps':'PASS','no_season_and_missing_state_compatibility':'PASS',
             'post_write_real_statement_commit_and_caller_rollback':'PASS','separate_connection_pre_post_authority_rejection':'PASS',
             'trusted_and_legacy_supplied_connection':'PASS','scope_limit':'Original pre/post authority checks add no locks or replay/concurrency guarantee'}
@@ -124,7 +124,7 @@ def main():
             assert cur.fetchone()[0]=='otm-modernization-assessment-20261029-synthetic-only','Refusing unmarked server'
             cur.execute(sql.SQL('CREATE DATABASE {}').format(sql.Identifier(name)));created=True
         engine=engine_for(name,'otm-draft-finalize');prior=snapshot_tests(engine,name);result=tests(engine,name)
-        files=['api/endpoints/draft/'+f for f in ('control_service.py','control_repository.py','snapshot_service.py','snapshot_repository.py','draftModel.py','draftEndpoints.py','routes.py')]
+        files=['api/endpoints/draft/'+f for f in ('control_service.py','control_repository.py','snapshot_service.py','snapshot_repository.py','draftEndpoints.py','routes.py')]
         files+=['api/actors.py','scripts/modernization/verify_draft_snapshot.py','scripts/modernization/verify_draft_finalization.py']
         report={'result':'PASS','scope':'Synthetic marked loopback PostgreSQL; no configured/hosted database','snapshot_rerun':prior,'finalization':result,
                 'sha256':{f:hashlib.sha256((ROOT/f).read_bytes()).hexdigest() for f in files}}

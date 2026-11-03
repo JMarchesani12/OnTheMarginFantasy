@@ -196,7 +196,7 @@ class LivePickAuthorizationTests(unittest.TestCase):
         self.assertEqual(self.state(), before)
         self.emit.assert_not_called()
 
-    def test_trusted_model_calls_do_not_require_http_identity(self):
+    def test_trusted_service_calls_do_not_require_http_identity(self):
         pick = self.model.create_draft_pick_live(10, 12, 102)
         self.assertEqual(pick['memberId'], 12)
         slot = self.db.connection.execute('SELECT "acquiredWeek" FROM "LeagueTeamSlot"').fetchone()

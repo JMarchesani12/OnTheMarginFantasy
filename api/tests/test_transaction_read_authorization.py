@@ -159,7 +159,7 @@ class TransactionReadAuthorizationTests(unittest.TestCase):
             self.assertEqual(self.open(value).status_code,400)
         self.assertEqual(self.client.post('/api/league/10/transactions/trades/open',json=[],headers=self.headers()).status_code,400)
 
-    def test_trusted_model_calls_remain_context_free(self):
+    def test_trusted_service_calls_remain_context_free(self):
         self.assertEqual(self.model.get_open_trade_transactions_for_member(20,21)['memberId'],21)
         rows=self.model.get_transactions_for_league(20)
         self.assertEqual([row['id'] for row in rows],[5])

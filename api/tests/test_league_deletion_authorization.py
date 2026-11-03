@@ -1,4 +1,5 @@
 """Commissioner league deletion: synthetic SQLite cascades, never live data."""
+from endpoints.league.administration.service import LeagueAdminService
 import os
 import time
 import unittest
@@ -147,11 +148,10 @@ class LeagueDeletionAuthorizationTests(unittest.TestCase):
         self.assertEqual(response.json, {'message': 'Failed to delete league'})
         self.assertEqual(self.state(), before)
 
-    def test_direct_model_remains_http_independent_and_commissioner_checked(self):
-        from endpoints.league.leagueModel import LeagueModel
-        model = LeagueModel.__new__(LeagueModel)
-        model.db = self.db
+    def test_direct_service_remains_http_independent_and_commissioner_checked(self):
+
+        model = self.db
         with self.assertRaises(PermissionError):
-            model.delete_league(10, 2)
-        result = model.delete_league(10, 1)
+            LeagueAdminService(model).delete_for_legacy_commissioner(10, 2)
+        result = LeagueAdminService(model).delete_for_legacy_commissioner(10, 1)
         self.assertEqual(result, {'deletedLeagueId': 10, 'deletedLeagueName': 'Alice League'})

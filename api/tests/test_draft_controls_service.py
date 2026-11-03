@@ -3,7 +3,7 @@ import json
 import unittest
 from actors import UserActor
 from endpoints.draft.control_service import DraftControlService
-from endpoints.draft.draftModel import DraftModel
+from endpoints.draft.pick_service import DraftPickService
 import test_draft_control_authorization as controls
 from test_transaction_service import ConnectionOwner
 
@@ -64,11 +64,11 @@ class DraftControlsServiceTests(unittest.TestCase):
         self.db.before_query=revoke
         with self.assertRaises(PermissionError):self.service.start(self.actor,10)
         self.assertEqual(self.state(),before)
-    def test_legacy_helpers_keep_supplied_connection_and_trusted_defaults(self):
-        model=DraftModel.__new__(DraftModel);model.db=self.engine
+    def test_service_helpers_keep_supplied_connection_and_trusted_defaults(self):
+        model=DraftPickService(self.engine)
         with self.engine.begin() as conn:
-            model.seed_draft_turns(conn,10)
+            DraftControlService(model.db).seed_turns(conn, 10)
             self.assertEqual(model._get_expected_member_for_overall(conn,10,1),11)
             self.assertEqual(model._compute_round_and_pos(3,2),(2,1))
-        self.assertEqual(model.start_draft(10)['state']['status'],'live')
-        self.assertEqual(model.pause_draft(10,acting_user_id='1')['state']['status'],'paused')
+        self.assertEqual(DraftControlService(model.db).start_for_job(10)['state']['status'],'live')
+        self.assertEqual(DraftControlService(model.db).pause_for_legacy_user_id(10, '1')['state']['status'],'paused')

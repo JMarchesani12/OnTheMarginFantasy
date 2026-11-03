@@ -114,7 +114,7 @@ class ScoringService:
         """
         Sum memberPointDiff across all games for this member in this week.
 
-        Uses ScheduleModel.get_member_games_for_week, which must return rows with:
+        Uses ScheduleReadService.get_member_games_for_week, which must return rows with:
           - memberPointDiff: int (0 for double-owned, +diff for owned side)
         """
         games = self.schedule_model.get_member_games_for_week(league_id=league_id, member_id=member_id, week_number=week_number)
@@ -127,7 +127,7 @@ class ScoringService:
         """
         Compute weekly scores for all members in a league for a given week:
 
-        - Uses global GameResult via ScheduleModel
+        - Uses global GameResult via ScheduleReadService
         - Everyone-vs-everyone
         - Waterfall points: N, N-1, ..., 1
         - Applies weekly tiebreakers to break ties in pointDifferential:
@@ -203,7 +203,7 @@ class ScoringService:
           - Sum point differential for each member
           - Sort group by total head-to-head PD (desc)
 
-        Requires ScheduleModel.get_head_to_head_games(
+        Requires ScheduleReadService.get_head_to_head_games(
             league_id, member_a_id, member_b_id, week_number
         ) returning rows with:
           - homeScore, awayScore

@@ -5,7 +5,6 @@ from sqlalchemy.exc import IntegrityError
 from endpoints.user.service import UserService
 from endpoints.user.contracts import (ProfileSubject, ProfileAlreadyExists,
     ProfileIdentityAmbiguous, ProfileCreationRejected, ProfileNotFound)
-from endpoints.user.userModel import UserModel
 import test_profile_regression as profiles
 from test_transaction_service import ConnectionOwner
 
@@ -52,9 +51,9 @@ class UserCreationServiceTests(unittest.TestCase):
         with self.assertRaises(ProfileIdentityAmbiguous):
             self.service.create_profile(ProfileSubject(profiles.ALICE,'alice@example.test'),'Tampered')
         self.assertEqual(self.count(),3)
-        self.assertEqual(UserModel(self.db).get_user_by_uuid(profiles.ALICE)['uuid'],profiles.ALICE)
+        self.assertEqual(UserService(self.db).get_profile_by_uuid_for_job(profiles.ALICE)['uuid'],profiles.ALICE)
 
-    def test_constraint_failure_is_domain_error_and_legacy_value_error(self):
+    def test_constraint_failure_is_domain_error_for_actor_and_job(self):
         execute=self.db.execute
         def fail(statement,params):
             if 'INSERT INTO' in str(statement):
@@ -63,8 +62,8 @@ class UserCreationServiceTests(unittest.TestCase):
         self.db.execute=fail
         with self.assertRaisesRegex(ProfileCreationRejected,'User creation failed'):
             self.service.create_profile(ProfileSubject(NEW,'new@example.test'),'New')
-        with self.assertRaisesRegex(ValueError,'User creation failed'):
-            UserModel(self.db).create_user('new@example.test','New',NEW)
+        with self.assertRaisesRegex(ProfileCreationRejected,'User creation failed'):
+            UserService(self.db).create_profile_for_job('new@example.test','New',NEW)
         self.assertEqual(self.count(),2)
 
     def test_unexpected_failure_after_insert_rolls_back_and_propagates(self):
@@ -92,14 +91,14 @@ class UserCreationServiceTests(unittest.TestCase):
             UserService(CommitFailure()).create_profile(ProfileSubject(NEW,'new@example.test'),'New')
         self.assertEqual(self.count(),2)
 
-    def test_legacy_create_validation_and_uuid_missing_contracts_remain(self):
-        model=UserModel(self.db)
-        with self.assertRaisesRegex(ValueError,'email is required'):
-            model.create_user('   ','New',NEW)
-        row=model.create_user(' new@example.test ',None,NEW)
+    def test_job_creation_validation_and_missing_uuid_contracts(self):
+        model=UserService(self.db)
+        with self.assertRaisesRegex(ProfileCreationRejected,'email is required'):
+            model.create_profile_for_job('   ','New',NEW)
+        row=model.create_profile_for_job(' new@example.test ',None,NEW)
         self.assertEqual(row['displayName'],'')
-        self.assertEqual(model.get_user_by_uuid(NEW),row)
-        with self.assertRaisesRegex(ValueError,'User not found'):
-            model.get_user_by_uuid('missing')
+        self.assertEqual(model.get_profile_by_uuid_for_job(NEW),row)
+        with self.assertRaisesRegex(ProfileNotFound,'User not found'):
+            model.get_profile_by_uuid_for_job('missing')
         with self.assertRaises(ProfileNotFound):
             self.service.get_profile_by_uuid_for_job('missing')

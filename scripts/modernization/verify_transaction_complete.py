@@ -12,7 +12,6 @@ from verify_transaction_pilot import read_tests
 from actors import UserActor
 from endpoints.transaction.workflow_service import TransactionWorkflowService
 from endpoints.transaction.workflow_repository import TransactionWorkflowRepository
-from endpoints.transaction.transactionModel import TransactionModel
 
 FIXTURE = '''
 DROP SCHEMA public CASCADE; CREATE SCHEMA public;
@@ -128,7 +127,6 @@ def tests(engine,database):
     expect(ValueError,lambda:service.free_agency(alice,10,100,1,11,102,None),'not a free agent')
     reset();free();query('UPDATE "League" SET settings=jsonb_set(settings,\'{roster,maxSwaps}\',\'1\') WHERE id=10')
     expect(service.SwapLimitExceeded,free,'used 1/1')
-    assert service.SwapLimitExceeded is TransactionModel.SwapLimitExceeded
     # Executemany for legacy multi-add rows; no new apply-time validation policy.
     reset();row=query('''INSERT INTO "Transaction" ("leagueId","weekId",type,"memberFromId",status,"fromTeamIds","toTeamIds")
         VALUES (10,100,'FREE_AGENT',11,'PENDING_APPLY','[101]','[103,105]') RETURNING id''')[0]
@@ -205,7 +203,7 @@ def tests(engine,database):
         release.set();first.join(5)
         if second.ident:second.join(5)
         event.remove(engine,'after_cursor_execute',hold);other.dispose()
-    reset();legacy=TransactionModel.__new__(TransactionModel);legacy.db=engine
+    reset();legacy=TransactionWorkflowService.__new__(TransactionWorkflowService);legacy.db=engine
     assert legacy._get_week_for_league(10,100)['weekNumber']==1
     declared={name for name,method in vars(TransactionWorkflowRepository).items() if callable(method) and not name.startswith('_')}
     assert covered==declared,{'missing_native_workflow_queries':sorted(declared-covered)}
@@ -215,7 +213,7 @@ def tests(engine,database):
         'personalized_party_voter_display_projection_and_query_time_revocation':'PASS',
         'mutation_phase_real_statement_deferred_commit_and_postwrite_authority_rollback':'PASS',
         'observed_concurrent_cancel_lock_wait_and_replay_rejection':'PASS',
-        'roster_violations_unregistered_lock_helper_and_legacy_exception_identity':'PASS',
+        'roster_violations_unregistered_lock_helper_and_swap_limit_failure':'PASS',
         'repository_queries_exercised':sorted(covered),
         'scope_limit':'Original helper connections, validation/revalidation, membership/cap rules and revocation boundary semantics preserved; no new routes/schema/timeout/startup policy.'}
 

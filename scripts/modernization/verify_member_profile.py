@@ -11,7 +11,6 @@ from verify_admission_create_deny import current_tests as creation_tests
 from verify_admission_approval import tests as approval_tests
 from actors import UserActor
 from endpoints.league.members.service import MemberService
-from endpoints.league.leagueModel import LeagueModel
 
 FIXTURE='''DROP SCHEMA public CASCADE; CREATE SCHEMA public;
 CREATE TABLE "LeagueMember" (id bigint PRIMARY KEY,"leagueId" bigint,"userId" bigint,
@@ -59,14 +58,14 @@ def tests(engine,database):
         assert state()==before
     with engine.begin() as conn:conn.exec_driver_sql('DROP TRIGGER member_commit ON "LeagueMember"')
     waits=[]
-    for facade in (False,True):
+    for user_id_service in (False,True):
         with engine.begin() as conn:conn.execute(text('UPDATE "LeagueMember" SET "userId"=1 WHERE id=11'))
         contender=engine_for(database,'otm-member-rename');outcomes=[]
         def rename():
             try:
-                if facade:
-                    model=LeagueModel.__new__(LeagueModel);model.db=contender
-                    model.update_owned_league_member(11,1,'Stolen after revocation')
+                if user_id_service:
+                    model=contender
+                    MemberService(model).rename_for_owner_id(11, 1, 'Stolen after revocation')
                 else:MemberService(contender).rename(actor,11,'Stolen after revocation')
                 outcomes.append('unexpected success')
             except Exception as exc:outcomes.append(type(exc).__name__)
@@ -87,10 +86,10 @@ def tests(engine,database):
             contender.dispose()
         assert not thread.is_alive() and outcomes==['LookupError'],outcomes
         assert state()[0]['teamName']==name
-        waits.append({'path':'legacy_facade' if facade else 'service','observed_lock_wait':True,'outcomes':outcomes})
-    model=LeagueModel.__new__(LeagueModel);model.db=engine
-    assert model.update_owned_league_member(11,2,'')['teamName']==''
-    assert model.update_league_member(12,{'seasonPoints':17})['seasonPoints']==17
+        waits.append({'path':'user_id_service' if user_id_service else 'actor_service','observed_lock_wait':True,'outcomes':outcomes})
+    model=engine
+    assert MemberService(model).rename_for_owner_id(11, 2, '')['teamName']==''
+    assert MemberService(model).update_for_job(12, {'seasonPoints': 17})['seasonPoints']==17
     return {'projection_bound_values_owner_scope':'PASS','trusted_allowlist_and_legacy_compatibility':'PASS',
             'post_update_and_deferred_commit_rollback':'PASS','ownership_revocation':waits}
 
@@ -106,7 +105,7 @@ def main():
         engine=engine_for(name,'otm-member-profile')
         prior={'listing_cancellation':listing_tests(engine,name),'creation_denial':creation_tests(engine,name),'approval':approval_tests(engine,name)}
         member=tests(engine,name)
-        files=['api/endpoints/league/'+f for f in ('members/service.py','members/repository.py','admission/service.py','admission/repository.py','admission/contracts.py','leagueModel.py','leagueEndpoints.py')]
+        files=['api/endpoints/league/'+f for f in ('members/service.py','members/repository.py','admission/service.py','admission/repository.py','admission/contracts.py','leagueEndpoints.py')]
         files+=['api/actors.py','scripts/modernization/'+ 'verify_admission_slice.py','scripts/modernization/verify_admission_create_deny.py','scripts/modernization/verify_admission_approval.py','scripts/modernization/verify_member_profile.py']
         report={'result':'PASS','scope':'Synthetic marked loopback PostgreSQL; no configured/hosted database','admission_rerun':prior,'member_profile':member,
             'sha256':{f:hashlib.sha256((ROOT/f).read_bytes()).hexdigest() for f in files}}

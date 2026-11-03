@@ -1,7 +1,8 @@
 """Draft snapshot authority, completed repair and supplied-transaction ownership."""
 import unittest
 from actors import UserActor
-from endpoints.draft.draftModel import DraftModel
+from endpoints.draft.pick_service import DraftPickService
+from endpoints.draft.snapshot_service import DraftSnapshotService
 import test_draft_state_authorization as draft
 from test_transaction_service import ConnectionOwner
 
@@ -54,8 +55,8 @@ class DraftSnapshotServiceTests(unittest.TestCase):
                 self.assertEqual(self.engine.begins,1)
                 raise RuntimeError('caller abort')
         self.assertEqual(self.states(),before)
-    def test_db_only_legacy_and_connection_helpers_remain_compatible(self):
-        model=DraftModel.__new__(DraftModel);model.db=self.engine
-        self.assertEqual(model.get_draft_state_snapshot(20)['state']['status'],'paused')
-        with self.assertRaises(PermissionError):model.get_draft_state_snapshot(20,reader_user_id=1)
+    def test_canonical_and_connection_helpers_remain_compatible(self):
+        model=DraftPickService(self.engine)
+        self.assertEqual(DraftSnapshotService(model.db).snapshot_for_job(20)['state']['status'],'paused')
+        with self.assertRaises(PermissionError):DraftSnapshotService(model.db).snapshot_for_reader_id(20, 1)
         self.assertEqual(model._get_next_unpicked_turn_from(self.db,10,3),(3,12))

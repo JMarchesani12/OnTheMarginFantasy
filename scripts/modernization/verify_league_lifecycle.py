@@ -10,7 +10,6 @@ from verify_member_summary import listing_tests,creation_tests,approval_tests,pr
 from actors import UserActor
 from endpoints.league.lifecycle.service import LeagueLifecycleService
 from endpoints.league.reads.service import LeagueReadService
-from endpoints.league.leagueModel import LeagueModel
 
 FIXTURE='''DROP SCHEMA public CASCADE; CREATE SCHEMA public;
 CREATE TABLE "League" (id bigint PRIMARY KEY,status text,"updatedAt" timestamptz,"draftDate" timestamptz,sport bigint,"seasonYear" integer,commissioner bigint);
@@ -79,13 +78,13 @@ def tests(engine,database):
     except DBAPIError:pass
     else:raise AssertionError('Deferred lifecycle failure missing')
     assert state()==before
-    reset();model=LeagueModel.__new__(LeagueModel);model.db=engine
-    assert model.sync_due_league_statuses() is None
+    reset();model=engine
+    assert LeagueLifecycleService(model).synchronize_for_job() is None
     assert {r['id']:r['status'] for r in state()}==EXPECTED
     reset()
-    row=LeagueReadService(engine).details(UserActor(1,'alice'),5,model.sync_due_league_statuses)
+    row=LeagueReadService(engine).details(UserActor(1,'alice'),5,LeagueLifecycleService(model).synchronize_for_job)
     assert row['status']=='In-Season' and {r['id']:r['status'] for r in state()}==EXPECTED
-    assert model.get_league(5)['status']=='In-Season'
+    assert LeagueReadService(model).details_for_job(5, LeagueLifecycleService(model).synchronize_for_job)['status']=='In-Season'
     return {'native_order_precedence_date_boundaries_sport_year_null_unchanged':'PASS',
             'repeat_status_convergence':'PASS','each_post_phase_statement_and_deferred_commit_rollback':'PASS',
             'db_only_legacy_none_and_real_read_callback':'PASS',
@@ -104,8 +103,8 @@ def main():
         prior={'listing_cancellation':listing_tests(engine,name),'creation_denial':creation_tests(engine,name),
                'approval':approval_tests(engine,name),'member_profile':profile_tests(engine,name),'member_removal':removal_tests(engine,name),'league_deletion':deletion_tests(engine,name),'league_settings':settings_tests(engine,name),'league_creation':league_creation_tests(engine,name),'league_rules':rules_tests(engine,name),'league_conferences':conference_tests(engine,name),'league_discovery':discovery_tests(engine,name),'league_details':detail_tests(engine,name),'member_summary':summary_tests(engine,name)}
         lifecycle=tests(engine,name)
-        files=['api/endpoints/league/'+f for f in ('lifecycle/service.py','lifecycle/repository.py','reads/service.py','reads/repository.py','administration/service.py','administration/repository.py','members/service.py','members/repository.py','admission/service.py','admission/repository.py','admission/contracts.py','leagueModel.py','leagueEndpoints.py')]
-        files+=['api/endpoints/schedule/scheduleModel.py','api/actors.py','api/rules/leagueRules.py','api/utils/authorization.py']+['scripts/modernization/'+f for f in ('verify_admission_slice.py','verify_admission_create_deny.py','verify_admission_approval.py','verify_member_profile.py','verify_member_removal.py','verify_league_delete.py','verify_league_settings.py','verify_league_creation.py','verify_league_rules_read.py','verify_league_conferences.py','verify_league_discovery.py','verify_league_details.py','verify_member_summary.py','verify_league_lifecycle.py')]
+        files=['api/endpoints/league/'+f for f in ('lifecycle/service.py','lifecycle/repository.py','reads/service.py','reads/repository.py','administration/service.py','administration/repository.py','members/service.py','members/repository.py','admission/service.py','admission/repository.py','admission/contracts.py','leagueEndpoints.py')]
+        files+=['api/endpoints/schedule/ingestion_service.py','api/actors.py','api/rules/leagueRules.py','api/utils/authorization.py']+['scripts/modernization/'+f for f in ('verify_admission_slice.py','verify_admission_create_deny.py','verify_admission_approval.py','verify_member_profile.py','verify_member_removal.py','verify_league_delete.py','verify_league_settings.py','verify_league_creation.py','verify_league_rules_read.py','verify_league_conferences.py','verify_league_discovery.py','verify_league_details.py','verify_member_summary.py','verify_league_lifecycle.py')]
         report={'result':'PASS','scope':'Synthetic marked loopback PostgreSQL; no configured/hosted database','prior_slices_rerun':prior,
                 'league_lifecycle':lifecycle,'sha256':{f:hashlib.sha256((ROOT/f).read_bytes()).hexdigest() for f in files}}
         (ROOT/'docs/modernization/evidence/mod-038-league-complete-postgres-2026-10-30.json').write_text(json.dumps(report,indent=2)+'\n')

@@ -12,7 +12,7 @@ from flask import Flask
 from sqlalchemy import text
 from authMiddleware import install_auth_middleware
 from endpoints.transaction.routes import setup_routes
-from endpoints.transaction.transactionModel import TransactionModel
+from endpoints.transaction.workflow_service import TransactionWorkflowService
 from test_league_read_authorization import ReadDatabase
 from test_profile_regression import ALICE, BOB
 from supabaseAuth import ISSUER, SUPABASE_JWT_SECRET
@@ -79,7 +79,7 @@ class FreeAgencyAuthorizationTests(unittest.TestCase):
         install_auth_middleware(app)
         setup_routes(app, self.db)
         self.client = app.test_client()
-        self.model = TransactionModel(self.db)
+        self.model = TransactionWorkflowService(self.db)
         self.body = dict(weekId=100,weekNumber=99,memberId=11,dropTeamId=101,addTeamId=103)
 
     def headers(self, subject=ALICE, **overrides):

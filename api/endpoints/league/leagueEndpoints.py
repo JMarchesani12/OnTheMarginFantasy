@@ -1,7 +1,8 @@
 from typing import Any, Dict
 from venv import logger
 from flask import request, jsonify
-from .leagueModel import LeagueModel
+from .lifecycle.service import LeagueLifecycleService
+from endpoints.schedule.read_service import ScheduleReadService
 from .admission.service import AdmissionService
 from .members.service import MemberService
 from .administration.service import LeagueAdminService
@@ -12,7 +13,8 @@ from authenticatedPrincipal import PrincipalResolutionError, resolve_authenticat
 
 class LeagueEndpoints:
     def __init__(self, db_engine):
-        self.leagueModel = LeagueModel(db_engine)
+        self.league_lifecycle_service = LeagueLifecycleService(db_engine)
+        self.schedule_service = ScheduleReadService(db_engine)
         self.db_engine = db_engine
         self.admission_service = AdmissionService(db_engine)
         self.member_service = MemberService(db_engine)
@@ -48,7 +50,7 @@ class LeagueEndpoints:
             else:
                 if view == 'details':
                     payload = self.league_read_service.details(
-                        actor, league_id, self.leagueModel.sync_due_league_statuses,
+                        actor, league_id, self.league_lifecycle_service.synchronize_for_job,
                     )
                 elif view == 'rules':
                     payload = self.league_read_service.rules(
@@ -56,8 +58,8 @@ class LeagueEndpoints:
                     )
                 elif view == 'members':
                     payload = self.league_read_service.members(
-                        actor, league_id, self.leagueModel.scheduleModel.timezone_for_job,
-                        self.leagueModel.scheduleModel.member_games_for_job,
+                        actor, league_id, self.schedule_service.timezone_for_job,
+                        self.schedule_service.member_games_for_job,
                     )
                 else:
                     payload = self.league_read_service.conferences(
@@ -110,7 +112,7 @@ class LeagueEndpoints:
             }
             created = self.league_admin_service.create(
                 UserActor(principal.user_id, principal.subject), league_data,
-                self.leagueModel.scheduleModel.ensure_weeks_for_job,
+                self.schedule_service.ensure_weeks_for_job,
             )
             return jsonify(created), 201
         except PrincipalResolutionError as exc:
@@ -162,7 +164,7 @@ class LeagueEndpoints:
                 return jsonify({"message": "Invalid stage"}), 400
             leagues = self.league_read_service.mine(
                 UserActor(principal.user_id, principal.subject),
-                self.leagueModel.sync_due_league_statuses, stage=stage,
+                self.league_lifecycle_service.synchronize_for_job, stage=stage,
             )
             return jsonify(leagues), 200
         except PrincipalResolutionError as e:

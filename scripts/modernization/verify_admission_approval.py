@@ -14,7 +14,6 @@ from verify_admission_create_deny import current_tests as creation_denial_tests
 from actors import UserActor
 from endpoints.league.admission.service import AdmissionService
 from endpoints.league.admission.contracts import AdmissionDenied, AdmissionRejected
-from endpoints.league.leagueModel import LeagueModel
 
 FIXTURE = '''
 DROP SCHEMA public CASCADE; CREATE SCHEMA public;
@@ -126,7 +125,7 @@ def tests(engine, database):
     assert state() == before
 
     concurrency = []
-    for facade in (False,True):
+    for user_id_service in (False,True):
         for same in (True,False):
             reset()
             first = engine_for(database,'otm-approve-first'); second = engine_for(database,'otm-approve-second')
@@ -141,9 +140,9 @@ def tests(engine, database):
             event.listen(first,'after_cursor_execute',hold)
             def approve(label,owner,request):
                 try:
-                    if facade:
-                        model = LeagueModel.__new__(LeagueModel); model.db = owner
-                        row = model.approve_join_request_as_commissioner(10,request,1)
+                    if user_id_service:
+                        model = owner
+                        row = AdmissionService(model).approve_request_for_legacy_commissioner(1, 10, request)
                     else: row = AdmissionService(owner).approve_request(actor,10,request)
                     outcomes[label] = ['success',row['request']['status'],row['request']['resolvedByUserId']]
                 except Exception as exc: outcomes[label] = [type(exc).__name__,str(exc)]
@@ -167,18 +166,18 @@ def tests(engine, database):
             assert not a.is_alive() and not b.is_alive()
             assert locks == ['league','request'],locks
             assert outcomes['first'] == ['success','APPROVED',1],outcomes
-            assert outcomes['second'] == ([('ValueError' if facade else 'AdmissionRejected'),'Join request is not pending'] if same else ['success','APPROVED',1]),outcomes
+            assert outcomes['second'] == ([('AdmissionRejected'),'Join request is not pending'] if same else ['success','APPROVED',1]),outcomes
             final = state(); new_members = [r for r in final['LeagueMember'] if r['leagueId']==10 and r['userId'] in (3,4)]
             assert sorted(r['draftOrder'] for r in new_members) == ([3] if same else [3,4])
             assert final['League'][0]['numPlayers'] == (3 if same else 4)
             assert final['League'][0]['settings'] == {'draft':{'numberOfRounds':7 if same else 6},'timezone':'UTC'}
-            concurrency.append({'path':'legacy_facade' if facade else 'service','requests':'same' if same else 'distinct',
+            concurrency.append({'path':'user_id_service' if user_id_service else 'actor_service','requests':'same' if same else 'distinct',
                                 'observed_lock_wait':True,'lock_order':locks,'outcomes':outcomes})
     reset()
-    model = LeagueModel.__new__(LeagueModel); model.db = engine
-    assert model.approve_join_request(10,101,5)['request']['resolvedByUserId'] == 5
+    model = engine
+    assert AdmissionService(model).approve_request_for_job(10, 101, 5)['request']['resolvedByUserId'] == 5
     with engine.begin() as conn:
-        assert model._approve_join_request(conn,20,201,5)['request']['resolvedByUserId'] == 5
+        assert AdmissionService(model).approve_request_in_transaction(conn, 20, 201, 5)['request']['resolvedByUserId'] == 5
     return {'authority_scope_state_projection_resolver':'PASS','capacity_json_rounds_fallback':'PASS',
             'real_unique_fk_rollback':'PASS','all_post_write_and_commit_rollback':'PASS',
             'trusted_supplied_connection_compatibility':'PASS','concurrent_approval':concurrency}
@@ -194,7 +193,7 @@ def main():
             cur.execute(sql.SQL('CREATE DATABASE {}').format(sql.Identifier(name))); created = True
         engine = engine_for(name,'otm-admission-complete')
         listing = listing_tests(engine,name); creation = creation_denial_tests(engine,name); approval = tests(engine,name)
-        files = ['api/endpoints/league/'+f for f in ('admission/service.py','admission/repository.py','admission/contracts.py','leagueModel.py','leagueEndpoints.py')]
+        files = ['api/endpoints/league/'+f for f in ('admission/service.py','admission/repository.py','admission/contracts.py','leagueEndpoints.py')]
         files += ['api/actors.py','scripts/modernization/verify_admission_slice.py',
                   'scripts/modernization/verify_admission_create_deny.py','scripts/modernization/verify_admission_approval.py']
         report = {'result':'PASS','scope':'Synthetic marked loopback PostgreSQL; no configured/hosted database',

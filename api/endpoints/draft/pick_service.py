@@ -1,7 +1,7 @@
 """Draft allocation and timeout policy, owning each write transaction.
 
 Interactive callers use pick_live(UserActor, ...); worker/trusted callers use
-explicit job methods. Legacy names remain for the inherited DraftModel facade.
+explicit job methods. Established helper names remain available for direct service overrides.
 Repository calls always use the current connection, including finalization.
 """
 import logging

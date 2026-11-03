@@ -6,7 +6,7 @@ import unittest
 from contextlib import contextmanager
 from types import SimpleNamespace
 from unittest.mock import Mock
-from endpoints.schedule.scheduleModel import ScheduleModel
+from endpoints.schedule.ingestion_service import ScheduleIngestionService
 
 
 class CalendarDatabase:
@@ -154,9 +154,9 @@ class ScheduleCalendarServiceTests(unittest.TestCase):
 
     def test_legacy_inheritance_and_helper_override_preserve_no_io_path(self):
         from endpoints.schedule.calendar_service import ScheduleCalendarService
-        self.assertTrue(issubclass(ScheduleModel,ScheduleCalendarService))
-        class ExistingWeeks(ScheduleModel):
+        self.assertTrue(issubclass(ScheduleIngestionService,ScheduleCalendarService))
+        class ExistingWeeks(ScheduleIngestionService):
             def _get_existing_weeks(self,league_id): return [{'weekNumber':7}]
         model = ExistingWeeks.__new__(ExistingWeeks)
         self.assertEqual(model.ensure_weeks_for_league(10),[{'weekNumber':7}])
-        self.assertEqual(ScheduleModel(Mock(),'https://example.test///').espn_base_url,'https://example.test')
+        self.assertEqual(ScheduleIngestionService(Mock(),'https://example.test///').espn_base_url,'https://example.test')

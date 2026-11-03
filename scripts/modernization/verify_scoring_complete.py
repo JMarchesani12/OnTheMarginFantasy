@@ -11,7 +11,6 @@ from assess_postgres import LOCAL,ROOT,engine_for
 from verify_scoring_read import scoring_tests
 from actors import UserActor
 from endpoints.scoring.service import ScoringService
-from endpoints.scoring.scoringModel import ScoringModel
 from endpoints.scoring.contracts import ScoringReadDenied,ScoringRejected
 
 FIXTURE='''
@@ -106,7 +105,7 @@ def remaining_tests(engine,database):
             INSERT INTO "WeeklyTeamScore" VALUES (10,100,11,5,1,2),(10,100,12,-2,2,2),(10,100,13,0,3,2);''')
     standings=service.get_season_standings(UserActor(2,'member'),10)
     assert [(m['memberId'],m['weeklyPoints'],m['bonusPoints'],m['totalPoints']) for m in standings['members']]==[(12,2.0,4.0,6.0),(11,2.0,2.0,4.0),(13,2.0,0.0,2.0)],standings
-    assert ScoringModel(engine,ScheduleFacts()).compute_end_of_year_season_standings(10)==standings
+    assert ScoringService(engine,ScheduleFacts()).get_season_standings_for_job(10)==standings
     try: service.get_season_standings(UserActor(99,'outsider'),10)
     except ScoringReadDenied: pass
     else: raise AssertionError('Outsider standings allowed')
@@ -160,7 +159,7 @@ def main():
         engine=engine_for(name,'otm-scoring-full')
         reads=scoring_tests(engine,name)
         results=remaining_tests(engine,name)
-        files=['api/endpoints/scoring/'+f for f in ('service.py','repository.py','rules.py','contracts.py','scoringModel.py','scoringEndpoints.py')]
+        files=['api/endpoints/scoring/'+f for f in ('service.py','repository.py','rules.py','contracts.py','service.py','scoringEndpoints.py')]
         files+=['api/cronJobs/cronComputeWeeklyScores.py','api/cronJobs/cronComputeFinalScoreboard.py',
                 'api/actors.py','api/utils/authorization.py','scripts/modernization/verify_scoring_complete.py','scripts/modernization/verify_scoring_read.py']
         report={'result':'PASS','scope':'Synthetic marked loopback PostgreSQL; schedule read port supplied facts, no provider/network calls',

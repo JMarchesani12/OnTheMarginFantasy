@@ -13,7 +13,6 @@ from verify_member_profile import tests as profile_tests
 from actors import UserActor
 from endpoints.league.members.service import MemberService
 from endpoints.league.admission.service import AdmissionService
-from endpoints.league.leagueModel import LeagueModel
 
 FIXTURE='''DROP SCHEMA public CASCADE; CREATE SCHEMA public;
 CREATE TABLE "User" (id bigint PRIMARY KEY,"displayName" text);
@@ -100,7 +99,7 @@ def tests(engine,database):
     assert state()==before
 
     concurrency=[]
-    for facade in (False,True):
+    for user_id_service in (False,True):
         for mode in ('same_removal','distinct_removal','approval_after_removal'):
             reset();first=engine_for(database,'otm-remove-first');second=engine_for(database,'otm-remove-second')
             locked,release=threading.Event(),threading.Event();outcomes={};locks=[]
@@ -114,16 +113,16 @@ def tests(engine,database):
             def run(label,owner):
                 try:
                     if label=='second' and mode=='approval_after_removal':
-                        if facade:
-                            model=LeagueModel.__new__(LeagueModel);model.db=owner
-                            row=model.approve_join_request_as_commissioner(10,101,1)
+                        if user_id_service:
+                            model=owner
+                            row=AdmissionService(model).approve_request_for_legacy_commissioner(1, 10, 101)
                         else:row=AdmissionService(owner).approve_request(actor,10,101)
                         outcomes[label]=['approved',row['request']['id']]
                     else:
                         target=13 if label=='second' and mode=='distinct_removal' else 12
-                        if facade:
-                            model=LeagueModel.__new__(LeagueModel);model.db=owner
-                            row=model.remove_member_and_shift_draft_order(10,target,1)
+                        if user_id_service:
+                            model=owner
+                            row=MemberService(model).remove_for_legacy_commissioner(10, target, 1)
                         else:row=MemberService(owner).remove(actor,10,target)
                         outcomes[label]=['removed',row['removedMemberId']]
                 except Exception as exc:outcomes[label]=[type(exc).__name__,str(exc)]
@@ -153,10 +152,10 @@ def tests(engine,database):
             assert final['League'][0]['numPlayers']==len(wanted)
             assert final['League'][1]==before['League'][1]
             assert final['League'][0]['settings']=={'draft':{'numberOfRounds':8},'timezone':'UTC'}
-            concurrency.append({'path':'legacy_facade' if facade else 'service','mode':mode,
+            concurrency.append({'path':'user_id_service' if user_id_service else 'actor_service','mode':mode,
                                 'observed_lock_wait':True,'lock_order':locks,'outcomes':outcomes})
-    reset();model=LeagueModel.__new__(LeagueModel);model.db=engine
-    row=model.remove_member_and_shift_draft_order(10,12,'1',0)
+    reset();model=engine
+    row=MemberService(model).remove_for_legacy_commissioner(10, 12, '1', 0)
     assert [r['draftOrder'] for r in row['members']]==[1,3]
     return {'authority_scope_protection_projection_shift_floor':'PASS','real_fk_post_write_deferred_commit_rollback':'PASS',
             'legacy_coercion_truthiness':'PASS','concurrent_removal':concurrency}
@@ -174,7 +173,7 @@ def main():
         prior={'listing_cancellation':listing_tests(engine,name),'creation_denial':creation_tests(engine,name),
                'approval':approval_tests(engine,name),'member_profile':profile_tests(engine,name)}
         removal=tests(engine,name)
-        files=['api/endpoints/league/'+f for f in ('members/service.py','members/repository.py','admission/service.py','admission/repository.py','admission/contracts.py','leagueModel.py','leagueEndpoints.py')]
+        files=['api/endpoints/league/'+f for f in ('members/service.py','members/repository.py','admission/service.py','admission/repository.py','admission/contracts.py','leagueEndpoints.py')]
         files+=['api/actors.py']+['scripts/modernization/'+f for f in ('verify_admission_slice.py','verify_admission_create_deny.py','verify_admission_approval.py','verify_member_profile.py','verify_member_removal.py')]
         report={'result':'PASS','scope':'Synthetic marked loopback PostgreSQL; no configured/hosted database','prior_slices_rerun':prior,
                 'member_removal':removal,'sha256':{f:hashlib.sha256((ROOT/f).read_bytes()).hexdigest() for f in files}}

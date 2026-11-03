@@ -8,7 +8,7 @@ from sqlalchemy.exc import DBAPIError
 from assess_postgres import LOCAL,ROOT,engine_for
 from actors import UserActor
 from endpoints.draft.snapshot_service import DraftSnapshotService
-from endpoints.draft.draftModel import DraftModel
+from endpoints.draft.pick_service import DraftPickService
 
 FIXTURE = 'DROP SCHEMA public CASCADE; CREATE SCHEMA public;\nCREATE TABLE "User" (id integer PRIMARY KEY,uuid text,email text,"displayName" text);\nINSERT INTO "User" VALUES (1,\'alice\',\'alice@example.test\',\'Alice\'),(2,\'bob\',\'bob@example.test\',\'Bob\');\n\n            INSERT INTO "User" (id, uuid, email, "displayName") VALUES\n                (3, \'00000000-0000-4000-8000-000000000003\', \'outsider@example.test\', \'Outsider\');\n            CREATE TABLE "League" (id INTEGER PRIMARY KEY, "numPlayers" INTEGER,\n                settings jsonb, "seasonYear" INTEGER, commissioner INTEGER, "isDiscoverable" BOOLEAN);\n            INSERT INTO "League" VALUES\n                (10, 2, \'{"draft":{"type":"snake","rounds":2}}\', 2026, 1, true),\n                (20, 1, \'{"draft":{"type":"linear","rounds":2}}\', 2026, 2, false),\n                (30, 1, \'{"draft":{"privateMarker":"hidden"}}\', 2026, 1, false);\n            CREATE TABLE "LeagueMember" (id INTEGER PRIMARY KEY, "leagueId" INTEGER,\n                "userId" INTEGER, "teamName" TEXT, "draftOrder" INTEGER);\n            INSERT INTO "LeagueMember" VALUES\n                (11, 10, 1, \'Alice Open\', 1), (12, 10, 2, \'Bob Open\', 2),\n                (21, 20, 2, \'Bob Private\', 1);\n            CREATE TABLE "DraftState" ("leagueId" INTEGER PRIMARY KEY, status TEXT,\n                "currentOverallPickNumber" INTEGER, "currentMemberId" INTEGER,\n                "expiresAt" timestamptz, "lastPickAt" timestamptz, "updatedAt" timestamptz);\n            INSERT INTO "DraftState" VALUES\n                (10, \'live\', 2, 12, \'2026-10-28T12:01:00Z\', \'2026-10-28T12:00:00Z\', \'2000-01-01T00:00:00Z\'),\n                (20, \'paused\', 1, 21, NULL, NULL, \'2000-01-01T00:00:00Z\'),\n                (30, \'complete\', 1, 11, \'2026-10-28T12:01:00Z\', NULL, \'2000-01-01T00:00:00Z\');\n            CREATE TABLE "DraftPick" (id INTEGER, "leagueId" INTEGER, "createdAt" timestamptz,\n                "overallPickNumber" INTEGER, "roundNumber" INTEGER, "pickInRound" INTEGER,\n                "memberId" INTEGER, "sportTeamId" INTEGER);\n            INSERT INTO "DraftPick" VALUES (1, 10, \'2026-10-28T12:00:00Z\', 1, 1, 1, 11, 101);\n            CREATE TABLE "DraftTurn" ("leagueId" INTEGER, "overallPickNumber" INTEGER, "memberId" INTEGER);\n            INSERT INTO "DraftTurn" VALUES (10, 1, 11), (10, 2, 12), (10, 3, 12), (10, 4, 11),\n                (20, 1, 21), (20, 2, 21);\n            CREATE TABLE "SportTeam" (id INTEGER, "sportId" INTEGER, "displayName" TEXT);\n            INSERT INTO "SportTeam" VALUES (101, 1, \'Synthetic Team\');\n            CREATE TABLE "ConferenceMembership" ("sportTeamId" INTEGER, "sportId" INTEGER,\n                "seasonYear" INTEGER, "sportConferenceId" INTEGER);\n            INSERT INTO "ConferenceMembership" VALUES (101, 1, 2026, 501);\n            CREATE TABLE "SportConference" (id INTEGER, "sportId" INTEGER, "conferenceId" INTEGER);\n            INSERT INTO "SportConference" VALUES (501, 1, 401);\n            CREATE TABLE "Conference" (id INTEGER, name TEXT);\n            INSERT INTO "Conference" VALUES (401, \'Synthetic Conference\');\n        '
 
@@ -93,11 +93,11 @@ def tests(engine,database):
         else:raise AssertionError('Revoked member snapshot accepted')
     finally:event.remove(engine,'before_cursor_execute',revoke);other.dispose()
     assert changed==[True] and len(statements)==1 and state()==before
-    model=DraftModel.__new__(DraftModel);model.db=engine
-    assert model.get_draft_state_snapshot(20)['members'][0]['memberId']==21
-    helper=DraftModel.__new__(DraftModel)
+    model=DraftPickService(engine)
+    assert DraftSnapshotService(model.db).snapshot_for_job(20)['members'][0]['memberId']==21
+    helper=DraftPickService(None)
     with engine.begin() as conn:
-        assert helper.get_draft_state_snapshot(20,conn=conn)['state'] is None
+        assert DraftSnapshotService(helper.db).snapshot_for_job(20, conn=conn)['state'] is None
         assert helper._get_next_unpicked_turn_from(conn,10,3)==(4,11)
     return {'member_only_scope_before_repair':'PASS','native_json_timestamps_picks_season_join_turn_skipping':'PASS',
             'missing_state_trusted_legacy_supplied_connection':'PASS','repair_post_read_commit_caller_rollback':'PASS',
@@ -113,7 +113,7 @@ def main():
             assert cur.fetchone()[0]=='otm-modernization-assessment-20261029-synthetic-only','Refusing unmarked server'
             cur.execute(sql.SQL('CREATE DATABASE {}').format(sql.Identifier(name)));created=True
         engine=engine_for(name,'otm-draft-snapshot');result=tests(engine,name)
-        files=['api/endpoints/draft/'+f for f in ('snapshot_service.py','snapshot_repository.py','draftModel.py','draftEndpoints.py','routes.py')]
+        files=['api/endpoints/draft/'+f for f in ('snapshot_service.py','snapshot_repository.py','draftEndpoints.py','routes.py')]
         files+=['api/actors.py','scripts/modernization/verify_draft_snapshot.py']
         report={'result':'PASS','scope':'Synthetic marked loopback PostgreSQL; no configured/hosted database','snapshot':result,
                 'sha256':{f:hashlib.sha256((ROOT/f).read_bytes()).hexdigest() for f in files}}

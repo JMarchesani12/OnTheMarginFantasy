@@ -12,7 +12,7 @@ from sqlalchemy.exc import DBAPIError
 from assess_postgres import LOCAL, ROOT, engine_for
 from endpoints.schedule.calendar_service import ScheduleCalendarService
 from endpoints.schedule.calendar_repository import ScheduleCalendarRepository
-from endpoints.schedule.scheduleModel import ScheduleModel
+from endpoints.schedule.ingestion_service import ScheduleIngestionService
 
 FIXTURE = '''
 DROP SCHEMA public CASCADE; CREATE SCHEMA public;
@@ -113,7 +113,7 @@ def tests(engine):
             if deferred:conn.exec_driver_sql('CREATE CONSTRAINT TRIGGER reject_week AFTER INSERT ON "Week" DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION reject_week()')
             else:conn.exec_driver_sql('CREATE TRIGGER reject_week BEFORE INSERT ON "Week" FOR EACH ROW EXECUTE FUNCTION reject_week()')
         expect(DBAPIError,lambda:service.ensure_weeks_for_job(10));assert weeks()==[]
-    reset();legacy=ScheduleModel.__new__(ScheduleModel);legacy.db=engine
+    reset();legacy=ScheduleIngestionService.__new__(ScheduleIngestionService);legacy.db=engine
     assert len(legacy.ensure_weeks_for_league(10))==3
     assert str(legacy.get_league_timezone(10))=='America/New_York'
     declared={name for name,method in vars(ScheduleCalendarRepository).items() if callable(method) and not name.startswith('_')}
@@ -138,7 +138,7 @@ def main():
             assert cursor.fetchone()[0]=='otm-modernization-assessment-20261029-synthetic-only','Refusing unmarked server'
             cursor.execute(sql.SQL('CREATE DATABASE {}').format(sql.Identifier(name)));created=True
         engine=engine_for(name,'otm-schedule-calendar');result=tests(engine)
-        files=['api/endpoints/schedule/'+f for f in ('calendar_service.py','calendar_repository.py','scheduleModel.py','scheduleEndpoints.py','routes.py','helpers/weekHelper.py')]
+        files=['api/endpoints/schedule/'+f for f in ('calendar_service.py','calendar_repository.py','ingestion_service.py','scheduleEndpoints.py','routes.py','helpers/weekHelper.py')]
         files+=['api/rules/tournamentRules.py','api/tests/test_schedule_calendar_service.py','scripts/modernization/verify_schedule_calendar.py']
         report={'result':'PASS','scope':'Marked owned synthetic loopback PostgreSQL; no configured DB/app/provider/jobs startup',
                 'calendar':result,'sha256':{f:hashlib.sha256((ROOT/f).read_bytes()).hexdigest() for f in files}}

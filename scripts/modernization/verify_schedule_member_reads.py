@@ -11,7 +11,7 @@ from verify_schedule_calendar import FIXTURE as CALENDAR_FIXTURE, tests as calen
 from rules.leagueRules import resolve_rules
 from endpoints.schedule.read_service import ScheduleReadService
 from endpoints.schedule.read_repository import ScheduleReadRepository
-from endpoints.schedule.scheduleModel import ScheduleModel
+from endpoints.schedule.ingestion_service import ScheduleIngestionService
 
 FIXTURE = CALENDAR_FIXTURE + '''
 ALTER TABLE "Week" ADD COLUMN "createdAt" timestamptz DEFAULT '2000-01-01T00:00Z';
@@ -117,7 +117,7 @@ def tests(engine):
     try:expect(RuntimeError,lambda:service.member_games_for_job(10,11,2))
     finally:event.remove(engine,'after_cursor_execute',fail)
     assert triggered==[True] and state()==before
-    legacy=ScheduleModel.__new__(ScheduleModel);legacy.db=engine
+    legacy=ScheduleIngestionService.__new__(ScheduleIngestionService);legacy.db=engine
     assert len(legacy.get_member_games_for_week(10,11,2))==6 and legacy.get_week_for_league(10,2)['weekNumber']==2
     declared={'member_games','head_to_head_games','week','owned_teams'}
     assert declared <= vars(ScheduleReadRepository).keys() and covered==declared
@@ -140,7 +140,7 @@ def main():
             assert cursor.fetchone()[0]=='otm-modernization-assessment-20261029-synthetic-only','Refusing unmarked server'
             cursor.execute(sql.SQL('CREATE DATABASE {}').format(sql.Identifier(name)));created=True
         engine=engine_for(name,'otm-schedule-member-reads');calendar=calendar_tests(engine);result=tests(engine)
-        files=['api/endpoints/schedule/'+f for f in ('read_service.py','read_repository.py','calendar_service.py','calendar_repository.py','scheduleModel.py','scheduleEndpoints.py','routes.py','helpers/weekHelper.py')]
+        files=['api/endpoints/schedule/'+f for f in ('read_service.py','read_repository.py','calendar_service.py','calendar_repository.py','ingestion_service.py','scheduleEndpoints.py','routes.py','helpers/weekHelper.py')]
         files+=['api/rules/leagueRules.py','api/rules/tournamentRules.py','api/tests/test_schedule_read_service.py','scripts/modernization/verify_schedule_calendar.py','scripts/modernization/verify_schedule_member_reads.py']
         report={'result':'PASS','scope':'Marked owned synthetic loopback PostgreSQL; no configured app/DB/provider/jobs startup',
                 'member_reads':result,'calendar_rerun':calendar,'sha256':{f:hashlib.sha256((ROOT/f).read_bytes()).hexdigest() for f in files}}

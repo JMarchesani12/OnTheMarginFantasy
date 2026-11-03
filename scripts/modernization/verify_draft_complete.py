@@ -21,7 +21,6 @@ from verify_draft_finalization import FIXTURE as FINALIZE_FIXTURE
 from actors import UserActor
 from endpoints.draft.pick_service import DraftPickService
 from endpoints.draft.pick_repository import DraftPickRepository
-from endpoints.draft.draftModel import DraftModel
 
 FIXTURE = FINALIZE_FIXTURE + '''
 UPDATE "League" SET settings='{"draft":{"draftType":"SNAKE","selectionTime":60,"numberOfRounds":2,"timeoutAction":"AUTO-SKIP","graceSeconds":0}}' WHERE id=10;
@@ -233,7 +232,7 @@ def tests(engine, database, probe=False):
             deadline=namespace[helper.name](conn);assert deadline[0]==10 and 0<deadline[1]<=60
         query('UPDATE "DraftState" SET status=\'paused\'')
         with engine.begin() as conn:assert namespace[helper.name](conn) is None
-        reset();legacy=DraftModel.__new__(DraftModel);legacy.db=engine
+        reset();legacy=DraftPickService(engine)
         assert legacy.create_draft_pick_live(10,12,102)['overallPickNumber']==2
         declared={name for name,method in vars(DraftPickRepository).items() if callable(method) and not name.startswith('_')}
         assert covered==declared,{'missing_native_operations':sorted(declared-covered)}
@@ -265,7 +264,7 @@ def main():
         previous={'snapshot':snapshot_tests(engine,database),'finalization':finalize_tests(engine,database),
                   'controls':control_tests(engine,database),'order':order_tests(engine,database)}
         files=['api/endpoints/draft/'+name for name in ('draft_rules.py','pick_service.py','pick_repository.py','control_service.py',
-            'control_repository.py','snapshot_service.py','snapshot_repository.py','draftModel.py','draftEndpoints.py','routes.py','draftSocket.py','startDraftNotifyListener.py','notifyChannel.py')]
+            'control_repository.py','snapshot_service.py','snapshot_repository.py','draftEndpoints.py','routes.py','draftSocket.py','startDraftNotifyListener.py','notifyChannel.py')]
         files+=['api/actors.py','api/worker/draftTimeoutWorker.py']
         files+=['scripts/modernization/'+name for name in ('verify_draft_snapshot.py','verify_draft_finalization.py','verify_draft_controls.py','verify_draft_order.py','verify_draft_complete.py')]
         report={'result':'PASS','scope':'Synthetic marked loopback PostgreSQL only; no configured DB or running jobs/listeners',

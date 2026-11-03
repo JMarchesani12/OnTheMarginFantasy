@@ -1,7 +1,8 @@
 """Draft finalization authority and atomic state/league transition tests."""
 import unittest
 from actors import UserActor
-from endpoints.draft.draftModel import DraftModel
+from endpoints.draft.pick_service import DraftPickService
+from endpoints.draft.control_service import DraftControlService
 import test_draft_control_authorization as controls
 from test_transaction_service import ConnectionOwner
 
@@ -49,11 +50,11 @@ class DraftFinalizationServiceTests(unittest.TestCase):
         with self.assertRaises(PermissionError):service.finalize(UserActor(1,'alice'),10)
         self.assertEqual(self.state(),before)
     def test_supplied_transaction_legacy_and_assert_helpers(self):
-        model=DraftModel.__new__(DraftModel);model.db=self.engine;before=self.state()
+        model=DraftPickService(self.engine);before=self.state()
         with self.assertRaises(RuntimeError):
             with self.engine.begin() as conn:
                 self.assertTrue(model.finalize_draft(10,conn=conn)['draftComplete'])
                 self.assertEqual(self.engine.begins,1)
                 raise RuntimeError('caller abort')
         self.assertEqual(self.state(),before)
-        self.assertTrue(model.force_finalize_draft(10,'1')['draftComplete'])
+        self.assertTrue(DraftControlService(model.db).force_finalize_for_user_id(10, '1')['draftComplete'])

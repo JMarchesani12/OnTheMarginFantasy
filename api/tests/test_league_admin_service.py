@@ -1,7 +1,7 @@
 """League deletion policy and atomic cascades on disposable synthetic SQL."""
+from endpoints.league.administration.service import LeagueAdminService
 import unittest
 from actors import UserActor
-from endpoints.league.leagueModel import LeagueModel
 import test_league_deletion_authorization as deletion
 from test_transaction_service import ConnectionOwner
 
@@ -47,7 +47,7 @@ class LeagueAdminServiceTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):service.delete(UserActor(1,'alice'),10)
         self.assertEqual(self.state(),before)
 
-    def test_db_only_legacy_delegate_checks_authority_and_preserves_coercion(self):
-        model=LeagueModel.__new__(LeagueModel);model.db=self.engine
-        with self.assertRaises(PermissionError):model.delete_league(10,2)
-        self.assertEqual(model.delete_league(10,'1'),{'deletedLeagueId':10,'deletedLeagueName':'Alice League'})
+    def test_canonical_delegate_checks_authority_and_preserves_coercion(self):
+        model=self.engine
+        with self.assertRaises(PermissionError):LeagueAdminService(model).delete_for_legacy_commissioner(10, 2)
+        self.assertEqual(LeagueAdminService(model).delete_for_legacy_commissioner(10, '1'),{'deletedLeagueId':10,'deletedLeagueName':'Alice League'})

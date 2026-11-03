@@ -9,7 +9,7 @@ from assess_postgres import LOCAL,ROOT,engine_for
 from verify_draft_finalization import FIXTURE as FINALIZE_FIXTURE,snapshot_tests,tests as finalize_tests
 from actors import UserActor
 from endpoints.draft.control_service import DraftControlService
-from endpoints.draft.draftModel import DraftModel
+from endpoints.draft.pick_service import DraftPickService
 
 FIXTURE=FINALIZE_FIXTURE+'''
 UPDATE "League" SET settings='{"draft":{"draftType":"SNAKE","selectionTime":60,"numberOfRounds":2,"timeoutAction":"AUTO-SKIP","graceSeconds":0}}' WHERE id=10;
@@ -114,7 +114,7 @@ def tests(engine,database):
         before['League'][0]['commissioner']=2;assert changed==[True] and state()==before
 
     locks=[]
-    for facade in (False,True):
+    for user_id_service in (False,True):
         prepare('pause');first=engine_for(database,'otm-controls-first');second=engine_for(database,'otm-controls-second')
         locked,release=threading.Event(),threading.Event();outcomes={}
         def hold(conn,cursor,statement,params,context,many):
@@ -124,9 +124,8 @@ def tests(engine,database):
         event.listen(first,'after_cursor_execute',hold)
         def run(label,owner,action):
             try:
-                if facade:
-                    model=DraftModel.__new__(DraftModel);model.db=owner
-                    result=getattr(model,action+'_draft')(10,acting_user_id=1)
+                if user_id_service:
+                    result=getattr(DraftControlService(owner),action+'_for_legacy_user_id')(10,1)
                 else:result=getattr(DraftControlService(owner),action)(actor,10)
                 outcomes[label]=result['state']['status']
             except Exception as exc:outcomes[label]=[type(exc).__name__,str(exc)]
@@ -144,9 +143,9 @@ def tests(engine,database):
             if b.ident is not None:b.join(10)
             event.remove(first,'after_cursor_execute',hold);first.dispose();second.dispose()
         assert not a.is_alive() and not b.is_alive() and outcomes=={'first':'paused','second':'live'},outcomes
-        locks.append({'path':'legacy_facade' if facade else 'service','observed_lock_wait':True,'outcomes':outcomes})
-    reset();model=DraftModel.__new__(DraftModel);model.db=engine
-    assert model.start_draft(10)['state']['status']=='live'
+        locks.append({'path':'user_id_service' if user_id_service else 'actor_service','observed_lock_wait':True,'outcomes':outcomes})
+    reset();model=DraftPickService(engine)
+    assert DraftControlService(model.db).start_for_job(10)['state']['status']=='live'
     return {'native_generate_series_snake_straight_interval_upsert':'PASS','incomplete_order_config_missing_complete_guards':'PASS',
             'post_write_deferred_commit_and_authority_rollback':'PASS','concurrent_pause_resume':locks,
             'legacy_trusted_reset_compatibility':'PASS','scope_limit':'Existing restart/ON CONFLICT behavior preserved; no new replay guarantee'}
@@ -161,7 +160,7 @@ def main():
             assert cur.fetchone()[0]=='otm-modernization-assessment-20261029-synthetic-only','Refusing unmarked server'
             cur.execute(sql.SQL('CREATE DATABASE {}').format(sql.Identifier(name)));created=True
         engine=engine_for(name,'otm-draft-controls');snapshot=snapshot_tests(engine,name);finalization=finalize_tests(engine,name);controls=tests(engine,name)
-        files=['api/endpoints/draft/'+f for f in ('draft_rules.py','control_service.py','control_repository.py','snapshot_service.py','snapshot_repository.py','draftModel.py','draftEndpoints.py','routes.py')]
+        files=['api/endpoints/draft/'+f for f in ('draft_rules.py','control_service.py','control_repository.py','snapshot_service.py','snapshot_repository.py','draftEndpoints.py','routes.py')]
         files+=['api/actors.py']+['scripts/modernization/'+f for f in ('verify_draft_snapshot.py','verify_draft_finalization.py','verify_draft_controls.py')]
         report={'result':'PASS','scope':'Synthetic marked loopback PostgreSQL; no configured/hosted database','snapshot_rerun':snapshot,'finalization_rerun':finalization,'controls':controls,
                 'sha256':{f:hashlib.sha256((ROOT/f).read_bytes()).hexdigest() for f in files}}

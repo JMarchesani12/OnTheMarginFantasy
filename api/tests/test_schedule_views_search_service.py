@@ -3,7 +3,7 @@ import datetime as dt
 import unittest
 from test_schedule_read_service import ReadEngine
 from endpoints.schedule.read_service import ScheduleReadService
-from endpoints.schedule.scheduleModel import ScheduleModel
+from endpoints.schedule.ingestion_service import ScheduleIngestionService
 
 
 class SequenceEngine(ReadEngine):
@@ -88,13 +88,13 @@ class ScheduleViewsSearchTests(unittest.TestCase):
         self.assertEqual(engine.outcomes,['rollback'])
 
     def test_legacy_db_only_classmethod_and_window_overrides(self):
-        class CustomRank(ScheduleModel):
+        class CustomRank(ScheduleIngestionService):
             @classmethod
             def _team_search_rank(cls,row,query): return 100
         model = CustomRank.__new__(CustomRank)
         model.db = SequenceEngine([[self.context()],[{'teamName':'Unrelated Team'}]])
         self.assertEqual(model.search_teams_for_league(10,'iowa'),[{'teamName':'Unrelated Team'}])
-        class CustomWindow(ScheduleModel):
+        class CustomWindow(ScheduleIngestionService):
             def _get_week_window(self,league_id,week_number): return ('start','end')
         model = CustomWindow.__new__(CustomWindow)
         model.db = SequenceEngine([[{'id':1}]])

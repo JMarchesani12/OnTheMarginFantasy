@@ -6,8 +6,8 @@ from sqlalchemy import text
 from flask import Flask
 from authMiddleware import install_auth_middleware
 from endpoints.scoring.routes import setup_routes
-from endpoints.scoring.scoringModel import ScoringModel
-from endpoints.transaction.transactionModel import TransactionModel
+from endpoints.scoring.service import ScoringService, ScoringReadService
+from endpoints.transaction.workflow_service import TransactionWorkflowService
 import test_free_agency_authorization as fixture
 
 
@@ -50,7 +50,7 @@ class ScoringAuthorizationTests(unittest.TestCase):
         with patch.dict(os.environ,{'ESPN_BASE_URL':'https://provider.example.test'}):
             setup_routes(app,self.db)
         self.client=app.test_client()
-        self.model=ScoringModel(self.db,None)
+        self.model=ScoringService(self.db,None)
 
     def read(self,kind='points',league=10,subject=fixture.ALICE,body=None):
         if kind=='points':
@@ -120,8 +120,8 @@ class ScoringAuthorizationTests(unittest.TestCase):
             self.db.connection.commit()
 
     def test_trusted_reads_remain_context_free(self):
-        self.assertEqual(self.model.compute_end_of_year_season_standings(20)['members'][0]['memberId'],21)
-        self.assertEqual(self.model.get_weekly_points_awarded_for_league(20,[1])[0]['pointsAwarded'],8)
+        self.assertEqual(self.model.get_season_standings_for_job(20)['members'][0]['memberId'],21)
+        self.assertEqual(ScoringReadService(self.db).get_weekly_points_for_job(20,[1])[0]['pointsAwarded'],8)
 
     def test_operational_errors_have_safe_responses(self):
         def fail(sql):
@@ -142,8 +142,8 @@ class DisabledOperationalHttpTests(unittest.TestCase):
         self.score_client=self.fixture.client
         self.trade_client=self.fixture.fixture.client
         self.headers=self.fixture.headers
-        self.score=self.enterContext(patch.object(ScoringModel,'compute_weekly_scores'))
-        self.apply=self.enterContext(patch.object(TransactionModel,'apply_trade'))
+        self.score=self.enterContext(patch.object(ScoringService,'compute_weekly_scores_for_job'))
+        self.apply=self.enterContext(patch.object(TransactionWorkflowService,'apply_trade'))
         self.database=self.enterContext(patch.object(self.fixture.db,'begin',side_effect=AssertionError('No HTTP persistence')))
         self.connect=self.enterContext(patch.object(self.fixture.db,'connect',side_effect=AssertionError('No HTTP persistence')))
 

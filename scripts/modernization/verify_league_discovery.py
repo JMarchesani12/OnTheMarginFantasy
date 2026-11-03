@@ -8,7 +8,6 @@ from assess_postgres import LOCAL,ROOT,engine_for
 from verify_league_conferences import listing_tests,creation_tests,approval_tests,profile_tests,removal_tests,deletion_tests,settings_tests,league_creation_tests,rules_tests,tests as conference_tests
 from actors import UserActor
 from endpoints.league.reads.service import LeagueReadService
-from endpoints.league.leagueModel import LeagueModel
 
 FIXTURE='''DROP SCHEMA public CASCADE; CREATE SCHEMA public;
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
@@ -53,10 +52,10 @@ def tests(engine,database):
     assert len(service.search_public('Margin',sport_id=3,limit=999,offset=-1))==50
     assert len(service.search_public('Margin',sport_id=3,limit=0))==1
     assert len(service.search_public('Margin',sport_id=3,limit=50,offset=50))==5
-    model=LeagueModel.__new__(LeagueModel);model.db=engine
-    assert model.get_league_read_access(10,2)['fullAccess'] is True
-    assert model.get_member_previews_for_user(13,3)==[]
-    assert model.search_leagues('Margin',sport_id=1)==service.search_public('Margin',sport_id=1)
+    model=engine
+    assert LeagueReadService(model).access_for_reader_id(10, 2)['fullAccess'] is True
+    assert LeagueReadService(model).member_previews_for_reader_id(13, 3)==[]
+    assert LeagueReadService(model).search_public('Margin', sport_id=1)==service.search_public('Margin',sport_id=1)
     other=engine_for(database,'otm-discovery-revoke')
     try:
         assert service.access(outsider,10)['isDiscoverable'] is True
@@ -81,7 +80,7 @@ def tests(engine,database):
     finally:other.dispose()
     return {'native_metadata_full_access_private_missing':'PASS','names_only_preview_entitlements':'PASS',
             'pg_trgm_ranking_tie_order_sport_page_clamps_bound_values':'PASS','short_query_no_io':'PASS',
-            'separate_connection_visibility_membership_and_query_gap_revocation':'PASS','legacy_model_compatibility':'PASS'}
+            'separate_connection_visibility_membership_and_query_gap_revocation':'PASS','canonical_service_contracts':'PASS'}
 
 
 def main():
@@ -96,7 +95,7 @@ def main():
         prior={'listing_cancellation':listing_tests(engine,name),'creation_denial':creation_tests(engine,name),
                'approval':approval_tests(engine,name),'member_profile':profile_tests(engine,name),'member_removal':removal_tests(engine,name),'league_deletion':deletion_tests(engine,name),'league_settings':settings_tests(engine,name),'league_creation':league_creation_tests(engine,name),'league_rules':rules_tests(engine,name),'league_conferences':conference_tests(engine,name)}
         discovery=tests(engine,name)
-        files=['api/endpoints/league/'+f for f in ('reads/service.py','reads/repository.py','administration/service.py','administration/repository.py','members/service.py','members/repository.py','admission/service.py','admission/repository.py','admission/contracts.py','leagueModel.py','leagueEndpoints.py')]
+        files=['api/endpoints/league/'+f for f in ('reads/service.py','reads/repository.py','administration/service.py','administration/repository.py','members/service.py','members/repository.py','admission/service.py','admission/repository.py','admission/contracts.py','leagueEndpoints.py')]
         files+=['api/actors.py','api/rules/leagueRules.py','api/utils/authorization.py']+['scripts/modernization/'+f for f in ('verify_admission_slice.py','verify_admission_create_deny.py','verify_admission_approval.py','verify_member_profile.py','verify_member_removal.py','verify_league_delete.py','verify_league_settings.py','verify_league_creation.py','verify_league_rules_read.py','verify_league_conferences.py','verify_league_discovery.py')]
         report={'result':'PASS','scope':'Synthetic marked loopback PostgreSQL; no configured/hosted database','prior_slices_rerun':prior,
                 'league_discovery':discovery,'sha256':{f:hashlib.sha256((ROOT/f).read_bytes()).hexdigest() for f in files}}

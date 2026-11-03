@@ -10,7 +10,6 @@ from sqlalchemy import text
 from assess_postgres import LOCAL, ROOT, engine_for
 from verify_profile_pilot import profile_tests
 from endpoints.user.service import UserService
-from endpoints.user.userModel import UserModel
 from endpoints.user.contracts import (ProfileSubject, ProfileAlreadyExists,
     ProfileIdentityAmbiguous, ProfileCreationRejected)
 
@@ -86,21 +85,21 @@ def creation_tests(engine):
     else:
         raise AssertionError('Repeat did not conflict')
     assert count()==4
-    model=UserModel(engine)
-    assert str(model.get_user_by_uuid(AMBIGUOUS)['uuid'])==AMBIGUOUS
-    legacy=model.create_user(' legacy@example.test ',None,NEW)
+    model=UserService(engine)
+    assert str(model.get_profile_by_uuid_for_job(AMBIGUOUS)['uuid'])==AMBIGUOUS
+    legacy=model.create_profile_for_job(' legacy@example.test ',None,NEW)
     assert legacy['displayName']=='' and legacy['email']=='legacy@example.test'
     assert count()==5  # legacy trusted creation intentionally has no new UUID precheck
     try:
-        model.create_user('alice@example.test','Duplicate',NEW)
-    except ValueError as exc:
+        model.create_profile_for_job('alice@example.test','Duplicate',NEW)
+    except ProfileCreationRejected as exc:
         assert str(exc)=='User creation failed'
     else:
         raise AssertionError('Legacy constraint failure did not translate')
     assert count()==5
     return {'creation_normalization_projection_reload':'PASS','existing_and_ambiguous_denials':'PASS',
             'real_email_unique_and_auth_fk':'PASS','insert_statement_rollback':'PASS',
-            'deferred_insert_commit_rollback':'PASS','legacy_uuid_and_creation_compatibility':'PASS'}
+            'deferred_insert_commit_rollback':'PASS','job_uuid_and_creation_contracts':'PASS'}
 
 
 def main():
@@ -118,7 +117,7 @@ def main():
         engine=engine_for(name,'otm-profile-creation')
         reads=profile_tests(engine)
         creations=creation_tests(engine)
-        files=['api/endpoints/user/'+f for f in ('service.py','repository.py','contracts.py','userModel.py','userEndpoints.py')]
+        files=['api/endpoints/user/'+f for f in ('service.py','repository.py','contracts.py','userEndpoints.py')]
         files+=['api/actors.py','api/authenticatedPrincipal.py','scripts/modernization/verify_profile_pilot.py',
                 'scripts/modernization/verify_profile_creation.py']
         report={'result':'PASS','scope':'Synthetic marked loopback PostgreSQL; auth.users is a minimal FK fixture, not provider acceptance',

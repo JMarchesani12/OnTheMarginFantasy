@@ -1,4 +1,5 @@
 """Approval identity/transaction tests; synthetic SQLite, no PostgreSQL locking proof."""
+from endpoints.league.admission.service import AdmissionService
 import json
 import os
 import time
@@ -216,12 +217,11 @@ class JoinRequestApprovalAuthorizationTests(unittest.TestCase):
         self.assertEqual(self.state(), before)
 
 
-    def test_trusted_model_approval_remains_independent_of_http_principal(self):
-        from endpoints.league.leagueModel import LeagueModel
-        model = LeagueModel.__new__(LeagueModel)
-        model.db = self.db
+    def test_trusted_service_approval_remains_independent_of_http_principal(self):
+
+        model = self.db
         # No Flask request context; trusted actor remains audit metadata as before.
-        result = model.approve_join_request(10, 101, 4)
+        result = AdmissionService(model).approve_request_for_job(10, 101, 4)
         self.assertEqual(result['request']['status'], 'APPROVED')
         self.assertEqual(result['request']['resolvedByUserId'], 4)
         self.assertEqual(result['member']['userId'], 3)

@@ -5,7 +5,7 @@ import jwt
 from flask import Flask
 from authMiddleware import install_auth_middleware
 from endpoints.roster.routes import setup_routes
-from endpoints.roster.rosterModel import RosterModel
+from endpoints.roster.service import RosterService
 from test_league_read_authorization import ReadDatabase
 from test_profile_regression import ALICE, BOB
 from supabaseAuth import ISSUER, SUPABASE_JWT_SECRET
@@ -67,8 +67,8 @@ class RosterReadTests(unittest.TestCase):
         for member in (True, [], 'bad', None):
             self.assertEqual(self.read(member=member).status_code,400)
 
-    def test_trusted_model_access_remains_explicitly_context_free(self):
-        rows = RosterModel(self.db).get_member_teams_for_week(20,21,1)
+    def test_trusted_service_access_remains_explicitly_context_free(self):
+        rows = RosterService(self.db).get_member_teams_for_job(20,21,1)
         self.assertEqual(rows[0]['slotId'],2)
 
     def test_revocation_before_roster_query_does_not_expose_rows(self):

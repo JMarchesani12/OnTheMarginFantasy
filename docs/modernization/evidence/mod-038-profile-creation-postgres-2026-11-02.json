@@ -1,0 +1,30 @@
+{
+  "result": "PASS",
+  "scope": "Synthetic marked loopback PostgreSQL; auth.users is a minimal FK fixture, not provider acceptance",
+  "profile_reads_updates_rerun": {
+    "projection_and_identity_fields": "PASS",
+    "own_update_and_bound_parameters": "PASS",
+    "foreign_and_invalid_update_denials": "PASS",
+    "statement_failure_rollback": "PASS",
+    "deferred_commit_failure_rollback": "PASS",
+    "missing_profile_and_job_contracts": "PASS"
+  },
+  "profile_creation_uuid": {
+    "creation_normalization_projection_reload": "PASS",
+    "existing_and_ambiguous_denials": "PASS",
+    "real_email_unique_and_auth_fk": "PASS",
+    "insert_statement_rollback": "PASS",
+    "deferred_insert_commit_rollback": "PASS",
+    "job_uuid_and_creation_contracts": "PASS"
+  },
+  "sha256": {
+    "api/endpoints/user/service.py": "019ae115ceda16162cbf4b586f5c1e52967d119ed3693919eba86c5f2ff1a87a",
+    "api/endpoints/user/repository.py": "21d184c7b9049496b72f6e3ca6f1133e666983f1c904cbb8bc8a6335cb912c55",
+    "api/endpoints/user/contracts.py": "402c2fbdaf7d32f29d00cf1297e8d99d30f292a95bff18512d4994c2ea2537ff",
+    "api/endpoints/user/userEndpoints.py": "0b658094e4ab61f979c1080457c409b93c72f87ebf3581ca9441a0209fef22d2",
+    "api/actors.py": "6b0ea454e1227c2e9fe94cb3ca76db15a799ec3b5481a063b0fd2705318b789f",
+    "api/authenticatedPrincipal.py": "2ca4f7fd5edd233dc00c56369e253f1f22d7dbede031b9888bf4771e1da60bdc",
+    "scripts/modernization/verify_profile_pilot.py": "99fb43a3c7d15f1568c6305acddc8c36bce1902280813d37a52b476a7d75fcef",
+    "scripts/modernization/verify_profile_creation.py": "ab27b8cc2673f05b81b7b88d680c956d5a962b0118a3cdcd6030869e645edf0a"
+  }
+}

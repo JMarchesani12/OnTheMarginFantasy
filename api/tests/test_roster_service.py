@@ -66,16 +66,16 @@ class RosterServiceTests(unittest.TestCase):
         self.db.before_query=remove
         self.assertEqual(self.service.get_member_teams_for_week(UserActor(1,'alice'),10,12,1), [])
 
-    def test_no_future_unlocked_week_has_domain_failure_and_legacy_value_error(self):
+    def test_no_future_unlocked_week_has_domain_failure_for_actor_and_job(self):
         self.db.connection.execute('DELETE FROM Week WHERE id=101')
         self.db.connection.commit()
         for operation,args in ((self.service.get_member_teams_for_week,(10,12,1)),
                                (self.service.get_available_teams_for_week,(10,1))):
             with self.assertRaisesRegex(RosterWeekUnavailable,'No unlocked future week found after week 1'):
                 operation(UserActor(1,'alice'),*args)
-        from endpoints.roster.rosterModel import RosterModel
-        with self.assertRaisesRegex(ValueError,'No unlocked future week'):
-            RosterModel(self.db).get_member_teams_for_week(10,12,1)
+        from endpoints.roster.service import RosterService
+        with self.assertRaisesRegex(RosterWeekUnavailable,'No unlocked future week'):
+            RosterService(self.db).get_member_teams_for_job(10,12,1)
 
     def test_missing_week_and_explicit_trusted_reads_keep_existing_semantics(self):
         self.db.connection.execute('DELETE FROM Week WHERE leagueId=10')

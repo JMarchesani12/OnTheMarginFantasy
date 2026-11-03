@@ -9,7 +9,6 @@ from assess_postgres import LOCAL,ROOT,engine_for
 from verify_member_removal import listing_tests,creation_tests,approval_tests,profile_tests,tests as removal_tests
 from actors import UserActor
 from endpoints.league.administration.service import LeagueAdminService
-from endpoints.league.leagueModel import LeagueModel
 
 FIXTURE='''DROP SCHEMA public CASCADE; CREATE SCHEMA public;
 CREATE TABLE "League" (id bigint PRIMARY KEY,name text,commissioner bigint);
@@ -82,7 +81,7 @@ def tests(engine,database):
     assert state()==before
 
     concurrency=[]
-    for facade in (False,True):
+    for user_id_service in (False,True):
         reset();first=engine_for(database,'otm-delete-first');second=engine_for(database,'otm-delete-second')
         locked,release=threading.Event(),threading.Event();outcomes={};locks=[]
         def hold(conn,cursor,statement,params,context,many):
@@ -92,9 +91,9 @@ def tests(engine,database):
         event.listen(first,'after_cursor_execute',hold)
         def delete(label,owner):
             try:
-                if facade:
-                    model=LeagueModel.__new__(LeagueModel);model.db=owner
-                    result=model.delete_league(10,1)
+                if user_id_service:
+                    model=owner
+                    result=LeagueAdminService(model).delete_for_legacy_commissioner(10, 1)
                 else:result=LeagueAdminService(owner).delete(actor,10)
                 outcomes[label]=['deleted',result['deletedLeagueId']]
             except Exception as exc:outcomes[label]=[type(exc).__name__,str(exc)]
@@ -116,7 +115,7 @@ def tests(engine,database):
         assert not a.is_alive() and not b.is_alive()
         assert locks==['league'] and outcomes=={'first':['deleted',10],'second':['ValueError','League not found']},outcomes
         assert len(state()['League'])==1 and state()['WeeklyScores']==[{'id':2,'weekId':2001,'points':20}]
-        concurrency.append({'path':'legacy_facade' if facade else 'service','mode':'competing_deletion','observed_lock_wait':True,'outcomes':outcomes})
+        concurrency.append({'path':'user_id_service' if user_id_service else 'actor_service','mode':'competing_deletion','observed_lock_wait':True,'outcomes':outcomes})
 
         reset();before=state();contender=engine_for(database,'otm-delete-second');outcomes={}
         thread=threading.Thread(target=delete,args=('revoked',contender),daemon=True)
@@ -135,9 +134,9 @@ def tests(engine,database):
             contender.dispose()
         assert not thread.is_alive() and outcomes=={'revoked':['PermissionError','Only the commissioner can delete this league']},outcomes
         before['League'][0]['commissioner']=2;assert state()==before
-        concurrency.append({'path':'legacy_facade' if facade else 'service','mode':'commissioner_revocation','observed_lock_wait':True,'outcomes':outcomes})
-    reset();model=LeagueModel.__new__(LeagueModel);model.db=engine
-    assert model.delete_league(10,'1')=={'deletedLeagueId':10,'deletedLeagueName':'Alice League'}
+        concurrency.append({'path':'user_id_service' if user_id_service else 'actor_service','mode':'commissioner_revocation','observed_lock_wait':True,'outcomes':outcomes})
+    reset();model=engine
+    assert LeagueAdminService(model).delete_for_legacy_commissioner(10, '1')=={'deletedLeagueId':10,'deletedLeagueName':'Alice League'}
     return {'authority_scope_projection_direct_multilevel_cascades':'PASS','real_fk_post_delete_commit_rollback':'PASS',
             'suppressed_delete_return_guard_rollback':'PASS','legacy_coercion':'PASS','concurrent_deletion':concurrency}
 
@@ -154,7 +153,7 @@ def main():
         prior={'listing_cancellation':listing_tests(engine,name),'creation_denial':creation_tests(engine,name),
                'approval':approval_tests(engine,name),'member_profile':profile_tests(engine,name),'member_removal':removal_tests(engine,name)}
         removal=tests(engine,name)
-        files=['api/endpoints/league/'+f for f in ('administration/service.py','administration/repository.py','members/service.py','members/repository.py','admission/service.py','admission/repository.py','admission/contracts.py','leagueModel.py','leagueEndpoints.py')]
+        files=['api/endpoints/league/'+f for f in ('administration/service.py','administration/repository.py','members/service.py','members/repository.py','admission/service.py','admission/repository.py','admission/contracts.py','leagueEndpoints.py')]
         files+=['api/actors.py']+['scripts/modernization/'+f for f in ('verify_admission_slice.py','verify_admission_create_deny.py','verify_admission_approval.py','verify_member_profile.py','verify_member_removal.py','verify_league_delete.py')]
         report={'result':'PASS','scope':'Synthetic marked loopback PostgreSQL; no configured/hosted database','prior_slices_rerun':prior,
                 'league_deletion':removal,'sha256':{f:hashlib.sha256((ROOT/f).read_bytes()).hexdigest() for f in files}}

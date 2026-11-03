@@ -4,7 +4,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from endpoints.schedule.scheduleModel import ScheduleModel
+from endpoints.schedule.ingestion_service import ScheduleIngestionService
 
 
 class TierAdjustedPointDiffTests(unittest.TestCase):
@@ -13,7 +13,7 @@ class TierAdjustedPointDiffTests(unittest.TestCase):
             for margin in [21, -21, 0]:
                 with self.subTest(owned=owned_tier, opponent=opponent_tier, margin=margin):
                     self.assertEqual(
-                        ScheduleModel._apply_tier_adjustment(
+                        ScheduleIngestionService._apply_tier_adjustment(
                             margin, owned_tier, opponent_tier, sport_id=1
                         ),
                         margin,
@@ -32,21 +32,21 @@ class TierAdjustedPointDiffTests(unittest.TestCase):
             ]:
                 with self.subTest(owned=owned, opponent=opponent, margin=margin):
                     self.assertEqual(
-                        ScheduleModel._apply_tier_adjustment(
+                        ScheduleIngestionService._apply_tier_adjustment(
                             margin, owned, opponent, sport_id=1
                         ),
                         expected,
                     )
 
     def test_football_still_adjusts_at_one_tier(self):
-        self.assertEqual(ScheduleModel._apply_tier_adjustment(21, 1, 2, sport_id=2), 11)
-        self.assertEqual(ScheduleModel._apply_tier_adjustment(-21, 1, 2, sport_id=2), -42)
-        self.assertEqual(ScheduleModel._apply_tier_adjustment(21, 2, 1, sport_id=2), 42)
-        self.assertEqual(ScheduleModel._apply_tier_adjustment(-21, 2, 1, sport_id=2), -11)
+        self.assertEqual(ScheduleIngestionService._apply_tier_adjustment(21, 1, 2, sport_id=2), 11)
+        self.assertEqual(ScheduleIngestionService._apply_tier_adjustment(-21, 1, 2, sport_id=2), -42)
+        self.assertEqual(ScheduleIngestionService._apply_tier_adjustment(21, 2, 1, sport_id=2), 42)
+        self.assertEqual(ScheduleIngestionService._apply_tier_adjustment(-21, 2, 1, sport_id=2), -11)
 
     def test_halves_win_margin_against_lower_tier_opponent_rounding_up(self):
         self.assertEqual(
-            ScheduleModel._apply_tier_adjustment(
+            ScheduleIngestionService._apply_tier_adjustment(
                 raw_point_diff=21,
                 owned_team_tier=1,
                 opponent_team_tier=3,
@@ -56,7 +56,7 @@ class TierAdjustedPointDiffTests(unittest.TestCase):
 
     def test_doubles_loss_margin_against_lower_tier_opponent(self):
         self.assertEqual(
-            ScheduleModel._apply_tier_adjustment(
+            ScheduleIngestionService._apply_tier_adjustment(
                 raw_point_diff=-7,
                 owned_team_tier=1,
                 opponent_team_tier=3,
@@ -66,7 +66,7 @@ class TierAdjustedPointDiffTests(unittest.TestCase):
 
     def test_doubles_win_margin_for_lower_tier_team_against_higher_tier_opponent(self):
         self.assertEqual(
-            ScheduleModel._apply_tier_adjustment(
+            ScheduleIngestionService._apply_tier_adjustment(
                 raw_point_diff=10,
                 owned_team_tier=2,
                 opponent_team_tier=1,
@@ -76,7 +76,7 @@ class TierAdjustedPointDiffTests(unittest.TestCase):
 
     def test_halves_loss_margin_for_lower_tier_team_against_higher_tier_opponent(self):
         self.assertEqual(
-            ScheduleModel._apply_tier_adjustment(
+            ScheduleIngestionService._apply_tier_adjustment(
                 raw_point_diff=-10,
                 owned_team_tier=2,
                 opponent_team_tier=1,
@@ -86,7 +86,7 @@ class TierAdjustedPointDiffTests(unittest.TestCase):
 
     def test_keeps_margin_for_same_tier_opponent(self):
         self.assertEqual(
-            ScheduleModel._apply_tier_adjustment(
+            ScheduleIngestionService._apply_tier_adjustment(
                 raw_point_diff=21,
                 owned_team_tier=2,
                 opponent_team_tier=2,
@@ -96,7 +96,7 @@ class TierAdjustedPointDiffTests(unittest.TestCase):
 
     def test_keeps_margin_when_team_tier_is_unknown(self):
         self.assertEqual(
-            ScheduleModel._apply_tier_adjustment(
+            ScheduleIngestionService._apply_tier_adjustment(
                 raw_point_diff=21,
                 owned_team_tier=None,
                 opponent_team_tier=3,

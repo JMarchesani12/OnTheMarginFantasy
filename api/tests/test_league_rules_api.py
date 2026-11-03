@@ -1,3 +1,5 @@
+from endpoints.league.reads.service import LeagueReadService
+from endpoints.league.administration.service import LeagueAdminService
 import sys
 import time
 import jwt
@@ -7,7 +9,7 @@ from unittest.mock import Mock
 from flask import Flask
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from endpoints.league.leagueEndpoints import LeagueEndpoints
-from endpoints.schedule.scheduleModel import ScheduleModel
+from endpoints.schedule.ingestion_service import ScheduleIngestionService
 from authMiddleware import install_auth_middleware
 from supabaseAuth import ISSUER, SUPABASE_JWT_SECRET
 from test_profile_regression import ALICE, ProfileDatabase
@@ -28,7 +30,6 @@ class Connection:
 class LeagueRulesApiTests(unittest.TestCase):
     def setUp(self):
         self.endpoint=LeagueEndpoints.__new__(LeagueEndpoints)
-        self.endpoint.leagueModel=Mock()
         self.endpoint.league_read_service=Mock()
         self.endpoint.league_read_service.access.return_value = {
             'fullAccess': True, 'isDiscoverable': False,
@@ -64,7 +65,7 @@ class ScheduleRulesIntegrationTests(unittest.TestCase):
                 row=Row(rawMemberPointDiff=21,ownsHome=home,ownsAway=away,homeTeamTier=1,awayTeamTier=3,sportId=1)
                 db=Mock()
                 db.begin.return_value=Connection([row])
-                model=ScheduleModel(db,'https://example.test')
+                model=ScheduleIngestionService(db,'https://example.test')
                 model._get_league=Mock(return_value={'sport':1,'settings':{}})
                 game=model.get_member_games_for_week(1,2,3)[0]
                 self.assertEqual(game['memberPointDiff'],expected)
@@ -75,23 +76,22 @@ class EmptyScheduleRulesTests(unittest.TestCase):
     def test_unknown_version_is_rejected_even_without_games(self):
         db=Mock()
         db.begin.return_value=Connection([])
-        model=ScheduleModel(db,'https://example.test')
+        model=ScheduleIngestionService(db,'https://example.test')
         model._get_league=Mock(return_value={'sport':1,'settings':{'ruleSetVersion':'unknown'}})
         with self.assertRaises(ValueError):
             model.get_member_games_for_week(1,2,3)
 
 class LeagueRulesModelTests(unittest.TestCase):
     def model(self, responses):
-        from endpoints.league.leagueModel import LeagueModel
-        model=LeagueModel.__new__(LeagueModel)
+
         conn=Mock()
         conn.execute.side_effect=responses
         context=Mock()
         context.__enter__=Mock(return_value=conn)
         context.__exit__=Mock(return_value=False)
-        model.db=Mock()
-        model.db.connect.return_value=context
-        model.db.begin.return_value=context
+        model=Mock()
+        model.connect.return_value=context
+        model.begin.return_value=context
         return model,conn
 
     def test_rules_model_sorts_tiers_and_teams(self):
@@ -99,7 +99,7 @@ class LeagueRulesModelTests(unittest.TestCase):
         first=Mock(); first.fetchone.return_value=league
         teams=Mock(); teams.fetchall.return_value=[Row(teamId=1,teamName='Zulu',tier=2),Row(teamId=2,teamName='Beta',tier=1),Row(teamId=3,teamName='Alpha',tier=1)]
         model,conn=self.model([first,teams])
-        payload=model.get_league_rules(7)
+        payload=LeagueReadService(model).rules_for_job(7)
         self.assertEqual(payload['version'],'v1')
         self.assertEqual(payload['settings']['tradeDeadline'], '2026-12-01T00:00:00Z')
         self.assertIn('blocked after', ' '.join(p for section in payload['sections'] for p in section['paragraphs']))
@@ -110,7 +110,7 @@ class LeagueRulesModelTests(unittest.TestCase):
     def test_missing_rules_league_does_not_query_teams(self):
         result=Mock(); result.fetchone.return_value=None
         model,conn=self.model([result])
-        self.assertIsNone(model.get_league_rules(5))
+        self.assertIsNone(LeagueReadService(model).rules_for_job(5))
         self.assertEqual(conn.execute.call_count,1)
 
     def test_settings_update_preserves_version_in_database_write(self):
@@ -118,12 +118,12 @@ class LeagueRulesModelTests(unittest.TestCase):
         first=Mock(); first.fetchone.return_value=Row(id=1,sport=1,settings={'ruleSetVersion':'v1'})
         second=Mock(); second.mappings.return_value.first.return_value={'id':1}
         model,conn=self.model([first,second])
-        model.update_league(1,{'settings':{'bonuses':{}}})
+        LeagueAdminService(model).update_for_job(1, {'settings': {'bonuses': {}}})
         self.assertEqual(json.loads(conn.execute.call_args.args[1]['settings'])['ruleSetVersion'],'v1')
 
     def test_version_change_rejected_before_database_write(self):
         first=Mock(); first.fetchone.return_value=Row(id=1,sport=1,settings={})
         model,conn=self.model([first])
         with self.assertRaises(ValueError):
-            model.update_league(1,{'settings':{'ruleSetVersion':'v2'}})
+            LeagueAdminService(model).update_for_job(1, {'settings': {'ruleSetVersion': 'v2'}})
         self.assertEqual(conn.execute.call_count,1)
