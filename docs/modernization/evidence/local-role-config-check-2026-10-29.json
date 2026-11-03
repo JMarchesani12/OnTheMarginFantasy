@@ -1,0 +1,9 @@
+{
+  "scope": "Local configuration presence/target comparison only; credentials and target identifiers omitted; not deployed environment evidence.",
+  "api_backend_configured": true,
+  "listener_DATABASE_URL_available_in_api_file_or_process": false,
+  "frontend_env_contains_server_connection_string": true,
+  "listener_target_matches_api": null,
+  "frontend_server_exact_endpoint_matches_api": false,
+  "interpretation": "Different endpoint/user tuples do not prove different projects; listener deployment environment remains unknown. Non-VITE server variables are not evidence of browser bundling."
+}

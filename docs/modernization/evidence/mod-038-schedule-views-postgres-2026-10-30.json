@@ -1,0 +1,71 @@
+{
+  "result": "PASS",
+  "scope": "Marked owned synthetic loopback PostgreSQL; no configured app/DB/provider/jobs startup",
+  "views_search": {
+    "conference_window_season_memberships_owners_flags_defaults_exact_projection": "PASS",
+    "team_season_home_away_opponent_optional_missing_league_and_nullable_binds": "PASS",
+    "native_lateral_current_before_latest_and_no_week_999_ownership": "PASS",
+    "search_abbreviation_rank_limits_owners_sport_season_global_memberships": "PASS",
+    "original_duplicate_rows_missing_guards_read_failure_no_writes_and_legacy": "PASS",
+    "repository_queries_exercised": [
+      "conference_games",
+      "search_league_context",
+      "search_teams",
+      "team_owner_context",
+      "team_season_games",
+      "week_window"
+    ],
+    "scope_limit": "Read views/search only; original SQL, context, duplicate, coercion and scope policies retained. Ingestion/bootstrap and final caller composition remain."
+  },
+  "member_rerun": {
+    "native_member_ownership_week_season_sport_filters_and_order": "PASS",
+    "tier_perspectives_unranked_double_owned_and_tournament_math": "PASS",
+    "head_to_head_directions_week_and_owned_plain_projections": "PASS",
+    "acquisition_drop_boundaries_missing_rows_and_read_no_writes": "PASS",
+    "supplied_invalid_rules_failure_propagation_and_legacy_db_only": "PASS",
+    "original_null_start_h2h_null_score_and_membership_join_behavior": "PASS",
+    "repository_queries_exercised": [
+      "head_to_head_games",
+      "member_games",
+      "owned_teams",
+      "week"
+    ],
+    "scope_limit": "Member reads only; original query/policy/failure semantics preserved. Other views/search, ingestion/bootstrap and final composition remain."
+  },
+  "calendar_rerun": {
+    "json_dates_timezone_weekday_subdivision_and_missing_guards": "PASS",
+    "basketball_opening_dst_persisted_plan_and_existing_week_reuse": "PASS",
+    "football_week_zero_original_projection_and_defaults": "PASS",
+    "all_subdivisions_continuous_postseason_and_phase_final_calendar_join": "PASS",
+    "numbered_batch_rollback_preserves_prior_week_zero_commit": "PASS",
+    "native_statement_deferred_commit_rollback": "PASS",
+    "legacy_db_only_helpers_and_no_provider_client": "PASS",
+    "repository_queries_exercised": [
+      "insert_week",
+      "insert_week_zero",
+      "league",
+      "season_for_league",
+      "season_phases",
+      "subdivisions",
+      "weeks_for_league"
+    ],
+    "scope_limit": "Calendar only; original helper transaction boundaries preserved. Remaining schedule reads, ingestion/bootstrap and composition are later slices."
+  },
+  "read_repository_coverage": "10/10",
+  "sha256": {
+    "api/endpoints/schedule/read_service.py": "de4a958f9a0e83a30692fb47d8c3805e634e4234143ad85e3e253da974ddd525",
+    "api/endpoints/schedule/read_repository.py": "a2f109a185b8bbf86e8f4c58c52291c29f32f147228741f206275ece728d373f",
+    "api/endpoints/schedule/calendar_service.py": "6bb6cd15679419d3bf3bfbfa20f405d91c5d709ae0698d025a835a7ce31e363d",
+    "api/endpoints/schedule/calendar_repository.py": "252bf08e3ba5aea831cb4c03294e00a44789cef10bedc0019aba76ce850318d8",
+    "api/endpoints/schedule/scheduleModel.py": "26883bffbc46f48570df418acedd7b3c8379e8faa34f986f24769cf58dc32906",
+    "api/endpoints/schedule/scheduleEndpoints.py": "04f1a9a08b53e0c083a3d6b6809d891e889247fb80f3e4aafd2d5da0873386ac",
+    "api/endpoints/schedule/routes.py": "49a50d6c737c0ef0dc5bfb4369726fa381a54b9117d02508b67feb9269763021",
+    "api/endpoints/schedule/helpers/weekHelper.py": "5d36eba963f796d85581a006faabf13623749a9750cc2e453620797b9885ef05",
+    "api/rules/leagueRules.py": "b2e550cf2667318760af9d2731a4ffe64a0f7cea4da330469217272d680f1535",
+    "api/rules/tournamentRules.py": "d2f100bed2f52bbf0a5b14354d717979d89065e46d34e7158775327cb2ffdd85",
+    "api/tests/test_schedule_views_search_service.py": "908478d6cd8c576331092b31be5609f621137e189a334dc37d8701d138dbf94d",
+    "scripts/modernization/verify_schedule_calendar.py": "5d109bc5c51c420c09a912a4623c3c9c233d7b62d84f14164a34a0d2c2639f12",
+    "scripts/modernization/verify_schedule_member_reads.py": "483d03c5c20f7118ea8178289a1e5f7809f3c334f0378dd139f942fd83691d61",
+    "scripts/modernization/verify_schedule_views_search.py": "37cb9abb3c7b24e20a7940a9c6ec2964fa652f7dd81a90bde49d273a517fce32"
+  }
+}

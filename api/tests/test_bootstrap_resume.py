@@ -7,7 +7,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from endpoints.schedule.scheduleModel import ScheduleModel
+from endpoints.schedule.ingestion_service import ScheduleIngestionService
 
 
 class BootstrapResumeTests(unittest.TestCase):
@@ -23,7 +23,7 @@ class BootstrapResumeTests(unittest.TestCase):
         conn.execute.return_value.mappings.return_value.first.return_value = dict(
             id=1, sportId=1, scheduleBootstrapped=bootstrapped,
             seasonStart=dt.date(2027, 3, 1), seasonEnd=dt.date(2027, 3, 3))
-        model = ScheduleModel(db, 'https://example.test')
+        model = ScheduleIngestionService(db, 'https://example.test')
         model._get_season_phases = lambda _: []
         model._get_sport_api_config = lambda _: ('basketball', [50], 'basketball')
         model.ingest_scoreboard_for_date_for_sport_season = callback

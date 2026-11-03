@@ -59,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        const existingUser = await getUserByUuid(userId);
+        const existingUser = await getUserByUuid(userId, currentSession.access_token);
         if (existingUser) {
           safeLocalStorage.setItem(createdKey, 'true');
           if (pendingRaw) {
@@ -69,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch (error) {
         console.warn('Failed to look up user record.', error);
+        return;
       }
 
       const displayName =
@@ -77,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const resolvedDisplayName =
           displayName?.trim() || email.split("@")[0] || email;
-        await createUser(userId, email, resolvedDisplayName);
+        await createUser(resolvedDisplayName, currentSession.access_token);
         safeLocalStorage.removeItem(PENDING_USER_CREATE_KEY);
         safeLocalStorage.setItem(createdKey, 'true');
       } catch (error) {

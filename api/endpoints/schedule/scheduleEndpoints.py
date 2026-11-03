@@ -1,16 +1,14 @@
 # endpoints/schedule/scheduleEndpoints.py
 
-from rules.leagueRules import resolve_rules, rule_summary
 from flask import request, jsonify
 from sqlalchemy.engine import Engine
-import datetime as dt
 
-from endpoints.schedule.scheduleModel import ScheduleModel
+from .read_service import ScheduleReadService
 
 
 class ScheduleEndpoints:
-    def __init__(self, db_engine: Engine, espn_base_url: str):
-        self.model = ScheduleModel(db_engine, espn_base_url)
+    def __init__(self, db_engine: Engine, espn_base_url: str = None):
+        self.service = ScheduleReadService(db_engine)
 
     # ------------------------------------------------------------------
     # POST /api/schedule/all
@@ -41,31 +39,8 @@ class ScheduleEndpoints:
             member_id_int = int(member_id)
             week_number_int = int(week_number)
 
-            league = self.model._get_league(league_id_int)
-            rules = resolve_rules(league['sport'], league.get('settings'))
-            games = self.model.get_member_games_for_week(
-                league_id_int,
-                member_id_int,
-                week_number_int,
-                resolved_rules=rules,
-            )
-            week = self.model.get_week_for_league(
-                league_id_int,
-                week_number_int,
-            )
-            owned_teams = self.model.get_owned_teams_for_member(
-                league_id_int,
-                member_id_int,
-                week_number_int
-            )
-
-            # New response shape: include both week + games
-            return jsonify({
-                "rules": {"version": rules["version"], "summary": rule_summary(rules), "tierAdjustment": rules},
-                "ownedTeams": owned_teams,
-                "week": week,      # can be None if not found
-                "games": games,    # list[dict]
-            }), 200
+            payload = self.service.member_schedule_for_job(league_id_int, member_id_int, week_number_int)
+            return jsonify(payload), 200
         except ValueError as e:
             return jsonify({"message": str(e)}), 400
         except Exception:
@@ -93,7 +68,7 @@ class ScheduleEndpoints:
             return jsonify({"message": f"Missing required fields: {missing}"}), 400
 
         try:
-            games = self.model.get_conference_games_by_week(
+            games = self.service.conference_games_for_job(
                 league_id=int(body["leagueId"]),
                 week_number=int(body["weekNumber"]),
                 season_year=int(body["seasonYear"]),
@@ -133,7 +108,7 @@ class ScheduleEndpoints:
 
         try:
             league_id = body.get("leagueId")
-            games = self.model.get_team_games_by_season(
+            games = self.service.team_games_for_job(
                 sport_team_id=int(body["sportTeamId"]),
                 season_year=int(body["seasonYear"]),
                 league_id=int(league_id) if league_id is not None else None,
@@ -167,7 +142,7 @@ class ScheduleEndpoints:
             return jsonify({"message": "leagueId is required"}), 400
 
         try:
-            teams = self.model.search_teams_for_league(
+            teams = self.service.search_teams_for_job(
                 league_id=int(league_id),
                 query=str(query),
                 limit=int(limit),
@@ -184,29 +159,6 @@ class ScheduleEndpoints:
             traceback.print_exc()
             return jsonify({"message": "Failed to search teams"}), 500
         
-    # POST /api/schedule/createWeeks
-    # {
-    #     "leagueId": 2,
-    # }
     def createWeeksForLeague(self):
-        body = request.get_json(silent=True) or {}
-
-        required = ["leagueId"]
-        missing = [k for k in required if body.get(k) is None]
-        if missing:
-            return jsonify({"message": f"Missing required fields: {missing}"}), 400
-
-        try:
-            weeks = self.model.ensure_weeks_for_league(
-                league_id=int(body["leagueId"])
-            )
-            return jsonify({
-                "leagueId": body["leagueId"],
-                "weeksCreated": weeks,
-            }), 201
-        except ValueError as e:
-            return jsonify({"message": str(e)}), 400
-        except Exception:
-            import traceback
-            traceback.print_exc()
-            return jsonify({"message": "Failed to create weeks"}), 500
+        """Standalone HTTP generation is disabled; trusted model calls remain separate."""
+        return jsonify({'error': 'http_week_generation_disabled'}), 410

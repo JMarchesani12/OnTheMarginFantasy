@@ -1,24 +1,22 @@
-from bootstrap import *
 import os
-from db import engine
 from datetime import datetime, timezone
 
-from dotenv import load_dotenv
 from sqlalchemy import text
 
-from endpoints.schedule.scheduleModel import ScheduleModel
-from endpoints.scoring.scoringEndpoints import ScoringEndpoints
+from endpoints.schedule.read_service import ScheduleReadService
+from endpoints.scoring.service import ScoringService
 
 
 def build_scoring(engine):
-    load_dotenv()
-    espn_base_url = os.getenv("ESPN_BASE_URL")
-    schedule_model = ScheduleModel(engine, espn_base_url)
-    scoring = ScoringEndpoints(engine, schedule_model)
+    schedule_model = ScheduleReadService(engine)
+    scoring = ScoringService(engine, schedule_model)
     return scoring
 
 
-def main():
+def main(engine=None):
+    if engine is None:
+        from runtime import configured_engine
+        engine = configured_engine()
     scoring = build_scoring(engine)
     today = datetime.now(timezone.utc).date()
 
@@ -74,7 +72,7 @@ def main():
         for row in leagues:
             league_id = int(row._mapping["leagueId"])
             print(f"  Computing end-of-year standings for league {league_id}")
-            scoring.compute_end_of_year_season_standings(league_id)
+            scoring.get_season_standings_for_job(league_id)
             
             with engine.begin() as conn:
                 conn.execute(

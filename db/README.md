@@ -1,8 +1,12 @@
 # Database Schema
 
-This document describes the current application database shape as used by the
-API. It is based on the live Supabase schema and the SQL in `api/endpoints`,
-`api/startSeasonJobs`, `api/cronJobs`, and `api/worker`.
+This document describes the application database shape from repository SQL and
+application consumers. `tables.sql` is a descriptive snapshot, not an executable
+blank-database baseline. A read-only catalog check on 2026-10-29 confirmed the
+configured backend database has the same 23 public table names and 180 column
+names; full definition equivalence and migration history remain unverified.
+See [schema provenance](../docs/modernization/mod-005-schema-provenance.md) and
+[access-policy evidence](../docs/modernization/mod-004-access-review.md).
 
 ## Overview
 
@@ -374,4 +378,46 @@ schema inspection scripts. Do not expose it in frontend code.
 
 ## Basketball postseason configuration
 
-`SeasonPhase.rules` stores per-game margin rules, source matchers, and the shared final scoring period. Apply `api/migrations/20261023_basketball_tournament_rules.sql` before using the updated API. See [season setup documentation](../api/startSeasonJobs/README.md) for tournament JSON examples, phase classification, and existing-league rebuild requirements.
+`SeasonPhase.rules` stores per-game margin rules, source matchers, and the shared final scoring period. The previously referenced `api/migrations/20261023_basketball_tournament_rules.sql` is absent from available repository history. The configured database already has `SeasonPhase.rules`; other environments must verify that prerequisite. Recover or reconcile migration provenance before defining an upgrade; do not run a nonexistent migration. See [season setup documentation](../api/startSeasonJobs/README.md) for tournament JSON examples, phase classification, and existing-league rebuild requirements.
+
+
+## Versioned observed baseline
+
+The [2026-10-29 baseline package](baselines/20261029/README.md) provides ordered,
+checksummed schema/access SQL, an expected catalog reference and a transaction-aware
+initialization/adoption ledger runner restricted to synthetic local targets by its
+CLI. It has been tested locally and verified against configured Supabase catalogs
+read-only. It has not been installed/adopted on the deployed database. Historical
+migration files are not replayed after baseline initialization.
+
+The [browser privilege proposal](proposals/README.md) is separate and unapplied;
+baseline installation deliberately preserves observed grants. Full Supabase
+platform setup, runtime role alignment and deployment/recovery approval remain
+explicit prerequisites for operational use.
+
+## Current schema after the main/audit integration
+
+The current `db/tables.sql` and `api/migrations/20261030_game_kickoff_tbd.sql`
+are identical to main at merge parent `ae8a103`. `GameResult.timeTBD` is a boolean,
+NOT NULL, default false. A read-only configured-database catalog check on
+2026-11-02 confirmed that exact column definition; no hosted DDL was executed.
+This column check does not claim a fresh full hosted schema comparison.
+
+The frozen October 29 baseline intentionally predates this October 30 migration.
+For a new supported local database, initialize and verify the frozen baseline
+first, then apply the checked-in kickoff migration. Do not replay older historical
+migrations already incorporated in the baseline. Keep the baseline files and
+checksums unchanged. Its runner verifies only its historical expected state and
+will reject the post-migration extra column; it is not a current-schema deployment
+runner and must not be used to re-adopt an already upgraded database.
+
+The additive migration preserves existing rows with false as the initial flag;
+replaying it preserves existing true values. It does not reingest provider data.
+The refresh job is a separate explicit operation, and no refresh or automatic
+migration is added to web startup or deployment by this integration. Current
+hosted timeTBD already satisfies this prerequisite.
+
+Disposable PostgreSQL verification, including baseline-plus-migration, replay,
+read projections and actual parser/upsert transitions, is reproducible with
+`python3 scripts/modernization/verify_main_audit_merge.py` against the documented
+marked synthetic server on port 55439. See [merge evidence](../docs/modernization/evidence/main-audit-merge-2026-11-02.json).

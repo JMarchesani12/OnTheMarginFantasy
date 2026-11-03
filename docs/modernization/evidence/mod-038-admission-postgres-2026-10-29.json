@@ -1,0 +1,51 @@
+{
+  "result": "PASS",
+  "scope": "Synthetic marked loopback PostgreSQL; no configured/hosted database",
+  "admission_listing_cancellation": {
+    "listing_projection_filter_and_commissioner_revocation": "PASS",
+    "cancellation_scope_owner_state": "PASS",
+    "post_update_and_deferred_commit_rollback": "PASS",
+    "legacy_helpers_and_new_only_db_models": "PASS",
+    "concurrent_cancellation": [
+      {
+        "path": "service",
+        "observed_lock_wait": true,
+        "outcomes": {
+          "first": [
+            "success",
+            "CANCELLED",
+            null
+          ],
+          "second": [
+            "AdmissionRejected",
+            "Only pending requests can be cancelled"
+          ]
+        }
+      },
+      {
+        "path": "legacy_facade",
+        "observed_lock_wait": true,
+        "outcomes": {
+          "first": [
+            "success",
+            "CANCELLED",
+            null
+          ],
+          "second": [
+            "ValueError",
+            "Only pending requests can be cancelled"
+          ]
+        }
+      }
+    ]
+  },
+  "sha256": {
+    "api/endpoints/league/admission_service.py": "9b0d7fc26c2318bdce91b692d7092a81fbdcf2f229db68843b2496ea228d729b",
+    "api/endpoints/league/admission_repository.py": "5d7c4514766391acb50d89a51a3994c2792f6fa718354ded77446aa8a920b48f",
+    "api/endpoints/league/contracts.py": "b421a2acaaa9215bd6cd02c5b18e921747208ff7130fb4e68ccfd71651fa0a19",
+    "api/endpoints/league/leagueModel.py": "745a2b01352eb18eaf39c50f16194d858895f2f5611a85e3707254ea70fd3c53",
+    "api/endpoints/league/leagueEndpoints.py": "38e8804332429fa6700212d11b13be5db22d474bcc8d62a7a9490f88411c5d6f",
+    "api/actors.py": "6b0ea454e1227c2e9fe94cb3ca76db15a799ec3b5481a063b0fd2705318b789f",
+    "scripts/modernization/verify_admission_slice.py": "4a1f92670ebd6bc31ab0bff131a82906e1843003042abdd57c0c72fbdd14abbf"
+  }
+}

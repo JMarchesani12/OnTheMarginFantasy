@@ -6,23 +6,24 @@ window covers typical football TV announcements. Use --days 100 for a repair.
 from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from bootstrap import *
 import argparse
 import datetime as dt
 import os
 from zoneinfo import ZoneInfo
 from sqlalchemy import text
-from db import engine
-from endpoints.schedule.scheduleModel import ScheduleModel
+from endpoints.schedule.ingestion_service import ScheduleIngestionService
 
 
-def main():
+def main(argv=None, engine=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--days', type=int, default=21)
     parser.add_argument('--sport-season-id', type=int)
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     if args.days < 1:
         parser.error('--days must be positive')
+    if engine is None:
+        from runtime import configured_engine
+        engine = configured_engine()
     today = dt.datetime.now(ZoneInfo('America/Chicago')).date()
     end = today + dt.timedelta(days=args.days - 1)
     with engine.connect() as conn:
@@ -36,7 +37,7 @@ def main():
               AND ss."seasonStart"::date <= :end
               AND (:id IS NULL OR ss.id = :id)
         '''), {'today': today, 'end': end, 'id': args.sport_season_id}).mappings().all()
-    model = ScheduleModel(engine, os.getenv('ESPN_BASE_URL'))
+    model = ScheduleIngestionService(engine, os.getenv('ESPN_BASE_URL', ''))
     failures = []
     for season in seasons:
         start_day = max(today, season['seasonStart'].date() if isinstance(season['seasonStart'], dt.datetime) else season['seasonStart'])
@@ -44,7 +45,7 @@ def main():
         day = start_day
         while day <= end_day:
             try:
-                print(model.ingest_scoreboard_for_date_for_sport_season(season['id'], day), flush=True)
+                print(model.ingest_season_for_job(season['id'], day), flush=True)
             except Exception as exc:
                 failures.append((season['id'], day.isoformat()))
                 print(f'Refresh failed for season={season["id"]} date={day}: {exc}', flush=True)

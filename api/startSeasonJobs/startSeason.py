@@ -18,7 +18,6 @@ from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from dotenv import load_dotenv
 from sqlalchemy import text
 
 
@@ -521,8 +520,9 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> None:
-    load_dotenv()
     args = build_parser().parse_args()
+    from runtime import load_runtime_environment
+    load_runtime_environment()
 
     config_path = Path(arg_or_env(args, "config", "SEASON_CONFIG")).expanduser()
     manifest = load_manifest(config_path)
@@ -540,15 +540,16 @@ def main() -> None:
             + ", ".join(sorted(missing_codes))
         )
 
-    from db import engine
-    from endpoints.schedule.scheduleModel import ScheduleModel
+    from runtime import configured_engine
+    engine = configured_engine()
+    from endpoints.schedule.ingestion_service import ScheduleIngestionService
 
-    schedule_model = ScheduleModel(engine, require_env("ESPN_BASE_URL"))
+    schedule_model = ScheduleIngestionService(engine, require_env("ESPN_BASE_URL"))
 
     # Keep the season, subdivision windows, and phases atomic. A validation or
     # database failure rolls the entire setup transaction back.
     with engine.begin() as conn:
-        sport_season_id = schedule_model.upsert_sport_season(
+        sport_season_id = schedule_model.upsert_season_for_job(
             conn,
             sport_id=config.sport_id,
             season_year=manifest.season_year,
@@ -567,7 +568,7 @@ def main() -> None:
 
     # ESPN calls happen after the metadata transaction so a long bootstrap does
     # not hold database locks for the full ingestion window.
-    summary = schedule_model.bootstrap_sport_season_schedule_by_scoreboard(
+    summary = schedule_model.bootstrap_for_job(
         sport_season_id,
         force=args.force,
         max_days=args.max_days,

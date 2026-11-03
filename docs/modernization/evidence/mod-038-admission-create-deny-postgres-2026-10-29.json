@@ -1,0 +1,100 @@
+{
+  "result": "PASS",
+  "scope": "Synthetic marked loopback PostgreSQL; no configured/hosted database",
+  "listing_cancellation_rerun": {
+    "listing_projection_filter_and_commissioner_revocation": "PASS",
+    "cancellation_scope_owner_state": "PASS",
+    "post_update_and_deferred_commit_rollback": "PASS",
+    "legacy_helpers_and_new_only_db_models": "PASS",
+    "concurrent_cancellation": [
+      {
+        "path": "service",
+        "observed_lock_wait": true,
+        "outcomes": {
+          "first": [
+            "success",
+            "CANCELLED",
+            null
+          ],
+          "second": [
+            "AdmissionRejected",
+            "Only pending requests can be cancelled"
+          ]
+        }
+      },
+      {
+        "path": "legacy_facade",
+        "observed_lock_wait": true,
+        "outcomes": {
+          "first": [
+            "success",
+            "CANCELLED",
+            null
+          ],
+          "second": [
+            "ValueError",
+            "Only pending requests can be cancelled"
+          ]
+        }
+      }
+    ]
+  },
+  "creation_denial": {
+    "creation_projection_normalization_repeat": "PASS",
+    "membership_and_real_fk_failures": "PASS",
+    "insert_statement_and_commit_rollback": "PASS",
+    "denial_authority_scope_and_resolver": "PASS",
+    "denial_post_update_and_commit_rollback": "PASS",
+    "trusted_and_supplied_connection_compatibility": "PASS",
+    "concurrent_denial": [
+      {
+        "path": "service",
+        "observed_lock_wait": true,
+        "lock_order": [
+          "league",
+          "request"
+        ],
+        "outcomes": {
+          "first": [
+            "success",
+            "DENIED",
+            1
+          ],
+          "second": [
+            "AdmissionRejected",
+            "Join request is not pending"
+          ]
+        }
+      },
+      {
+        "path": "legacy_facade",
+        "observed_lock_wait": true,
+        "lock_order": [
+          "league",
+          "request"
+        ],
+        "outcomes": {
+          "first": [
+            "success",
+            "DENIED",
+            1
+          ],
+          "second": [
+            "ValueError",
+            "Join request is not pending"
+          ]
+        }
+      }
+    ]
+  },
+  "sha256": {
+    "api/endpoints/league/admission_service.py": "2592da67505d9f3c9b567382cc8d366f5fcc5a94c0f6714481966ea8ce8f6498",
+    "api/endpoints/league/admission_repository.py": "2fe1c6755fd91872c9b9d3208550c2693f189f3d0900648b30b8919c5bb3ab69",
+    "api/endpoints/league/contracts.py": "b421a2acaaa9215bd6cd02c5b18e921747208ff7130fb4e68ccfd71651fa0a19",
+    "api/endpoints/league/leagueModel.py": "a916742e7d18b55e08c44a0b2f7a2c157629f317005d5cad7d5526a832686020",
+    "api/endpoints/league/leagueEndpoints.py": "205a0c19e3f2f7b5dcd0809d123d5d96dd1ed1eff50e67dd29afe0deb101a1e9",
+    "api/actors.py": "6b0ea454e1227c2e9fe94cb3ca76db15a799ec3b5481a063b0fd2705318b789f",
+    "scripts/modernization/verify_admission_slice.py": "4a1f92670ebd6bc31ab0bff131a82906e1843003042abdd57c0c72fbdd14abbf",
+    "scripts/modernization/verify_admission_create_deny.py": "343008b0a77871f22ba0b39ec4d5c9397ff7d146e6206b37022e4e3fe0303cfc"
+  }
+}

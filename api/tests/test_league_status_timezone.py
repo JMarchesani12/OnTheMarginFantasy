@@ -3,15 +3,14 @@ import unittest
 from pathlib import Path
 from unittest.mock import MagicMock
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from endpoints.league.leagueModel import LeagueModel
+from endpoints.league.lifecycle.service import LeagueLifecycleService
 
 
 class LeagueStatusTimezoneTests(unittest.TestCase):
     def statements(self):
-        model = LeagueModel.__new__(LeagueModel)
-        model.db = MagicMock()
-        model.sync_due_league_statuses()
-        conn = model.db.begin.return_value.__enter__.return_value
+        engine = MagicMock()
+        LeagueLifecycleService(engine).synchronize_for_job()
+        conn = engine.begin.return_value.__enter__.return_value
         return [str(call.args[0]) for call in conn.execute.call_args_list]
 
     def test_season_transitions_do_not_use_database_calendar_date(self):

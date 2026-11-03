@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from endpoints.scoring.scoringModel import ScoringModel
+from endpoints.scoring.service import ScoringService
 
 
 class _FakeConnection:
@@ -38,7 +38,7 @@ class _ScheduleStub:
     pass
 
 
-class WeekZeroScoringModel(ScoringModel):
+class WeekZeroScoringService(ScoringService):
     def _get_week_by_number(self, league_id, week_number):
         return {"id": 100, "weekNumber": week_number}
 
@@ -47,9 +47,6 @@ class WeekZeroScoringModel(ScoringModel):
             {"id": 1, "teamName": "A"},
             {"id": 2, "teamName": "B"},
         ]
-
-    def _delete_existing_weekly_scores(self, league_id, week_id):
-        self.deleted = (league_id, week_id)
 
     def compute_member_point_diff_for_week(self, league_id, member_id, week_number):
         return {1: 5, 2: -2}[member_id]
@@ -60,9 +57,9 @@ class WeekZeroScoringModel(ScoringModel):
 
 class ScoringWeekZeroTests(unittest.TestCase):
     def test_compute_weekly_scores_accepts_week_zero(self):
-        model = WeekZeroScoringModel(_FakeDb(), _ScheduleStub())
+        model = WeekZeroScoringService(_FakeDb(), _ScheduleStub())
 
-        result = model.compute_weekly_scores(league_id=33, week_number=0)
+        result = model.compute_weekly_scores_for_job(league_id=33, week_number=0)
 
         self.assertEqual(result["weekNumber"], 0)
         self.assertEqual(

@@ -91,7 +91,7 @@ class BasketballIntegrationTests(unittest.TestCase):
             subdivisions=(), tournaments=tournaments, timezone='America/New_York')
 
     def test_schedule_scoring_applies_phase_after_tiers_and_keeps_double_owned_zero(self):
-        from endpoints.schedule.scheduleModel import ScheduleModel
+        from endpoints.schedule.ingestion_service import ScheduleIngestionService
         from rules.leagueRules import resolve_rules
         db = MagicMock()
         conn = db.begin.return_value.__enter__.return_value
@@ -103,13 +103,13 @@ class BasketballIntegrationTests(unittest.TestCase):
                                 phaseRules=dict(positiveOnly=True, marginMultiplier=mult))
             rows.append(row)
         conn.execute.return_value.fetchall.return_value = rows
-        games = ScheduleModel(db, 'https://example.test').get_member_games_for_week(
+        games = ScheduleIngestionService(db, 'https://example.test').get_member_games_for_week(
             1, 2, 3, resolved_rules=resolve_rules(1, {}))
         self.assertEqual([g['memberPointDiff'] for g in games], [11, 0, 0, 42])
 
     def test_final_period_replaces_calendar_weeks_without_gap(self):
-        from endpoints.schedule.scheduleModel import ScheduleModel
-        model = ScheduleModel(Mock(), 'https://example.test')
+        from endpoints.schedule.ingestion_service import ScheduleIngestionService
+        model = ScheduleIngestionService(Mock(), 'https://example.test')
         model._get_existing_weeks = lambda _: []
         model._get_sport_season_for_league = lambda _: dict(sportSeasonId=1,
             regularSeasonStart=dt.date(2026, 11, 2), regularSeasonEnd=dt.date(2027, 3, 7),
@@ -132,13 +132,13 @@ class BasketballIntegrationTests(unittest.TestCase):
             self.assertEqual(a[1]+dt.timedelta(days=1), b[0])
 
     def test_future_final_period_cannot_award_ranking_points(self):
-        from endpoints.scoring.scoringModel import ScoringModel
-        model = ScoringModel(Mock(), Mock())
+        from endpoints.scoring.service import ScoringService
+        model = ScoringService(Mock(), Mock())
         model._get_league_members = lambda _: []
         model._get_week_by_number = lambda *_: dict(id=1, isFinalPeriod=True,
                                                   endDate=dt.datetime(2099, 4, 6, tzinfo=UTC))
         with self.assertRaisesRegex(ValueError, 'final scoring period'):
-            model.compute_weekly_scores(1, 20)
+            model.compute_weekly_scores_for_job(1, 20)
 
     def test_source_metadata_survives_event_parsing(self):
         from endpoints.schedule.helpers.espn.espnClient import ESPNClient
@@ -152,14 +152,14 @@ class BasketballIntegrationTests(unittest.TestCase):
         self.assertEqual(result['tournamentIds'], ['9'])
 
     def test_failed_or_partial_bootstrap_is_not_marked_complete(self):
-        from endpoints.schedule.scheduleModel import ScheduleModel
+        from endpoints.schedule.ingestion_service import ScheduleIngestionService
         for fail, limit, expected in [(True, None, False), (False, 1, False), (False, None, True)]:
             db = MagicMock()
             conn = db.begin.return_value.__enter__.return_value
             conn.execute.return_value.mappings.return_value.first.return_value = dict(
                 id=1, sportId=1, scheduleBootstrapped=False,
                 seasonStart=dt.date(2027, 3, 1), seasonEnd=dt.date(2027, 3, 2))
-            model = ScheduleModel(db, 'https://example.test')
+            model = ScheduleIngestionService(db, 'https://example.test')
             model._get_sport_api_config = lambda _: ('basketball', [50], 'basketball')
             def ingest(*_):
                 if fail:
@@ -199,10 +199,10 @@ class BasketballIntegrationTests(unittest.TestCase):
     def test_rebuild_uses_same_week_plan(self):
         from scripts.rebuild_weeks_and_rescore import _compute_week_boundaries
         model = Mock()
-        model._get_sport_season_for_league.return_value = {'seasonYear': 2026}
-        model.get_week_boundaries.return_value = [(20, '2027-03-16', '2027-04-06')]
-        self.assertEqual(_compute_week_boundaries(model, 1, 2026), model.get_week_boundaries.return_value)
-        model.get_week_boundaries.assert_called_once_with(1)
+        model.season_for_job.return_value = {'seasonYear': 2026}
+        model.boundaries_for_job.return_value = [(20, '2027-03-16', '2027-04-06')]
+        self.assertEqual(_compute_week_boundaries(model, 1, 2026), model.boundaries_for_job.return_value)
+        model.boundaries_for_job.assert_called_once_with(1)
 
     def test_phase_setup_repairs_dates_rules_and_definition_names(self):
         from startSeasonJobs.startSeason import load_manifest, configure_manifest_phases, SPORT_CONFIGS
@@ -234,15 +234,15 @@ class BasketballIntegrationTests(unittest.TestCase):
         self.assertEqual(final_period([p], UTC), (dt.date(2027, 3, 16), dt.date(2027, 4, 6)))
 
     def test_old_split_final_weeks_cannot_be_scored(self):
-        from endpoints.scoring.scoringModel import ScoringModel
+        from endpoints.scoring.service import ScoringService
         for start, end in [(dt.datetime(2020, 3, 16, tzinfo=UTC), dt.datetime(2020, 3, 23, tzinfo=UTC)),
                            (dt.datetime(2020, 4, 1, tzinfo=UTC), dt.datetime(2020, 4, 7, tzinfo=UTC))]:
-            model = ScoringModel(Mock(), Mock())
+            model = ScoringService(Mock(), Mock())
             model._get_week_by_number = lambda *_: dict(id=1, isFinalPeriod=True, startDate=start,
                 endDate=end, finalPeriodStart=dt.datetime(2020, 3, 16, tzinfo=UTC),
                 finalPeriodEnd=dt.datetime(2020, 4, 7, tzinfo=UTC))
             with self.assertRaisesRegex(ValueError, 'split across weeks'):
-                model.compute_weekly_scores(1, 20)
+                model.compute_weekly_scores_for_job(1, 20)
 
     def test_conference_config_coverage_is_required_before_phase_writes(self):
         from startSeasonJobs.startSeason import configure_manifest_phases, SPORT_CONFIGS

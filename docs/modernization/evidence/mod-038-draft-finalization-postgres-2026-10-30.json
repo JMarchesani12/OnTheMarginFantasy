@@ -1,0 +1,31 @@
+{
+  "result": "PASS",
+  "scope": "Synthetic marked loopback PostgreSQL; no configured/hosted database",
+  "snapshot_rerun": {
+    "member_only_scope_before_repair": "PASS",
+    "native_json_timestamps_picks_season_join_turn_skipping": "PASS",
+    "missing_state_trusted_legacy_supplied_connection": "PASS",
+    "repair_post_read_commit_caller_rollback": "PASS",
+    "separate_connection_pre_query_revocation": "PASS"
+  },
+  "finalization": {
+    "native_final_state_season_date_boundaries_projection_timestamps": "PASS",
+    "no_season_and_missing_state_compatibility": "PASS",
+    "post_write_real_statement_commit_and_caller_rollback": "PASS",
+    "separate_connection_pre_post_authority_rejection": "PASS",
+    "trusted_and_legacy_supplied_connection": "PASS",
+    "scope_limit": "Original pre/post authority checks add no locks or replay/concurrency guarantee"
+  },
+  "sha256": {
+    "api/endpoints/draft/control_service.py": "c04e9569c461ea02c09d38b0c68f516f2a4e7c9abeea7ddb0269e9d179a73a28",
+    "api/endpoints/draft/control_repository.py": "21493f530777a577eb9c18a6c74ca684c88f79315f199aca7db79ee579379e08",
+    "api/endpoints/draft/snapshot_service.py": "671165c3af27febb9a239bacf31bde2694462287cf0143b31ba12ffc796d56e4",
+    "api/endpoints/draft/snapshot_repository.py": "46fe264b9986c2268f104465649c8ee1387c75f32b684b0d6f4f20e4998f9be2",
+    "api/endpoints/draft/draftModel.py": "3bb484e60b1197eb13fbf030297aad9d5633587d3aa2d28a8ade64ff2739bbc0",
+    "api/endpoints/draft/draftEndpoints.py": "51823da20593fc747c340d26f1d50f740a7a58f5bc956082078ae82c0aed1015",
+    "api/endpoints/draft/routes.py": "10f373a7205d38a05ce4ff2e82464d6af9ac795cf342b9d918c4eb3b3644f1e9",
+    "api/actors.py": "6b0ea454e1227c2e9fe94cb3ca76db15a799ec3b5481a063b0fd2705318b789f",
+    "scripts/modernization/verify_draft_snapshot.py": "b0e970d84d574fb489cd69feae5b104d7d46c50c967671715054e41759eeabc8",
+    "scripts/modernization/verify_draft_finalization.py": "4c97a527bf34c827ce4fefae534b3e8ee0a72544c8d2fdcc6e150475ba691dce"
+  }
+}

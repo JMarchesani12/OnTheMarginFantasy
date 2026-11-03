@@ -1,0 +1,33 @@
+{
+  "version": "20261029_observed_public_v1",
+  "checksum": "58e8dffe807fe2ceed56949d96892ade5e293740cc2776dc757d33cba24c52af",
+  "verification": "matches all versioned public-state groups",
+  "groups": [
+    "tables",
+    "columns",
+    "constraints",
+    "indexes",
+    "policies",
+    "sequence_grants",
+    "table_acl",
+    "precise_columns",
+    "sequence_options",
+    "default_grants",
+    "schema_acl",
+    "role_flags",
+    "role_membership",
+    "custom_routines",
+    "column_acl",
+    "triggers",
+    "views",
+    "internal_triggers",
+    "relation_durability",
+    "event_trigger"
+  ],
+  "settings": {
+    "read_only": "on",
+    "statement_timeout": "10s",
+    "lock_timeout": "2s"
+  },
+  "scope": "Catalog-only verification against configured Supabase; no application rows, migration ledger writes or deployed DDL."
+}

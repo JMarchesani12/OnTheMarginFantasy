@@ -16,10 +16,11 @@ export async function getUser(
 }
 
 export async function getUserByUuid(
-  uuid: string
+  uuid: string,
+  accessToken?: string
 ): Promise<User | null> {
   const res = await apiFetch(`${API_BASE_URL}/api/user/byUuid/${uuid}`, {
-    skipAuth: true,
+    headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
   });
 
   if (res.status === 404) {
@@ -35,20 +36,17 @@ export async function getUserByUuid(
 }
 
 export async function createUser(
-  uuid: string | undefined,
-  email: string,
-  displayName: string
+  displayName: string,
+  accessToken?: string
 ): Promise<User> {
-
-const payload = {
-    "uuid": uuid,
-    "email": email,
-    "displayName": displayName
-};
+  const payload = { displayName };
 
   const res = await apiFetch(`${API_BASE_URL}/api/user`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+    },
     body: JSON.stringify(payload)
   });
 

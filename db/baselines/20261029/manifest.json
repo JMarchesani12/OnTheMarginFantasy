@@ -1,0 +1,24 @@
+{
+  "version": "20261029_observed_public_v1",
+  "prerequisites": [
+    "PostgreSQL 17",
+    "Supabase auth.users and auth.uid()",
+    "anon/authenticated/service_role/supabase_admin roles",
+    "pg_trgm 1.6 in public",
+    "Observed supabase_admin public default grants"
+  ],
+  "steps": [
+    {
+      "path": "001_schema.sql",
+      "sha256": "7fe1c17223dd2cf3ebbfdb9d2ca318d4f7ad24f9a6578309c40aad3cfb58a109"
+    },
+    {
+      "path": "002_access.sql",
+      "sha256": "8141dbdcb405815aa4d3094bd5b2f60b1db494dbb528e00502d13b9723c5170d"
+    }
+  ],
+  "expected": {
+    "path": "expected.json",
+    "sha256": "c986826dd661cd97d04a18ca34b22147c450a20223024d574331e1c4a929a053"
+  }
+}

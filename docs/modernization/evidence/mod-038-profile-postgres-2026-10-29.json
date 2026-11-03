@@ -1,0 +1,22 @@
+{
+  "result": "PASS",
+  "scope": "Synthetic marked loopback PostgreSQL, no configured/hosted database",
+  "profile_reads_updates": {
+    "projection_and_identity_fields": "PASS",
+    "own_update_and_bound_parameters": "PASS",
+    "foreign_and_invalid_update_denials": "PASS",
+    "statement_failure_rollback": "PASS",
+    "deferred_commit_failure_rollback": "PASS",
+    "missing_profile_and_legacy_facade": "PASS"
+  },
+  "sha256": {
+    "api/endpoints/user/service.py": "f3272d10a2eee5250cd0f800ad2d8d9ff4079aa41ddcd0c5fd2db647c621a914",
+    "api/endpoints/user/repository.py": "d934c6b5a973e5a4835ae9058c89be8402cdeaf64d376d569312e40855a174cf",
+    "api/endpoints/user/contracts.py": "697815c5e51c5aee617efb15996c2bbaae993bbd5873a2de82d3a085174b954c",
+    "api/endpoints/user/userModel.py": "da9601643cf2fa5ae9fa0d948f79c6aa3e2d55f7adc4f06031864da0f5547ffb",
+    "api/endpoints/user/userEndpoints.py": "73842732a4ecc290cec4b3d16e5a2e49e5fb8e4a7bb4bf164ba816e5b5e3e89c",
+    "api/actors.py": "6b0ea454e1227c2e9fe94cb3ca76db15a799ec3b5481a063b0fd2705318b789f",
+    "api/authenticatedPrincipal.py": "2ca4f7fd5edd233dc00c56369e253f1f22d7dbede031b9888bf4771e1da60bdc",
+    "scripts/modernization/verify_profile_pilot.py": "9760497659d6723f47f082f67e3044cdfbe263a69aae739bc8cb55659e53fcb3"
+  }
+}

@@ -1,10 +1,10 @@
 import type { LeagueRules } from "../types/leagueRules";
 import type { ApproveRequestResponse, CreateLeaguePayload, GetConferences, GetRequestResponse, League, LeagueSearchResult, RequestResponse, SingleLeague, UpdateLeague } from "../types/league";
-import type { LeagueMember, UpdateLeagueMember } from "../types/leagueMember";
+import type { LeagueMember, LeagueMemberPreview, UpdateLeagueMember } from "../types/leagueMember";
 import { apiFetch, API_BASE_URL } from "./client";
 
 export async function getLeague(leagueId: number): Promise<SingleLeague> {
-  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}?view=full`, {
     method: "GET"
   });
 
@@ -71,7 +71,7 @@ export async function getLeaguesForUser(
 export async function getMembersOfLeague(
   leagueId: number
 ): Promise<LeagueMember[]> {
-  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/members`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/members?view=full`, {
     method: "GET",
   });
 
@@ -79,6 +79,16 @@ export async function getMembersOfLeague(
     throw new Error(`Failed to get league members: ${res.status}`);
   }
 
+  return res.json();
+}
+
+export async function getMemberPreviewsOfLeague(
+  leagueId: number
+): Promise<LeagueMemberPreview[]> {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/members?view=preview`);
+  if (!res.ok) {
+    throw new Error(`Failed to get league members: ${res.status}`);
+  }
   return res.json();
 }
 
@@ -270,15 +280,11 @@ export async function deleteLeague(
 
 export async function updateLeagueMember(
   memberId: number,
-  teamName?: string,
-  draftOrder?: number,
-  seasonPoints?: number
+  teamName: string
 ) {
 
   const payload: UpdateLeagueMember = {
-    teamName: teamName,
-    draftOrder: draftOrder,
-    seasonPoints: seasonPoints
+    teamName: teamName
   }
   const res = await apiFetch(`${API_BASE_URL}/api/league/leagueMember/${memberId}`, {
     method: "PATCH",

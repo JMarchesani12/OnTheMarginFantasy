@@ -1,0 +1,1 @@
+"""League lifecycle domain implementation."""

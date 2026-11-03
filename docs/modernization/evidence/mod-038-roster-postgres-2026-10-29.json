@@ -1,0 +1,21 @@
+{
+  "result": "PASS",
+  "scope": "Synthetic marked loopback PostgreSQL, no configured/hosted database",
+  "roster_reads": {
+    "locked_week_and_pending_moves": "PASS",
+    "native_projection_seasonal_conferences_and_tiers": "PASS",
+    "member_commissioner_and_denials": "PASS",
+    "query_time_revocation_and_target_removal": "PASS",
+    "missing_future_week": "PASS"
+  },
+  "sha256": {
+    "api/endpoints/roster/service.py": "913c98ac4a477fb542b44de86b7b72fb806ee78e9407214b6d0ab665de68df1b",
+    "api/endpoints/roster/repository.py": "b2c5a6f526f0b7b1a496c45137d1476b004d79fdf9ce65ff75b77932c0f90c0b",
+    "api/endpoints/roster/contracts.py": "12f88d943ce0cad7610347f5eeb4e52b49c1ce6293ad922964de3e0e01b614ae",
+    "api/endpoints/roster/rosterModel.py": "cdce1acb9cd5e5e9c53c7812c199eb2e09549a295962e92c9371f061e6b02545",
+    "api/endpoints/roster/rosterEndpoints.py": "bff36ddacc394106cd5f2ce47db687278680a8eab66fc669b8c383e3a4f2bbf6",
+    "api/actors.py": "6b0ea454e1227c2e9fe94cb3ca76db15a799ec3b5481a063b0fd2705318b789f",
+    "api/utils/authorization.py": "76bd2e7086a2ef1086987feb1e461e53944ba6a290970aee74715d03b64bbecb",
+    "scripts/modernization/verify_roster_pilot.py": "e315d2bdd22990db854c1773bbd39736ce22cbf9d6e148227e33778002002f76"
+  }
+}

@@ -1,0 +1,1 @@
+"""League reads domain implementation."""

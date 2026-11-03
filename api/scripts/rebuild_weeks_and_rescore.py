@@ -4,8 +4,8 @@ import datetime as dt
 
 from sqlalchemy import text
 
-from endpoints.schedule.scheduleModel import ScheduleModel
-from endpoints.scoring.scoringModel import ScoringModel
+from endpoints.schedule.read_service import ScheduleReadService
+from endpoints.scoring.service import ScoringService
 
 
 GET_ALL_LEAGUES = text("""
@@ -101,17 +101,17 @@ LOCK_NEXT_WEEK = text("""
 
 
 def _compute_week_boundaries(
-    schedule_model: ScheduleModel,
+    schedule_model: ScheduleReadService,
     league_id: int,
     season_year: int,
 ):
-    season = schedule_model._get_sport_season_for_league(league_id)
+    season = schedule_model.season_for_job(league_id)
     if int(season["seasonYear"]) != season_year:
         raise ValueError(
             f"League {league_id} belongs to seasonYear={season['seasonYear']}, "
             f"not requested seasonYear={season_year}"
         )
-    return schedule_model.get_week_boundaries(league_id)
+    return schedule_model.boundaries_for_job(league_id)
 
 
 def main():
@@ -119,10 +119,11 @@ def main():
     parser.add_argument("--season-year", type=int, required=True)
     parser.add_argument("--league-id", type=int, action="append", help="Limit to specific league IDs")
     args = parser.parse_args()
-    from db import engine
+    from runtime import configured_engine
+    engine = configured_engine()
     season_year = args.season_year
-    schedule_model = ScheduleModel(engine, os.getenv("ESPN_BASE_URL", ""))
-    scoring_model = ScoringModel(engine, schedule_model)
+    schedule_model = ScheduleReadService(engine)
+    scoring_model = ScoringService(engine, schedule_model)
 
     with engine.begin() as conn:
         league_rows = conn.execute(GET_ALL_LEAGUES).fetchall()
@@ -209,7 +210,7 @@ def main():
             week_id = int(row._mapping["id"])
 
             try:
-                scoring_model.compute_weekly_scores(
+                scoring_model.compute_weekly_scores_for_job(
                     league_id=league_id,
                     week_number=week_number,
                 )

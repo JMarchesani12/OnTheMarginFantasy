@@ -6,12 +6,12 @@ from unittest.mock import Mock
 from zoneinfo import ZoneInfo
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from endpoints.schedule.scheduleModel import ScheduleModel
+from endpoints.schedule.ingestion_service import ScheduleIngestionService
 
 
 class BasketballWeeksTests(unittest.TestCase):
     def model(self, sport=1, start=dt.date(2026, 11, 2)):
-        model = ScheduleModel(Mock(), '')
+        model = ScheduleIngestionService(Mock(), '')
         model._get_sport_season_for_league = lambda _: dict(
             sportId=sport, sportSeasonId=1, regularSeasonStart=start,
             regularSeasonEnd=dt.date(2026, 11, 22), allSubdivisions=False)

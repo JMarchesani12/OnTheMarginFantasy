@@ -1,0 +1,111 @@
+{
+  "migration": {
+    "frozen_schema_plus_main_migration": "PASS",
+    "existing_rows_preserved_false_default": "PASS",
+    "replay_preserves_existing_true": "PASS",
+    "column_boolean_not_null_default_false": "PASS"
+  },
+  "calendar": {
+    "json_dates_timezone_weekday_subdivision_and_missing_guards": "PASS",
+    "basketball_opening_dst_persisted_plan_and_existing_week_reuse": "PASS",
+    "football_week_zero_original_projection_and_defaults": "PASS",
+    "all_subdivisions_continuous_postseason_and_phase_final_calendar_join": "PASS",
+    "numbered_batch_rollback_preserves_prior_week_zero_commit": "PASS",
+    "native_statement_deferred_commit_rollback": "PASS",
+    "legacy_db_only_helpers_and_no_provider_client": "PASS",
+    "repository_queries_exercised": [
+      "insert_week",
+      "insert_week_zero",
+      "league",
+      "season_for_league",
+      "season_phases",
+      "subdivisions",
+      "weeks_for_league"
+    ],
+    "scope_limit": "Calendar only; original helper transaction boundaries preserved. Remaining schedule reads, ingestion/bootstrap and composition are later slices."
+  },
+  "schedule_members": {
+    "native_member_ownership_week_season_sport_filters_and_order": "PASS",
+    "tier_perspectives_unranked_double_owned_and_tournament_math": "PASS",
+    "head_to_head_directions_week_and_owned_plain_projections": "PASS",
+    "acquisition_drop_boundaries_missing_rows_and_read_no_writes": "PASS",
+    "supplied_invalid_rules_failure_propagation_and_legacy_db_only": "PASS",
+    "original_null_start_h2h_null_score_and_membership_join_behavior": "PASS",
+    "repository_queries_exercised": [
+      "head_to_head_games",
+      "member_games",
+      "owned_teams",
+      "week"
+    ],
+    "scope_limit": "Member reads only; original query/policy/failure semantics preserved. Other views/search, ingestion/bootstrap and final composition remain."
+  },
+  "schedule_views": {
+    "conference_window_season_memberships_owners_flags_defaults_exact_projection": "PASS",
+    "team_season_home_away_opponent_optional_missing_league_and_nullable_binds": "PASS",
+    "native_lateral_current_before_latest_and_no_week_999_ownership": "PASS",
+    "search_abbreviation_rank_limits_owners_sport_season_global_memberships": "PASS",
+    "original_duplicate_rows_missing_guards_read_failure_no_writes_and_legacy": "PASS",
+    "repository_queries_exercised": [
+      "conference_games",
+      "search_league_context",
+      "search_teams",
+      "team_owner_context",
+      "team_season_games",
+      "week_window"
+    ],
+    "scope_limit": "Read views/search only; original SQL, context, duplicate, coercion and scope policies retained. Ingestion/bootstrap and final caller composition remain."
+  },
+  "ingestion": {
+    "all13_queries_native_json_groups_limit_team_phase_upsert_filters": "PASS",
+    "rich_phase_current_over_null_membership_and_exclusive_fallback": "PASS",
+    "game_conflict_update_null_team_mapping_and_statement_commit_caller_rollback": "PASS",
+    "actual_parser_fake_fetch_dedupe_counts_and_per_game_partial_commit": "PASS",
+    "team_failure_original_completion_semantics": "PASS",
+    "real_temp_checkpoint_partial_resume_force_failed_date_retry_and_skip": "PASS",
+    "checkpoint_before_metadata_commit_failure_and_retry_convergence": "PASS",
+    "active_league_date_status_filters_and_legacy_db_only": "PASS",
+    "repository_queries_exercised": [
+      "active_leagues",
+      "api_config",
+      "bootstrap_finish",
+      "bootstrap_start",
+      "fallback_phase",
+      "mark_team_bootstrapped",
+      "season_for_bootstrap",
+      "season_for_ingestion",
+      "shared_conferences",
+      "sport_teams",
+      "team_id",
+      "upsert_game",
+      "upsert_season"
+    ],
+    "scope_limit": "Original transaction, provider/parser, retry, dedupe/count, checkpoint and completion policies preserved; no live provider or configured application startup."
+  },
+  "kickoff": {
+    "all_four_read_projections_true_and_false": "PASS",
+    "actual_parser_upsert_tbd_to_confirmed_same_id": "PASS"
+  },
+  "lifecycle": {
+    "native_order_precedence_date_boundaries_sport_year_null_unchanged": "PASS",
+    "repeat_status_convergence": "PASS",
+    "each_post_phase_statement_and_deferred_commit_rollback": "PASS",
+    "db_only_legacy_none_and_real_read_callback": "PASS",
+    "scope_limit": "Existing global read-time writes and intermediate timestamp updates preserved; no concurrency redesign"
+  },
+  "timezone_boundary": {
+    "four_timezone_setting_paths_and_utc_fallback_across_day_boundary": "PASS"
+  },
+  "result": "PASS",
+  "scope": "Owned marked local PostgreSQL; synthetic rows/providers only",
+  "sha256": {
+    "api/endpoints/league/lifecycle/repository.py": "9d6ebef398525c058197860b878cab5777d97fe69d053ed46c880ce137db7a9e",
+    "api/endpoints/schedule/ingestion_repository.py": "abc4eb4b7a1125ca0a52f99ba1cd61aa6486ae1efd7d38450ef6cb5e9f9e011e",
+    "api/endpoints/schedule/ingestion_service.py": "3aa57e96b3207992fbf803a6caec729e332d4d2c357a0941c4383f1fde70115e",
+    "api/endpoints/schedule/read_repository.py": "6ea5187661ffbe637ea3b27ead6edc7da1e6ce4b4e9e9c7b2ade897065578549",
+    "api/endpoints/schedule/helpers/espn/espnClient.py": "9c585b128a7c7952d884f96cba58b2e643b57da9d4e5902c16f38f2d25505939",
+    "api/cronJobs/cronRefreshSchedules.py": "927a2f6d5f225701e89cfb741c04b4edcb9e83c5d3d2c86f5e745b4196ea87ed",
+    "api/migrations/20261030_game_kickoff_tbd.sql": "4fa4d40cf16cf0600a37aec2f915e31efe024c294fe5c5a047d32ad599cf33d4",
+    "db/tables.sql": "0f2d1df3f1cee87776afd7475078ecb89d1bfc2824f9f5bbf177c64d457f1575",
+    "scripts/modernization/verify_main_audit_merge.py": "5b171de2ad75bc9d5774244c5f4af46f1b33545cc59373181a2e5d469a766445"
+  }
+}

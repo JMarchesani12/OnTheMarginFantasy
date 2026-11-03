@@ -1,0 +1,1 @@
+"""League administration domain implementation."""

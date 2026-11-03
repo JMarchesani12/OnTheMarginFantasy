@@ -1,0 +1,102 @@
+{
+  "result": "PASS",
+  "scope": "Synthetic marked loopback PostgreSQL; no configured or hosted database",
+  "trade_concurrency": [
+    {
+      "path": "direct",
+      "observed_lock_wait": true,
+      "outcomes": {
+        "first": [
+          "success",
+          null
+        ],
+        "second": [
+          "ValueError",
+          "Transaction is not pending apply"
+        ]
+      },
+      "ownership_intervals": [
+        [
+          11,
+          101,
+          1,
+          2
+        ],
+        [
+          12,
+          102,
+          1,
+          2
+        ],
+        [
+          12,
+          101,
+          2,
+          null
+        ],
+        [
+          11,
+          102,
+          2,
+          null
+        ]
+      ]
+    },
+    {
+      "path": "dispatcher",
+      "observed_lock_wait": true,
+      "outcomes": {
+        "first": [
+          "success",
+          null
+        ],
+        "second": [
+          "ValueError",
+          "Transaction is not pending apply"
+        ]
+      },
+      "ownership_intervals": [
+        [
+          11,
+          101,
+          1,
+          2
+        ],
+        [
+          12,
+          102,
+          1,
+          2
+        ],
+        [
+          12,
+          101,
+          2,
+          null
+        ],
+        [
+          11,
+          102,
+          2,
+          null
+        ]
+      ]
+    }
+  ],
+  "transaction_reads": {
+    "postgres_json_projection": "PASS",
+    "commissioner_without_membership": "PASS",
+    "member_and_denials": "PASS",
+    "query_time_revocation": "PASS"
+  },
+  "sha256": {
+    "api/actors.py": "6b0ea454e1227c2e9fe94cb3ca76db15a799ec3b5481a063b0fd2705318b789f",
+    "api/utils/authorization.py": "76bd2e7086a2ef1086987feb1e461e53944ba6a290970aee74715d03b64bbecb",
+    "api/endpoints/transaction/transactionModel.py": "92ec3dae2ea23a3705961d7379eb3d893cfca1b66a8a8ab882763cfa1c849342",
+    "api/endpoints/transaction/transactionEndpoints.py": "f59197b3ccf06f4d36d3c883e54de659034574932163193d169ff499a7135631",
+    "api/endpoints/transaction/service.py": "9d57b60c5bfc6ff25c7a05de137dfd157999f80db520300a6056c58eb6988e49",
+    "api/endpoints/transaction/repository.py": "0a99da7f0690ff2a33f87c598019572a955381ebda91560ca1bc261e86f06aa3",
+    "api/endpoints/transaction/contracts.py": "fc1d2b82723fc82dc337871ab5a0dcb1e148cbb0a8f4a0dfede2f53f15f666fc",
+    "scripts/modernization/verify_transaction_pilot.py": "aca4b65367e6563048e6723cf91742f5617919045e69af040d554f665e4236ff"
+  }
+}

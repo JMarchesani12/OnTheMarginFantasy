@@ -1,20 +1,15 @@
-from bootstrap import *
 import os
-from db import engine
 from datetime import datetime, timezone
 
-from dotenv import load_dotenv
 from sqlalchemy import text
 
-from endpoints.schedule.scheduleModel import ScheduleModel
-from endpoints.scoring.scoringEndpoints import ScoringEndpoints
-from endpoints.transaction.transactionModel import TransactionModel
+from endpoints.schedule.read_service import ScheduleReadService
+from endpoints.scoring.service import ScoringService
+from endpoints.transaction.workflow_service import TransactionWorkflowService
 
 def build_scoring(engine):
-    load_dotenv()
-    espn_base_url = os.getenv("ESPN_BASE_URL")
-    schedule_model = ScheduleModel(engine, espn_base_url)
-    scoring = ScoringEndpoints(engine, schedule_model)
+    schedule_model = ScheduleReadService(engine)
+    scoring = ScoringService(engine, schedule_model)
     return scoring
 
 
@@ -52,9 +47,12 @@ GET_PENDING_TRANSACTIONS = text("""
 """)
 
 
-def main():
+def main(engine=None):
+    if engine is None:
+        from runtime import configured_engine
+        engine = configured_engine()
     scoring = build_scoring(engine)
-    transaction_model = TransactionModel(engine)
+    transaction_model = TransactionWorkflowService(engine)
 
     now = datetime.now(timezone.utc)
 
@@ -80,8 +78,8 @@ def main():
 
         # If scoring throws, we do NOT want to mark complete or lock next week.
         try:
-            # Avoid Flask jsonify/app context; run scoring model directly.
-            scoring.scoringModel.compute_weekly_scores(
+            # Trusted service call; no HTTP adapter or Flask context.
+            scoring.compute_weekly_scores_for_job(
                 league_id=league_id,
                 week_number=week_number,
             )
@@ -104,7 +102,7 @@ def main():
         trade_rows = conn.execute(GET_PENDING_TRANSACTIONS).fetchall()
 
     for tr in trade_rows:
-        transaction_model.apply_pending_transaction(int(tr._mapping["id"]))
+        transaction_model.apply_pending_for_job(int(tr._mapping["id"]))
 
     print("Weekly scoring, next-week locking, and transactions complete.")
 

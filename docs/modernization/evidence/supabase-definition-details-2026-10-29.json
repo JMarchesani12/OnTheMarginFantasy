@@ -1,0 +1,3817 @@
+{
+  "table_acl": [
+    {
+      "relname": "Conference",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    },
+    {
+      "relname": "ConferenceMembership",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    },
+    {
+      "relname": "DraftPick",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    },
+    {
+      "relname": "DraftState",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    },
+    {
+      "relname": "DraftTurn",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    },
+    {
+      "relname": "GameResult",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    },
+    {
+      "relname": "League",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    },
+    {
+      "relname": "LeagueJoinRequest",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    },
+    {
+      "relname": "LeagueMember",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    },
+    {
+      "relname": "LeagueTeamSlot",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    },
+    {
+      "relname": "School",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    },
+    {
+      "relname": "SeasonPhase",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    },
+    {
+      "relname": "Sport",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    },
+    {
+      "relname": "SportConference",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    },
+    {
+      "relname": "SportSeason",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    },
+    {
+      "relname": "SportSeasonSubdivision",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    },
+    {
+      "relname": "SportTeam",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    },
+    {
+      "relname": "TournamentDefinition",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    },
+    {
+      "relname": "Transaction",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    },
+    {
+      "relname": "TransactionVote",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    },
+    {
+      "relname": "User",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    },
+    {
+      "relname": "Week",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    },
+    {
+      "relname": "WeeklyTeamScore",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+    }
+  ],
+  "precise_columns": [
+    {
+      "relname": "Conference",
+      "attname": "createdAt",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "Conference",
+      "attname": "id",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "Conference",
+      "attname": "name",
+      "type": "text",
+      "collname": "default",
+      "attgenerated": ""
+    },
+    {
+      "relname": "ConferenceMembership",
+      "attname": "createdAt",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "ConferenceMembership",
+      "attname": "id",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "ConferenceMembership",
+      "attname": "seasonYear",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "ConferenceMembership",
+      "attname": "sportConferenceId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "ConferenceMembership",
+      "attname": "sportId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "ConferenceMembership",
+      "attname": "sportTeamId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "DraftPick",
+      "attname": "createdAt",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "DraftPick",
+      "attname": "id",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "DraftPick",
+      "attname": "leagueId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "DraftPick",
+      "attname": "memberId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "DraftPick",
+      "attname": "overallPickNumber",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "DraftPick",
+      "attname": "pickInRound",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "DraftPick",
+      "attname": "roundNumber",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "DraftPick",
+      "attname": "sportTeamId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "DraftState",
+      "attname": "currentMemberId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "DraftState",
+      "attname": "currentOverallPickNumber",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "DraftState",
+      "attname": "expiresAt",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "DraftState",
+      "attname": "lastPickAt",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "DraftState",
+      "attname": "leagueId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "DraftState",
+      "attname": "status",
+      "type": "text",
+      "collname": "default",
+      "attgenerated": ""
+    },
+    {
+      "relname": "DraftState",
+      "attname": "updatedAt",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "DraftTurn",
+      "attname": "createdAt",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "DraftTurn",
+      "attname": "leagueId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "DraftTurn",
+      "attname": "memberId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "DraftTurn",
+      "attname": "overallPickNumber",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "GameResult",
+      "attname": "awayScore",
+      "type": "integer",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "GameResult",
+      "attname": "awayTeamExternalId",
+      "type": "integer",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "GameResult",
+      "attname": "awayTeamId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "GameResult",
+      "attname": "awayTeamName",
+      "type": "text",
+      "collname": "default",
+      "attgenerated": ""
+    },
+    {
+      "relname": "GameResult",
+      "attname": "broadcast",
+      "type": "text",
+      "collname": "default",
+      "attgenerated": ""
+    },
+    {
+      "relname": "GameResult",
+      "attname": "createdAt",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "GameResult",
+      "attname": "date",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "GameResult",
+      "attname": "externalGameId",
+      "type": "text",
+      "collname": "default",
+      "attgenerated": ""
+    },
+    {
+      "relname": "GameResult",
+      "attname": "homeScore",
+      "type": "integer",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "GameResult",
+      "attname": "homeTeamExternalId",
+      "type": "integer",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "GameResult",
+      "attname": "homeTeamId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "GameResult",
+      "attname": "homeTeamName",
+      "type": "text",
+      "collname": "default",
+      "attgenerated": ""
+    },
+    {
+      "relname": "GameResult",
+      "attname": "id",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "GameResult",
+      "attname": "roundOrder",
+      "type": "integer",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "GameResult",
+      "attname": "seasonPhaseId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "GameResult",
+      "attname": "sport",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "GameResult",
+      "attname": "sportSeasonId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "League",
+      "attname": "commissioner",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "League",
+      "attname": "createdAt",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "League",
+      "attname": "draftDate",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "League",
+      "attname": "freeAgentDeadline",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "League",
+      "attname": "id",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "League",
+      "attname": "isDiscoverable",
+      "type": "boolean",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "League",
+      "attname": "name",
+      "type": "text",
+      "collname": "default",
+      "attgenerated": ""
+    },
+    {
+      "relname": "League",
+      "attname": "numPlayers",
+      "type": "integer",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "League",
+      "attname": "seasonYear",
+      "type": "integer",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "League",
+      "attname": "settings",
+      "type": "jsonb",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "League",
+      "attname": "sport",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "League",
+      "attname": "status",
+      "type": "text",
+      "collname": "default",
+      "attgenerated": ""
+    },
+    {
+      "relname": "League",
+      "attname": "tradeDeadline",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "League",
+      "attname": "updatedAt",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "LeagueJoinRequest",
+      "attname": "createdAt",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "LeagueJoinRequest",
+      "attname": "id",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "LeagueJoinRequest",
+      "attname": "leagueId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "LeagueJoinRequest",
+      "attname": "message",
+      "type": "text",
+      "collname": "default",
+      "attgenerated": ""
+    },
+    {
+      "relname": "LeagueJoinRequest",
+      "attname": "resolvedAt",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "LeagueJoinRequest",
+      "attname": "resolvedByUserId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "LeagueJoinRequest",
+      "attname": "status",
+      "type": "text",
+      "collname": "default",
+      "attgenerated": ""
+    },
+    {
+      "relname": "LeagueJoinRequest",
+      "attname": "teamName",
+      "type": "text",
+      "collname": "default",
+      "attgenerated": ""
+    },
+    {
+      "relname": "LeagueJoinRequest",
+      "attname": "userId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "LeagueMember",
+      "attname": "createdAt",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "LeagueMember",
+      "attname": "draftOrder",
+      "type": "integer",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "LeagueMember",
+      "attname": "id",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "LeagueMember",
+      "attname": "leagueId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "LeagueMember",
+      "attname": "seasonPoints",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "LeagueMember",
+      "attname": "teamName",
+      "type": "text",
+      "collname": "default",
+      "attgenerated": ""
+    },
+    {
+      "relname": "LeagueMember",
+      "attname": "userId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "LeagueTeamSlot",
+      "attname": "acquiredVia",
+      "type": "text",
+      "collname": "default",
+      "attgenerated": ""
+    },
+    {
+      "relname": "LeagueTeamSlot",
+      "attname": "acquiredWeek",
+      "type": "integer",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "LeagueTeamSlot",
+      "attname": "createdAt",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "LeagueTeamSlot",
+      "attname": "droppedWeek",
+      "type": "integer",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "LeagueTeamSlot",
+      "attname": "id",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "LeagueTeamSlot",
+      "attname": "leagueId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "LeagueTeamSlot",
+      "attname": "memberId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "LeagueTeamSlot",
+      "attname": "sportTeamId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "School",
+      "attname": "createdAt",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "School",
+      "attname": "id",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "School",
+      "attname": "name",
+      "type": "text",
+      "collname": "default",
+      "attgenerated": ""
+    },
+    {
+      "relname": "School",
+      "attname": "shortName",
+      "type": "text",
+      "collname": "default",
+      "attgenerated": ""
+    },
+    {
+      "relname": "SeasonPhase",
+      "attname": "createdAt",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "SeasonPhase",
+      "attname": "endDate",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "SeasonPhase",
+      "attname": "id",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "SeasonPhase",
+      "attname": "name",
+      "type": "text",
+      "collname": "default",
+      "attgenerated": ""
+    },
+    {
+      "relname": "SeasonPhase",
+      "attname": "priority",
+      "type": "integer",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "SeasonPhase",
+      "attname": "rules",
+      "type": "jsonb",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "SeasonPhase",
+      "attname": "sportSeasonId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "SeasonPhase",
+      "attname": "startDate",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "SeasonPhase",
+      "attname": "tournamentId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "SeasonPhase",
+      "attname": "type",
+      "type": "text",
+      "collname": "default",
+      "attgenerated": ""
+    },
+    {
+      "relname": "Sport",
+      "attname": "api-keyword",
+      "type": "text",
+      "collname": "default",
+      "attgenerated": ""
+    },
+    {
+      "relname": "Sport",
+      "attname": "apiGroupIds",
+      "type": "jsonb",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "Sport",
+      "attname": "baseUrlName",
+      "type": "text",
+      "collname": "default",
+      "attgenerated": ""
+    },
+    {
+      "relname": "Sport",
+      "attname": "created_at",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "Sport",
+      "attname": "id",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "Sport",
+      "attname": "maxDraftRounds",
+      "type": "numeric",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "Sport",
+      "attname": "maxPlayersToHaveMaxRounds",
+      "type": "integer",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "Sport",
+      "attname": "name",
+      "type": "text",
+      "collname": "default",
+      "attgenerated": ""
+    },
+    {
+      "relname": "SportConference",
+      "attname": "conferenceId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "SportConference",
+      "attname": "createdAt",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "SportConference",
+      "attname": "id",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "SportConference",
+      "attname": "maxTeamsPerOwner",
+      "type": "integer",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "SportConference",
+      "attname": "sportId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "SportSeason",
+      "attname": "createdAt",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "SportSeason",
+      "attname": "id",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "SportSeason",
+      "attname": "scheduleBootstrapped",
+      "type": "boolean",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "SportSeason",
+      "attname": "scheduleBootstrappedAt",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "SportSeason",
+      "attname": "seasonEnd",
+      "type": "date",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "SportSeason",
+      "attname": "seasonFinalized",
+      "type": "boolean",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "SportSeason",
+      "attname": "seasonStart",
+      "type": "date",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "SportSeason",
+      "attname": "seasonYear",
+      "type": "integer",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "SportSeason",
+      "attname": "sportId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "SportSeasonSubdivision",
+      "attname": "code",
+      "type": "text",
+      "collname": "default",
+      "attgenerated": ""
+    },
+    {
+      "relname": "SportSeasonSubdivision",
+      "attname": "createdAt",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "SportSeasonSubdivision",
+      "attname": "id",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "SportSeasonSubdivision",
+      "attname": "name",
+      "type": "text",
+      "collname": "default",
+      "attgenerated": ""
+    },
+    {
+      "relname": "SportSeasonSubdivision",
+      "attname": "postseasonEnd",
+      "type": "date",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "SportSeasonSubdivision",
+      "attname": "postseasonStart",
+      "type": "date",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "SportSeasonSubdivision",
+      "attname": "regularSeasonEnd",
+      "type": "date",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "SportSeasonSubdivision",
+      "attname": "regularSeasonStart",
+      "type": "date",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "SportSeasonSubdivision",
+      "attname": "sportSeasonId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "SportTeam",
+      "attname": "createdAt",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "SportTeam",
+      "attname": "displayName",
+      "type": "text",
+      "collname": "default",
+      "attgenerated": ""
+    },
+    {
+      "relname": "SportTeam",
+      "attname": "externalId",
+      "type": "text",
+      "collname": "default",
+      "attgenerated": ""
+    },
+    {
+      "relname": "SportTeam",
+      "attname": "id",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "SportTeam",
+      "attname": "schoolId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "SportTeam",
+      "attname": "sportId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "SportTeam",
+      "attname": "tier",
+      "type": "smallint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "TournamentDefinition",
+      "attname": "code",
+      "type": "text",
+      "collname": "default",
+      "attgenerated": ""
+    },
+    {
+      "relname": "TournamentDefinition",
+      "attname": "createdAt",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "TournamentDefinition",
+      "attname": "id",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "TournamentDefinition",
+      "attname": "name",
+      "type": "text",
+      "collname": "default",
+      "attgenerated": ""
+    },
+    {
+      "relname": "TournamentDefinition",
+      "attname": "scope",
+      "type": "text",
+      "collname": "default",
+      "attgenerated": ""
+    },
+    {
+      "relname": "TournamentDefinition",
+      "attname": "sportConferenceId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "TournamentDefinition",
+      "attname": "sportId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "Transaction",
+      "attname": "createdAt",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "Transaction",
+      "attname": "decidedByMemberId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "Transaction",
+      "attname": "fromTeamIds",
+      "type": "jsonb",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "Transaction",
+      "attname": "id",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "Transaction",
+      "attname": "leagueId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "Transaction",
+      "attname": "memberFromId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "Transaction",
+      "attname": "memberToId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "Transaction",
+      "attname": "rejectReason",
+      "type": "text",
+      "collname": "default",
+      "attgenerated": ""
+    },
+    {
+      "relname": "Transaction",
+      "attname": "status",
+      "type": "text",
+      "collname": "default",
+      "attgenerated": ""
+    },
+    {
+      "relname": "Transaction",
+      "attname": "toTeamIds",
+      "type": "jsonb",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "Transaction",
+      "attname": "type",
+      "type": "text",
+      "collname": "default",
+      "attgenerated": ""
+    },
+    {
+      "relname": "Transaction",
+      "attname": "weekId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "TransactionVote",
+      "attname": "createdAt",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "TransactionVote",
+      "attname": "id",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "TransactionVote",
+      "attname": "leagueMemberId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "TransactionVote",
+      "attname": "transactionId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "TransactionVote",
+      "attname": "veto",
+      "type": "boolean",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "User",
+      "attname": "createdAt",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "User",
+      "attname": "displayName",
+      "type": "text",
+      "collname": "default",
+      "attgenerated": ""
+    },
+    {
+      "relname": "User",
+      "attname": "email",
+      "type": "text",
+      "collname": "default",
+      "attgenerated": ""
+    },
+    {
+      "relname": "User",
+      "attname": "id",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "User",
+      "attname": "uuid",
+      "type": "uuid",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "Week",
+      "attname": "createdAt",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "Week",
+      "attname": "endDate",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "Week",
+      "attname": "id",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "Week",
+      "attname": "isLocked",
+      "type": "boolean",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "Week",
+      "attname": "leagueId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "Week",
+      "attname": "scoringComplete",
+      "type": "boolean",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "Week",
+      "attname": "startDate",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "Week",
+      "attname": "weekNumber",
+      "type": "integer",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "WeeklyTeamScore",
+      "attname": "createdAt",
+      "type": "timestamp with time zone",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "WeeklyTeamScore",
+      "attname": "id",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "WeeklyTeamScore",
+      "attname": "leagueId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "WeeklyTeamScore",
+      "attname": "memberId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "WeeklyTeamScore",
+      "attname": "pointDifferential",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "WeeklyTeamScore",
+      "attname": "pointsAwarded",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "WeeklyTeamScore",
+      "attname": "rank",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    },
+    {
+      "relname": "WeeklyTeamScore",
+      "attname": "weekId",
+      "type": "bigint",
+      "collname": null,
+      "attgenerated": ""
+    }
+  ],
+  "sequence_options": [
+    {
+      "schemaname": "public",
+      "sequencename": "ConferenceMembership_id_seq",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "Conference_id_seq",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "DraftPick_id_seq",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "GameResult_id_seq",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "LeagueJoinRequest_id_seq",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "LeagueMember_id_seq",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "LeagueTeamSlot_id_seq",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "League_id_seq",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "School_id_seq",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "SeasonPhase_id_seq",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "SportConference_id_seq",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "SportSeasonSubdivision_id_seq",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "SportSeason_id_seq",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "SportTeam_id_seq",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "Sport_id_seq",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "TournamentDefinition_id_seq",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "TransactionVote_id_seq",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "Transaction_id_seq",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "User_id_seq",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "Week_id_seq",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1
+    },
+    {
+      "schemaname": "public",
+      "sequencename": "WeeklyTeamScore_id_seq",
+      "data_type": "bigint",
+      "start_value": 1,
+      "min_value": 1,
+      "max_value": 9223372036854775807,
+      "increment_by": 1,
+      "cycle": false,
+      "cache_size": 1
+    }
+  ],
+  "internal_triggers": [
+    {
+      "table_name": "Conference",
+      "constraint_name": "SportConference_conferenceId_fkey",
+      "constraint_table": "SportConference",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_cascade_del"
+    },
+    {
+      "table_name": "Conference",
+      "constraint_name": "SportConference_conferenceId_fkey",
+      "constraint_table": "SportConference",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "ConferenceMembership",
+      "constraint_name": "ConferenceMembership_sportConferenceId_fkey",
+      "constraint_table": "ConferenceMembership",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "ConferenceMembership",
+      "constraint_name": "ConferenceMembership_sportConferenceId_fkey",
+      "constraint_table": "ConferenceMembership",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "ConferenceMembership",
+      "constraint_name": "ConferenceMembership_sportId_fkey",
+      "constraint_table": "ConferenceMembership",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "ConferenceMembership",
+      "constraint_name": "ConferenceMembership_sportId_fkey",
+      "constraint_table": "ConferenceMembership",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "ConferenceMembership",
+      "constraint_name": "ConferenceMembership_sportTeamId_fkey",
+      "constraint_table": "ConferenceMembership",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "ConferenceMembership",
+      "constraint_name": "ConferenceMembership_sportTeamId_fkey",
+      "constraint_table": "ConferenceMembership",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "DraftPick",
+      "constraint_name": "DraftPick_leagueId_fkey",
+      "constraint_table": "DraftPick",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "DraftPick",
+      "constraint_name": "DraftPick_leagueId_fkey",
+      "constraint_table": "DraftPick",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "DraftPick",
+      "constraint_name": "DraftPick_memberId_fkey",
+      "constraint_table": "DraftPick",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "DraftPick",
+      "constraint_name": "DraftPick_memberId_fkey",
+      "constraint_table": "DraftPick",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "DraftPick",
+      "constraint_name": "DraftPick_sportTeamId_fkey",
+      "constraint_table": "DraftPick",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "DraftPick",
+      "constraint_name": "DraftPick_sportTeamId_fkey",
+      "constraint_table": "DraftPick",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "DraftState",
+      "constraint_name": "DraftState_currentMemberId_fkey",
+      "constraint_table": "DraftState",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "DraftState",
+      "constraint_name": "DraftState_currentMemberId_fkey",
+      "constraint_table": "DraftState",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "DraftState",
+      "constraint_name": "DraftState_leagueId_fkey",
+      "constraint_table": "DraftState",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "DraftState",
+      "constraint_name": "DraftState_leagueId_fkey",
+      "constraint_table": "DraftState",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "DraftTurn",
+      "constraint_name": "DraftTurn_leagueId_fkey",
+      "constraint_table": "DraftTurn",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "DraftTurn",
+      "constraint_name": "DraftTurn_leagueId_fkey",
+      "constraint_table": "DraftTurn",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "DraftTurn",
+      "constraint_name": "DraftTurn_memberId_fkey",
+      "constraint_table": "DraftTurn",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "DraftTurn",
+      "constraint_name": "DraftTurn_memberId_fkey",
+      "constraint_table": "DraftTurn",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "GameResult",
+      "constraint_name": "GameResult_awayTeamId_fkey",
+      "constraint_table": "GameResult",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "GameResult",
+      "constraint_name": "GameResult_awayTeamId_fkey",
+      "constraint_table": "GameResult",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "GameResult",
+      "constraint_name": "GameResult_homeTeamId_fkey",
+      "constraint_table": "GameResult",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "GameResult",
+      "constraint_name": "GameResult_homeTeamId_fkey",
+      "constraint_table": "GameResult",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "GameResult",
+      "constraint_name": "GameResult_seasonPhaseId_fkey",
+      "constraint_table": "GameResult",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "GameResult",
+      "constraint_name": "GameResult_seasonPhaseId_fkey",
+      "constraint_table": "GameResult",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "GameResult",
+      "constraint_name": "GameResult_sportSeasonId_fkey",
+      "constraint_table": "GameResult",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "GameResult",
+      "constraint_name": "GameResult_sportSeasonId_fkey",
+      "constraint_table": "GameResult",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "GameResult",
+      "constraint_name": "GameResult_sport_fkey",
+      "constraint_table": "GameResult",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "GameResult",
+      "constraint_name": "GameResult_sport_fkey",
+      "constraint_table": "GameResult",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "League",
+      "constraint_name": "DraftPick_leagueId_fkey",
+      "constraint_table": "DraftPick",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_cascade_del"
+    },
+    {
+      "table_name": "League",
+      "constraint_name": "DraftPick_leagueId_fkey",
+      "constraint_table": "DraftPick",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "League",
+      "constraint_name": "DraftState_leagueId_fkey",
+      "constraint_table": "DraftState",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_cascade_del"
+    },
+    {
+      "table_name": "League",
+      "constraint_name": "DraftState_leagueId_fkey",
+      "constraint_table": "DraftState",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "League",
+      "constraint_name": "DraftTurn_leagueId_fkey",
+      "constraint_table": "DraftTurn",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_cascade_del"
+    },
+    {
+      "table_name": "League",
+      "constraint_name": "DraftTurn_leagueId_fkey",
+      "constraint_table": "DraftTurn",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "League",
+      "constraint_name": "LeagueJoinRequest_leagueId_fkey",
+      "constraint_table": "LeagueJoinRequest",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_cascade_del"
+    },
+    {
+      "table_name": "League",
+      "constraint_name": "LeagueJoinRequest_leagueId_fkey",
+      "constraint_table": "LeagueJoinRequest",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "League",
+      "constraint_name": "LeagueMember_leagueId_fkey",
+      "constraint_table": "LeagueMember",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_cascade_del"
+    },
+    {
+      "table_name": "League",
+      "constraint_name": "LeagueMember_leagueId_fkey",
+      "constraint_table": "LeagueMember",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "League",
+      "constraint_name": "LeagueTeamSlot_leagueId_fkey",
+      "constraint_table": "LeagueTeamSlot",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_cascade_del"
+    },
+    {
+      "table_name": "League",
+      "constraint_name": "LeagueTeamSlot_leagueId_fkey",
+      "constraint_table": "LeagueTeamSlot",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "League",
+      "constraint_name": "League_commissioner_fkey",
+      "constraint_table": "League",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "League",
+      "constraint_name": "League_commissioner_fkey",
+      "constraint_table": "League",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "League",
+      "constraint_name": "League_sport_fkey",
+      "constraint_table": "League",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "League",
+      "constraint_name": "League_sport_fkey",
+      "constraint_table": "League",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "League",
+      "constraint_name": "Transaction_leagueId_fkey",
+      "constraint_table": "Transaction",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_cascade_del"
+    },
+    {
+      "table_name": "League",
+      "constraint_name": "Transaction_leagueId_fkey",
+      "constraint_table": "Transaction",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "League",
+      "constraint_name": "Week_leagueId_fkey",
+      "constraint_table": "Week",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_cascade_del"
+    },
+    {
+      "table_name": "League",
+      "constraint_name": "Week_leagueId_fkey",
+      "constraint_table": "Week",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "League",
+      "constraint_name": "WeeklyTeamScore_leagueId_fkey",
+      "constraint_table": "WeeklyTeamScore",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_cascade_del"
+    },
+    {
+      "table_name": "League",
+      "constraint_name": "WeeklyTeamScore_leagueId_fkey",
+      "constraint_table": "WeeklyTeamScore",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "LeagueJoinRequest",
+      "constraint_name": "LeagueJoinRequest_leagueId_fkey",
+      "constraint_table": "LeagueJoinRequest",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "LeagueJoinRequest",
+      "constraint_name": "LeagueJoinRequest_leagueId_fkey",
+      "constraint_table": "LeagueJoinRequest",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "LeagueJoinRequest",
+      "constraint_name": "LeagueJoinRequest_resolvedByUserId_fkey",
+      "constraint_table": "LeagueJoinRequest",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "LeagueJoinRequest",
+      "constraint_name": "LeagueJoinRequest_resolvedByUserId_fkey",
+      "constraint_table": "LeagueJoinRequest",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "LeagueJoinRequest",
+      "constraint_name": "LeagueJoinRequest_userId_fkey",
+      "constraint_table": "LeagueJoinRequest",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "LeagueJoinRequest",
+      "constraint_name": "LeagueJoinRequest_userId_fkey",
+      "constraint_table": "LeagueJoinRequest",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "LeagueMember",
+      "constraint_name": "DraftPick_memberId_fkey",
+      "constraint_table": "DraftPick",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_cascade_del"
+    },
+    {
+      "table_name": "LeagueMember",
+      "constraint_name": "DraftPick_memberId_fkey",
+      "constraint_table": "DraftPick",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "LeagueMember",
+      "constraint_name": "DraftState_currentMemberId_fkey",
+      "constraint_table": "DraftState",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_setnull_del"
+    },
+    {
+      "table_name": "LeagueMember",
+      "constraint_name": "DraftState_currentMemberId_fkey",
+      "constraint_table": "DraftState",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "LeagueMember",
+      "constraint_name": "DraftTurn_memberId_fkey",
+      "constraint_table": "DraftTurn",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_cascade_del"
+    },
+    {
+      "table_name": "LeagueMember",
+      "constraint_name": "DraftTurn_memberId_fkey",
+      "constraint_table": "DraftTurn",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "LeagueMember",
+      "constraint_name": "LeagueMember_leagueId_fkey",
+      "constraint_table": "LeagueMember",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "LeagueMember",
+      "constraint_name": "LeagueMember_leagueId_fkey",
+      "constraint_table": "LeagueMember",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "LeagueMember",
+      "constraint_name": "LeagueMember_userId_fkey",
+      "constraint_table": "LeagueMember",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "LeagueMember",
+      "constraint_name": "LeagueMember_userId_fkey",
+      "constraint_table": "LeagueMember",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "LeagueMember",
+      "constraint_name": "LeagueTeamSlot_memberId_fkey",
+      "constraint_table": "LeagueTeamSlot",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_cascade_del"
+    },
+    {
+      "table_name": "LeagueMember",
+      "constraint_name": "LeagueTeamSlot_memberId_fkey",
+      "constraint_table": "LeagueTeamSlot",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "LeagueMember",
+      "constraint_name": "TransactionVote_leagueMemberId_fkey",
+      "constraint_table": "TransactionVote",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_cascade_del"
+    },
+    {
+      "table_name": "LeagueMember",
+      "constraint_name": "TransactionVote_leagueMemberId_fkey",
+      "constraint_table": "TransactionVote",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "LeagueMember",
+      "constraint_name": "Transaction_memberFromId_fkey",
+      "constraint_table": "Transaction",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_del"
+    },
+    {
+      "table_name": "LeagueMember",
+      "constraint_name": "Transaction_memberFromId_fkey",
+      "constraint_table": "Transaction",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "LeagueMember",
+      "constraint_name": "Transaction_memberToId_fkey",
+      "constraint_table": "Transaction",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_cascade_del"
+    },
+    {
+      "table_name": "LeagueMember",
+      "constraint_name": "Transaction_memberToId_fkey",
+      "constraint_table": "Transaction",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "LeagueMember",
+      "constraint_name": "WeeklyTeamScore_memberId_fkey",
+      "constraint_table": "WeeklyTeamScore",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_cascade_del"
+    },
+    {
+      "table_name": "LeagueMember",
+      "constraint_name": "WeeklyTeamScore_memberId_fkey",
+      "constraint_table": "WeeklyTeamScore",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "LeagueTeamSlot",
+      "constraint_name": "LeagueTeamSlot_leagueId_fkey",
+      "constraint_table": "LeagueTeamSlot",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "LeagueTeamSlot",
+      "constraint_name": "LeagueTeamSlot_leagueId_fkey",
+      "constraint_table": "LeagueTeamSlot",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "LeagueTeamSlot",
+      "constraint_name": "LeagueTeamSlot_memberId_fkey",
+      "constraint_table": "LeagueTeamSlot",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "LeagueTeamSlot",
+      "constraint_name": "LeagueTeamSlot_memberId_fkey",
+      "constraint_table": "LeagueTeamSlot",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "LeagueTeamSlot",
+      "constraint_name": "LeagueTeamSlot_sportTeamId_fkey",
+      "constraint_table": "LeagueTeamSlot",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "LeagueTeamSlot",
+      "constraint_name": "LeagueTeamSlot_sportTeamId_fkey",
+      "constraint_table": "LeagueTeamSlot",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "School",
+      "constraint_name": "SportTeam_schoolId_fkey",
+      "constraint_table": "SportTeam",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_cascade_del"
+    },
+    {
+      "table_name": "School",
+      "constraint_name": "SportTeam_schoolId_fkey",
+      "constraint_table": "SportTeam",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "SeasonPhase",
+      "constraint_name": "GameResult_seasonPhaseId_fkey",
+      "constraint_table": "GameResult",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_setnull_del"
+    },
+    {
+      "table_name": "SeasonPhase",
+      "constraint_name": "GameResult_seasonPhaseId_fkey",
+      "constraint_table": "GameResult",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "SeasonPhase",
+      "constraint_name": "SeasonPhase_sportSeasonId_fkey",
+      "constraint_table": "SeasonPhase",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "SeasonPhase",
+      "constraint_name": "SeasonPhase_sportSeasonId_fkey",
+      "constraint_table": "SeasonPhase",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "SeasonPhase",
+      "constraint_name": "SeasonPhase_tournamentId_fkey",
+      "constraint_table": "SeasonPhase",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "SeasonPhase",
+      "constraint_name": "SeasonPhase_tournamentId_fkey",
+      "constraint_table": "SeasonPhase",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "Sport",
+      "constraint_name": "ConferenceMembership_sportId_fkey",
+      "constraint_table": "ConferenceMembership",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_del"
+    },
+    {
+      "table_name": "Sport",
+      "constraint_name": "ConferenceMembership_sportId_fkey",
+      "constraint_table": "ConferenceMembership",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "Sport",
+      "constraint_name": "GameResult_sport_fkey",
+      "constraint_table": "GameResult",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_cascade_del"
+    },
+    {
+      "table_name": "Sport",
+      "constraint_name": "GameResult_sport_fkey",
+      "constraint_table": "GameResult",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "Sport",
+      "constraint_name": "League_sport_fkey",
+      "constraint_table": "League",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_cascade_del"
+    },
+    {
+      "table_name": "Sport",
+      "constraint_name": "League_sport_fkey",
+      "constraint_table": "League",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "Sport",
+      "constraint_name": "SportConference_sportId_fkey",
+      "constraint_table": "SportConference",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_cascade_del"
+    },
+    {
+      "table_name": "Sport",
+      "constraint_name": "SportConference_sportId_fkey",
+      "constraint_table": "SportConference",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "Sport",
+      "constraint_name": "SportSeason_sportId_fkey",
+      "constraint_table": "SportSeason",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_cascade_del"
+    },
+    {
+      "table_name": "Sport",
+      "constraint_name": "SportSeason_sportId_fkey",
+      "constraint_table": "SportSeason",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "Sport",
+      "constraint_name": "SportTeam_sportId_fkey",
+      "constraint_table": "SportTeam",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_cascade_del"
+    },
+    {
+      "table_name": "Sport",
+      "constraint_name": "SportTeam_sportId_fkey",
+      "constraint_table": "SportTeam",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "Sport",
+      "constraint_name": "TournamentDefinition_sportId_fkey",
+      "constraint_table": "TournamentDefinition",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_cascade_del"
+    },
+    {
+      "table_name": "Sport",
+      "constraint_name": "TournamentDefinition_sportId_fkey",
+      "constraint_table": "TournamentDefinition",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "SportConference",
+      "constraint_name": "ConferenceMembership_sportConferenceId_fkey",
+      "constraint_table": "ConferenceMembership",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_del"
+    },
+    {
+      "table_name": "SportConference",
+      "constraint_name": "ConferenceMembership_sportConferenceId_fkey",
+      "constraint_table": "ConferenceMembership",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "SportConference",
+      "constraint_name": "SportConference_conferenceId_fkey",
+      "constraint_table": "SportConference",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "SportConference",
+      "constraint_name": "SportConference_conferenceId_fkey",
+      "constraint_table": "SportConference",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "SportConference",
+      "constraint_name": "SportConference_sportId_fkey",
+      "constraint_table": "SportConference",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "SportConference",
+      "constraint_name": "SportConference_sportId_fkey",
+      "constraint_table": "SportConference",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "SportConference",
+      "constraint_name": "TournamentDefinition_sportConferenceId_fkey",
+      "constraint_table": "TournamentDefinition",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_del"
+    },
+    {
+      "table_name": "SportConference",
+      "constraint_name": "TournamentDefinition_sportConferenceId_fkey",
+      "constraint_table": "TournamentDefinition",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "SportSeason",
+      "constraint_name": "GameResult_sportSeasonId_fkey",
+      "constraint_table": "GameResult",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_cascade_del"
+    },
+    {
+      "table_name": "SportSeason",
+      "constraint_name": "GameResult_sportSeasonId_fkey",
+      "constraint_table": "GameResult",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "SportSeason",
+      "constraint_name": "SeasonPhase_sportSeasonId_fkey",
+      "constraint_table": "SeasonPhase",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_cascade_del"
+    },
+    {
+      "table_name": "SportSeason",
+      "constraint_name": "SeasonPhase_sportSeasonId_fkey",
+      "constraint_table": "SeasonPhase",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "SportSeason",
+      "constraint_name": "SportSeasonSubdivision_sportSeasonId_fkey",
+      "constraint_table": "SportSeasonSubdivision",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_cascade_del"
+    },
+    {
+      "table_name": "SportSeason",
+      "constraint_name": "SportSeasonSubdivision_sportSeasonId_fkey",
+      "constraint_table": "SportSeasonSubdivision",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "SportSeason",
+      "constraint_name": "SportSeason_sportId_fkey",
+      "constraint_table": "SportSeason",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "SportSeason",
+      "constraint_name": "SportSeason_sportId_fkey",
+      "constraint_table": "SportSeason",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "SportSeasonSubdivision",
+      "constraint_name": "SportSeasonSubdivision_sportSeasonId_fkey",
+      "constraint_table": "SportSeasonSubdivision",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "SportSeasonSubdivision",
+      "constraint_name": "SportSeasonSubdivision_sportSeasonId_fkey",
+      "constraint_table": "SportSeasonSubdivision",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "SportTeam",
+      "constraint_name": "ConferenceMembership_sportTeamId_fkey",
+      "constraint_table": "ConferenceMembership",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_del"
+    },
+    {
+      "table_name": "SportTeam",
+      "constraint_name": "ConferenceMembership_sportTeamId_fkey",
+      "constraint_table": "ConferenceMembership",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "SportTeam",
+      "constraint_name": "DraftPick_sportTeamId_fkey",
+      "constraint_table": "DraftPick",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_cascade_del"
+    },
+    {
+      "table_name": "SportTeam",
+      "constraint_name": "DraftPick_sportTeamId_fkey",
+      "constraint_table": "DraftPick",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "SportTeam",
+      "constraint_name": "GameResult_awayTeamId_fkey",
+      "constraint_table": "GameResult",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_cascade_del"
+    },
+    {
+      "table_name": "SportTeam",
+      "constraint_name": "GameResult_awayTeamId_fkey",
+      "constraint_table": "GameResult",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "SportTeam",
+      "constraint_name": "GameResult_homeTeamId_fkey",
+      "constraint_table": "GameResult",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_del"
+    },
+    {
+      "table_name": "SportTeam",
+      "constraint_name": "GameResult_homeTeamId_fkey",
+      "constraint_table": "GameResult",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "SportTeam",
+      "constraint_name": "LeagueTeamSlot_sportTeamId_fkey",
+      "constraint_table": "LeagueTeamSlot",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_cascade_del"
+    },
+    {
+      "table_name": "SportTeam",
+      "constraint_name": "LeagueTeamSlot_sportTeamId_fkey",
+      "constraint_table": "LeagueTeamSlot",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "SportTeam",
+      "constraint_name": "SportTeam_schoolId_fkey",
+      "constraint_table": "SportTeam",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "SportTeam",
+      "constraint_name": "SportTeam_schoolId_fkey",
+      "constraint_table": "SportTeam",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "SportTeam",
+      "constraint_name": "SportTeam_sportId_fkey",
+      "constraint_table": "SportTeam",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "SportTeam",
+      "constraint_name": "SportTeam_sportId_fkey",
+      "constraint_table": "SportTeam",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "TournamentDefinition",
+      "constraint_name": "SeasonPhase_tournamentId_fkey",
+      "constraint_table": "SeasonPhase",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_del"
+    },
+    {
+      "table_name": "TournamentDefinition",
+      "constraint_name": "SeasonPhase_tournamentId_fkey",
+      "constraint_table": "SeasonPhase",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "TournamentDefinition",
+      "constraint_name": "TournamentDefinition_sportConferenceId_fkey",
+      "constraint_table": "TournamentDefinition",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "TournamentDefinition",
+      "constraint_name": "TournamentDefinition_sportConferenceId_fkey",
+      "constraint_table": "TournamentDefinition",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "TournamentDefinition",
+      "constraint_name": "TournamentDefinition_sportId_fkey",
+      "constraint_table": "TournamentDefinition",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "TournamentDefinition",
+      "constraint_name": "TournamentDefinition_sportId_fkey",
+      "constraint_table": "TournamentDefinition",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "Transaction",
+      "constraint_name": "TransactionVote_transactionId_fkey",
+      "constraint_table": "TransactionVote",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_cascade_del"
+    },
+    {
+      "table_name": "Transaction",
+      "constraint_name": "TransactionVote_transactionId_fkey",
+      "constraint_table": "TransactionVote",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "Transaction",
+      "constraint_name": "Transaction_leagueId_fkey",
+      "constraint_table": "Transaction",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "Transaction",
+      "constraint_name": "Transaction_leagueId_fkey",
+      "constraint_table": "Transaction",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "Transaction",
+      "constraint_name": "Transaction_memberFromId_fkey",
+      "constraint_table": "Transaction",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "Transaction",
+      "constraint_name": "Transaction_memberFromId_fkey",
+      "constraint_table": "Transaction",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "Transaction",
+      "constraint_name": "Transaction_memberToId_fkey",
+      "constraint_table": "Transaction",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "Transaction",
+      "constraint_name": "Transaction_memberToId_fkey",
+      "constraint_table": "Transaction",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "Transaction",
+      "constraint_name": "Transaction_weekId_fkey",
+      "constraint_table": "Transaction",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "Transaction",
+      "constraint_name": "Transaction_weekId_fkey",
+      "constraint_table": "Transaction",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "TransactionVote",
+      "constraint_name": "TransactionVote_leagueMemberId_fkey",
+      "constraint_table": "TransactionVote",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "TransactionVote",
+      "constraint_name": "TransactionVote_leagueMemberId_fkey",
+      "constraint_table": "TransactionVote",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "TransactionVote",
+      "constraint_name": "TransactionVote_transactionId_fkey",
+      "constraint_table": "TransactionVote",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "TransactionVote",
+      "constraint_name": "TransactionVote_transactionId_fkey",
+      "constraint_table": "TransactionVote",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "User",
+      "constraint_name": "LeagueJoinRequest_resolvedByUserId_fkey",
+      "constraint_table": "LeagueJoinRequest",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_setnull_del"
+    },
+    {
+      "table_name": "User",
+      "constraint_name": "LeagueJoinRequest_resolvedByUserId_fkey",
+      "constraint_table": "LeagueJoinRequest",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "User",
+      "constraint_name": "LeagueJoinRequest_userId_fkey",
+      "constraint_table": "LeagueJoinRequest",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_cascade_del"
+    },
+    {
+      "table_name": "User",
+      "constraint_name": "LeagueJoinRequest_userId_fkey",
+      "constraint_table": "LeagueJoinRequest",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "User",
+      "constraint_name": "LeagueMember_userId_fkey",
+      "constraint_table": "LeagueMember",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_cascade_del"
+    },
+    {
+      "table_name": "User",
+      "constraint_name": "LeagueMember_userId_fkey",
+      "constraint_table": "LeagueMember",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "User",
+      "constraint_name": "League_commissioner_fkey",
+      "constraint_table": "League",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_del"
+    },
+    {
+      "table_name": "User",
+      "constraint_name": "League_commissioner_fkey",
+      "constraint_table": "League",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "User",
+      "constraint_name": "User_uuid_fkey",
+      "constraint_table": "User",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "User",
+      "constraint_name": "User_uuid_fkey",
+      "constraint_table": "User",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "Week",
+      "constraint_name": "Transaction_weekId_fkey",
+      "constraint_table": "Transaction",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_cascade_del"
+    },
+    {
+      "table_name": "Week",
+      "constraint_name": "Transaction_weekId_fkey",
+      "constraint_table": "Transaction",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "Week",
+      "constraint_name": "Week_leagueId_fkey",
+      "constraint_table": "Week",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "Week",
+      "constraint_name": "Week_leagueId_fkey",
+      "constraint_table": "Week",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "Week",
+      "constraint_name": "WeeklyTeamScore_weekId_fkey",
+      "constraint_table": "WeeklyTeamScore",
+      "tgtype": 9,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_cascade_del"
+    },
+    {
+      "table_name": "Week",
+      "constraint_name": "WeeklyTeamScore_weekId_fkey",
+      "constraint_table": "WeeklyTeamScore",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_noaction_upd"
+    },
+    {
+      "table_name": "WeeklyTeamScore",
+      "constraint_name": "WeeklyTeamScore_leagueId_fkey",
+      "constraint_table": "WeeklyTeamScore",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "WeeklyTeamScore",
+      "constraint_name": "WeeklyTeamScore_leagueId_fkey",
+      "constraint_table": "WeeklyTeamScore",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "WeeklyTeamScore",
+      "constraint_name": "WeeklyTeamScore_memberId_fkey",
+      "constraint_table": "WeeklyTeamScore",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "WeeklyTeamScore",
+      "constraint_name": "WeeklyTeamScore_memberId_fkey",
+      "constraint_table": "WeeklyTeamScore",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    },
+    {
+      "table_name": "WeeklyTeamScore",
+      "constraint_name": "WeeklyTeamScore_weekId_fkey",
+      "constraint_table": "WeeklyTeamScore",
+      "tgtype": 5,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_ins"
+    },
+    {
+      "table_name": "WeeklyTeamScore",
+      "constraint_name": "WeeklyTeamScore_weekId_fkey",
+      "constraint_table": "WeeklyTeamScore",
+      "tgtype": 17,
+      "tgenabled": "O",
+      "tgdeferrable": false,
+      "tginitdeferred": false,
+      "function_schema": "pg_catalog",
+      "function_name": "RI_FKey_check_upd"
+    }
+  ],
+  "relation_durability": [
+    {
+      "relname": "Conference",
+      "relkind": "r",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "ConferenceMembership",
+      "relkind": "r",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "ConferenceMembership_id_seq",
+      "relkind": "S",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "Conference_id_seq",
+      "relkind": "S",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "DraftPick",
+      "relkind": "r",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "DraftPick_id_seq",
+      "relkind": "S",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "DraftState",
+      "relkind": "r",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "DraftTurn",
+      "relkind": "r",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "GameResult",
+      "relkind": "r",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "GameResult_id_seq",
+      "relkind": "S",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "League",
+      "relkind": "r",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "LeagueJoinRequest",
+      "relkind": "r",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "LeagueJoinRequest_id_seq",
+      "relkind": "S",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "LeagueMember",
+      "relkind": "r",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "LeagueMember_id_seq",
+      "relkind": "S",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "LeagueTeamSlot",
+      "relkind": "r",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "LeagueTeamSlot_id_seq",
+      "relkind": "S",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "League_id_seq",
+      "relkind": "S",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "School",
+      "relkind": "r",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "School_id_seq",
+      "relkind": "S",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "SeasonPhase",
+      "relkind": "r",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "SeasonPhase_id_seq",
+      "relkind": "S",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "Sport",
+      "relkind": "r",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "SportConference",
+      "relkind": "r",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "SportConference_id_seq",
+      "relkind": "S",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "SportSeason",
+      "relkind": "r",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "SportSeasonSubdivision",
+      "relkind": "r",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "SportSeasonSubdivision_id_seq",
+      "relkind": "S",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "SportSeason_id_seq",
+      "relkind": "S",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "SportTeam",
+      "relkind": "r",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "SportTeam_id_seq",
+      "relkind": "S",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "Sport_id_seq",
+      "relkind": "S",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "TournamentDefinition",
+      "relkind": "r",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "TournamentDefinition_id_seq",
+      "relkind": "S",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "Transaction",
+      "relkind": "r",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "TransactionVote",
+      "relkind": "r",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "TransactionVote_id_seq",
+      "relkind": "S",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "Transaction_id_seq",
+      "relkind": "S",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "User",
+      "relkind": "r",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "User_id_seq",
+      "relkind": "S",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "Week",
+      "relkind": "r",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "Week_id_seq",
+      "relkind": "S",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "WeeklyTeamScore",
+      "relkind": "r",
+      "relpersistence": "p"
+    },
+    {
+      "relname": "WeeklyTeamScore_id_seq",
+      "relkind": "S",
+      "relpersistence": "p"
+    }
+  ]
+}

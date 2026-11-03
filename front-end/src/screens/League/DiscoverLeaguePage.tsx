@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import type { LeagueSearchResult } from "../../types/league";
-import type { LeagueMember } from "../../types/leagueMember";
+import type { LeagueMemberPreview } from "../../types/leagueMember";
 import {
-  getMembersOfLeague,
+  getMemberPreviewsOfLeague,
   requestToJoinLeague,
 } from "../../api/leagues";
 import { getSports } from "../../api/sport";
@@ -25,7 +25,7 @@ const DiscoverLeaguePage = () => {
   const [sports, setSports] = useState<Sport[]>([]);
   const [sportsLoading, setSportsLoading] = useState(false);
   const [sportsError, setSportsError] = useState<string | null>(null);
-  const [members, setMembers] = useState<LeagueMember[]>([]);
+  const [members, setMembers] = useState<LeagueMemberPreview[]>([]);
   const [membersLoading, setMembersLoading] = useState(false);
   const [membersError, setMembersError] = useState<string | null>(null);
   const [requestStatus, setRequestStatus] = useState<
@@ -46,7 +46,7 @@ const DiscoverLeaguePage = () => {
       setMembersError(null);
 
       try {
-        const data = await getMembersOfLeague(league.id);
+        const data = await getMemberPreviewsOfLeague(league.id);
         if (!isCancelled) {
           setMembers(data);
         }
@@ -217,14 +217,11 @@ const DiscoverLeaguePage = () => {
           {members.map((member) => {
             const displayName =
               member.teamName?.trim() ||
-              String(member.displayName ?? `User ${member.userId}`);
+              (member.displayName ?? "Unnamed team");
 
             return (
               <li key={member.id}>
                 <span>{displayName}</span>
-                <span className="discover-league__member-meta">
-                  Draft #{member.draftOrder ?? "TBD"}
-                </span>
               </li>
             );
           })}

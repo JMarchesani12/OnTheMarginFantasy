@@ -1,6 +1,6 @@
 # Season setup and basketball tournaments
 
-Run SQL migration `api/migrations/20261023_basketball_tournament_rules.sql` before deploying the updated API or running basketball setup. It adds `SeasonPhase.rules` JSONB. It does not rewrite existing seasons or leagues. No new subdivisions or tournament-specific tables are needed.
+Basketball setup requires `SeasonPhase.rules` JSONB. The previously referenced `api/migrations/20261023_basketball_tournament_rules.sql` is missing from available repository history; do not treat it as a runnable setup step. The configured backend database has the column as of the read-only 2026-10-29 catalog check. Verify other environments and reconcile the migration provenance before defining an upgrade; see [MOD-005](../../docs/modernization/mod-005-schema-provenance.md). It does not rewrite existing seasons or leagues. No new subdivisions or tournament-specific tables are needed.
 
 ## Configuration
 
@@ -65,7 +65,7 @@ Conference source matches must also agree with both teams' season-specific confe
 
 ## Running
 
-From `api`, after applying the migration and completing/confirming the config:
+From `api`, after verifying the schema prerequisite above and completing/confirming the config:
 
 ```sh
 PYTHONPATH=. python3 startSeasonJobs/startSeason.py --config startSeasonJobs/configs/ncaa-mens-basketball-2026.json
