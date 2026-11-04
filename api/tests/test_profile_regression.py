@@ -27,6 +27,7 @@ class ProfileDatabase:
     def __init__(self):
         self.connection = sqlite3.connect(":memory:")
         self.connection.row_factory = sqlite3.Row
+        self.connection.create_function('pg_advisory_xact_lock', 1, lambda key: None)
         self.connection.execute('''CREATE TABLE "User" (
             id INTEGER PRIMARY KEY, uuid TEXT UNIQUE, email TEXT UNIQUE,
             "displayName" TEXT, "createdAt" TEXT DEFAULT '2026-01-01T00:00:00Z'

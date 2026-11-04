@@ -1,5 +1,6 @@
 """Transaction use cases and connection ownership, independent of transport."""
 from actors import UserActor
+from utils.ownership import lock_ownership, transaction_league_hint
 from .contracts import TransactionAccessDenied, TransactionNotFound, TradeRejected
 from .repository import TransactionRepository
 
@@ -58,9 +59,15 @@ class TransactionService:
 
     def apply_trade_for_job(self, transaction_id: int) -> None:
         with self.engine.begin() as conn:
+            league_id = transaction_league_hint(conn, transaction_id)
+            if league_id is None:
+                raise TransactionNotFound('Transaction not found')
+            lock_ownership(conn, league_id)
             tx = self.repository.lock_trade(conn, transaction_id)
             if tx is None:
                 raise TransactionNotFound('Transaction not found')
+            if tx['leagueId'] != league_id:
+                raise TradeRejected('Transaction league changed')
             if tx['type'] != 'TRADE':
                 raise TradeRejected('Not a trade transaction')
             if tx['status'] != 'PENDING_APPLY':

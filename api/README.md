@@ -184,3 +184,22 @@ counts. [Migration, preflight and recovery instructions](../db/preflights/MOD-00
 No SQL runs automatically at startup. Application locking changes require normal
 backend deployment; database constraints alone do not make older multi-transaction
 initialization atomic. Job completion/ownership snapshot policy remains separate.
+
+
+## Ownership writes (MOD-010)
+
+Supported draft/live/manual/timeout, trade application and free-agent reservation/
+application share the stable per-league transaction advisory mutex in
+`utils/ownership.py`. Acquire it before DraftState/Transaction row locks; pass
+that transaction connection to validation/persistence helpers. Private insert
+helpers are not independently locked public commands. Free-agent queued work
+rechecks actual drops/availability/conference caps before completing; rejected
+work remains pending with ownership rolled back. Job timing/veto behavior and
+acquisition defaults are unchanged.
+
+The configured database's interval/member/overlap constraints were installed
+and verified on2026-11-04 using btree_gist1.7 (1059 slots unchanged, including10
+valid empty intervals). [Migration/preflight/recovery details](../db/preflights/MOD-010.md).
+Other environments follow the full baseline/additive migration sequence. The
+mutex and apply-time validation require normal deployment of all backend/job
+writers; this SQL rollout did not deploy application code or execute jobs.

@@ -1,5 +1,15 @@
 # Modernization progress
 
+## Priority 5 MOD-010 — 2026-11-04
+
+MOD-010 implemented and verified in supported application/synthetic PostgreSQL scope; configured database integrity guards installed and catalog-verified. Shared v1 per-league transaction advisory mutex now precedes row locks in live/manual/timeout draft, trade application and free-agent submission/application. Free-agent routing/swap/member/pending checks share the owned transaction; queued application revalidates current ownership and post-drop conference caps. Conflicts roll back history and leave pending work pending. Existing scheduler/requested-week/veto/acquired-week policies retained.
+
+Added interval CHECK, same-league member FK and GiST half-open overlap exclusion using standard platform btree_gist1.7. Empty/adjacent/future intervals remain valid. Configured preflight and after-check:1059 slots,10 empty intervals, no negative/reversed/overlapping or member/sport mismatch counts; unchanged by migration. [Rollout evidence](evidence/mod-010-rollout-2026-11-04.json), [runbook](../../db/preflights/MOD-010.md). No ownership commands, historical cleanup, jobs or backend deployment ran on the configured target.
+
+Backend **630/630**, frontend **64/64**, build and native tests pass. Native pending-add race reproduced two accepted reservations before fix; after fix a real lock wait yields one rejection. Cross-command draft/manual/timeout/trade/free-agent and cap races pass with/without schema guards, independent leagues do not wait, direct SQL overlap races fail with23P01, and replay/statement/commit rollback plus prior draft/transaction suites pass. Independent review found no material issue; race diagnostics tightened so arbitrary DB errors cannot masquerade as expected rejections. [Native evidence](evidence/mod-010-postgres-2026-11-04.json), [plan](../superpowers/plans/2026-11-04-mod-010.md).
+
+Backend changes remain uncommitted on audit and are not deployed. Installed constraints protect intervals immediately; complete reservation/cap serialization requires upgrading all relevant web/job writers. Current-week queue policy remains; a future queued command may later conflict and needs MOD-013 recovery. MOD-012 admission/initialization is the remaining Priority5 task. Frozen baseline unchanged.
+
 ## Priority 5 MOD-008 — 2026-11-04
 
 MOD-008 implemented and locally verified; configured database constraints applied and catalog-verified. Week initialization keeps the existing fast read, computes unchanged boundaries, then locks League, rechecks and writes the full plan in one transaction. Football week0 now rolls back with numbered weeks and retry creates a complete set. Weekly score replacement locks its scoped Week before deletion/insertion and fails safely if the period disappeared. Existing ranking/date/read projections retained.

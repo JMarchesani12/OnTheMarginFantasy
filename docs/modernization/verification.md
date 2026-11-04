@@ -1565,3 +1565,73 @@ proved. MOD-010/012/013/015 retain their separate responsibilities. See the
 [rollout/recovery runbook](../../db/preflights/MOD-008.md).
 
 Cleanup verified: owned random native-test databases dropped; disposable PostgreSQL container stopped/auto-removed with temporary storage discarded. Final native source hashes and configured migration checksum match.
+
+## Priority 5 MOD-010 ownership concurrency — 2026-11-04
+
+User authorized continuing Priority5. Baseline624/624; final **630/630** backend,
+frontend **64/64** and production build pass, diff clean. Three isolated failures
+first reproduced queued free-agent application taking an owned team, completing
+an unowned drop and exceeding conference caps. Native pending-add reproduction
+accepted both competing requests before fix; afterward one waits and rejects.
+
+A stable v1 SHA256-derived signed64 per-league pg_advisory_xact_lock precedes
+DraftState/Transaction row locks for all first-party public ownership/reservation
+writers. A transaction application reads only a league hint before the mutex,
+then row-locks and rejects changed league/type/status. Existing trade replay and
+authority behavior retained. FA effective-week routing/swap/member/pending checks
+now share the supplied transaction; strict ConnectionOwner regression verifies
+one begin/no extra connect. Apply revalidates all drops before closing them,
+then actual add availability and conference counts after drops on the same
+connection. Exceptions preserve slots and pending status. No automatic retries.
+
+[Native report](evidence/mod-010-postgres-2026-11-04.json) uses actual baseline plus
+current additive migrations. Covers13 observed application races: same-team pending
+reservation plus manual/live/timeout versus free-agent apply, different pending
+trades, different-team cap competition and independent league requests, each with
+and without database guards. Conflicting commands wait and reject, independent
+leagues proceed without the mutex wait. Deterministic team selection is injected
+only for the timeout candidate; actual timeout insertion/state/transaction path
+runs. Tests assert exactly one valid owner, unchanged rejected replay/history
+and statement/deferred-commit rollback. A direct SQL race outside application
+mutex observes the exclusion wait and23P01. Strict diagnostics do not classify
+arbitrary database failures/deadlocks as expected application rejections.
+Prior full draft/transaction native contracts rerun successfully.
+
+Prepared aggregate-only ownership preflight and bounded migration. Interval CHECK
+allows acquired>=0 and end>=start; same-league member FK references MOD-008 parent
+key with cascade; GiST exclusion prevents same-league/team overlapping int8range
+intervals. Standard platform btree_gist enables scalar GiST equality. Native proof
+includes zero-length duplicates, adjacent transfers, week0 and future intervals;
+an earlier open-ended manual write cannot overwrite a valid future reservation.
+Dirty/shape drift refuses atomically; no historical repair. Sport mismatches are
+inventoried, not enforced by a new cross-table sport constraint.
+
+Independent reviewer found no material bug, missing public writer or lock
+inversion. Private insert/repository helpers require the outer command's supplied
+connection/mutex. Existing control/response/veto row-lock paths never request the
+ownership mutex. Conference semantics remain current source policy; no season-rule
+or scheduler change was inferred from the concurrency work.
+
+Configured read-only aggregate preflight found1059 slots,10 valid empty intervals,
+zero negative/reversed/overlap/member-league/sport mismatches. Following authorized
+rollout workflow, applied the reviewed migration with5s lock/60s statement bounds:
+btree_gist1.7 now in public; interval/FK/exclusion definitions, index readiness,
+operators, range bounds and nondeferrability verified. Counts unchanged after.
+[Rollout report](evidence/mod-010-rollout-2026-11-04.json) contains only target hash,
+aggregate counts/catalog flags, extension metadata and migration checksum.
+No configured ownership commands, private-row exports, draft/job execution,
+remediation or history writes. No new package downloads/infrastructure service.
+Current schema/run order updated; frozen baseline/checksums untouched.
+
+Limits: requested-week pending policy remains; future queued commands can become
+invalid and remain pending on safe rejection. MOD-013 owns dependency/retry/timing
+recovery, including no-week-ready behavior. Full game/ownership/membership/calendar
+snapshots and deployed RLS/provider behavior are not claimed. SQL guards protect
+intervals immediately, but reservation/cap serialization requires deploying all
+updated application/job writers. Those backend changes remain uncommitted on
+audit, not deployed. See [runbook](../../db/preflights/MOD-010.md). MOD-012 remains
+as the next Priority5 task.
+
+Final MOD-010 authorization check reproduced a foreign-member request reaching a contended ownership mutex before denial; moved the initial owned-member check ahead of that mutex and verified404/no state change. Mutex still precedes command row locks and guarded insertion still rechecks authority. Current source-snapshot initialization passes with platform btree_gist prerequisite; final backend630/630.
+
+Cleanup verified: owned random native databases removed; task-owned PostgreSQL container stopped/auto-removed with temporary storage discarded. Native/current-schema source hashes and installed migration checksum match final files.

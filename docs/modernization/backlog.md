@@ -274,6 +274,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-010 — Verify ownership reservation concurrency and add justified guards
 
+- **Completion — 2026-11-04:** Supported application/native PostgreSQL scope complete; configured interval CHECK, same-league member FK and GiST overlap exclusion installed with clean/unchanged1059-slot counts (10 empty valid). Shared per-league mutex, same-connection free-agent checks and apply-time ownership/cap revalidation pass real cross-command and direct-SQL races/rollback/replay. Backend630/630, frontend64/64/build; independent review no material findings. [Native evidence](evidence/mod-010-postgres-2026-11-04.json), [rollout](evidence/mod-010-rollout-2026-11-04.json), [runbook](../../db/preflights/MOD-010.md). Backend changes still local/uncommitted; queue timing/recovery and concurrent membership/calendar administration remain separate. No historical cleanup or configured ownership commands.
+
 - **Priority / size / risk:** P1 / M / High.
 - **Features:** F-013, F-015, F-016, F-024, F-025, F-030, F-033.
 - **Problem / evidence:** DB-05; BE S02/S03; no interval overlap/same-league guards; checks on separate connections.

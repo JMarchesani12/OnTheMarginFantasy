@@ -203,3 +203,13 @@ class LivePickAuthorizationTests(unittest.TestCase):
         slot = self.db.connection.execute('SELECT "acquiredWeek" FROM "LeagueTeamSlot"').fetchone()
         self.assertEqual(slot[0], 1)  # Preserve model default, separate from HTTP default 0.
         self.emit.assert_not_called()
+
+    def test_foreign_member_denial_precedes_ownership_mutex(self):
+        def contended(sql):
+            if 'pg_advisory_xact_lock' in sql:
+                raise RuntimeError('synthetic mutex must not be reached')
+        self.db.before_query = contended
+        before = self.state()
+        response = self.client.post('/api/draft/pick', json=self.body, headers=self.headers(fixture.ALICE))
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(self.state(), before)

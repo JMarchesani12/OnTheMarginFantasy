@@ -17,6 +17,7 @@ from .snapshot_service import DraftSnapshotService
 from .control_service import DraftControlService
 from .pick_repository import DraftPickRepository
 from actors import UserActor
+from utils.ownership import lock_ownership
 from .draft_rules import compute_round_and_pos, draft_order_for_pick
 
 
@@ -97,6 +98,7 @@ class DraftPickService:
                 }).fetchone()
                 if not owned:
                     raise PermissionError('League member not found')
+            lock_ownership(conn, league_id)
             cfg = self._get_draft_settings(conn, league_id)
             num_players = cfg["numPlayers"]
             rounds = cfg["numberOfRounds"]
@@ -237,6 +239,7 @@ class DraftPickService:
         """
 
         with self.db.begin() as conn:
+            lock_ownership(conn, league_id)
             cfg = self._get_draft_settings(conn, league_id)
             num_players = cfg["numPlayers"]
             rounds = cfg["numberOfRounds"]
@@ -469,6 +472,7 @@ class DraftPickService:
         """
 
         with self.db.begin() as conn:
+            lock_ownership(conn, league_id)
             # 1) Get league info (numPlayers) to compute rounds
             league_row = self.pick_repository.manual_league(conn, {"leagueId": league_id}).fetchone()
 

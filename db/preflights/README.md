@@ -77,3 +77,5 @@ email/FK policies, actual unique-lock waits and same-/different-email races.
 
 
 For the subsequent MOD-008 migration, use the separate [week/score identity runbook](MOD-008.md); do not assume profile preflight covers period/score history.
+
+For MOD-010, use the separate [ownership integrity runbook](MOD-010.md), including the platform extension prerequisite and valid empty/half-open interval policy.

@@ -400,7 +400,7 @@ explicit prerequisites for operational use.
 At the main/audit integration, `db/tables.sql` and
 `api/migrations/20261030_game_kickoff_tbd.sql` matched main at merge parent
 `ae8a103`. The current intended snapshot additionally includes the additive
-MOD-006 `User_uuid_key` and MOD-008 period/score identity constraints described below. `GameResult.timeTBD` is a boolean,
+MOD-006 `User_uuid_key`, MOD-008 period/score keys and MOD-010 ownership constraints described below. `GameResult.timeTBD` is a boolean,
 NOT NULL, default false. A read-only configured-database catalog check on
 2026-11-02 confirmed that exact column definition; no hosted DDL was executed.
 This column check does not claim a fresh full hosted schema comparison.
@@ -455,3 +455,18 @@ The configured target was clean (176 weeks,340 scores) and the bounded migration
 was applied/catalog-verified with unchanged counts on2026-11-04. [Rollout evidence](../docs/modernization/evidence/mod-008-rollout-2026-11-04.json).
 Other targets require their own readiness check. Backend application deployment
 is separate and was not performed by the database rollout.
+
+
+## MOD-010 ownership integrity — 2026-11-04
+
+After User and week/score identity migrations, apply
+[ownership integrity](../api/migrations/20261104_ownership_integrity.sql) with its
+[aggregate preflight and rollout/recovery review](preflights/MOD-010.md). It enables
+platform-supplied btree_gist if absent and adds an interval CHECK, same-league
+member FK and nondeferrable half-open overlap exclusion. Empty/adjacent/future
+valid ranges are preserved; no history is cleaned or reassigned.
+
+Configured target applied/catalog-verified with1059 slots and10 empty intervals
+unchanged, no overlap/reversed/member/sport mismatches. [Rollout evidence](../docs/modernization/evidence/mod-010-rollout-2026-11-04.json).
+Current target snapshot includes these constraints and requires the extension;
+the frozen baseline/checksums remain unchanged. Backend deployment is separate.

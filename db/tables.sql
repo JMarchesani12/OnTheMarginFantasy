@@ -215,7 +215,10 @@ create table public."LeagueTeamSlot" (
   constraint "LeagueTeamSlot_pkey" primary key (id),
   constraint "LeagueTeamSlot_leagueId_fkey" foreign KEY ("leagueId") references "League" (id) on delete CASCADE,
   constraint "LeagueTeamSlot_memberId_fkey" foreign KEY ("memberId") references "LeagueMember" (id) on delete CASCADE,
-  constraint "LeagueTeamSlot_sportTeamId_fkey" foreign KEY ("sportTeamId") references "SportTeam" (id) on delete CASCADE
+  constraint "LeagueTeamSlot_sportTeamId_fkey" foreign KEY ("sportTeamId") references "SportTeam" (id) on delete CASCADE,
+  constraint "LeagueTeamSlot_interval_check" check ("acquiredWeek" >= 0 and ("droppedWeek" is null or "droppedWeek" >= "acquiredWeek")),
+  constraint "LeagueTeamSlot_same_league_member_fkey" foreign KEY ("leagueId", "memberId") references "LeagueMember" ("leagueId", id) on delete CASCADE,
+  constraint "LeagueTeamSlot_no_overlap" exclude using gist ("leagueId" with =, "sportTeamId" with =, int8range("acquiredWeek"::bigint, "droppedWeek"::bigint, '[)') with &&)
 ) TABLESPACE pg_default;
 
 

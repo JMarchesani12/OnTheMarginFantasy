@@ -1,0 +1,248 @@
+{
+  "result": "PASS",
+  "scope": "Owned marked synthetic PostgreSQL; no configured ownership commands",
+  "tests": {
+    "competing_pending_free_agent_reservations": {
+      "observed_lock_wait": true,
+      "outcomes": {
+        "first": "ok",
+        "second": "rejected"
+      }
+    },
+    "integrity": {
+      "schema_empty_adjacent_future_exclusion_check_fk": "PASS",
+      "dirty_refusal_and_shape_replay": "PASS",
+      "application_statement_commit_rollback": "PASS",
+      "cross_command_races": [
+        {
+          "observed_lock_wait": true,
+          "outcomes": {
+            "first": "ok",
+            "second": "rejected"
+          },
+          "mode": "manual",
+          "database_guard": false
+        },
+        {
+          "observed_lock_wait": true,
+          "outcomes": {
+            "first": "ok",
+            "second": "rejected"
+          },
+          "mode": "live",
+          "database_guard": false
+        },
+        {
+          "observed_lock_wait": true,
+          "outcomes": {
+            "first": "ok",
+            "second": "rejected"
+          },
+          "mode": "timeout",
+          "database_guard": false
+        },
+        {
+          "observed_lock_wait": true,
+          "outcomes": {
+            "first": "ok",
+            "second": "rejected"
+          },
+          "mode": "different_trades",
+          "database_guard": false
+        },
+        {
+          "observed_lock_wait": true,
+          "outcomes": {
+            "first": "ok",
+            "second": "rejected"
+          },
+          "mode": "cap",
+          "database_guard": false
+        },
+        {
+          "observed_lock_wait": false,
+          "outcomes": {
+            "second": "ok",
+            "first": "ok"
+          },
+          "mode": "independent_league",
+          "database_guard": false
+        },
+        {
+          "observed_lock_wait": true,
+          "outcomes": {
+            "first": "ok",
+            "second": "rejected"
+          },
+          "mode": "manual",
+          "database_guard": true
+        },
+        {
+          "observed_lock_wait": true,
+          "outcomes": {
+            "first": "ok",
+            "second": "rejected"
+          },
+          "mode": "live",
+          "database_guard": true
+        },
+        {
+          "observed_lock_wait": true,
+          "outcomes": {
+            "first": "ok",
+            "second": "rejected"
+          },
+          "mode": "timeout",
+          "database_guard": true
+        },
+        {
+          "observed_lock_wait": true,
+          "outcomes": {
+            "first": "ok",
+            "second": "rejected"
+          },
+          "mode": "different_trades",
+          "database_guard": true
+        },
+        {
+          "observed_lock_wait": true,
+          "outcomes": {
+            "first": "ok",
+            "second": "rejected"
+          },
+          "mode": "cap",
+          "database_guard": true
+        },
+        {
+          "observed_lock_wait": false,
+          "outcomes": {
+            "second": "ok",
+            "first": "ok"
+          },
+          "mode": "independent_league",
+          "database_guard": true
+        }
+      ],
+      "direct_exclusion_race": {
+        "observed_lock_wait": true,
+        "outcomes": {
+          "first": "ok",
+          "second": "database_error_23P01"
+        }
+      }
+    },
+    "prior_transaction": {
+      "all33_workflow_operations_arrays_jsonb_lateral_executemany": "PASS",
+      "actor_roles_ownership_status_deadline_swap_caps_pending_and_effective_week": "PASS",
+      "proposal_accept_reject_cancel_veto_toggle_threshold_and_dispatch_apply_replay": "PASS",
+      "personalized_party_voter_display_projection_and_query_time_revocation": "PASS",
+      "mutation_phase_real_statement_deferred_commit_and_postwrite_authority_rollback": "PASS",
+      "observed_concurrent_cancel_lock_wait_and_replay_rejection": "PASS",
+      "roster_violations_unregistered_lock_helper_and_swap_limit_failure": "PASS",
+      "repository_queries_exercised": [
+        "accept_trade",
+        "add_free_agent_slots",
+        "assert_owned_member",
+        "cancel_trade",
+        "complete_free_agent",
+        "drop_free_agent_slots",
+        "free_agent_deadline",
+        "free_agent_for_update",
+        "insert_free_agent",
+        "insert_trade",
+        "insert_veto",
+        "league_settings",
+        "lock_week",
+        "mark_vetoed",
+        "member_conference_counts",
+        "member_count",
+        "member_roster_ids",
+        "member_swap_count",
+        "member_team_owned",
+        "next_unlocked_week",
+        "open_trades",
+        "pending_add_ids",
+        "pending_drop_ids",
+        "pending_transaction",
+        "reject_trade",
+        "roster_violations",
+        "team_conference_info",
+        "team_owned",
+        "toggle_veto",
+        "trade_current_scope",
+        "trade_for_action",
+        "veto_count",
+        "week_for_league"
+      ],
+      "scope_limit": "Original helper connections, validation/revalidation, membership/cap rules and revocation boundary semantics preserved; no new routes/schema/timeout/startup policy."
+    },
+    "prior_draft": {
+      "native_live_manual_lookup_ownership_turn_grace_caps_season_defaults": "PASS",
+      "guarded_insert_rechecks_separate_transaction_revocation": "PASS",
+      "native_skip_rotation_unpicked_holes_last_turn_missing_turn_and_noops": "PASS",
+      "native_auto_random_buckets_caps_availability_sport_and_completion": "PASS",
+      "post_write_finalize_notify_statement_deferred_commit_rollback": "PASS",
+      "real_pick_timeout_lock_wait_rechecks_advanced_clock": "PASS",
+      "native_worker_deadline_without_worker_startup": "PASS",
+      "postgres_notify_commit_only_existing_branch_placement": "PASS",
+      "repository_queries_exercised": [
+        "auto_advance_next",
+        "auto_advance_past_end",
+        "auto_state_for_update",
+        "conference_cap",
+        "conference_info",
+        "insert_auto_pick",
+        "insert_auto_slot",
+        "insert_live_pick",
+        "insert_live_slot",
+        "insert_manual_pick",
+        "insert_manual_slot",
+        "league_sport",
+        "live_advance_next",
+        "live_advance_past_end",
+        "live_advance_without_turn",
+        "live_owned_member",
+        "live_state_for_update",
+        "live_team_ownership",
+        "manual_league",
+        "manual_pick_count",
+        "manual_team_ownership",
+        "member_conference_count",
+        "member_for_order",
+        "membership_for_subject",
+        "next_timeout_deadline",
+        "notify",
+        "owned_conference_count",
+        "random_conference_team",
+        "random_independent_team",
+        "sport_conference_ids",
+        "sport_rounds",
+        "timeout_advance",
+        "timeout_auto_member",
+        "timeout_expected_member",
+        "timeout_expired",
+        "timeout_extend_clock",
+        "timeout_last_unpicked",
+        "timeout_next_turn",
+        "timeout_rotate_turns",
+        "timeout_state_for_update"
+      ],
+      "scope_limit": "Original publication placement, restart and legacy cap/random policies preserved; this is extraction, not MOD-023/025/startup redesign"
+    },
+    "current_snapshot_initialization": "PASS"
+  },
+  "sha256": {
+    "api/endpoints/transaction/workflow_service.py": "99a9e1a5a10a73f398dfa104cc6e5a0f116b4ef1ed8da023076f5cbdf016d1c6",
+    "api/endpoints/transaction/service.py": "0c410940b356f8cf567600dd73891afff3ab99e528d7b8786d94dd5a34328156",
+    "api/endpoints/draft/pick_service.py": "882464f5ac31fa12fff5fba20fda676bbaffbeaecc0c495ddfd39c7ce26026b8",
+    "api/utils/ownership.py": "79016d10aeccb4efdd2b66dc61ea6f38a295eb2218929f15fb1da6edf06adce5",
+    "api/migrations/20261104_ownership_integrity.sql": "fb3b6c5dd445a6e8da5dd67784d882032a698917e7ac1d9eebb1167120480116",
+    "db/preflights/20261104_ownership_integrity.sql": "9fd84bcd83818ea8fdd9c5f849211e22147d79021430c9afbaa1065ad31f9798",
+    "scripts/modernization/verify_mod010.py": "611665947aeb54b0fd67e5649805923a3ab7c596a04c3365e413e9897b5211c4",
+    "db/tables.sql": "a91658beef78c1c57560ed2ee8b3f2610cd06df3a44e11b6b42651a2256dd055",
+    "db/baselines/20261029/001_schema.sql": "7fe1c17223dd2cf3ebbfdb9d2ca318d4f7ad24f9a6578309c40aad3cfb58a109",
+    "scripts/modernization/verify_transaction_complete.py": "dda6e2029e80ef81f9f76211d53a69d4bc40dddae4910145817d942ce015066d",
+    "scripts/modernization/verify_draft_complete.py": "6152343a3976c0318e63a2801201a6b4bb1b281adc891ba5f54ec462a50310e9",
+    "scripts/modernization/assess_postgres.py": "487ce07086f86784f17576163fa457816e62daf59db8b3824c705403fb522546"
+  }
+}
