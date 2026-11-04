@@ -162,6 +162,8 @@ class ScoringService:
             ms['rank'] = rank
             ms['pointsAwarded'] = points_awarded
         with self.db.begin() as conn:
+            if self.repository.lock_scoring_week(conn, league_id, week_id) is None:
+                raise ScoringRejected('Scoring week no longer exists')
             self._delete_existing_weekly_scores(conn, league_id, week_id)
             for ms in member_scores:
                 self.repository.insert_weekly_score(conn, league_id, week_id, ms['memberId'], ms['pointDifferential'], ms['rank'], ms['pointsAwarded'])

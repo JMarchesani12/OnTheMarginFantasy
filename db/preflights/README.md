@@ -74,3 +74,6 @@ and drops a random test database; it accepts no DSN and reads no `.env`.
 [Recorded results](../../docs/modernization/evidence/mod-006-postgres-2026-11-04.json)
 cover baseline upgrade/replay, dirty/shape/RLS refusal, nullable legacy rows,
 email/FK policies, actual unique-lock waits and same-/different-email races.
+
+
+For the subsequent MOD-008 migration, use the separate [week/score identity runbook](MOD-008.md); do not assume profile preflight covers period/score history.

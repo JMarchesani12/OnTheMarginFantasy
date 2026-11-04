@@ -75,6 +75,13 @@ class ScoringRepository:
         """)
         return conn.execute(sql, {'leagueId': league_id}).fetchall()
 
+    def lock_scoring_week(self, conn, league_id, week_id):
+        return conn.execute(text('''
+            SELECT id FROM "Week"
+            WHERE "leagueId"=:leagueId AND id=:weekId
+            FOR UPDATE
+        '''), {'leagueId': league_id, 'weekId': week_id}).fetchone()
+
     def delete_weekly_scores(self, conn, league_id, week_id):
         sql = text("""
             DELETE FROM "WeeklyTeamScore"

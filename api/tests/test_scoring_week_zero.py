@@ -13,6 +13,10 @@ class _FakeConnection:
 
     def execute(self, sql, params=None):
         self.executions.append((sql, params))
+        if 'SELECT id FROM "Week"' in str(sql):
+            class Result:
+                def fetchone(self): return {'id': 100}
+            return Result()
 
 
 class _FakeBegin:

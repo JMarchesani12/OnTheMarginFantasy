@@ -399,8 +399,8 @@ explicit prerequisites for operational use.
 
 At the main/audit integration, `db/tables.sql` and
 `api/migrations/20261030_game_kickoff_tbd.sql` matched main at merge parent
-`ae8a103`. The current intended snapshot additionally includes the unapplied
-MOD-006 `User_uuid_key` constraint described below. `GameResult.timeTBD` is a boolean,
+`ae8a103`. The current intended snapshot additionally includes the additive
+MOD-006 `User_uuid_key` and MOD-008 period/score identity constraints described below. `GameResult.timeTBD` is a boolean,
 NOT NULL, default false. A read-only configured-database catalog check on
 2026-11-02 confirmed that exact column definition; no hosted DDL was executed.
 This column check does not claim a fresh full hosted schema comparison.
@@ -440,3 +440,18 @@ counts unchanged after installation, and the valid null-distinct constraint
 verified. [Rollout evidence](../docs/modernization/evidence/mod-006-rollout-2026-11-04.json).
 No backend deployment or account remediation was included. The frozen baseline/checksums remain unchanged;
 its historical expected catalog is not the upgraded schema reference.
+
+
+## MOD-008 week/score identity — 2026-11-04
+
+After the frozen baseline, kickoff migration and User identity migration, apply
+[week/score identity](../api/migrations/20261104_week_score_identity.sql) only after
+its [aggregate preflight and rollout review](preflights/MOD-008.md). Current
+`db/tables.sql` includes the two natural keys, composite parent unique keys and
+same-league score FKs. Existing FK cascade behavior is retained; no historical
+rows are deduplicated or rebuilt. Frozen baseline/checksums remain unchanged.
+
+The configured target was clean (176 weeks,340 scores) and the bounded migration
+was applied/catalog-verified with unchanged counts on2026-11-04. [Rollout evidence](../docs/modernization/evidence/mod-008-rollout-2026-11-04.json).
+Other targets require their own readiness check. Backend application deployment
+is separate and was not performed by the database rollout.

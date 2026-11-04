@@ -119,13 +119,7 @@ class BasketballIntegrationTests(unittest.TestCase):
         p = phase(1, scoringPeriod='BASKETBALL_FINAL')
         p['startDate'] = dt.datetime(2027, 3, 16, tzinfo=UTC)
         model._get_season_phases = lambda _: [p]
-        model._insert_week0 = lambda *args: dict(weekNumber=0)
-        recorded = []
-        def insert(league, ranges, starting_week_number=1, tzinfo=None):
-            recorded.extend(ranges)
-            return [dict(weekNumber=n) for n in range(starting_week_number, starting_week_number+len(ranges))]
-        model._insert_weeks = insert
-        model.ensure_weeks_for_league(1)
+        recorded = [(start.date(), end.date()) for _, start, end in model.get_week_boundaries(1)]
         self.assertEqual(recorded[-1], (dt.date(2027, 3, 16), dt.date(2027, 4, 6)))
         self.assertEqual(recorded[-2][1], dt.date(2027, 3, 15))
         for a, b in zip(recorded, recorded[1:]):

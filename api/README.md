@@ -167,3 +167,20 @@ verified on2026-11-04 after maintainer authorization and clean aggregate preflig
 (14 profiles;0 unlinked/duplicate groups; counts unchanged). See the
 [rollout evidence](../docs/modernization/evidence/mod-006-rollout-2026-11-04.json).
 This database operation did not deploy backend application code.
+
+
+## Week and score identity (MOD-008)
+
+Fresh calendar initialization writes the full boundary plan, including football
+week0, atomically after a League lock/recheck. Failed inserts leave no partial
+plan; retries and competing callers return one canonical set. Existing weeks
+are returned without rebuilding historical periods. Date/ranking behavior is
+unchanged. Score replacement locks the scoped Week before replacing its complete
+score set; a missing period fails before mutation.
+
+The configured database's natural keys and same-league score FKs were installed
+and verified on2026-11-04:176 weeks and340 scores, clean/unchanged aggregate
+counts. [Migration, preflight and recovery instructions](../db/preflights/MOD-008.md).
+No SQL runs automatically at startup. Application locking changes require normal
+backend deployment; database constraints alone do not make older multi-transaction
+initialization atomic. Job completion/ownership snapshot policy remains separate.

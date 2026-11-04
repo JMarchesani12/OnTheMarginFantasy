@@ -1,4 +1,4 @@
-"""Trusted calendar policy and original per-helper transaction boundaries.
+"""Trusted calendar policy, atomic initialization and legacy helper interfaces.
 
 No provider client, HTTP adapter, configured engine or compatibility-model imports.
 Established helper names remain available to read/ingestion subclasses.
@@ -241,12 +241,24 @@ class ScheduleCalendarService:
         existing = self._get_existing_weeks(league_id)
         if existing:
             return existing
-        local_tz, week0_start, week0_end, ranges = self._get_league_week_ranges(league_id)
-        created = []
-        if week0_start is not None:
-            created.append(self._insert_week0(league_id, week0_start, week0_end))
-        created.extend(self._insert_weeks(league_id, ranges, starting_week_number=1, tzinfo=local_tz))
-        return created
+        plan = self.get_week_boundaries(league_id)
+        with self.db.begin() as conn:
+            if self.calendar_repository.lock_league(conn, league_id) is None:
+                raise ValueError(f'League {league_id} not found')
+            rows = self.calendar_repository.weeks_for_league(conn, {'leagueId': league_id}).fetchall()
+            if rows:
+                return [dict(row._mapping) for row in rows]
+            created = []
+            for number, start, end in plan:
+                params = {'leagueId': league_id, 'weekNumber': number,
+                          'startDate': start, 'endDate': end}
+                if number == 0:
+                    row = self.calendar_repository.insert_week_zero(conn, params).mappings().first()
+                    created.append(dict(row))
+                else:
+                    row = self.calendar_repository.insert_week(conn, params).fetchone()
+                    created.append(dict(row._mapping))
+            return created
 
     def _get_league_week_ranges(self, league_id):
         season = self._get_sport_season_for_league(league_id)

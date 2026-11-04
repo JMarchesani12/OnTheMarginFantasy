@@ -246,6 +246,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-008 — Enforce week/weekly-score identity under concurrent work
 
+- **Completion — 2026-11-04:** Application/synthetic PostgreSQL scope complete; configured identity constraints installed after clean aggregate preflight (176 weeks,340 scores, no duplicate/null/cross-league counts; unchanged after). Atomic League-locked full week initialization, scoped Week-locked score replacement, natural keys and same-league composite FKs verified under real competing lock waits/rollback. Backend624/624, frontend64/64/build and independent review pass. [Native evidence](evidence/mod-008-postgres-2026-11-04.json), [rollout](evidence/mod-008-rollout-2026-11-04.json), [runbook](../../db/preflights/MOD-008.md). No automatic historical cleanup/rebuild or job-completion redesign. Backend changes remain local/uncommitted; application deployment separate.
+
 - **Priority / size / risk:** P1 / M / High.
 - **Features:** F-007, F-009, F-025, F-028, F-031, F-032, F-036.
 - **Problem / evidence:** DB-04/07: no league/weekNumber or league/week/member uniqueness; ensure-weeks check/insert.

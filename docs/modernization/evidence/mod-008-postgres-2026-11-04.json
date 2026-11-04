@@ -1,0 +1,73 @@
+{
+  "result": "PASS",
+  "scope": "Marked owned loopback PostgreSQL only; no hosted job/score generation",
+  "tests": {
+    "dirty_aggregate_and_atomic_refusal": "PASS",
+    "upgrade_replay_and_independent_keys_fks": "PASS",
+    "direct_unique_cross_league_and_cascade": "PASS",
+    "whole_plan_statement_commit_rollback_retry": "PASS",
+    "races": [
+      {
+        "operation": "ensure",
+        "preexisting_scores": false,
+        "observed_lock_wait": true,
+        "converged": true
+      },
+      {
+        "operation": "score",
+        "preexisting_scores": false,
+        "observed_lock_wait": true,
+        "converged": true
+      },
+      {
+        "operation": "score",
+        "preexisting_scores": true,
+        "observed_lock_wait": true,
+        "converged": true
+      }
+    ],
+    "prior_calendar": {
+      "json_dates_timezone_weekday_subdivision_and_missing_guards": "PASS",
+      "basketball_opening_dst_persisted_plan_and_existing_week_reuse": "PASS",
+      "football_week_zero_original_projection_and_defaults": "PASS",
+      "all_subdivisions_continuous_postseason_and_phase_final_calendar_join": "PASS",
+      "whole_initialization_rollback_includes_week_zero": "PASS",
+      "native_statement_deferred_commit_rollback": "PASS",
+      "legacy_db_only_helpers_and_no_provider_client": "PASS",
+      "repository_queries_exercised": [
+        "insert_week",
+        "insert_week_zero",
+        "league",
+        "lock_league",
+        "season_for_league",
+        "season_phases",
+        "subdivisions",
+        "weeks_for_league"
+      ],
+      "scope_limit": "MOD-008 whole initialization atomic; standalone legacy helper interfaces retained. Calendar date policy unchanged."
+    },
+    "prior_scoring": {
+      "atomic_replacement_statement_and_commit_rollback": "PASS",
+      "scoped_repeat_convergence_week_zero": "PASS",
+      "weekly_tiebreaks_and_waterfall": "PASS",
+      "all_season_tiebreak_query_families": "PASS",
+      "all_bonus_families_and_primary_phase_filter": "PASS",
+      "actor_standings_and_revocation": "PASS",
+      "empty_phase_facts": "PASS",
+      "split_and_future_final_period_guards": "PASS"
+    }
+  },
+  "sha256": {
+    "api/endpoints/schedule/calendar_service.py": "a19e3e7155c6fc1ebad5fd86f881f6b1d6498f5592a54318e2818c27d1480b48",
+    "api/endpoints/schedule/calendar_repository.py": "1d7cf9382251ca809e9412844f10916bca00ac156bf9b89921df71f35e3baf39",
+    "api/endpoints/scoring/service.py": "adbdd26900347206e7e3385388b85c2d7f72ea632cc8ccc3b89ef998e4a2cf24",
+    "api/endpoints/scoring/repository.py": "e91972dc49673520c439061b0cff92d3b0a42e70b609d254da482e3f0e7a4232",
+    "api/migrations/20261104_week_score_identity.sql": "b6a040b0d2599e32e4d87d7c59c30aecbbaa22cca7d79c07d988279a36c2e244",
+    "db/preflights/20261104_week_score_identity.sql": "5e7cc2392a902024594b6345accb7dd427541cce497ba7dcb88b5cdb09a7b255",
+    "db/baselines/20261029/001_schema.sql": "7fe1c17223dd2cf3ebbfdb9d2ca318d4f7ad24f9a6578309c40aad3cfb58a109",
+    "db/tables.sql": "0d469bb3907ca5f8080ec6dc56f3379bda56de1fdcf344eb25d14a947b5f4581",
+    "scripts/modernization/verify_mod008.py": "fe70b0cf451720915c861fb3eabb155ec62b67e7faad3b493dd3ebe6d800f488",
+    "scripts/modernization/verify_schedule_calendar.py": "96e3cab35956a584953a89e2c470bd45bf8cc9d31cd2ee2d396d8e5d2d17a590",
+    "scripts/modernization/verify_scoring_complete.py": "dbb4aeaa47836182ed02746c740dd0feafb5380dbe3b8fcb0a31996343381aef"
+  }
+}

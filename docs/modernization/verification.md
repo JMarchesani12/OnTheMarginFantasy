@@ -1511,3 +1511,57 @@ must preserve current week0/final-period behavior and avoid silent historical
 deduplication. No new MOD-008 schema/behavior implemented during this stage.
 
 Cleanup verified: owned random native-test database dropped; task-owned PostgreSQL container stopped/auto-removed and temporary storage discarded. All evidence source hashes match. Configured database retains the authorized MOD-006 constraint.
+
+## Priority 5 MOD-008 — 2026-11-04
+
+User authorized starting MOD-008. Baseline623 isolated tests retained; final
+**624/624**. Two concrete defects reproduced before implementation: football
+numbered insert failure retained week0, and a missing period could still replace
+committed scores. Calendar now keeps the fast existing read, plans unchanged
+UTC boundaries, then locks League, rechecks and writes all planned weeks in one
+transaction. Existing rows/standalone helper interfaces retained; pure date
+fixtures use the boundary API, actual calendar persistence/rollback tests remain.
+Scoring locks a scoped Week row in the existing replacement transaction before
+delete/insert; a missing row fails before scores mutate. Calculation/ranking is
+unchanged and upstream facts remain separate reads.
+
+Prepared aggregate-only fail-closed preflight for duplicate week/score keys,
+null keys and absent/cross-league score week/member references. Bounded migration
+locks Week→LeagueMember→WeeklyTeamScore and rechecks dirty state. Added natural
+unique keys and independent composite same-league score FKs with parent unique
+keys, retaining original single-column FKs and cascades. Replay checks table,
+ordered columns, type, validation/nondeferrability, unique index readiness/null
+semantics and FK target/action/match policy. No history cleanup/remapping.
+
+[Native report](evidence/mod-008-postgres-2026-11-04.json) proves actual baseline
+plus kickoff/User/period migrations, upgrade/replay, separate dirty duplicate and
+cross-league refusal without row/partial-key changes, wrong-key/FK-action drift
+rejection, direct23505/23503, member cascade, whole-plan statement/deferred-commit
+rollback and retry. Real pg_stat_activity waits observed for concurrent fresh
+ensures and score replacement with no previous scores and with previous scores;
+both callers converge to identical canonical sets. Prior calendar/scoring native
+checks rerun, including DST/week0/final-period/tiebreak and score rollback.
+Old extraction fixture expecting a separately committed week0 now verifies full
+initialization rollback. Independent reviewer found no material findings.
+
+Following the maintainer-authorized Priority5 rollout workflow, read-only aggregate
+configured-database preflight found176 weeks,340 scores and zero duplicate/null/
+cross-league counts. Applied exactly the reviewed period/score migration with
+5s lock/60s statement bounds. Read-only catalog verification confirms all six
+constraints; counts unchanged after installation. [Rollout report](evidence/mod-008-rollout-2026-11-04.json)
+contains target fingerprint, aggregate before/after, constraint booleans and SQL
+checksum, with no private rows/credentials. No hosted jobs, week rebuilds, score
+computation, row cleanup or additional application actions occurred. Current
+schema snapshot/run order updated, frozen baseline/checksums unchanged.
+
+Frontend64/64 and production build pass; diff check clean. Native source hashes
+and installed migration checksum match. Backend changes remain uncommitted on
+audit and are not deployed: new database constraints protect identities, while
+atomic initialization/waiting replacements require the new backend code.
+Limits: existing partial calendar history is not rebuilt, read-only planning can
+precede concurrent calendar administration, upstream scoring facts/membership
+are not one snapshot, full hosted RLS/topology and job orchestration are not
+proved. MOD-010/012/013/015 retain their separate responsibilities. See the
+[rollout/recovery runbook](../../db/preflights/MOD-008.md).
+
+Cleanup verified: owned random native-test databases dropped; disposable PostgreSQL container stopped/auto-removed with temporary storage discarded. Final native source hashes and configured migration checksum match.

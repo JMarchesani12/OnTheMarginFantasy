@@ -37,7 +37,7 @@ class ReadDatabase(ProfileDatabase):
         return self
 
     def execute(self, statement, params):
-        sql = str(statement).replace(
+        sql = str(statement).replace('FOR UPDATE', '').replace(
             "w.\"endDate\" + interval '1 microsecond' - interval '7 days'",
             "datetime(w.\"endDate\", '-7 days')")
         if self.before_query:

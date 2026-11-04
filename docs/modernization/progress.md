@@ -1,5 +1,13 @@
 # Modernization progress
 
+## Priority 5 MOD-008 — 2026-11-04
+
+MOD-008 implemented and locally verified; configured database constraints applied and catalog-verified. Week initialization keeps the existing fast read, computes unchanged boundaries, then locks League, rechecks and writes the full plan in one transaction. Football week0 now rolls back with numbered weeks and retry creates a complete set. Weekly score replacement locks its scoped Week before deletion/insertion and fails safely if the period disappeared. Existing ranking/date/read projections retained.
+
+Added natural keys for Week(leagueId,weekNumber) and WeeklyTeamScore(leagueId,weekId,memberId), parent composite keys and independently verified same-league week/member score FKs preserving cascades. Aggregate preflight:176 weeks,340 scores, zero duplicate/null/cross-league counts; guarded migration applied with all six constraints verified and counts unchanged. No history rebuild, deduplication or score generation. [Rollout evidence](evidence/mod-008-rollout-2026-11-04.json), [runbook](../../db/preflights/MOD-008.md).
+
+Backend **624/624**, frontend **64/64**, build and native PostgreSQL checks pass. Native tests cover baseline upgrade/replay/dirty/shape refusal, direct unique/FK/cascade behavior, whole initialization statement/commit rollback and retry, real lock waits for concurrent ensures and empty/populated score replacement, plus prior calendar/scoring contracts. Independent review found no material issue. [Native evidence](evidence/mod-008-postgres-2026-11-04.json), [plan](../superpowers/plans/2026-11-04-mod-008.md). Frozen baseline unchanged. Backend changes remain uncommitted on audit and are not deployed; constraints alone cannot make an old backend initialize atomically. Next remaining Priority5 tasks: MOD-010 ownership concurrency and MOD-012 admission/initialization recovery. MOD-011 already complete.
+
 ## Priority 5 rollout and MOD-011 verification — 2026-11-04
 
 **MOD-006 database rollout applied and verified on the configured target.** Maintainer authorized running the preflight/migration in the conversation. Aggregate counts:14 profiles,0 unlinked,0 duplicate groups, unchanged after migration. `User_uuid_key` is present, nondeferrable, null-distinct, valid/ready, and UUID remains nullable. [Credential-free rollout evidence](evidence/mod-006-rollout-2026-11-04.json). No account remediation, unrelated SQL, main update/push or backend application deployment. This supersedes the earlier pending-hosted-rollout note for this target; other environments still need preflight.

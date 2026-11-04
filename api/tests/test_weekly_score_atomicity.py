@@ -9,6 +9,8 @@ class WeeklyScoreAtomicityTests(unittest.TestCase):
         self.db=ReadDatabase()
         self.addCleanup(self.db.connection.close)
         self.db.connection.executescript('''
+            CREATE TABLE "Week" (id INTEGER, "leagueId" INTEGER);
+            INSERT INTO "Week" VALUES (100,33);
             CREATE TABLE WeeklyTeamScore (leagueId INTEGER,weekId INTEGER,memberId INTEGER,
                 pointDifferential INTEGER,rank INTEGER,pointsAwarded INTEGER);
             INSERT INTO WeeklyTeamScore VALUES
@@ -49,3 +51,11 @@ class WeeklyScoreAtomicityTests(unittest.TestCase):
             result=self.model.compute_weekly_scores_for_job(33,0)
             self.assertEqual(self.rows(),expected)
             self.assertEqual((result['leagueId'],result['weekId'],result['weekNumber']),(33,100,0))
+
+    def test_missing_week_cannot_replace_previously_committed_scores(self):
+        self.db.connection.execute('DELETE FROM "Week"')
+        self.db.connection.commit()
+        before = self.rows()
+        with self.assertRaises(ValueError):
+            self.model.compute_weekly_scores_for_job(33, 0)
+        self.assertEqual(self.rows(), before)

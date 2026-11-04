@@ -1,0 +1,39 @@
+{
+  "scope": "Configured database; MOD-008 constraints only, no historical rows modified or jobs launched",
+  "target_fingerprint": "cdabf6a142f596457a3d7bad607032fb0de3dc15672fc3ed5b94c90b9cb0eb16",
+  "before": {
+    "total_weeks": 176,
+    "total_scores": 340,
+    "duplicate_week_groups": 0,
+    "duplicate_week_rows": 0,
+    "duplicate_score_groups": 0,
+    "duplicate_score_rows": 0,
+    "null_week_keys": 0,
+    "null_score_keys": 0,
+    "wrong_week_league_scores": 0,
+    "wrong_member_league_scores": 0
+  },
+  "after": {
+    "total_weeks": 176,
+    "total_scores": 340,
+    "duplicate_week_groups": 0,
+    "duplicate_week_rows": 0,
+    "duplicate_score_groups": 0,
+    "duplicate_score_rows": 0,
+    "null_week_keys": 0,
+    "null_score_keys": 0,
+    "wrong_week_league_scores": 0,
+    "wrong_member_league_scores": 0
+  },
+  "constraints": {
+    "LeagueMember_league_id_key": true,
+    "Week_league_id_key": true,
+    "Week_league_week_number_key": true,
+    "WeeklyTeamScore_identity_key": true,
+    "WeeklyTeamScore_same_league_member_fkey": true,
+    "WeeklyTeamScore_same_league_week_fkey": true
+  },
+  "counts_unchanged": true,
+  "migration_sha256": "b6a040b0d2599e32e4d87d7c59c30aecbbaa22cca7d79c07d988279a36c2e244",
+  "result": "APPLIED_AND_VERIFIED"
+}

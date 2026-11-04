@@ -34,13 +34,8 @@ class BasketballWeeksTests(unittest.TestCase):
         self.assertEqual(boundaries[0][0], 1)
         self.assertEqual(boundaries[0][2], dt.datetime(2026, 11, 9, 4, 59, 59, 999999, tzinfo=dt.timezone.utc))
 
-    def test_new_basketball_leagues_do_not_insert_week_zero(self):
-        model = self.model()
-        model._get_existing_weeks = lambda _: []
-        model._insert_week0 = Mock()
-        model._insert_weeks = Mock(return_value=[dict(weekNumber=1)])
-        model.ensure_weeks_for_league(1)
-        model._insert_week0.assert_not_called()
+    def test_new_basketball_plan_has_no_week_zero(self):
+        self.assertEqual([number for number, _, _ in self.model().get_week_boundaries(1)], [1, 2, 3])
 
     def test_football_retains_week_zero(self):
         self.assertEqual(self.model(sport=2).get_week_boundaries(1)[0][0], 0)
