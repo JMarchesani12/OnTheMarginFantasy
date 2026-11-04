@@ -35,12 +35,14 @@ def tests(engine,database):
             return {table:[dict(r._mapping) for r in conn.execute(text(f'SELECT * FROM "{table}" ORDER BY id'))]
                     for table in ('League','LeagueMember','Week')}
     observer=engine_for(database,'otm-create-initializer')
-    def initialize(league_id):
-        # Separate transaction proves creation is committed before capability call.
-        with observer.begin() as conn:
-            assert conn.execute(text('SELECT count(*) FROM "League" WHERE id=:id'),{'id':league_id}).scalar_one()==1
-            assert conn.execute(text('SELECT count(*) FROM "LeagueMember" WHERE "leagueId"=:id'),{'id':league_id}).scalar_one()==1
-            conn.execute(text('INSERT INTO "Week" ("leagueId") VALUES (:id)'),{'id':league_id})
+    def initialize(league_id,conn=None):
+        # External reader cannot see uncommitted creation; calendar writes use
+        # only the supplied creation connection.
+        assert conn is not None
+        with observer.begin() as separate:
+            assert separate.execute(text('SELECT count(*) FROM "League" WHERE id=:id'),{'id':league_id}).scalar_one()==0
+            assert separate.execute(text('SELECT count(*) FROM "LeagueMember" WHERE "leagueId"=:id'),{'id':league_id}).scalar_one()==0
+        conn.execute(text('INSERT INTO "Week" ("leagueId") VALUES (:id)'),{'id':league_id})
         calls.append(league_id)
     try:
         reset();data=payload();snapshot=json.loads(json.dumps(data))
@@ -48,6 +50,7 @@ def tests(engine,database):
         assert data==snapshot
         assert set(row)=={'id','createdAt','name','sport','numPlayers','status','settings','updatedAt','draftDate',
                           'commissioner','seasonYear','isDiscoverable','sportinfo','creatorMemberId'}
+        assert row['numPlayers']==1
         assert row['commissioner']==1 and row['name']=="O'Brien :name" and row['isDiscoverable'] is True
         assert row['sportinfo']=={'id':1,'name':'Basketball'} and row['createdAt'] is not None and row['updatedAt'] is not None
         assert row['settings']=={'ruleSetVersion':'v1','timezone':'UTC'} and calls==[row['id']]
@@ -96,15 +99,15 @@ def tests(engine,database):
         try:service.create(actor,payload(),initialize)
         except DBAPIError:pass
         else:raise AssertionError('Deferred creation failure missing')
-        assert state()==before and calls==[]
+        assert state()==before and len(calls)==1
         reset()
-        def failed_initializer(league_id):
-            initialize(league_id)
-            raise RuntimeError('synthetic post-commit scheduling failure')
+        def failed_initializer(league_id,conn=None):
+            initialize(league_id,conn=conn)
+            raise RuntimeError('synthetic in-transaction scheduling failure')
         try:service.create(actor,payload(),failed_initializer)
         except RuntimeError:pass
         else:raise AssertionError('Initializer failure swallowed')
-        assert all(len(rows)==1 for rows in state().values()) and len(calls)==1
+        assert all(len(rows)==0 for rows in state().values()) and len(calls)==1
         reset();model=engine
         class Schedule:
             ensure_weeks_for_league=staticmethod(initialize)
@@ -113,7 +116,7 @@ def tests(engine,database):
         assert row['commissioner']==2 and state()['LeagueMember'][0]['userId']==2 and calls==[row['id']]
         return {'native_cte_json_projection_member_defaults':'PASS','input_identity_timezone':'PASS',
                 'real_commissioner_member_fk_no_projection_post_write_commit_rollback':'PASS',
-                'supplied_initializer_separate_connection_visibility':'PASS','initializer_failure_preserves_committed_creation':'PASS',
+                'supplied_initializer_precommit_visibility':'PASS','initializer_failure_rolls_back_creation':'PASS',
                 'trusted_job_service':'PASS',
                 'scope_limit':'Scheduling capability boundary verified; ScheduleIngestionService algorithms unchanged, not reimplemented in fixture'}
     finally:observer.dispose()

@@ -1,5 +1,13 @@
 # Modernization progress
 
+## Priority 5 MOD-012 — 2026-11-04
+
+MOD-012 complete in application/synthetic PostgreSQL scope. Pending request creation locks League and reuses the same request under contention. Checked/trusted/supplied approvals lock League before Request and allocate distinct orders. New leagues start at one member; approval derives numPlayers from actual membership. Membership remains uncapped and the existing round formula is preserved. Fair draft-round scaling remains an explicit policy follow-up.
+
+League, creator and complete calendar now share one transaction, including metadata reads through the supplied connection. Native verification covers observed lock waits, same/distinct approval races, uncommitted visibility, planning/insertion/deferred-commit rollback and successful retry, plus prior creation/admission/calendar suites. Backend **632/632**, frontend **64/64**, production build and diff checks pass. Independent review found no blocking issues; its count-semantics documentation correction was applied. [Evidence](evidence/mod-012-postgres-2026-11-04.json), [plan](../superpowers/plans/2026-11-04-mod-012.md).
+
+Priority 5 tasks are complete within their recorded implementation/verification boundaries. No new SQL migration is needed for MOD-012; existing partial leagues are not automatically repaired. Changes remain uncommitted and the updated backend is not deployed. Frozen baseline unchanged. The owned synthetic database/container was removed after verification.
+
 ## Priority 5 MOD-010 — 2026-11-04
 
 MOD-010 implemented and verified in supported application/synthetic PostgreSQL scope; configured database integrity guards installed and catalog-verified. Shared v1 per-league transaction advisory mutex now precedes row locks in live/manual/timeout draft, trade application and free-agent submission/application. Free-agent routing/swap/member/pending checks share the owned transaction; queued application revalidates current ownership and post-drop conference caps. Conflicts roll back history and leave pending work pending. Existing scheduler/requested-week/veto/acquired-week policies retained.

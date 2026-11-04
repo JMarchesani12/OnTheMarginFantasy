@@ -189,7 +189,7 @@ class AdmissionRepository:
                 WITH locked_league AS (
                     SELECT l.id,
                         l."sport",
-                        l."numPlayers" AS cur_players,
+                        (SELECT CAST(count(*) AS integer) FROM "LeagueMember" members WHERE members."leagueId"=l.id) AS member_count,
                         l.settings AS cur_settings
                     FROM "League" l
                     WHERE l.id = :leagueId
@@ -205,13 +205,13 @@ class AdmissionRepository:
                 computed AS (
                     SELECT
                         ll.id AS league_id,
-                        (ll.cur_players + 1) AS new_players,
+                        ll.member_count AS new_players,
                         GREATEST(
                             1,
                             CASE
-                                WHEN (ll.cur_players + 1) <= sc.max_players_full
+                                WHEN ll.member_count <= sc.max_players_full
                                     THEN sc.max_rounds
-                                ELSE sc.max_rounds - ((ll.cur_players + 1) - sc.max_players_full)
+                                ELSE sc.max_rounds - (ll.member_count - sc.max_players_full)
                             END
                         ) AS new_num_rounds
                     FROM locked_league ll

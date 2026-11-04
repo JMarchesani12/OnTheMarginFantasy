@@ -308,8 +308,11 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 - **Expected benefit:** Avoid capacity/order collisions and partially initialized leagues.
 - **Scope / exclusions:** First cover concurrent approval/request reuse and league creation failure, then lock allocation and define initialization retry/transaction boundary. No broad league-model split.
 - **Dependencies:** MOD-005/008/011; MOD-003A role policy.
-- **Acceptance / verification:** Last-slot approvals cannot exceed capacity or collide; pending request race returns deliberate outcome; create failure cannot present an unusable completed league and retry repairs/converges without duplicate weeks.
+- **Acceptance / verification:** User clarified uncapped membership on 2026-11-04: concurrent approvals cannot collide and numPlayers reflects actual membership; pending request race returns the existing request; create failure cannot present an unusable completed league and retry repairs/converges without duplicate weeks.
 - **Contract impact:** Behavior: concurrency/recovery yes; API: deliberate conflict/retry outcomes; schema: reuse existing and MOD-008 keys.
+
+- **Completed — 2026-11-04 (application/synthetic PostgreSQL scope):** League-first request reuse and checked/trusted/supplied approvals serialize allocation. New leagues start at one member; approval derives the count from memberships. League, creator and complete calendar now commit together, using the same supplied connection for planning and writes; failed planning/insertion/deferred commit rolls back and retry succeeds. Native lock waits, same/distinct approval races, precommit visibility and prior creation/admission/calendar suites pass. [Evidence](evidence/mod-012-postgres-2026-11-04.json). No migration or application deployment. Existing partial leagues are not automatically repaired.
+- **Policy follow-up:** No hard membership limit. Preserve the existing round formula for this change; a fair scaling design remains open and must account for eligible team supply, equal roster sizes and conference restrictions. MOD-012 does not establish draft fairness.
 
 ### MOD-013 — Define retry-safe weekly job completion and pending application
 

@@ -50,7 +50,7 @@ class ProfileDatabase:
         return False
 
     def execute(self, statement, params):
-        cursor = self.connection.execute(str(statement), params)
+        cursor = self.connection.execute(str(statement).replace('FOR UPDATE', ''), params)
 
         class Result:
             def fetchone(self):

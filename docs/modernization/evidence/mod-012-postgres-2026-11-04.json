@@ -1,0 +1,190 @@
+{
+  "result": "PASS",
+  "scope": "Owned marked loopback PostgreSQL only; no configured leagues/admissions/jobs",
+  "tests": {
+    "competing_pending_request_reuse": {
+      "observed_lock_wait": true,
+      "outcomes": {
+        "first": "ok",
+        "second": "ok"
+      }
+    },
+    "uncapped_approval_races": [
+      {
+        "observed_lock_wait": true,
+        "outcomes": {
+          "first": "ok",
+          "second": "ok"
+        },
+        "supplied_connection": false,
+        "same_request": false,
+        "member_count": 3
+      },
+      {
+        "observed_lock_wait": true,
+        "outcomes": {
+          "first": "ok",
+          "second": "AdmissionRejected"
+        },
+        "supplied_connection": false,
+        "same_request": true,
+        "member_count": 2
+      },
+      {
+        "observed_lock_wait": true,
+        "outcomes": {
+          "first": "ok",
+          "second": "ok"
+        },
+        "supplied_connection": true,
+        "same_request": false,
+        "member_count": 3
+      },
+      {
+        "observed_lock_wait": true,
+        "outcomes": {
+          "first": "ok",
+          "second": "AdmissionRejected"
+        },
+        "supplied_connection": true,
+        "same_request": true,
+        "member_count": 2
+      }
+    ],
+    "derived_current_member_counts": "PASS",
+    "atomic_uncommitted_calendar_visibility": "PASS",
+    "planning_statement_commit_rollback_retry": "PASS",
+    "standalone_calendar_idempotency": "PASS",
+    "prior_creation": {
+      "native_cte_json_projection_member_defaults": "PASS",
+      "input_identity_timezone": "PASS",
+      "real_commissioner_member_fk_no_projection_post_write_commit_rollback": "PASS",
+      "supplied_initializer_precommit_visibility": "PASS",
+      "initializer_failure_rolls_back_creation": "PASS",
+      "trusted_job_service": "PASS",
+      "scope_limit": "Scheduling capability boundary verified; ScheduleIngestionService algorithms unchanged, not reimplemented in fixture"
+    },
+    "prior_admission": {
+      "authority_scope_state_projection_resolver": "PASS",
+      "capacity_json_rounds_fallback": "PASS",
+      "real_unique_fk_rollback": "PASS",
+      "all_post_write_and_commit_rollback": "PASS",
+      "trusted_supplied_connection_compatibility": "PASS",
+      "concurrent_approval": [
+        {
+          "path": "actor_service",
+          "requests": "same",
+          "observed_lock_wait": true,
+          "lock_order": [
+            "league",
+            "request"
+          ],
+          "outcomes": {
+            "first": [
+              "success",
+              "APPROVED",
+              1
+            ],
+            "second": [
+              "AdmissionRejected",
+              "Join request is not pending"
+            ]
+          }
+        },
+        {
+          "path": "actor_service",
+          "requests": "distinct",
+          "observed_lock_wait": true,
+          "lock_order": [
+            "league",
+            "request"
+          ],
+          "outcomes": {
+            "first": [
+              "success",
+              "APPROVED",
+              1
+            ],
+            "second": [
+              "success",
+              "APPROVED",
+              1
+            ]
+          }
+        },
+        {
+          "path": "user_id_service",
+          "requests": "same",
+          "observed_lock_wait": true,
+          "lock_order": [
+            "league",
+            "request"
+          ],
+          "outcomes": {
+            "first": [
+              "success",
+              "APPROVED",
+              1
+            ],
+            "second": [
+              "AdmissionRejected",
+              "Join request is not pending"
+            ]
+          }
+        },
+        {
+          "path": "user_id_service",
+          "requests": "distinct",
+          "observed_lock_wait": true,
+          "lock_order": [
+            "league",
+            "request"
+          ],
+          "outcomes": {
+            "first": [
+              "success",
+              "APPROVED",
+              1
+            ],
+            "second": [
+              "success",
+              "APPROVED",
+              1
+            ]
+          }
+        }
+      ]
+    },
+    "prior_calendar": {
+      "json_dates_timezone_weekday_subdivision_and_missing_guards": "PASS",
+      "basketball_opening_dst_persisted_plan_and_existing_week_reuse": "PASS",
+      "football_week_zero_original_projection_and_defaults": "PASS",
+      "all_subdivisions_continuous_postseason_and_phase_final_calendar_join": "PASS",
+      "whole_initialization_rollback_includes_week_zero": "PASS",
+      "native_statement_deferred_commit_rollback": "PASS",
+      "legacy_db_only_helpers_and_no_provider_client": "PASS",
+      "repository_queries_exercised": [
+        "insert_week",
+        "insert_week_zero",
+        "league",
+        "lock_league",
+        "season_for_league",
+        "season_phases",
+        "subdivisions",
+        "weeks_for_league"
+      ],
+      "scope_limit": "MOD-008 whole initialization atomic; standalone legacy helper interfaces retained. Calendar date policy unchanged."
+    }
+  },
+  "sha256": {
+    "api/endpoints/league/admission/service.py": "7050bbd6357ed5ded97a0426db5e0e42e1502696a2e36b5e6ab18964b0007a59",
+    "api/endpoints/league/administration/service.py": "5dc7d0c8db6c313ce4d7c62422045ae0424aea8b9cde86b0014993d85b3d741d",
+    "api/endpoints/schedule/calendar_service.py": "7a127e10318c9d9aa0366027ff910f6d37be662ad5e7dfe7fde310678dbcd1c1",
+    "api/endpoints/league/admission/repository.py": "59356f9e648dc6a9603e22a4de0863b073cb341a2ff0884b9ef4ca3cd539dc7b",
+    "scripts/modernization/verify_mod012.py": "be5c05ad0f67585a012fb1597c593c28bf59f2ec95c39da3d97705cf41313c1e",
+    "scripts/modernization/verify_league_creation.py": "04f19f0fc1734f39b8e43410ec90dc00090eac55a5ac16244b5b167aae74869a",
+    "scripts/modernization/verify_admission_approval.py": "ef3b0679b828e0128d7098efa2c81aa64bfc7c28d85800700ed8325fe7e6e118",
+    "scripts/modernization/verify_schedule_calendar.py": "96e3cab35956a584953a89e2c470bd45bf8cc9d31cd2ee2d396d8e5d2d17a590",
+    "db/baselines/20261029/001_schema.sql": "7fe1c17223dd2cf3ebbfdb9d2ca318d4f7ad24f9a6578309c40aad3cfb58a109"
+  }
+}

@@ -72,6 +72,8 @@ class AdmissionService:
             raise AdmissionRejected('Team name is required.')
         team_name = team_name.strip()
         with self.engine.begin() as conn:
+            if not self.repository.lock_league(conn, league_id):
+                raise AdmissionRejected(f'League {league_id} not found')
             if self.repository.is_member(conn, league_id, user_id):
                 raise AdmissionRejected('Already a member of this league')
             existing = self.repository.pending_request(conn, league_id, user_id)
@@ -121,15 +123,20 @@ class AdmissionService:
                 raise AdmissionRejected(f'League {league_id} not found')
             if league['commissioner'] != user_id:
                 raise AdmissionDenied('Only the commissioner can perform this action')
-            return self.approve_request_in_transaction(conn, league_id, request_id, user_id)
+            return self._approve_locked(conn, league_id, request_id, user_id)
 
     def approve_request_for_job(self, league_id, request_id, acting_user_id):
         """Trusted legacy approval; HTTP always selects checked actor approval."""
         with self.engine.begin() as conn:
-            self.repository.lock_league_for_job(conn, league_id)
             return self.approve_request_in_transaction(conn, league_id, request_id, acting_user_id)
 
     def approve_request_in_transaction(self, conn, league_id, request_id, acting_user_id):
+        """Trusted supplied connection; own no commit and lock League first."""
+        if not self.repository.lock_league(conn, league_id):
+            raise AdmissionRejected(f'League {league_id} not found')
+        return self._approve_locked(conn, league_id, request_id, acting_user_id)
+
+    def _approve_locked(self, conn, league_id, request_id, acting_user_id):
         req = self.repository.lock_request_for_approval(conn, league_id, request_id)
         if not req:
             raise AdmissionRejected('Join request not found')

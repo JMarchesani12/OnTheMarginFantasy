@@ -30,7 +30,7 @@ class LeagueTeamNameTests(unittest.TestCase):
     def test_join_stores_trimmed_team_name(self):
         conn = self.model.begin.return_value.__enter__.return_value
         conn.execute.return_value.fetchone.return_value = None
-        conn.execute.return_value.mappings.return_value.first.side_effect = [None, {'id': 3}]
+        conn.execute.return_value.mappings.return_value.first.side_effect = [{'commissioner': 1}, None, {'id': 3}]
         self.assertEqual(AdmissionService(self.model).create_request_for_user_id(2, 1, team_name='  Margin Makers  '), {'id': 3})
         sql, params = conn.execute.call_args.args
         self.assertIn(':teamName', str(sql))

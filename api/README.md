@@ -203,3 +203,17 @@ valid empty intervals). [Migration/preflight/recovery details](../db/preflights/
 Other environments follow the full baseline/additive migration sequence. The
 mutex and apply-time validation require normal deployment of all backend/job
 writers; this SQL rollout did not deploy application code or execute jobs.
+
+## Atomic league initialization (MOD-012)
+
+League creation inserts the league, creator membership and calendar in one
+transaction. Initialization callbacks must accept `conn=` and use that connection;
+`ScheduleCalendarService.ensure_weeks_for_job(league_id, conn=conn)` supports this.
+Calendar planning or insertion failure, including deferred commit failure, rolls
+back the whole creation. Retry after correcting the cause; separate successful
+POSTs are not deduplicated. Existing partial leagues need explicit investigation.
+
+`numPlayers` is current membership, not capacity. Creation sets it to one and
+approval derives it from memberships under the league lock. Membership is uncapped;
+the existing draft-round formula remains pending a separate fairness design.
+This change requires the updated backend; no MOD-012 SQL migration is needed.

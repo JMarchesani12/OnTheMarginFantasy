@@ -4,6 +4,7 @@ No provider client, HTTP adapter, configured engine or compatibility-model impor
 Established helper names remain available to read/ingestion subclasses.
 """
 import datetime as dt
+from contextlib import nullcontext
 import json
 from typing import Any, Dict, List, Optional
 from zoneinfo import ZoneInfo
@@ -37,9 +38,9 @@ class ScheduleCalendarService:
             self._calendar_repository = repository
         return repository
 
-    def _get_league(self, league_id: int) -> Dict[str, Any]:
+    def _get_league(self, league_id: int, conn=None) -> Dict[str, Any]:
         
-        with self.db.begin() as conn:
+        with (nullcontext(conn) if conn is not None else self.db.begin()) as conn:
             row = self.calendar_repository.league(conn, {"leagueId": league_id}).fetchone()
 
         if not row:
@@ -47,8 +48,8 @@ class ScheduleCalendarService:
 
         return dict(row._mapping)
 
-    def _get_league_settings(self, league_id: int) -> Dict[str, Any]:
-        league = self._get_league(league_id)
+    def _get_league_settings(self, league_id: int, conn=None) -> Dict[str, Any]:
+        league = self._get_league(league_id, **({'conn': conn} if conn is not None else {}))
         settings = league.get("settings") or {}
         if isinstance(settings, str):
             settings = json.loads(settings)
@@ -58,8 +59,8 @@ class ScheduleCalendarService:
         """Timezone capability for callers that compose schedule reads."""
         return self._get_league_timezone(league_id)
 
-    def _get_league_timezone(self, league_id: int) -> dt.tzinfo:
-        settings = self._get_league_settings(league_id)
+    def _get_league_timezone(self, league_id: int, conn=None) -> dt.tzinfo:
+        settings = self._get_league_settings(league_id, **({'conn': conn} if conn is not None else {}))
         schedule_cfg = settings.get("schedule") or {}
         tz_name = (
             settings.get("timezone")
@@ -74,8 +75,8 @@ class ScheduleCalendarService:
         except Exception:
             return dt.timezone.utc
 
-    def _get_week_start_weekday(self, league_id: int) -> int:
-        league = self._get_league(league_id)
+    def _get_week_start_weekday(self, league_id: int, conn=None) -> int:
+        league = self._get_league(league_id, **({'conn': conn} if conn is not None else {}))
         settings = league.get("settings") or {}
         if isinstance(settings, str):
             settings = json.loads(settings)
@@ -101,10 +102,10 @@ class ScheduleCalendarService:
             "or an integer from 0 (Monday) through 6 (Sunday)"
         )
 
-    def _get_sport_season_for_league(self, league_id: int) -> Dict[str, Any]:
+    def _get_sport_season_for_league(self, league_id: int, conn=None) -> Dict[str, Any]:
         
 
-        with self.db.begin() as conn:
+        with (nullcontext(conn) if conn is not None else self.db.begin()) as conn:
             row = self.calendar_repository.season_for_league(conn, {"leagueId": league_id}).mappings().first()
             if not row:
                 raise ValueError(
@@ -178,9 +179,9 @@ class ScheduleCalendarService:
         season.setdefault("allSubdivisions", False)
         return season
 
-    def _get_existing_weeks(self, league_id: int) -> List[Dict[str, Any]]:
+    def _get_existing_weeks(self, league_id: int, conn=None) -> List[Dict[str, Any]]:
         
-        with self.db.begin() as conn:
+        with (nullcontext(conn) if conn is not None else self.db.begin()) as conn:
             rows = self.calendar_repository.weeks_for_league(conn, {"leagueId": league_id}).fetchall()
         return [dict(r._mapping) for r in rows]
 
@@ -225,7 +226,7 @@ class ScheduleCalendarService:
         print(f"Inserted {len(created)} weeks for league {league_id} (starting_week_number={starting_week_number})")
         return created
 
-    def ensure_weeks_for_league(self, league_id: int) -> List[Dict[str, Any]]:
+    def ensure_weeks_for_league(self, league_id: int, conn=None) -> List[Dict[str, Any]]:
         """
         If Week rows already exist for this league, returns them.
 
@@ -238,34 +239,43 @@ class ScheduleCalendarService:
           - Multiple subdivisions use one continuous window through the latest
             postseason end so their overlapping phases do not duplicate weeks.
         """
+        if conn is not None:
+            return self._ensure_weeks_in_transaction(conn, league_id)
         existing = self._get_existing_weeks(league_id)
         if existing:
             return existing
-        plan = self.get_week_boundaries(league_id)
-        with self.db.begin() as conn:
-            if self.calendar_repository.lock_league(conn, league_id) is None:
-                raise ValueError(f'League {league_id} not found')
-            rows = self.calendar_repository.weeks_for_league(conn, {'leagueId': league_id}).fetchall()
-            if rows:
-                return [dict(row._mapping) for row in rows]
-            created = []
-            for number, start, end in plan:
-                params = {'leagueId': league_id, 'weekNumber': number,
-                          'startDate': start, 'endDate': end}
-                if number == 0:
-                    row = self.calendar_repository.insert_week_zero(conn, params).mappings().first()
-                    created.append(dict(row))
-                else:
-                    row = self.calendar_repository.insert_week(conn, params).fetchone()
-                    created.append(dict(row._mapping))
-            return created
+        with self.db.begin() as owned:
+            return self._ensure_weeks_in_transaction(owned, league_id)
 
-    def _get_league_week_ranges(self, league_id):
-        season = self._get_sport_season_for_league(league_id)
-        local_tz = self._get_league_timezone(league_id)
-        week_start_weekday = self._get_week_start_weekday(league_id)
+    def _ensure_weeks_in_transaction(self, conn, league_id):
+        """No acquisition/commit: caller owns all calendar reads and writes."""
+        if self.calendar_repository.lock_league(conn, league_id) is None:
+            raise ValueError(f'League {league_id} not found')
+        rows = self.calendar_repository.weeks_for_league(conn, {'leagueId': league_id}).fetchall()
+        if rows:
+            return [dict(row._mapping) for row in rows]
+        plan = self.get_week_boundaries(league_id, conn=conn)
+        if not plan:
+            raise ValueError('League calendar has no periods')
+        created = []
+        for number, start, end in plan:
+            params = {'leagueId': league_id, 'weekNumber': number,
+                      'startDate': start, 'endDate': end}
+            if number == 0:
+                row = self.calendar_repository.insert_week_zero(conn, params).mappings().first()
+                created.append(dict(row))
+            else:
+                row = self.calendar_repository.insert_week(conn, params).fetchone()
+                created.append(dict(row._mapping))
+        return created
 
-        merged_final = final_period(self._get_season_phases(season['sportSeasonId']), local_tz)
+    def _get_league_week_ranges(self, league_id, conn=None):
+        supplied = {'conn': conn} if conn is not None else {}
+        season = self._get_sport_season_for_league(league_id, **supplied)
+        local_tz = self._get_league_timezone(league_id, **supplied)
+        week_start_weekday = self._get_week_start_weekday(league_id, **supplied)
+
+        merged_final = final_period(self._get_season_phases(season['sportSeasonId'], **supplied), local_tz)
         # Regular season weeks (season dates are timezone-agnostic)
         reg_start_date = season["regularSeasonStart"]
         reg_end_date = season["regularSeasonEnd"]
@@ -305,9 +315,9 @@ class ScheduleCalendarService:
             return local_tz, None, None, ranges
         return local_tz, week0_start.astimezone(dt.timezone.utc), week0_end.astimezone(dt.timezone.utc), ranges
 
-    def get_week_boundaries(self, league_id):
+    def get_week_boundaries(self, league_id, conn=None):
         """Shared, read-only week plan for new leagues and deliberate rebuilds."""
-        local_tz, week0_start, week0_end, ranges = self._get_league_week_ranges(league_id)
+        local_tz, week0_start, week0_end, ranges = self._get_league_week_ranges(league_id, **({'conn': conn} if conn is not None else {}))
         opening = [(0, week0_start, week0_end)] if week0_start is not None else []
         return opening + [
             (number,
@@ -316,12 +326,12 @@ class ScheduleCalendarService:
             for number, (start, end) in enumerate(ranges, start=1)
         ]
 
-    def _get_season_phases(self, sport_season_id):
-        with self.db.begin() as conn:
+    def _get_season_phases(self, sport_season_id, conn=None):
+        with (nullcontext(conn) if conn is not None else self.db.begin()) as conn:
             return [dict(r) for r in self.calendar_repository.season_phases(conn, {"season": sport_season_id}).mappings().all()]
 
-    def ensure_weeks_for_job(self, league_id):
-        return self.ensure_weeks_for_league(league_id)
+    def ensure_weeks_for_job(self, league_id, conn=None):
+        return self.ensure_weeks_for_league(league_id, conn=conn)
 
     def boundaries_for_job(self, league_id):
         return self.get_week_boundaries(league_id)

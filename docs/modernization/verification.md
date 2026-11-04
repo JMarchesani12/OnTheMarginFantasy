@@ -1635,3 +1635,16 @@ as the next Priority5 task.
 Final MOD-010 authorization check reproduced a foreign-member request reaching a contended ownership mutex before denial; moved the initial owned-member check ahead of that mutex and verified404/no state change. Mutex still precedes command row locks and guarded insertion still rechecks authority. Current source-snapshot initialization passes with platform btree_gist prerequisite; final backend630/630.
 
 Cleanup verified: owned random native databases removed; task-owned PostgreSQL container stopped/auto-removed with temporary storage discarded. Native/current-schema source hashes and installed migration checksum match final files.
+
+## MOD-012 — 2026-11-04
+
+`python3 api/tests/run_isolated.py`: **632/632 PASS**; frontend
+`node --test --experimental-strip-types tests/*.test.ts`: **64/64 PASS**;
+`npm run build` and `git diff --check` pass. Native owned, marked loopback
+PostgreSQL verifier passes on frozen schema plus current migrations, including
+request reuse, checked/supplied same/distinct approval lock waits and uncapped
+count/order/round checks, stale count correction, real calendar supplied visibility,
+planning/statement/deferred-commit rollback/retry and prior native suites.
+[Hashed evidence](evidence/mod-012-postgres-2026-11-04.json). Independent review
+found no blocking issues; count-policy documentation corrected. Synthetic resources
+removed. No new migration, configured league mutation or application deployment.

@@ -163,3 +163,15 @@ class ScheduleCalendarServiceTests(unittest.TestCase):
         model = ExistingWeeks.__new__(ExistingWeeks)
         self.assertEqual(model.ensure_weeks_for_league(10),[{'weekNumber':7}])
         self.assertEqual(ScheduleIngestionService(Mock(),'https://example.test///').espn_base_url,'https://example.test')
+
+    def test_supplied_connection_keeps_caller_rollback_and_uncommitted_league_visible(self):
+        service = self.service()
+        with self.assertRaisesRegex(RuntimeError, 'caller rollback'):
+            with self.db.begin() as conn:
+                self.db.connection.execute('UPDATE "League" SET settings=?', ('{"timezone":"UTC"}',))
+                rows = service.ensure_weeks_for_job(10, conn=conn)
+                self.assertEqual(len(rows), 3)
+                self.assertTrue(self.db.active)
+                self.assertEqual(rows[0]['startDate'].hour, 0)
+                raise RuntimeError('caller rollback')
+        self.assertEqual(self.db.connection.execute('SELECT count(*) FROM "Week"').fetchone()[0], 0)

@@ -52,7 +52,7 @@ class AdmissionApprovalServiceTests(unittest.TestCase):
     def test_empty_team_falls_back_and_rounds_floor_at_one(self):
         self.assertTrue(hasattr(self.service, 'approve_request'), 'actor approval operation missing')
         self.db.connection.execute('UPDATE "LeagueJoinRequest" SET "teamName"=NULL WHERE id=101')
-        self.db.connection.execute('UPDATE "League" SET "numPlayers"=20 WHERE id=10')
+        self.db.connection.execute('UPDATE "Sport" SET "maxDraftRounds"=1,"maxPlayersToHaveMaxRounds"=1')
         self.db.connection.commit()
         result = self.service.approve_request(self.actor, 10, 101)
         self.assertEqual(result['member']['teamName'], 'My Team')
@@ -80,3 +80,11 @@ class AdmissionApprovalServiceTests(unittest.TestCase):
             result = AdmissionService(model).approve_request_in_transaction(conn, 20, 201, 4)
         self.assertEqual(result['request']['resolvedByUserId'], 4)
         self.assertEqual(self.engine.begins, 2)
+
+    def test_approval_refreshes_current_count_from_memberships(self):
+        self.db.connection.execute('UPDATE "League" SET "numPlayers"=20 WHERE id=10')
+        self.db.connection.commit()
+        self.service.approve_request(self.actor, 10, 101)
+        league = self.state()['League'][0]
+        self.assertEqual(league['numPlayers'], 3)
+        self.assertEqual(json.loads(league['settings'])['draft']['numberOfRounds'], 8)

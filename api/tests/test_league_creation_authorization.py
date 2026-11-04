@@ -109,7 +109,7 @@ class LeagueCreationAuthorizationTests(unittest.TestCase):
                 self.assertEqual(league['commissioner'], user_id)
                 self.assertEqual(dict(member), {'id': created['creatorMemberId'], 'leagueId': created['id'],
                     'userId': user_id, 'teamName': 'Margin Team', 'seasonPoints': 0, 'draftOrder': 1})
-                self.weeks.assert_called_with(created['id'])
+                self.weeks.assert_called_with(created['id'], conn=self.db)
 
     def test_foreign_commissioner_cannot_create_league_or_membership(self):
         for subject, forged in ((ALICE, 2), (BOB, 1)):
