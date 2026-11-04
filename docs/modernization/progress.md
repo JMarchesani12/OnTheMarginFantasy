@@ -1,5 +1,13 @@
 # Modernization progress
 
+## Priority 5 rollout and MOD-011 verification — 2026-11-04
+
+**MOD-006 database rollout applied and verified on the configured target.** Maintainer authorized running the preflight/migration in the conversation. Aggregate counts:14 profiles,0 unlinked,0 duplicate groups, unchanged after migration. `User_uuid_key` is present, nondeferrable, null-distinct, valid/ready, and UUID remains nullable. [Credential-free rollout evidence](evidence/mod-006-rollout-2026-11-04.json). No account remediation, unrelated SQL, main update/push or backend application deployment. This supersedes the earlier pending-hosted-rollout note for this target; other environments still need preflight.
+
+**MOD-011 complete in application/synthetic PostgreSQL scope.** Existing denial/cancellation repairs were verified without product changes against the actual frozen schema plus kickoff/identity migrations, including canonical status CHECK/FKs, exact once-only response, approved/foreign-role/owner/wrong-league rejection, post-write/deferred-commit rollback, and observed denial↔cancellation lock waits. Prior native listing/cancellation and creation/denial suites pass. Independent review found no material issues; backend623/623 and diff checks pass. [Native evidence](evidence/mod-011-postgres-2026-11-04.json), [verification plan](../superpowers/plans/2026-11-04-mod-011-verification.md).
+
+Next substantive Priority5 work is MOD-008: current `ensure_weeks_for_league` checks and inserts on separate transactions; weekly score replacement is atomic but lacks a shared period lock and unique natural keys. Plan full initialization transaction/locking and aggregate duplicate/cross-league preflight before any new constraints. MOD-010/012 remain separate; no approval/capacity behavior changed in this verification stage. Working changes remain uncommitted on audit.
+
 ## Priority 5 / MOD-006 — 2026-11-04
 
 MOD-006 is implemented and verified locally; hosted preflight/rollout remain outstanding. Prepared aggregate-only read-only identity preflight and a bounded transactional `User_uuid_key UNIQUE(uuid)` migration. Nullable legacy/job profiles, unique email and auth FK policy are preserved; no account linking/merging/deletion. Dirty duplicate groups abort migration without exposing identifiers; replay validates exact uniqueness/null semantics and index readiness. RLS-filtered preflight fails closed. Frozen baseline remains unchanged; current intended schema and initialization order include the additive migration.

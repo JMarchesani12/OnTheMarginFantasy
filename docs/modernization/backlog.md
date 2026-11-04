@@ -220,7 +220,7 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-006 — Establish one application profile per auth subject
 
-- **Status — 2026-11-04:** Local implementation/verification complete; hosted aggregate preflight and approved migration rollout outstanding. Nullable legacy UUIDs and unique-email policy retained. Prepared guarded `User_uuid_key` migration and conflict-safe provisioning; real PostgreSQL first-login race/dirty-preflight/replay/RLS checks pass. [Runbook](../../db/preflights/README.md), [evidence](evidence/mod-006-postgres-2026-11-04.json). No automatic account remediation or hosted changes.
+- **Status — 2026-11-04:** Local implementation/verification complete; maintainer-authorized configured-database preflight/migration applied and catalog-verified.14 profiles,0 unlinked/duplicate groups; counts unchanged. [Rollout evidence](evidence/mod-006-rollout-2026-11-04.json). Backend deployment unchanged; other targets need their own preflight. Nullable legacy UUIDs and unique-email policy retained. Prepared guarded `User_uuid_key` migration and conflict-safe provisioning; real PostgreSQL first-login race/dirty-preflight/replay/RLS checks pass. [Runbook](../../db/preflights/README.md), [evidence](evidence/mod-006-postgres-2026-11-04.json). No automatic account remediation; the configured database uniqueness constraint is now installed.
 
 - **Priority / size / risk:** P1 / M / High.
 - **Features:** F-002, F-004, F-022.
@@ -282,6 +282,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 - **Contract impact:** Behavior: concurrency yes; API: conflict outcomes possible; schema: conditional validated guards.
 
 ### MOD-011 — Repair join denial and cancellation
+
+- **Completion — 2026-11-04:** Complete in application/synthetic PostgreSQL scope. Existing repairs verified on real baseline CHECK/FKs plus current migrations: canonical transitions, once-only/role/owner/URL scope, approved-state rejection, statement/commit rollback and real competing denial/cancellation locks. Prior native admission suites and623/623 backend pass; independent review no material findings. [Evidence](evidence/mod-011-postgres-2026-11-04.json). Supersedes historical outstanding-PostgreSQL notes below. No product repair repeated, no hosted admission writes or new capacity guarantee.
 
 - **Priority / size / risk:** P1 / S / Low–Medium.
 - **Features:** F-006, F-019, F-029.

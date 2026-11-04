@@ -160,3 +160,10 @@ The service rolls back before making one verified-subject lookup. It does not
 look up identity by email, retry mutations, return someone else's profile or
 update existing values. Email conflicts across subjects remain safe 400 failures.
 The application alone cannot guarantee uniqueness on an unmigrated database.
+
+
+The configured application database's MOD-006 constraint was installed and
+verified on2026-11-04 after maintainer authorization and clean aggregate preflight
+(14 profiles;0 unlinked/duplicate groups; counts unchanged). See the
+[rollout evidence](../docs/modernization/evidence/mod-006-rollout-2026-11-04.json).
+This database operation did not deploy backend application code.

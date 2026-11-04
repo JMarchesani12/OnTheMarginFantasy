@@ -434,5 +434,9 @@ then [November4 identity uniqueness](../api/migrations/20261104_user_identity_un
 Existing databases require the [aggregate preflight and rollout/remediation runbook](preflights/README.md)
 before operational application. The migration refuses duplicate linked profiles
 without changing rows; it does not merge or link accounts. Hosted preflight and
-installation have **not** run. The frozen baseline/checksums remain unchanged;
+installation were initially pending. On2026-11-04 the maintainer authorized
+both on the configured application database:14 profiles,0 unlinked,0 duplicates,
+counts unchanged after installation, and the valid null-distinct constraint
+verified. [Rollout evidence](../docs/modernization/evidence/mod-006-rollout-2026-11-04.json).
+No backend deployment or account remediation was included. The frozen baseline/checksums remain unchanged;
 its historical expected catalog is not the upgraded schema reference.

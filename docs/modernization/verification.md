@@ -1463,3 +1463,51 @@ application/job/listener launch, merge/push/commit or deployment. Work remains
 uncommitted on audit. MOD-008/010/011/012 remain separate.
 
 Cleanup verified: random test databases and temporary RLS reader removed by the harness; task-owned PostgreSQL container stopped/auto-removed with tmpfs storage discarded. Final evidence source hashes match.
+
+## MOD-006 authorized configured-database rollout — 2026-11-04
+
+Maintainer explicitly requested running the prepared SQL now. Connected only to
+the configured application database with credentials kept out of outputs. Ran
+the checked-in aggregate-only read-only preflight with row_security=off and
+statement timeout:14 total profiles,0 unlinked,0 duplicate groups/affected rows.
+Catalog confirmed nullable UUID and no existing named uniqueness constraint.
+Applied exactly `api/migrations/20261104_user_identity_unique.sql`, preserving
+its transaction, duplicate recheck and5s/60s lock/statement timeouts. Verified
+constraint columns/type, nondeferrability, validation, null-distinct semantics
+and valid/ready index; UUID remains nullable. Aggregate counts unchanged.
+[Rollout report](evidence/mod-006-rollout-2026-11-04.json) contains target hash,
+aggregate before/after, catalog booleans and migration checksum, no identities,
+connection URI or secrets. Result APPLIED_AND_VERIFIED. No other migrations,
+account linking/remediation, baseline replay or backend deployment performed.
+The previous outstanding hosted rollout is satisfied for this configured target.
+
+## MOD-011 PostgreSQL acceptance — 2026-11-04
+
+Verification-only: no product repair repeated. Initialized the real frozen001
+schema with documented minimal Auth/pg_trgm prerequisites, then kickoff and
+identity migrations on an owned marked disposable PostgreSQL17.6 database.
+Seeded synthetic commissioner/applicants/leagues/requests, retaining actual
+status CHECK, foreign keys and pending-request index. Exercised checked actor
+AdmissionService paths for PENDING→DENIED/CANCELLED and exact eight-field
+response, correct IDs/scope/message/resolver/time, repeat rejection, approved
+request rejection for its actual owner, wrong-league/foreign-owner/noncommissioner
+rejection with all request rows unchanged. Lowercase statuses fail with23514.
+Post-write fault and deferred23514 commit failure both preserve pending rows.
+
+Observed actual pg_stat_activity lock waits for deny→cancel and cancel→deny:
+first resolution commits once, second raises AdmissionRejected without replacing
+the committed result. Prior native listing/cancellation and creation/denial
+fixtures rerun, including same-command races, role checks and rollback coverage.
+[Evidence with source hashes](evidence/mod-011-postgres-2026-11-04.json).
+Independent reviewer found no material findings and confirmed evidence hashes.
+Full guarded backend623/623; diff check clean. This closes MOD-011's stale native
+acceptance gap, not MOD-012 admission capacity/initialization or deployed-policy
+acceptance. No hosted requests were created, denied or cancelled.
+
+Next MOD-008 source findings: calendar ensure checks existing weeks then inserts
+across separate transactions; scoring replacement uses one transaction but has
+no common period lock and natural-key uniqueness. Its separate design/preflight
+must preserve current week0/final-period behavior and avoid silent historical
+deduplication. No new MOD-008 schema/behavior implemented during this stage.
+
+Cleanup verified: owned random native-test database dropped; task-owned PostgreSQL container stopped/auto-removed and temporary storage discarded. All evidence source hashes match. Configured database retains the authorized MOD-006 constraint.

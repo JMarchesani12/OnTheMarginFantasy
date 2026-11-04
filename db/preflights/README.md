@@ -35,9 +35,14 @@ as interactive principals. No accounts are merged, deleted or linked by this wor
    across subjects remain safe 400 rejections. No session can acquire another
    profile by email and no profile values are overwritten.
 
-No hosted preflight, constraint installation, remediation or deployment has been
-performed by this task. Repository and disposable-test results do not establish
-production readiness. Existing UUID FK/auth cascade and unique-email policy are
+On 2026-11-04 the maintainer authorized the configured-database rollout.
+Aggregate preflight found14 profiles,0 unlinked profiles and0 duplicate groups;
+the guarded migration installed and verified the intended unique constraint,
+with aggregate counts unchanged. [Rollout evidence](../../docs/modernization/evidence/mod-006-rollout-2026-11-04.json)
+identifies the target by a credential-free fingerprint. This records only the
+configured target, not every environment. No account remediation or backend
+application deployment was performed. Other targets still require their own
+preflight and rollout authorization. Existing UUID FK/auth cascade and unique-email policy are
 unchanged. Browser provider consolidation remains MOD-026.
 
 ## Initialization and recovery
