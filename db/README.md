@@ -397,8 +397,10 @@ explicit prerequisites for operational use.
 
 ## Current schema after the main/audit integration
 
-The current `db/tables.sql` and `api/migrations/20261030_game_kickoff_tbd.sql`
-are identical to main at merge parent `ae8a103`. `GameResult.timeTBD` is a boolean,
+At the main/audit integration, `db/tables.sql` and
+`api/migrations/20261030_game_kickoff_tbd.sql` matched main at merge parent
+`ae8a103`. The current intended snapshot additionally includes the unapplied
+MOD-006 `User_uuid_key` constraint described below. `GameResult.timeTBD` is a boolean,
 NOT NULL, default false. A read-only configured-database catalog check on
 2026-11-02 confirmed that exact column definition; no hosted DDL was executed.
 This column check does not claim a fresh full hosted schema comparison.
@@ -421,3 +423,16 @@ Disposable PostgreSQL verification, including baseline-plus-migration, replay,
 read projections and actual parser/upsert transitions, is reproducible with
 `python3 scripts/modernization/verify_main_audit_merge.py` against the documented
 marked synthetic server on port 55439. See [merge evidence](../docs/modernization/evidence/main-audit-merge-2026-11-02.json).
+
+
+## MOD-006 linked-profile uniqueness — prepared 2026-11-04
+
+The intended current snapshot now adds `User_uuid_key UNIQUE(uuid)`, preserving
+nullable legacy UUIDs, email uniqueness and the auth-user FK. Supported fresh
+initialization applies the frozen baseline, the October30 kickoff migration,
+then [November4 identity uniqueness](../api/migrations/20261104_user_identity_unique.sql).
+Existing databases require the [aggregate preflight and rollout/remediation runbook](preflights/README.md)
+before operational application. The migration refuses duplicate linked profiles
+without changing rows; it does not merge or link accounts. Hosted preflight and
+installation have **not** run. The frozen baseline/checksums remain unchanged;
+its historical expected catalog is not the upgraded schema reference.

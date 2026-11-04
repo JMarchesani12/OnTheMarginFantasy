@@ -31,6 +31,16 @@ class UserService:
                     raise ProfileAlreadyExists('User already exists')
                 return self._insert_profile(conn, email, name, actor.subject)
         except IntegrityError as exc:
+            # The failed transaction has exited/rolled back before this lookup.
+            # Either UUID or email uniqueness may report first for same-subject
+            # first-login races. Resolve only this verified subject, never email.
+            if getattr(exc.orig, 'pgcode', None) == '23505':
+                with self.engine.begin() as conn:
+                    matches = self.repository.profile_ids_for_subject(conn, actor.subject)
+                if len(matches) > 1:
+                    raise ProfileIdentityAmbiguous('Application identity is ambiguous') from None
+                if matches:
+                    raise ProfileAlreadyExists('User already exists') from None
             raise ProfileCreationRejected('User creation failed') from exc
 
     @staticmethod

@@ -1,5 +1,13 @@
 # Modernization progress
 
+## Priority 5 / MOD-006 — 2026-11-04
+
+MOD-006 is implemented and verified locally; hosted preflight/rollout remain outstanding. Prepared aggregate-only read-only identity preflight and a bounded transactional `User_uuid_key UNIQUE(uuid)` migration. Nullable legacy/job profiles, unique email and auth FK policy are preserved; no account linking/merging/deletion. Dirty duplicate groups abort migration without exposing identifiers; replay validates exact uniqueness/null semantics and index readiness. RLS-filtered preflight fails closed. Frozen baseline remains unchanged; current intended schema and initialization order include the additive migration.
+
+Interactive creation maps a PostgreSQL unique conflict after rollback through one verified-subject lookup: an existing profile yields the normal 409; an email belonging to another subject remains safely rejected. Native PostgreSQL first-login races observe actual lock waits and leave one linked profile, for same/different email; baseline upgrade/replay, duplicate/shape/RLS refusal, null legacy, email/FK and prior rollback checks pass. Backend **623/623**, frontend **64/64**, production build and diff check pass. Fresh independent reviewer found no material issues and independently passed623 tests.
+
+[Rollout/remediation runbook](../../db/preflights/README.md), [native evidence](evidence/mod-006-postgres-2026-11-04.json), [plan](../superpowers/plans/2026-11-04-mod-006.md). No hosted aggregate data was read, and no hosted migration/deployment occurred. Application code alone cannot guarantee uniqueness until the constraint is installed. Changes remain uncommitted on audit. MOD-008/010/011/012 are separate remaining Priority5 tasks; this stage does not claim them complete.
+
 ## Priority 4 continuation — 2026-11-03
 
 **MOD-025 complete in application and synthetic PostgreSQL scope.** Draft order is an exact current-member permutation; start accepts only Pre-Draft with absent/pristine pre state and no turns/picks. Replays return 409 `draft_start_conflict`, preserving picks/cursor/timers. Existing-state locking follows state-before-League to match pick finalization; absent-state starts/order serialize on League and recheck without lock inversion. Native tests observe start/start, order/start, start/order and finalization/start/order lock waits, plus statement/deferred-commit rollback and replay after a committed pick. Old snapshot/finalization/control/order PostgreSQL checks rerun with intentional compatibility changes.

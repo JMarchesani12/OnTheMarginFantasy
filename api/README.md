@@ -145,3 +145,18 @@ Draft order updates must contain every current league member exactly once.
 Start requires a Pre-Draft league, absent/pristine `pre` state and no existing
 turns/picks. Repeated starts return 409 with `draft_start_conflict`, preserving
 picks, cursor and timers. Paused drafts use the existing resume operation.
+
+
+## Linked profile provisioning
+
+MOD-006 prepares `20261104_user_identity_unique.sql` to enforce one profile per
+non-null auth subject; nullable legacy/job UUIDs and unique email are preserved.
+Run the [aggregate preflight and rollout review](../db/preflights/README.md) before
+installing it operationally. No automatic schema migration runs at startup.
+
+With the constraint installed, concurrent first login creates one profile; the
+loser returns the existing safe 409 rather than a generic constraint failure.
+The service rolls back before making one verified-subject lookup. It does not
+look up identity by email, retry mutations, return someone else's profile or
+update existing values. Email conflicts across subjects remain safe 400 failures.
+The application alone cannot guarantee uniqueness on an unmigrated database.

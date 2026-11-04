@@ -220,6 +220,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-006 — Establish one application profile per auth subject
 
+- **Status — 2026-11-04:** Local implementation/verification complete; hosted aggregate preflight and approved migration rollout outstanding. Nullable legacy UUIDs and unique-email policy retained. Prepared guarded `User_uuid_key` migration and conflict-safe provisioning; real PostgreSQL first-login race/dirty-preflight/replay/RLS checks pass. [Runbook](../../db/preflights/README.md), [evidence](evidence/mod-006-postgres-2026-11-04.json). No automatic account remediation or hosted changes.
+
 - **Priority / size / risk:** P1 / M / High.
 - **Features:** F-002, F-004, F-022.
 - **Problem / evidence:** DB-03: nullable nonunique User.uuid with maybeSingle/API lookups; FE S01.

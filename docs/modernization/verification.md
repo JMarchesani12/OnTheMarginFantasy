@@ -1409,3 +1409,57 @@ serialization remains MOD-012. No production access, schema/dependency change,
 commit, merge, push or deployment; work remains reviewable on audit.
 
 Cleanup confirmed: task-owned PostgreSQL container stopped/auto-removed; its tmpfs storage discarded. All evidence source hashes match the final implementation.
+
+## Priority 5 MOD-006 linked-profile uniqueness — 2026-11-04
+
+User authorized starting Priority5 with the first ready task after dependency
+review. MOD-002 principal isolation and MOD-005 baseline are available in their
+recorded scopes. This work covers local MOD-006, not later Priority5 tasks or
+hosted rollout. Baseline backend621/621; final **623/623**. Frontend **64/64**
+and `npm run build` pass; `git diff --check` clean.
+
+Preserved nullable legacy/job UUIDs, unique email and auth FK/cascade policy.
+Prepared a named nondeferrable null-distinct `User_uuid_key UNIQUE(uuid)` migration
+with5-second lock and60-second statement timeouts. Aggregate preflight reports
+only total/null/duplicate-group/affected-row counts; no UUID/email/name output.
+Migration repeats duplicate checks under table lock and refuses dirty data
+without remapping/deleting/linking profiles. Replay checks constraint columns,
+nondeferrability, null-distinct semantics and valid/ready backing index. Both
+preflight/migration set row_security=off so filtered roles fail rather than
+report misleading readiness; this does not bypass RLS.
+
+UserService retains existing initial ambiguity/existence checks. PostgreSQL23505
+failures roll back before one fresh lookup of the verified subject; exactly one
+row maps to existing409, ambiguous rows deny, absent subject retains generic400.
+No identity lookup by email, automatic mutation retry or profile overwrite.
+Other constraint failures and trusted job behavior remain safe/compatible.
+Two isolated driver-aware regressions failed before implementation and pass
+with actual synthetic persistence/rollback; prior ambiguity/statement/commit
+rollback tests retained.
+
+[Native evidence](evidence/mod-006-postgres-2026-11-04.json) verifies real PostgreSQL
+baseline001 + kickoff + additive upgrade/replay, duplicate aggregate counts and
+atomic refusal, direct uniqueness, nullable legacy rows, email/FK rejections,
+actual concurrent insert lock waits for same-subject/same-email and different
+email (one created/one existing conflict), different-subject/same-email denial,
+and prior native creation/rollback contracts. NULLS NOT DISTINCT replay and
+RLS-filtered preflight tests reproduced their failures before fixes. Fresh
+independent reviewer found no material issue and independently ran623 tests.
+Optional explicit post23505 ambiguity/commit23505 branch fixtures remain a
+coverage refinement; initial ambiguity, deferred rollback and native23505 races
+are covered.
+
+The verifier accepts no configured DSN/.env, creates/drops only its own random
+DB on the marked task-owned loopback PostgreSQL17.6 instance from cached image,
+and removes its temporary RLS reader role. No full-provider or deployed-policy
+claim follows from this minimal auth fixture. Frozen baseline untouched; current
+intended schema and documented run order include the new migration. See the
+[rollout/remediation/recovery runbook](../../db/preflights/README.md).
+
+Hosted aggregate preflight and migration approval/installation remain mandatory
+before production uniqueness is guaranteed; neither was performed. No configured
+DB access, private rows, schema change on hosted systems, dependency download,
+application/job/listener launch, merge/push/commit or deployment. Work remains
+uncommitted on audit. MOD-008/010/011/012 remain separate.
+
+Cleanup verified: random test databases and temporary RLS reader removed by the harness; task-owned PostgreSQL container stopped/auto-removed with tmpfs storage discarded. Final evidence source hashes match.

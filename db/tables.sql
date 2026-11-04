@@ -397,6 +397,7 @@ create table public."User" (
   uuid uuid null,
   constraint "User_pkey" primary key (id),
   constraint "User_email_key" unique (email),
+  constraint "User_uuid_key" unique (uuid),
   constraint "User_uuid_fkey" foreign KEY (uuid) references auth.users (id) on delete CASCADE
 ) TABLESPACE pg_default;
 
