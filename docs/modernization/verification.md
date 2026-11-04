@@ -1345,3 +1345,67 @@ assessment with explicit authorization and existing cached Docker image.
   This does not authorize hosted execution or claim arbitrary historical schemas/
   production disaster restores. MOD-004 remains partial for Render/consumer mapping
   and an authorized, versioned privilege rollout path. MOD-009 stays complete.
+
+## Priority 4 continuation — 2026-11-03
+
+User selected the recommended explicit replay conflict and authorized continuing
+Priority 4 in the existing audit checkout. Baseline isolated backend: 594/594.
+
+MOD-025 now validates a nonempty exact permutation of current league members,
+rejecting duplicate/foreign/missing/malformed IDs before writes. Start validates
+member count and positions 1..numPlayers and requires Pre-Draft with absent or
+pristine schema-default pre state, no picks/turns. Live/paused/complete/unknown
+and progressed-pre states cannot restart. HTTP replay returns 409 with
+`draft_start_conflict`, with no broadcast or change to persisted picks, cursor,
+timers or turns. Pause/resume, actor authority and transaction ownership remain.
+Order also rejects later league lifecycle/unknown draft state.
+
+Independent review identified inverted League/state locks against final-pick
+finalization. A native regression reproduced PostgreSQL deadlock/OperationalError.
+Existing DraftState now locks before League. If state is absent, League serializes
+first commands; a nonlocking state recheck rejects a state created during the
+wait, avoiding a new state lock while League is held. Native lock-wait tests now
+pass for start/start, order/start, start/order, finalization/start and
+finalization/order. Finalization completes and the replay receives its intended
+conflict/denial. Native statement and deferred-commit failures roll back. Prior
+snapshot, finalization, controls and order native suites also pass; partial-order
+and restart expectations were updated to assert the intentional new behavior.
+[PostgreSQL report](evidence/mod-025-postgres-2026-11-03.json) contains source hashes.
+
+MOD-019 local slices: all Flask failures have structured error.code/message and
+requestId, matching X-Request-ID. Top-level message preserves current browser
+consumers. Legacy string error codes move to error.code. Only pre-execution auth
+middleware emits the reserved auth recovery code. Framework errors preserve
+headers such as Allow; IntegrityError maps to safe 409, DataError to 400;
+unexpected/caught 5xx are sanitized and discard extra fields. Target user/league/
+draft/roster adapters pass framework/driver failures to those handlers; malformed
+profile JSON and invalid profile/league scalar types deliberately return 400.
+Removed schedule-adapter traceback printing to prevent private exception logs.
+Existing HTTP authorization/rollback tests retain their checks and use a shared
+wire-envelope assertion for changed error shapes. Dedicated boundary tests
+independently pin code/status/message/header contracts and private-data exclusion.
+
+Resource budgets: body 262144 bytes, query string 8192 bytes, scoring weeks128,
+trade IDs256 per side, public search q128 characters, limit1..50, offset0..10000.
+These are documented operational ceilings, not measured/domain maximum claims.
+Known and terminated unknown-length body tests verify rejection and exact-boundary
+acceptance; the latter uses bounded one-byte lookahead. Oversized arrays and
+search inputs fail before domain work; no silent truncation/pagination introduced.
+Existing full draft/roster snapshots remain complete. See [HTTP documentation](../../api/README.md#http-errors-and-input-limits).
+
+Final commands: `python3 api/tests/run_isolated.py` **621/621**;
+`node --test --experimental-strip-types tests/*.test.ts` from front-end **64/64**;
+`npm run build` from front-end passes; `git diff --check` passes.
+`python3 scripts/modernization/verify_mod025.py` passes on a task-owned marked
+loopback PostgreSQL17.6 container from an already cached image, with no downloads
+or persistent volumes. The harness creates/drops only its own random database.
+No configured/hosted database, application/job/listener or provider ran.
+MOD-034 startup and MOD-028A auth recovery regressions retained.
+
+Limits: gateway quotas/trusted proxies/distributed rate enforcement remain open;
+no new rate infrastructure or hosted configuration changes. Synthetic PostgreSQL
+proves these local lock/rollback paths, not deployed RLS/topology. Admission
+serialization remains MOD-012. No production access, schema/dependency change,
+commit, merge, push or deployment; work remains reviewable on audit.
+
+Cleanup confirmed: task-owned PostgreSQL container stopped/auto-removed; its tmpfs storage discarded. All evidence source hashes match the final implementation.

@@ -3,6 +3,7 @@
 SQLite adapts the PostgreSQL INSERT CTE/JSON projection; week initialization is
 substituted. These tests do not validate PostgreSQL syntax/types or scheduling.
 """
+from http_error_assertions import assert_error_response
 import json
 import os
 import re
@@ -115,7 +116,7 @@ class LeagueCreationAuthorizationTests(unittest.TestCase):
             with self.subTest(subject=subject):
                 response = self.client.post('/api/league/create', headers=self.headers(subject), json=self.payload(forged))
                 self.assertEqual(response.status_code, 403)
-                self.assertEqual(response.json, {'error': 'commissioner_identity_mismatch'})
+                assert_error_response(self, response, {'error': 'commissioner_identity_mismatch'})
                 self.assert_no_creation()
 
     def test_extra_actor_fields_and_headers_cannot_override_verified_identity(self):
@@ -141,7 +142,7 @@ class LeagueCreationAuthorizationTests(unittest.TestCase):
             with self.subTest(code=code):
                 response = self.client.post('/api/league/create', headers=self.headers(subject), json=self.payload())
                 self.assertEqual(response.status_code, status)
-                self.assertEqual(response.json, {'error': code})
+                assert_error_response(self, response, {'error': code})
                 self.assert_no_creation()
         # Loosen UUID uniqueness only in this disposable synthetic fixture.
         self.db.connection.execute('PRAGMA foreign_keys = OFF')
@@ -151,7 +152,7 @@ class LeagueCreationAuthorizationTests(unittest.TestCase):
         self.db.connection.commit()
         response = self.client.post('/api/league/create', headers=self.headers(), json=self.payload())
         self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.json, {'error': 'application_identity_ambiguous'})
+        assert_error_response(self, response, {'error': 'application_identity_ambiguous'})
         self.assert_no_creation()
 
     def test_invalid_object_commissioner_and_missing_fields_are_json_400(self):
@@ -174,5 +175,5 @@ class LeagueCreationAuthorizationTests(unittest.TestCase):
         response = self.client.post('/api/league/create', headers=self.headers(),
             json={**self.payload(), 'teamName': '   '})
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json, {'message': 'Team name is required.'})
+        assert_error_response(self, response, {'message': 'Team name is required.'})
         self.assert_no_creation()

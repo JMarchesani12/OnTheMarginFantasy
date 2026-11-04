@@ -1,3 +1,6 @@
+from sqlalchemy.exc import IntegrityError
+from werkzeug.exceptions import HTTPException
+from sqlalchemy.exc import DataError
 # endpoints/roster/rosterEndpoints.py
 from flask import request, jsonify
 from .service import RosterService
@@ -32,6 +35,8 @@ class RosterEndpoints:
             return jsonify({'message': 'League member not found'}), 404
         except (ValueError, RosterWeekUnavailable) as exc:
             return jsonify({'message': str(exc)}), 400
+        except (HTTPException, DataError, IntegrityError):
+            raise
         except Exception:
             return jsonify({'message': 'Failed to read member roster'}), 500
 
@@ -54,5 +59,7 @@ class RosterEndpoints:
             return jsonify({'message': 'League not found'}), 404
         except (ValueError, RosterWeekUnavailable) as exc:
             return jsonify({'message': str(exc)}), 400
+        except (HTTPException, DataError, IntegrityError):
+            raise
         except Exception:
             return jsonify({'message': 'Failed to read available teams'}), 500

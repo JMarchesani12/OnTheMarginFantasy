@@ -1,4 +1,5 @@
 """Commissioner league deletion: synthetic SQLite cascades, never live data."""
+from http_error_assertions import assert_error_response
 from endpoints.league.administration.service import LeagueAdminService
 import os
 import time
@@ -79,7 +80,7 @@ class LeagueDeletionAuthorizationTests(unittest.TestCase):
             with self.subTest(subject=subject):
                 response = self.client.delete(f'/api/league/{target}', headers=self.headers(subject), json={'actingUserId': actor})
                 self.assertEqual(response.status_code, 403)
-                self.assertEqual(response.json, {'error': 'actor_identity_mismatch'})
+                assert_error_response(self, response, {'error': 'actor_identity_mismatch'})
                 self.assertEqual(self.state(), before)
 
     def test_member_nonmember_and_other_league_commissioner_cannot_delete(self):
@@ -88,7 +89,7 @@ class LeagueDeletionAuthorizationTests(unittest.TestCase):
             with self.subTest(subject=subject):
                 response = self.client.delete(f'/api/league/{target}', headers=self.headers(subject), json={'actingUserId': actor})
                 self.assertEqual(response.status_code, 403)
-                self.assertEqual(response.json, {'message': 'Only the commissioner can delete this league'})
+                assert_error_response(self, response, {'message': 'Only the commissioner can delete this league'})
                 self.assertEqual(self.state(), before)
 
     def test_body_query_headers_cannot_replace_url_league_or_principal(self):
@@ -103,14 +104,14 @@ class LeagueDeletionAuthorizationTests(unittest.TestCase):
         before = self.state()
         missing = self.client.delete('/api/league/999', headers=self.headers(), json={'actingUserId': 1})
         self.assertEqual(missing.status_code, 400)
-        self.assertEqual(missing.json, {'message': 'League not found'})
+        assert_error_response(self, missing, {'message': 'League not found'})
         self.assertEqual(self.state(), before)
         first = self.client.delete('/api/league/10', headers=self.headers(), json={'actingUserId': 1})
         self.assertEqual(first.status_code, 200)
         after = self.state()
         repeat = self.client.delete('/api/league/10', headers=self.headers(), json={'actingUserId': 1})
         self.assertEqual(repeat.status_code, 400)
-        self.assertEqual(repeat.json, {'message': 'League not found'})
+        assert_error_response(self, repeat, {'message': 'League not found'})
         self.assertEqual(self.state(), after)
 
     def test_auth_and_application_identity_failures_cannot_delete(self):
@@ -128,7 +129,7 @@ class LeagueDeletionAuthorizationTests(unittest.TestCase):
         self.db.connection.commit()
         response = self.client.delete('/api/league/10', headers=self.headers(), json={'actingUserId': 1})
         self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.json, {'error': 'application_identity_ambiguous'})
+        assert_error_response(self, response, {'error': 'application_identity_ambiguous'})
         self.assertEqual(self.state(), before)
 
     def test_invalid_actor_or_object_returns_json_400_without_deleting(self):
@@ -145,7 +146,7 @@ class LeagueDeletionAuthorizationTests(unittest.TestCase):
         self.db.fail_after_league_delete = True
         response = self.client.delete('/api/league/10', headers=self.headers(), json={'actingUserId': 1})
         self.assertEqual(response.status_code, 500)
-        self.assertEqual(response.json, {'message': 'Failed to delete league'})
+        assert_error_response(self, response, {'message': 'Failed to delete league'})
         self.assertEqual(self.state(), before)
 
     def test_direct_service_remains_http_independent_and_commissioner_checked(self):

@@ -1,4 +1,5 @@
 """Own-request cancellation: real JWT/routes/model and synthetic SQLite rows."""
+from http_error_assertions import assert_error_response
 from endpoints.league.admission.service import AdmissionService
 from endpoints.league.admission.contracts import AdmissionDenied
 import os
@@ -94,7 +95,7 @@ class JoinRequestCancellationAuthorizationTests(unittest.TestCase):
                 response = self.client.post(f'/api/league/{league_id}/joinRequests/{request_id}/cancel',
                     headers=self.headers(subject), json={'userId': forged})
                 self.assertEqual(response.status_code, 403)
-                self.assertEqual(response.json, {'error': 'user_identity_mismatch'})
+                assert_error_response(self, response, {'error': 'user_identity_mismatch'})
                 self.assertEqual(self.state(), before)
 
     def test_foreign_owner_including_commissioner_cannot_cancel(self):
@@ -104,7 +105,7 @@ class JoinRequestCancellationAuthorizationTests(unittest.TestCase):
                 response = self.client.post('/api/league/10/joinRequests/101/cancel',
                     headers=self.headers(subject), json={'userId': actor})
                 self.assertEqual(response.status_code, 403)
-                self.assertEqual(response.json, {'message': "Cannot cancel another user's request"})
+                assert_error_response(self, response, {'message': "Cannot cancel another user's request"})
                 self.assertEqual(self.state(), before)
 
     def test_foreign_league_missing_request_and_all_resolved_statuses_fail_unchanged(self):
@@ -133,7 +134,7 @@ class JoinRequestCancellationAuthorizationTests(unittest.TestCase):
         after = self.state()
         again = self.client.post('/api/league/10/joinRequests/101/cancel', headers=self.headers(), json={'userId': 2})
         self.assertEqual(again.status_code, 400)
-        self.assertEqual(again.json, {'message': 'Only pending requests can be cancelled'})
+        assert_error_response(self, again, {'message': 'Only pending requests can be cancelled'})
         self.assertEqual(self.state(), after)
 
     def test_auth_and_identity_failures_cannot_cancel(self):
@@ -151,7 +152,7 @@ class JoinRequestCancellationAuthorizationTests(unittest.TestCase):
         self.db.connection.commit()
         response = self.client.post('/api/league/10/joinRequests/101/cancel', headers=self.headers(), json={'userId': 2})
         self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.json, {'error': 'application_identity_ambiguous'})
+        assert_error_response(self, response, {'error': 'application_identity_ambiguous'})
         self.assertEqual(self.state(), before)
 
     def test_invalid_object_and_actor_have_safe_json_errors(self):
@@ -169,7 +170,7 @@ class JoinRequestCancellationAuthorizationTests(unittest.TestCase):
         with self.assertLogs(level='ERROR'):
             response = self.client.post('/api/league/10/joinRequests/101/cancel', headers=self.headers(), json={'userId': 2})
         self.assertEqual(response.status_code, 500)
-        self.assertEqual(response.json, {'message': 'Failed to cancel join request'})
+        assert_error_response(self, response, {'message': 'Failed to cancel join request'})
         self.assertEqual(self.state(), before)
 
     def test_direct_service_preserves_owner_check_without_http_context(self):

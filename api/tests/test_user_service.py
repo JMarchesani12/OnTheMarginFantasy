@@ -1,4 +1,5 @@
 """Direct own-profile service and compatibility contracts on disposable SQL."""
+from http_error_assertions import assert_error_response
 import unittest
 from actors import UserActor
 from endpoints.user.service import UserService
@@ -89,5 +90,5 @@ class ProfileAdapterOrderingTests(unittest.TestCase):
     def test_foreign_target_denied_before_malformed_json_and_private_fields_remain_hidden(self):
         response=self.client.patch('/api/user/2', headers={**self.headers(),'Content-Type':'application/json'}, data='{broken')
         self.assertEqual(response.status_code,404)
-        self.assertEqual(response.json,{'message':'User not found'})
+        assert_error_response(self, response, {'message':'User not found'})
         self.assertEqual(self.db.profile(2)['displayName'],'Bob')

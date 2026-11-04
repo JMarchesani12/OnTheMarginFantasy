@@ -1,4 +1,5 @@
 """Standalone HTTP week generation is disabled; no model call is permitted."""
+from http_error_assertions import assert_error_response
 import os
 import time
 import unittest
@@ -37,7 +38,7 @@ class HttpWeekGenerationDisabledTests(unittest.TestCase):
                 with self.subTest(subject=subject, body=body):
                     response = self.client.post('/api/schedule/createWeeks', headers=self.headers(subject), json=body)
                     self.assertEqual(response.status_code, 410)
-                    self.assertEqual(response.json, {'error': 'http_week_generation_disabled'})
+                    assert_error_response(self, response, {'error': 'http_week_generation_disabled'})
                     self.ensure.assert_not_called()
 
     def test_anonymous_requests_still_require_authentication(self):

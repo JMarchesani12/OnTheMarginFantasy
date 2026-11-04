@@ -3,6 +3,7 @@
 No current Week rows. PostgreSQL interval syntax is adapted and lifecycle sync
 substituted; no date arithmetic, lock, RLS or lifecycle verification claimed.
 """
+from http_error_assertions import assert_error_response
 from endpoints.league.lifecycle.service import LeagueLifecycleService
 import json
 import os
@@ -162,7 +163,7 @@ class LeagueReadAuthorizationTests(unittest.TestCase):
             with self.subTest(path=path):
                 response = self.client.get('/api/league/10' + path, headers=self.headers(OUTSIDER))
                 self.assertEqual(response.status_code, 403)
-                self.assertEqual(response.json, {'message': 'League membership required'})
+                assert_error_response(self, response, {'message': 'League membership required'})
         self.sync.assert_not_called()
 
     def test_private_missing_and_foreign_leagues_never_expose_data(self):
@@ -171,7 +172,7 @@ class LeagueReadAuthorizationTests(unittest.TestCase):
                 with self.subTest(subject=subject, league_id=league_id, path=path):
                     response = self.client.get(f'/api/league/{league_id}{path}', headers=self.headers(subject))
                     self.assertEqual(response.status_code, 404)
-                    self.assertEqual(response.json, {'message': 'League not found'})
+                    assert_error_response(self, response, {'message': 'League not found'})
         self.sync.assert_not_called()
 
     def test_preview_query_can_only_reduce_member_payload_and_cannot_unlock_private(self):
@@ -190,10 +191,10 @@ class LeagueReadAuthorizationTests(unittest.TestCase):
                     response = self.client.get('/api/league/10' + path, headers=headers)
                     self.assertEqual(response.status_code, status)
                     if code:
-                        self.assertEqual(set(response.json), {'error', 'requestId'})
+                        self.assertEqual(set(response.json), {'error', 'message', 'requestId'})
                         self.assertEqual(response.json['error']['code'], code)
                     else:
-                        self.assertEqual(set(response.json), {'error'})
+                        self.assertEqual(set(response.json), {'error', 'message', 'requestId'})
         self.db.connection.execute('ALTER TABLE "User" RENAME TO original_user')
         self.db.connection.execute('CREATE TABLE "User" AS SELECT * FROM original_user')
         self.db.connection.execute('INSERT INTO "User" (id, uuid) VALUES (?, ?)', (4, ALICE))
@@ -201,7 +202,7 @@ class LeagueReadAuthorizationTests(unittest.TestCase):
         for path in self.paths:
             response = self.client.get('/api/league/10' + path, headers=self.headers())
             self.assertEqual(response.status_code, 403)
-            self.assertEqual(response.json, {'error': 'application_identity_ambiguous'})
+            assert_error_response(self, response, {'error': 'application_identity_ambiguous'})
         self.sync.assert_not_called()
 
     def test_requesting_full_projection_cannot_elevate_nonmember(self):
@@ -209,7 +210,7 @@ class LeagueReadAuthorizationTests(unittest.TestCase):
             with self.subTest(path=path):
                 response = self.client.get('/api/league/10' + path + '?view=full', headers=self.headers(OUTSIDER))
                 self.assertEqual(response.status_code, 403)
-                self.assertEqual(response.json, {'message': 'League membership required'})
+                assert_error_response(self, response, {'message': 'League membership required'})
 
     def test_final_full_query_rechecks_membership_after_initial_access_check(self):
         def revoke(sql):
@@ -219,7 +220,7 @@ class LeagueReadAuthorizationTests(unittest.TestCase):
         self.db.before_query = revoke
         response = self.client.get('/api/league/10?view=full', headers=self.headers(BOB))
         self.assertEqual(response.status_code, 404)
-        self.assertEqual(response.json, {'message': 'League not found'})
+        assert_error_response(self, response, {'message': 'League not found'})
 
     def test_preview_query_rechecks_discoverability_before_returning_names(self):
         def make_private(sql):

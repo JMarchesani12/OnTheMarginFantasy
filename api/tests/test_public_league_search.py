@@ -3,6 +3,7 @@
 SQLite LIKE substitutes PostgreSQL ILIKE; similarity is fixed to exercise the
 secondary name order. This is not a PostgreSQL trigram/ranking validation.
 """
+from http_error_assertions import assert_error_response
 import ast
 import os
 import sqlite3
@@ -103,4 +104,4 @@ class PublicLeagueSearchTests(unittest.TestCase):
     def test_invalid_parameters_keep_json_error_contract(self):
         response = self.client.get('/api/leagues/search?q=Margin&sportId=bad')
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json, {'message': 'Invalid parameters'})
+        assert_error_response(self, response, {'message': 'Invalid parameters'})

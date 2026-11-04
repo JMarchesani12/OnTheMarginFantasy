@@ -1,3 +1,6 @@
+from sqlalchemy.exc import IntegrityError
+from werkzeug.exceptions import HTTPException
+from sqlalchemy.exc import DataError
 """HTTP scoring adapters; trusted jobs call the transport-independent model."""
 from flask import jsonify, request
 from authenticatedPrincipal import PrincipalResolutionError, resolve_authenticated_principal
@@ -30,7 +33,7 @@ class ScoringEndpoints:
                 payload = request.get_json(silent=True)
                 if not isinstance(payload, dict):
                     return jsonify({'message': 'Request body must be a JSON object'}), 400
-                weeks = integer_list_field(payload, 'weekNumbers')
+                weeks = integer_list_field(payload, 'weekNumbers', max_items=128)
                 if not weeks:
                     return jsonify({'message': 'weekNumbers must be a non-empty array of integers'}), 400
                 result = self.scoring_read_service.get_weekly_points(
@@ -47,6 +50,8 @@ class ScoringEndpoints:
             return jsonify({'message': 'League not found'}), 404
         except ValueError as exc:
             return jsonify({'message': str(exc)}), 400
+        except (HTTPException, DataError, IntegrityError):
+            raise
         except Exception:
             message = 'Failed to get points awarded' if view == 'points' else 'Failed to get standings'
             return jsonify({'message': message}), 500

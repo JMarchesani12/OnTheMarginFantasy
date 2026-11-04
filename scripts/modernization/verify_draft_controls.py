@@ -13,6 +13,7 @@ from endpoints.draft.pick_service import DraftPickService
 
 FIXTURE=FINALIZE_FIXTURE+'''
 UPDATE "League" SET settings='{"draft":{"draftType":"SNAKE","selectionTime":60,"numberOfRounds":2,"timeoutAction":"AUTO-SKIP","graceSeconds":0}}' WHERE id=10;
+UPDATE "League" SET status='Pre-Draft';
 DELETE FROM "DraftPick" WHERE "leagueId"=10;
 DELETE FROM "DraftTurn" WHERE "leagueId"=10;
 DELETE FROM "DraftState" WHERE "leagueId"=10;
@@ -39,14 +40,18 @@ def tests(engine,database):
     with engine.begin() as conn:conn.execute(text('DELETE FROM "LeagueMember" WHERE id=12'))
     before=state()
     try:service.start(actor,10)
-    except ValueError as exc:assert 'Missing draftOrder values: [2]' in str(exc)
+    except ValueError as exc:assert 'every member exactly once' in str(exc)
     else:raise AssertionError('Incomplete-order validation missing')
     assert state()==before
     reset();row=service.start(actor,10)
     assert turns()==[11,12,12,11] and row['state']['currentOverallPickNumber']==1 and row['state']['currentMemberId']==11
     with engine.connect() as conn:now=conn.execute(text('SELECT now()')).scalar_one()
     assert 0<(row['state']['expiresAt']-now).total_seconds()<=60
-    service.start(actor,10);assert turns()==[11,12,12,11]
+    before=state()
+    try:service.start(actor,10)
+    except ValueError:pass
+    else:raise AssertionError('Repeated start accepted')
+    assert state()==before
     paused=service.pause(actor,10);assert paused['state']['status']=='paused' and paused['state']['expiresAt'] is None
     resumed=service.resume(actor,10);assert resumed['state']['status']=='live' and resumed['state']['currentMemberId']==11 and resumed['state']['expiresAt'] is not None
     service.finalize_for_job(10);before=state()
@@ -55,7 +60,10 @@ def tests(engine,database):
         except ValueError as exc:assert str(exc)=='Draft is complete'
         else:raise AssertionError('Complete state accepted')
         assert state()==before
-    assert service.start(actor,10)['state']['status']=='live'  # Existing restart behavior.
+    try:service.start(actor,10)
+    except ValueError:pass
+    else:raise AssertionError('Completed draft restarted')
+    assert state()==before
     reset()
     with engine.begin() as conn:conn.execute(text('UPDATE "League" SET settings=jsonb_set(settings,\'{draft,draftType}\',\'"STRAIGHT"\') WHERE id=10'))
     service.start(actor,10);assert turns()==[11,12,11,12]
@@ -101,7 +109,7 @@ def tests(engine,database):
         assert state()==before
         prepare(action);before=state();other=engine_for(database,'otm-controls-revoke');changed=[]
         def revoke(conn,cursor,statement,params,context,many):
-            marker='INSERT INTO "DraftTurn"' if action=='start' else 'UPDATE "DraftState"'
+            marker='SELECT status FROM "League"' if action=='start' else 'UPDATE "DraftState"'
             if marker in statement and not changed:
                 changed.append(True)
                 with other.begin() as separate:separate.execute(text('UPDATE "League" SET commissioner=2 WHERE id=10'))
@@ -118,7 +126,7 @@ def tests(engine,database):
         prepare('pause');first=engine_for(database,'otm-controls-first');second=engine_for(database,'otm-controls-second')
         locked,release=threading.Event(),threading.Event();outcomes={}
         def hold(conn,cursor,statement,params,context,many):
-            if 'SELECT status FROM "DraftState"' in statement and 'FOR UPDATE' in statement:
+            if 'FROM "DraftState"' in statement and 'FOR UPDATE' in statement:
                 locked.set()
                 if not release.wait(10):raise RuntimeError('Control lock timeout')
         event.listen(first,'after_cursor_execute',hold)
@@ -148,7 +156,7 @@ def tests(engine,database):
     assert DraftControlService(model.db).start_for_job(10)['state']['status']=='live'
     return {'native_generate_series_snake_straight_interval_upsert':'PASS','incomplete_order_config_missing_complete_guards':'PASS',
             'post_write_deferred_commit_and_authority_rollback':'PASS','concurrent_pause_resume':locks,
-            'legacy_trusted_reset_compatibility':'PASS','scope_limit':'Existing restart/ON CONFLICT behavior preserved; no new replay guarantee'}
+            'legacy_trusted_replay_rejection':'PASS','scope_limit':'MOD-025 rejects restart; finalization/start/order races covered in verify_mod025.py'}
 
 
 def main():

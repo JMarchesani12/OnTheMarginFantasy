@@ -5,6 +5,10 @@ from .snapshot_service import DraftSnapshotService
 from .draft_rules import settings_from_league, compute_round_and_pos, draft_order_for_pick
 
 
+class DraftStartConflict(ValueError):
+    """Starting would overwrite existing draft progress or lifecycle state."""
+
+
 class DraftControlService:
     def __init__(self, engine, repository=None):
         self.engine = engine
@@ -111,12 +115,34 @@ class DraftControlService:
             rows.append({'leagueId': league_id, 'overallPickNumber': overall, 'memberId': order_to_member[order]})
         self.repository.insert_turns(conn, rows)
 
+    def _lock_before_start_or_order(self, conn, league_id, conflict):
+        # Existing rows follow pick/finalize order: DraftState, then League.
+        # If no state exists, League serializes first-start/order commands.
+        state = self.repository.lock_state(conn, league_id)
+        league = self.repository.lock_league(conn, league_id)
+        if not league:
+            raise ValueError('League not found')
+        if state is None and self.repository.order_state(conn, league_id) is not None:
+            # A first start may have committed while we waited for League.
+            # Never acquire its new state lock while holding League: a final
+            # pick can already own state and need League to finalize.
+            raise conflict('Draft has already started')
+        return league, state
+
     def _start(self, conn, league_id):
+        league, state = self._lock_before_start_or_order(conn, league_id, DraftStartConflict)
+        pristine = state is None or (
+            state['status'] == 'pre' and state['currentOverallPickNumber'] == 1 and
+            all(state[key] is None for key in ('currentMemberId', 'expiresAt', 'lastPickAt')))
+        if (league['status'] != 'Pre-Draft' or not pristine or
+                self.repository.has_draft_data(conn, league_id)):
+            raise DraftStartConflict('Draft has already started or cannot be started in its current state')
         cfg = self.draft_settings(conn, league_id)
-        missing = self.repository.missing_orders(conn, league_id, cfg['numPlayers'])
-        if missing:
-            missing_orders = [int(r['missingOrder']) for r in missing]
-            raise ValueError(f'Draft order incomplete. Missing draftOrder values: {missing_orders}')
+        members = self.repository.seed_members(conn, league_id)
+        orders = [row['draftOrder'] for row in members]
+        if (len(members) != cfg['numPlayers'] or
+                set(orders) != set(range(1, cfg['numPlayers'] + 1))):
+            raise ValueError('Draft order must include every member exactly once in positions 1..numPlayers')
         self.seed_turns(conn, league_id)
         first = self.expected_member(conn, league_id, 1)
         if not first:
@@ -154,17 +180,21 @@ class DraftControlService:
         return self.set_order_for_legacy_user_id(league_id, member_ids, None)
 
     def set_order_for_legacy_user_id(self, league_id, member_ids, user_id):
-        if not member_ids:
-            raise ValueError('memberIdsInOrder is required')
+        if (not isinstance(member_ids, list) or not member_ids or
+                any(type(member) is not int or member <= 0 for member in member_ids) or
+                len(set(member_ids)) != len(member_ids)):
+            raise ValueError('memberIdsInOrder must contain distinct positive integer member IDs')
         return self._with_control(league_id, user_id, lambda conn, league: self._set_order(conn, league, member_ids))
 
     def _set_order(self, conn, league_id, member_ids):
-        state = self.repository.order_state(conn, league_id)
-        if state and str(state['status']) in ('live', 'paused', 'complete'):
+        league, state = self._lock_before_start_or_order(conn, league_id, ValueError)
+        if (league['status'] != 'Pre-Draft' or
+                (state is not None and str(state['status']) != 'pre') or
+                self.repository.has_draft_data(conn, league_id)):
             raise ValueError('Cannot change draft order after draft has started')
-        members = self.repository.order_members(conn, league_id, member_ids)
-        if len(members) != len(member_ids):
-            raise ValueError('One or more memberIds are not in this league')
+        members = self.repository.seed_members(conn, league_id)
+        if set(member_ids) != {row['memberId'] for row in members}:
+            raise ValueError('Draft order must include every league member exactly once')
         self.repository.bump_orders(conn, league_id)
         self.repository.assign_order(conn, league_id, member_ids)
         return {'members': self.repository.ordered_members(conn, league_id)}

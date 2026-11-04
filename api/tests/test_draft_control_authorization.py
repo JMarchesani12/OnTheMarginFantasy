@@ -1,4 +1,5 @@
 """Commissioner draft controls: actual JWT/routes/transaction SQL, synthetic DB."""
+from http_error_assertions import assert_error_response
 import json
 import unittest
 
@@ -61,6 +62,7 @@ class DraftControlAuthorizationTests(unittest.TestCase):
 
     def prepare(self, action, league_id=10):
         if action in ('start', 'order'):
+            self.db.connection.execute('UPDATE "League" SET status=? WHERE id=?', ('Pre-Draft', league_id))
             for table in ('DraftState', 'DraftPick', 'DraftTurn'):
                 self.db.connection.execute(f'DELETE FROM "{table}" WHERE "leagueId" = ?', (league_id,))
         else:
@@ -165,7 +167,7 @@ class DraftControlAuthorizationTests(unittest.TestCase):
                 before = self.state()
                 response = self.invoke(action)
                 self.assertEqual(response.status_code, 403)
-                self.assertEqual(response.json, {'error': 'application_identity_ambiguous'})
+                assert_error_response(self, response, {'error': 'application_identity_ambiguous'})
                 self.assertEqual(self.state(), before)
                 self.emit.assert_not_called()
 
@@ -247,4 +249,38 @@ class DraftControlAuthorizationTests(unittest.TestCase):
         self.assertTrue(service.force_finalize_for_user_id(10, 1)['draftComplete'])
         self.prepare('order')
         self.assertEqual([m['memberId'] for m in service.set_order_for_job(10, [12, 11])['members']], [12, 11])
+        self.emit.assert_not_called()
+
+    def test_start_replay_is_conflict_without_event_or_state_change(self):
+        self.prepare('start')
+        self.assertEqual(self.invoke('start').status_code, 200)
+        self.emit.reset_mock()
+        before = self.state()
+        response = self.invoke('start')
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(response.json['error']['code'], 'draft_start_conflict')
+        self.assertEqual(self.state(), before)
+        self.emit.assert_not_called()
+
+    def test_partial_order_is_rejected_without_mutation(self):
+        self.prepare('order')
+        before = self.state()
+        response = self.invoke('order', body={'memberIdsInOrder': [11]})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(self.state(), before)
+
+    def test_replay_after_committed_pick_preserves_cursor_and_pick(self):
+        self.prepare('start')
+        self.assertEqual(self.invoke('start').status_code, 200)
+        self.db.connection.execute('UPDATE "DraftState" SET "expiresAt"=? WHERE "leagueId"=10', ('2030-01-01T00:00:00Z',))
+        self.db.connection.commit()
+        pick = self.client.post('/api/draft/pick', json={
+            'leagueId': 10, 'memberId': 11, 'sportTeamId': 102,
+        }, headers=self.headers())
+        self.assertEqual(pick.status_code, 201, pick.json)
+        self.emit.reset_mock()
+        before = self.state()
+        response = self.invoke('start')
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(self.state(), before)
         self.emit.assert_not_called()

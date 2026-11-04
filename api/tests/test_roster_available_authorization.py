@@ -3,6 +3,7 @@
 json_each replaces jsonb_array_elements_text + ::int. No deployed PostgreSQL,
 RLS or locking behavior is established by this synthetic fixture.
 """
+from http_error_assertions import assert_error_response
 import time
 import unittest
 import jwt
@@ -67,7 +68,7 @@ class AvailableAuthorizationTests(unittest.TestCase):
             with self.subTest(league=league,subject=subject):
                 response = self.read(league,subject,actingUserId=2,memberId=21,trustedJob=True)
                 self.assertEqual(response.status_code,404)
-                self.assertEqual(response.json,{'message':'League not found'})
+                assert_error_response(self, response, {'message':'League not found'})
 
     def test_denial_precedes_week_and_available_reads(self):
         queries=[]
@@ -114,4 +115,4 @@ class AvailableAuthorizationTests(unittest.TestCase):
         self.db.before_query=fail
         response=self.read()
         self.assertEqual(response.status_code,500)
-        self.assertEqual(response.json,{'message':'Failed to read available teams'})
+        assert_error_response(self, response, {'message':'Failed to read available teams'})

@@ -1,4 +1,5 @@
 """Live-pick ownership: real JWT, routes and transaction SQL; no deployed DB."""
+from http_error_assertions import assert_error_response
 import datetime as dt
 import sqlite3
 import unittest
@@ -108,7 +109,7 @@ class LivePickAuthorizationTests(unittest.TestCase):
                 before = self.state()
                 response = self.post({'leagueId': league_id, 'memberId': member_id, 'sportTeamId': 102}, subject)
                 self.assertEqual(response.status_code, 404)
-                self.assertEqual(response.json, {'message': 'League member not found'})
+                assert_error_response(self, response, {'message': 'League member not found'})
                 self.assertEqual(self.state(), before)
                 self.emit.assert_not_called()
 
@@ -139,14 +140,14 @@ class LivePickAuthorizationTests(unittest.TestCase):
         ''')
         response = self.post()
         self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.json, {'error': 'application_identity_ambiguous'})
+        assert_error_response(self, response, {'error': 'application_identity_ambiguous'})
         self.emit.assert_not_called()
 
     def test_owned_wrong_turn_expired_and_unique_conflicts_keep_existing_statuses(self):
         before = self.state()
         response = self.post(dict(self.body, memberId=11), fixture.ALICE)
         self.assertEqual(response.status_code, 409)
-        self.assertEqual(response.json, {'message': 'Not your turn'})
+        assert_error_response(self, response, {'message': 'Not your turn'})
         response = self.post(dict(self.body, sportTeamId=101))
         self.assertEqual(response.status_code, 409)
         self.assertIn('conflict', response.json['message'].lower())
@@ -156,7 +157,7 @@ class LivePickAuthorizationTests(unittest.TestCase):
         before = self.state()
         response = self.post()
         self.assertEqual(response.status_code, 409)
-        self.assertEqual(response.json, {'message': 'Pick window expired'})
+        assert_error_response(self, response, {'message': 'Pick window expired'})
         self.assertEqual(self.state(), before)
         self.emit.assert_not_called()
 
@@ -180,7 +181,7 @@ class LivePickAuthorizationTests(unittest.TestCase):
         self.db.before_query = revoke
         response = self.post()
         self.assertEqual(response.status_code, 404)
-        self.assertEqual(response.json, {'message': 'League member not found'})
+        assert_error_response(self, response, {'message': 'League member not found'})
         self.assertEqual(self.state(), before)
         self.emit.assert_not_called()
 
@@ -192,7 +193,7 @@ class LivePickAuthorizationTests(unittest.TestCase):
         self.db.before_query = fail
         response = self.post()
         self.assertEqual(response.status_code, 500)
-        self.assertEqual(response.json, {'message': 'Failed to create draft pick'})
+        assert_error_response(self, response, {'message': 'Failed to create draft pick'})
         self.assertEqual(self.state(), before)
         self.emit.assert_not_called()
 

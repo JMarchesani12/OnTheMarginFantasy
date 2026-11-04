@@ -1,0 +1,111 @@
+{
+  "result": "PASS",
+  "scope": "Owned marked loopback PostgreSQL only; no configured database",
+  "tests": {
+    "permutation_and_lifecycle": "PASS",
+    "pick_cursor_timer_replay": "PASS",
+    "statement_and_deferred_commit_rollback": "PASS",
+    "races": [
+      {
+        "first": "start",
+        "second": "start",
+        "observed_lock_wait": true,
+        "outcomes": {
+          "first": "ok",
+          "second": "start_conflict"
+        }
+      },
+      {
+        "first": "order",
+        "second": "start",
+        "observed_lock_wait": true,
+        "outcomes": {
+          "first": "ok",
+          "second": "ok"
+        }
+      },
+      {
+        "first": "start",
+        "second": "order",
+        "observed_lock_wait": true,
+        "outcomes": {
+          "first": "ok",
+          "second": "order_conflict"
+        }
+      },
+      {
+        "first": "finalize",
+        "second": "start",
+        "observed_lock_wait": true,
+        "outcomes": {
+          "first": "ok",
+          "second": "start_conflict"
+        }
+      },
+      {
+        "first": "finalize",
+        "second": "order",
+        "observed_lock_wait": true,
+        "outcomes": {
+          "first": "ok",
+          "second": "order_conflict"
+        }
+      }
+    ],
+    "prior_snapshot": {
+      "member_only_scope_before_repair": "PASS",
+      "native_json_timestamps_picks_season_join_turn_skipping": "PASS",
+      "missing_state_trusted_legacy_supplied_connection": "PASS",
+      "repair_post_read_commit_caller_rollback": "PASS",
+      "separate_connection_pre_query_revocation": "PASS"
+    },
+    "prior_finalization": {
+      "native_final_state_season_date_boundaries_projection_timestamps": "PASS",
+      "no_season_and_missing_state_compatibility": "PASS",
+      "post_write_real_statement_commit_and_caller_rollback": "PASS",
+      "separate_connection_pre_post_authority_rejection": "PASS",
+      "trusted_and_legacy_supplied_connection": "PASS",
+      "scope_limit": "Original pre/post authority checks add no locks or replay/concurrency guarantee"
+    },
+    "prior_controls": {
+      "native_generate_series_snake_straight_interval_upsert": "PASS",
+      "incomplete_order_config_missing_complete_guards": "PASS",
+      "post_write_deferred_commit_and_authority_rollback": "PASS",
+      "concurrent_pause_resume": [
+        {
+          "path": "actor_service",
+          "observed_lock_wait": true,
+          "outcomes": {
+            "first": "paused",
+            "second": "live"
+          }
+        },
+        {
+          "path": "user_id_service",
+          "observed_lock_wait": true,
+          "outcomes": {
+            "first": "paused",
+            "second": "live"
+          }
+        }
+      ],
+      "legacy_trusted_replay_rejection": "PASS",
+      "scope_limit": "MOD-025 rejects restart; finalization/start/order races covered in verify_mod025.py"
+    },
+    "prior_order": {
+      "native_bigint_arrays_any_unnest_generate_series_unique_swap": "PASS",
+      "exact_projection_permutation_guard": "PASS",
+      "post_bump_assignment_read_statement_commit_rollback": "PASS",
+      "separate_connection_late_authority_rejection": "PASS",
+      "legacy_trusted_coercion": "PASS",
+      "scope_limit": "MOD-025 full permutation and coordinated lock order; additional races in verify_mod025.py"
+    }
+  },
+  "sha256": {
+    "api/endpoints/draft/control_service.py": "b64db5264064ad766b11364705ad33c703ed1d7e84e2121c7d82679789172b63",
+    "api/endpoints/draft/control_repository.py": "a89ac61be51faae11c6c7edb4408d90448b1850f2fe4fba9bf3869b6ff107a48",
+    "scripts/modernization/verify_mod025.py": "c08ce67ebc4e1e63a78811cebe94d6aa866e01f5981fbe95f278e75460e5a2c0",
+    "scripts/modernization/verify_draft_controls.py": "c0cd78f97b1095ec571e3f9dc1f4c0bed8639c7d274febdb25827383b7baefbd",
+    "scripts/modernization/verify_draft_order.py": "4530ff4b371d6932ea63e6b6950c35be2c3fa1407b6527de3c832ca18fe094d0"
+  }
+}

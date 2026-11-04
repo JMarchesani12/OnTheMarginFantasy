@@ -21,13 +21,15 @@ class DraftControlsServiceTests(unittest.TestCase):
             for actor in (None,1,{'user_id':1}):
                 with self.assertRaises(TypeError):getattr(self.service,name)(actor,10)
         self.assertEqual(self.engine.begins,0)
-    def test_start_snake_turns_snapshot_and_existing_restart_behavior(self):
+    def test_start_snake_turns_snapshot_and_reject_restart(self):
         self.assertTrue(hasattr(self.service,'start'),'start operation missing')
         row=self.service.start(self.actor,10)
         self.assertEqual(row['state']['status'],'live');self.assertEqual(row['state']['currentOverallPickNumber'],1)
         self.assertEqual(row['state']['currentMemberId'],11);self.assertIsNotNone(row['state']['expiresAt'])
         self.assertEqual(self.turns(),[11,12,12,11]);self.assertEqual(self.engine.begins,1)
-        self.service.start(self.actor,10);self.assertEqual(self.turns(),[11,12,12,11])
+        before=self.state()
+        with self.assertRaises(ValueError):self.service.start(self.actor,10)
+        self.assertEqual(self.state(),before)
     def test_straight_seeding(self):
         self.assertTrue(hasattr(self.service,'start'),'start operation missing')
         raw=self.db.connection.execute('SELECT settings FROM "League" WHERE id=10').fetchone()[0];cfg=json.loads(raw)
@@ -70,5 +72,50 @@ class DraftControlsServiceTests(unittest.TestCase):
             DraftControlService(model.db).seed_turns(conn, 10)
             self.assertEqual(model._get_expected_member_for_overall(conn,10,1),11)
             self.assertEqual(model._compute_round_and_pos(3,2),(2,1))
+        self.db.connection.execute('DELETE FROM "DraftTurn" WHERE "leagueId"=10')
+        self.db.connection.commit()
         self.assertEqual(DraftControlService(model.db).start_for_job(10)['state']['status'],'live')
         self.assertEqual(DraftControlService(model.db).pause_for_legacy_user_id(10, '1')['state']['status'],'paused')
+
+    def test_start_conflicts_preserve_all_lifecycle_state(self):
+        for status in ('live', 'paused', 'complete', 'unknown'):
+            with self.subTest(status=status):
+                self.db.connection.execute('INSERT INTO "DraftState" ("leagueId",status,"currentOverallPickNumber","currentMemberId","expiresAt") VALUES (10,?,3,12,NULL) ON CONFLICT ("leagueId") DO UPDATE SET status=excluded.status', (status,))
+                self.db.connection.commit()
+                before = self.state()
+                with self.assertRaises(ValueError): self.service.start_for_job(10)
+                self.assertEqual(self.state(), before)
+
+    def test_start_requires_pre_draft_league(self):
+        for status in ('Drafting', 'Post-Draft', 'In-Season', 'Completed'):
+            self.db.connection.execute('UPDATE "League" SET status=? WHERE id=10', (status,))
+            self.db.connection.commit()
+            before = self.state()
+            with self.assertRaises(ValueError): self.service.start(self.actor, 10)
+            self.assertEqual(self.state(), before)
+
+    def test_start_rejects_stale_turns(self):
+        self.db.connection.execute('INSERT INTO "DraftTurn" ("leagueId","overallPickNumber","memberId") VALUES (10,1,12)')
+        self.db.connection.commit()
+        before = self.state()
+        with self.assertRaises(ValueError): self.service.start(self.actor, 10)
+        self.assertEqual(self.state(), before)
+
+    def test_start_rejects_extra_members(self):
+        self.db.connection.execute('INSERT INTO "LeagueMember" (id,"leagueId","userId","draftOrder") VALUES (13,10,3,3)')
+        self.db.connection.commit()
+        before = self.state()
+        with self.assertRaises(ValueError): self.service.start(self.actor, 10)
+        self.assertEqual(self.state(), before)
+
+    def test_pristine_pre_state_can_start(self):
+        self.db.connection.execute('INSERT INTO "DraftState" ("leagueId",status,"currentOverallPickNumber") VALUES (10,?,1)', ('pre',))
+        self.db.connection.commit()
+        self.assertEqual(self.service.start(self.actor,10)['state']['status'], 'live')
+
+    def test_pre_state_with_progress_cannot_start(self):
+        self.db.connection.execute('INSERT INTO "DraftState" ("leagueId",status,"currentOverallPickNumber") VALUES (10,?,3)', ('pre',))
+        self.db.connection.commit()
+        before = self.state()
+        with self.assertRaises(ValueError): self.service.start(self.actor,10)
+        self.assertEqual(self.state(), before)

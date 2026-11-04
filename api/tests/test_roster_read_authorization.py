@@ -1,4 +1,5 @@
 """MOD-003C member roster reads: real JWT/routes/SQL, synthetic SQLite only."""
+from http_error_assertions import assert_error_response
 import time
 import unittest
 import jwt
@@ -57,7 +58,7 @@ class RosterReadTests(unittest.TestCase):
             with self.subTest(league=league,member=member):
                 response = self.read(league,member,actingUserId=2,trustedJob=True)
                 self.assertEqual(response.status_code,404)
-                self.assertEqual(response.json,{'message':'League member not found'})
+                assert_error_response(self, response, {'message':'League member not found'})
 
     def test_auth_and_missing_profile_denied(self):
         self.assertEqual(self.client.post('/api/roster/memberTeams',json={}).status_code,401)
@@ -94,4 +95,4 @@ class RosterReadTests(unittest.TestCase):
         self.db.before_query = fail
         response = self.read()
         self.assertEqual(response.status_code,500)
-        self.assertEqual(response.json,{'message':'Failed to read member roster'})
+        assert_error_response(self, response, {'message':'Failed to read member roster'})

@@ -3,6 +3,7 @@
 Reuse the guarded runner and existing profile/read adapters. Only PostgreSQL's
 UUID cast is adapted; no app factory, jobs, socket server or deployed DB runs.
 """
+from http_error_assertions import assert_error_response
 import io
 import time
 import unittest
@@ -149,7 +150,7 @@ class DraftStateAuthorizationTests(unittest.TestCase):
                 self.db.queries.clear()
                 response = self.client.get(f'/api/draft/state/{league_id}', headers=self.headers(subject))
                 self.assertEqual(response.status_code, 404)
-                self.assertEqual(response.json, {'message': 'League not found'})
+                assert_error_response(self, response, {'message': 'League not found'})
                 self.assert_no_snapshot_queries()
                 self.assertEqual(self.state_rows(), before)
 
@@ -160,7 +161,7 @@ class DraftStateAuthorizationTests(unittest.TestCase):
             headers=headers, json={'leagueId': 20, 'userId': 1, 'memberId': 11,
                                   'actingUserId': 1, 'trustedJob': True, 'sub': ALICE})
         self.assertEqual(response.status_code, 404)
-        self.assertEqual(response.json, {'message': 'League not found'})
+        assert_error_response(self, response, {'message': 'League not found'})
         self.assert_no_snapshot_queries()
 
     def test_authentication_and_missing_application_identity_fail_before_snapshot(self):
@@ -174,7 +175,7 @@ class DraftStateAuthorizationTests(unittest.TestCase):
                 self.assertEqual(response.status_code, status)
                 self.assertIn('error', response.json)
                 self.assert_no_snapshot_queries()
-        self.assertEqual(response.json, {'error': 'application_identity_not_found'})
+        assert_error_response(self, response, {'error': 'application_identity_not_found'})
 
     def test_ambiguous_application_identity_fails_explicitly(self):
         self.db.connection.executescript('''
@@ -184,7 +185,7 @@ class DraftStateAuthorizationTests(unittest.TestCase):
         ''')
         response = self.client.get('/api/draft/state/10', headers=self.headers())
         self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.json, {'error': 'application_identity_ambiguous'})
+        assert_error_response(self, response, {'error': 'application_identity_ambiguous'})
         self.assert_no_snapshot_queries()
 
     def test_permission_is_evaluated_in_initial_snapshot_query_before_repair(self):
@@ -195,7 +196,7 @@ class DraftStateAuthorizationTests(unittest.TestCase):
         self.db.before_query = revoke
         response = self.client.get('/api/draft/state/10', headers=self.headers())
         self.assertEqual(response.status_code, 404)
-        self.assertEqual(response.json, {'message': 'League not found'})
+        assert_error_response(self, response, {'message': 'League not found'})
         self.assert_no_snapshot_queries()
 
     def test_authorized_completed_state_repair_is_preserved_after_authorization(self):
@@ -231,5 +232,5 @@ class DraftStateAuthorizationTests(unittest.TestCase):
         with redirect_stdout(io.StringIO()) as logs:
             response = self.client.get('/api/draft/state/10', headers=self.headers())
         self.assertEqual(response.status_code, 500)
-        self.assertEqual(response.json, {'message': 'Failed to get draft state'})
+        assert_error_response(self, response, {'message': 'Failed to get draft state'})
         self.assertNotIn('synthetic private SQL details', logs.getvalue())

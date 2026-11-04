@@ -1,3 +1,6 @@
+from sqlalchemy.exc import IntegrityError
+from werkzeug.exceptions import HTTPException
+from sqlalchemy.exc import DataError
 from flask import jsonify
 from .service import SportService
 
@@ -10,5 +13,7 @@ class SportEndpoints:
         try:
             sports = self.service.list_sports()
             return jsonify(sports), 200
+        except (HTTPException, DataError, IntegrityError):
+            raise
         except Exception:
             return jsonify({"message": "Failed to get sports"}), 500

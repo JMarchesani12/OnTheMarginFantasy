@@ -75,3 +75,7 @@ MOD-041 produces the decision and pipeline ownership/order; MOD-019 owns safe-er
 ## Immediate next action
 
 Choose MOD-009 for the next implementation run: inspect the locked application path and pending dispatcher, define replay outcome and add isolated fault/state tests. Keep PostgreSQL concurrent-apply verification explicitly outstanding until disposable infrastructure is available. If the user prefers the architecture conversation first, start MOD-038 as a decision-only task; present the alternatives above and obtain agreement before writing a migration design or product code.
+
+## Priority 4 status — 2026-11-03
+
+MOD-034 startup isolation and MOD-028A bounded auth refresh were already implemented. MOD-025 now enforces exact draft-order permutations and start replay conflicts, including native PostgreSQL start/order/finalization lock-race verification. MOD-019 safe errors and documented local resource ceilings are implemented; gateway rate/proxy policy remains open. See [current progress](progress.md#priority-4-continuation--2026-11-03) and [verification](verification.md#priority-4-continuation--2026-11-03). No deployment is implied by this status update.

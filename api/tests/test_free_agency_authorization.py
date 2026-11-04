@@ -3,6 +3,7 @@
 ANY lists, JSONB casts/expansion and now() are adapted; PostgreSQL locks/RLS
 and concurrent revocation are not verified. No app factory/jobs/live DB.
 """
+from http_error_assertions import assert_error_response
 import json
 import re
 import time
@@ -117,7 +118,7 @@ class FreeAgencyAuthorizationTests(unittest.TestCase):
                 response=self.post(dict(self.body,memberId=member,weekId=200 if league==20 else 100,
                     dropTeamId=102 if member==12 else 101,trustedJob=True,actingUserId=2),league,subject)
                 self.assertEqual(response.status_code,404)
-                self.assertEqual(response.json,{'message':'League member not found'})
+                assert_error_response(self, response, {'message':'League member not found'})
                 self.assertEqual(self.state(),before)
                 self.assertFalse(any('FROM "Week"' in sql or 'FROM "Transaction"' in sql for sql in self.db.queries))
 
@@ -203,7 +204,7 @@ class FreeAgencyAuthorizationTests(unittest.TestCase):
         self.db.before_query=fail
         response=self.post()
         self.assertEqual(response.status_code,500)
-        self.assertEqual(response.json,{'message':'Failed to process free agency move'})
+        assert_error_response(self, response, {'message':'Failed to process free agency move'})
         self.assertEqual(self.state(),before)
 
     def test_add_only_drop_only_and_null_optional_fields_remain_supported(self):

@@ -1,5 +1,13 @@
 # Modernization progress
 
+## Priority 4 continuation — 2026-11-03
+
+**MOD-025 complete in application and synthetic PostgreSQL scope.** Draft order is an exact current-member permutation; start accepts only Pre-Draft with absent/pristine pre state and no turns/picks. Replays return 409 `draft_start_conflict`, preserving picks/cursor/timers. Existing-state locking follows state-before-League to match pick finalization; absent-state starts/order serialize on League and recheck without lock inversion. Native tests observe start/start, order/start, start/order and finalization/start/order lock waits, plus statement/deferred-commit rollback and replay after a committed pick. Old snapshot/finalization/control/order PostgreSQL checks rerun with intentional compatibility changes.
+
+**MOD-019 safe-error and local resource slices complete.** Flask errors carry structured code/message/requestId with legacy top-level message; framework headers survive; SQLAlchemy integrity/data errors map to safe 409/400; 5xx extra fields are discarded. Malformed JSON/scalars have deliberate 400 responses. Documented body/query/scoring-week/trade-team/search ceilings reject excess before domain work. No new distributed rate infrastructure: gateway quotas/proxy policy remain open. MOD-034 startup and MOD-028A auth refresh retained and regression-tested.
+
+Backend **621/621** (baseline 594), frontend **64/64**, frontend build and diff checks pass. Fresh reviewer found lock inversion; native regression reproduced it and verified the fix against finalization races. [Native evidence](evidence/mod-025-postgres-2026-11-03.json), [verification](verification.md#priority-4-continuation--2026-11-03), [plan](../superpowers/plans/2026-11-03-priority4.md), [HTTP contract/limits](../../api/README.md#http-errors-and-input-limits). Work remains uncommitted on audit; no push/merge/deployment, schema/dependency changes, configured/hosted database access or app/job/listener launch. Task-owned PostgreSQL container and random test databases removed after verification; cached image reused with temporary storage, production services untouched. Hosted startup, gateway quotas, admission serialization and deployed-policy claims remain separate.
+
 ## Main into audit integration — 2026-11-02
 
 Resolved README and retired Model modify/delete conflicts. Main's five lifecycle transitions are preserved in the canonical lifecycle repository; timezone regressions now use the service. Kickoff `timeTBD` flows through canonical ingestion and all four schedule read queries, retaining main's sort order. Refresh cron uses the ingestion service and explicit runtime engine initialization. Frontend/provider changes from main retained.

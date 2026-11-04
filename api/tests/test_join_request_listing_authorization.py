@@ -1,4 +1,5 @@
 """Commissioner admission listing using real JWT/routes/SQL on synthetic data."""
+from http_error_assertions import assert_error_response
 import os
 import time
 import unittest
@@ -104,7 +105,7 @@ class JoinRequestListingAuthorizationTests(unittest.TestCase):
                 response = self.client.post(f'/api/league/{target}/joinRequests',
                     headers=self.headers(subject), json={'actingUserId': actor})
                 self.assertEqual(response.status_code, 403)
-                self.assertEqual(response.json, {'message': 'Only the commissioner can perform this action'})
+                assert_error_response(self, response, {'message': 'Only the commissioner can perform this action'})
 
     def test_forged_commissioner_actor_cannot_expose_applicant_data(self):
         for subject, forged, target in ((BOB, 1, 10), (OUTSIDER, 1, 10), (ALICE, 2, 20)):
@@ -112,7 +113,7 @@ class JoinRequestListingAuthorizationTests(unittest.TestCase):
                 response = self.client.post(f'/api/league/{target}/joinRequests',
                     headers=self.headers(subject), json={'actingUserId': forged})
                 self.assertEqual(response.status_code, 403)
-                self.assertEqual(response.json, {'error': 'actor_identity_mismatch'})
+                assert_error_response(self, response, {'error': 'actor_identity_mismatch'})
 
     def test_body_query_and_header_cannot_redirect_league_or_change_identity(self):
         response = self.client.post('/api/league/10/joinRequests?leagueId=20&actingUserId=2',
@@ -133,23 +134,23 @@ class JoinRequestListingAuthorizationTests(unittest.TestCase):
                 response = self.client.post('/api/league/10/joinRequests', headers=headers, json={'actingUserId': 1})
                 self.assertEqual(response.status_code, 401)
                 if code:
-                    self.assertEqual(set(response.json), {'error', 'requestId'})
+                    self.assertEqual(set(response.json), {'error', 'message', 'requestId'})
                     self.assertEqual(response.json['error']['code'], code)
                 else:
-                    self.assertEqual(response.json, {'error': 'missing_authenticated_subject'})
+                    assert_error_response(self, response, {'error': 'missing_authenticated_subject'})
 
     def test_missing_and_ambiguous_application_identity_cannot_read(self):
         response = self.client.post('/api/league/10/joinRequests',
             headers=self.headers('00000000-0000-4000-8000-000000000099'), json={'actingUserId': 1})
         self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.json, {'error': 'application_identity_not_found'})
+        assert_error_response(self, response, {'error': 'application_identity_not_found'})
         self.db.connection.execute('ALTER TABLE "User" RENAME TO original_user')
         self.db.connection.execute('CREATE TABLE "User" AS SELECT * FROM original_user')
         self.db.connection.execute('INSERT INTO "User" (id, uuid) VALUES (?, ?)', (4, ALICE))
         self.db.connection.commit()
         response = self.client.post('/api/league/10/joinRequests', headers=self.headers(), json={'actingUserId': 1})
         self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.json, {'error': 'application_identity_ambiguous'})
+        assert_error_response(self, response, {'error': 'application_identity_ambiguous'})
 
     def test_invalid_input_and_missing_league_have_safe_json_contracts(self):
         for payload in ([], {}, {'actingUserId': True}, {'actingUserId': 1.5},
@@ -160,4 +161,4 @@ class JoinRequestListingAuthorizationTests(unittest.TestCase):
                 self.assertIsInstance(response.json.get('message'), str)
         missing = self.client.post('/api/league/999/joinRequests', headers=self.headers(), json={'actingUserId': 1})
         self.assertEqual(missing.status_code, 400)
-        self.assertEqual(missing.json, {'message': 'League 999 not found'})
+        assert_error_response(self, missing, {'message': 'League 999 not found'})

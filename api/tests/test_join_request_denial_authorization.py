@@ -1,4 +1,5 @@
 """Denial auth/transition tests: real JWT/routes/SQL, synthetic SQLite only."""
+from http_error_assertions import assert_error_response
 from endpoints.league.admission.service import AdmissionService
 import os
 import time
@@ -122,7 +123,7 @@ class JoinRequestDenialAuthorizationTests(unittest.TestCase):
         after = self.state()
         repeat = self.client.post('/api/league/10/joinRequests/101/deny', headers=self.headers(), json={'actingUserId': 1})
         self.assertEqual(repeat.status_code, 400)
-        self.assertEqual(repeat.json, {'message': 'Join request is not pending'})
+        assert_error_response(self, repeat, {'message': 'Join request is not pending'})
         self.assertEqual(self.state(), after)
 
     def test_auth_and_application_identity_failures_cannot_deny(self):
@@ -140,7 +141,7 @@ class JoinRequestDenialAuthorizationTests(unittest.TestCase):
         self.db.connection.commit()
         response = self.client.post('/api/league/10/joinRequests/101/deny', headers=self.headers(), json={'actingUserId': 1})
         self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.json, {'error': 'application_identity_ambiguous'})
+        assert_error_response(self, response, {'error': 'application_identity_ambiguous'})
         self.assertEqual(self.state(), before)
 
     def test_invalid_actor_shape_and_missing_league_get_json_errors(self):
@@ -153,7 +154,7 @@ class JoinRequestDenialAuthorizationTests(unittest.TestCase):
                 self.assertEqual(self.state(), before)
         missing = self.client.post('/api/league/999/joinRequests/101/deny', headers=self.headers(), json={'actingUserId': 1})
         self.assertEqual(missing.status_code, 400)
-        self.assertEqual(missing.json, {'message': 'League 999 not found'})
+        assert_error_response(self, missing, {'message': 'League 999 not found'})
 
     def test_failure_after_denial_update_rolls_back_resolution(self):
         before = self.state()
@@ -161,7 +162,7 @@ class JoinRequestDenialAuthorizationTests(unittest.TestCase):
         with self.assertLogs(level='ERROR'):
             response = self.client.post('/api/league/10/joinRequests/101/deny', headers=self.headers(), json={'actingUserId': 1})
         self.assertEqual(response.status_code, 500)
-        self.assertEqual(response.json, {'message': 'Failed to deny join request'})
+        assert_error_response(self, response, {'message': 'Failed to deny join request'})
         self.assertEqual(self.state(), before)
 
     def test_trusted_denial_remains_independent_of_http_identity(self):

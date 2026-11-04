@@ -13,14 +13,17 @@ def integer_field(data: dict, field: str) -> int:
     return _integer_value(data.get(field), field)
 
 
-def integer_list_field(data: dict, field: str) -> list[int]:
+def integer_list_field(data: dict, field: str, max_items: int = 256) -> list[int]:
     """Read an integer array without coercing other containers or scalar values.
 
-    Empty arrays, duplicates and ID ranges remain domain-policy decisions.
+    Reject oversized arrays before element conversion. Empty arrays, duplicates
+    and ID ranges remain domain-policy decisions.
     """
     values = data.get(field)
     if not isinstance(values, list):
         raise ValueError(f"{field} must be an array of integers")
+    if len(values) > max_items:
+        raise ValueError(f"{field} must contain at most {max_items} items")
     return [_integer_value(value, field) for value in values]
 
 

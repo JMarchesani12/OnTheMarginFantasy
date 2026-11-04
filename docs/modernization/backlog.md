@@ -373,6 +373,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-019 — Bound request resources and standardize safe backend errors
 
+- **Status — 2026-11-03:** Safe-error mapping and local body/collection/query bounds implemented and verified. [Contract/ceilings](../../api/README.md#http-errors-and-input-limits), [verification](verification.md#priority-4-continuation--2026-11-03). Gateway quota/proxy decisions and distributed rate enforcement remain open; no rate infrastructure added.
+
 - **Priority / size / risk:** P1 / M / Medium.
 - **Features:** F-004, F-006–009, F-013, F-015–022, F-027, F-028, F-030, F-032–034.
 - **Problem / evidence:** BE D05/S06: conversions outside try, exception serialization, sqlite IntegrityError, raw details, unbounded arrays/no source quotas.
@@ -438,6 +440,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 - **Contract impact:** Behavior: operations yes; API: readiness optional explicit contract; schema: no.
 
 ### MOD-025 — Validate draft order and guard draft-start replay
+
+- **Status — 2026-11-03:** Complete in application/synthetic PostgreSQL scope: exact permutation, conflict replay and native start/order/finalization lock-race verification. [Evidence](evidence/mod-025-postgres-2026-11-03.json), [details](verification.md#priority-4-continuation--2026-11-03). Admission serialization/deployed policy remain separate.
 
 - **Priority / size / risk:** P1 / M / High.
 - **Features:** F-013, F-018, F-020, F-024, F-030.

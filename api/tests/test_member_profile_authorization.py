@@ -1,4 +1,5 @@
 """MOD-003A self-service member edits: real JWT/routes/SQL, synthetic rows."""
+from http_error_assertions import assert_error_response
 import os
 import time
 import unittest
@@ -68,7 +69,7 @@ class MemberProfileAuthorizationTests(unittest.TestCase):
                     headers=self.headers(subject), json={'teamName': 'Stolen'})
                 self.assertEqual(self.member(target), before)
                 self.assertEqual(response.status_code, 404)
-                self.assertEqual(response.json, {'message': 'LeagueMember not found'})
+                assert_error_response(self, response, {'message': 'LeagueMember not found'})
 
     def test_score_order_and_identity_smuggling_cannot_partially_update(self):
         for extra in ({'seasonPoints': 999}, {'draftOrder': 1}, {'userId': 1},
@@ -79,7 +80,7 @@ class MemberProfileAuthorizationTests(unittest.TestCase):
                     headers=self.headers(BOB), json={'teamName': 'Tampered', **extra})
                 self.assertEqual(self.member(12), before)
                 self.assertEqual(response.status_code, 400)
-                self.assertEqual(response.json, {'message': 'Only teamName may be updated'})
+                assert_error_response(self, response, {'message': 'Only teamName may be updated'})
 
     def test_forged_header_query_and_body_cannot_impersonate_owner(self):
         before = self.member(12)
@@ -101,7 +102,7 @@ class MemberProfileAuthorizationTests(unittest.TestCase):
         missing = self.client.patch('/api/league/leagueMember/11',
             headers=self.headers('00000000-0000-4000-8000-000000000099'), json={'teamName': 'Forged'})
         self.assertEqual(missing.status_code, 403)
-        self.assertEqual(missing.json, {'error': 'application_identity_not_found'})
+        assert_error_response(self, missing, {'error': 'application_identity_not_found'})
         self.db.connection.execute('ALTER TABLE "User" RENAME TO original_user')
         self.db.connection.execute('CREATE TABLE "User" AS SELECT * FROM original_user')
         self.db.connection.execute('INSERT INTO "User" (id, uuid) VALUES (?, ?)', (4, ALICE))
@@ -109,13 +110,13 @@ class MemberProfileAuthorizationTests(unittest.TestCase):
         ambiguous = self.client.patch('/api/league/leagueMember/11',
             headers=self.headers(), json={'teamName': 'Forged'})
         self.assertEqual(ambiguous.status_code, 403)
-        self.assertEqual(ambiguous.json, {'error': 'application_identity_ambiguous'})
+        assert_error_response(self, ambiguous, {'error': 'application_identity_ambiguous'})
         self.assertEqual(self.member(11)['teamName'], 'Alice Team')
 
     def test_missing_target_and_invalid_input_fail_without_writes(self):
         missing = self.client.patch('/api/league/leagueMember/999', headers=self.headers(), json={'teamName': 'New'})
         self.assertEqual(missing.status_code, 404)
-        self.assertEqual(missing.json, {'message': 'LeagueMember not found'})
+        assert_error_response(self, missing, {'message': 'LeagueMember not found'})
         for payload in ({}, [], {'teamName': ''}, {'teamName': '   '}, {'teamName': None}, {'teamName': 42}):
             with self.subTest(payload=payload):
                 response = self.client.patch('/api/league/leagueMember/11', headers=self.headers(), json=payload)

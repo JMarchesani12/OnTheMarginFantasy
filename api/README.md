@@ -112,3 +112,36 @@ polling. It refreshes the next 21 days once per sport season, including moved
 games and newly announced kickoff times. For a full future football repair use
 `--sport-season-id ID --days 100`. Refresh after deploying both API and frontend
 so existing placeholders acquire the flag and correct calendar date.
+
+## HTTP errors and input limits
+
+REST errors include `error.code`, `error.message`, and `requestId` matching
+`X-Request-ID`. A top-level `message` remains for existing browser consumers.
+Legacy string `error` values now live in `error.code`. Errors use `no-store`;
+5xx responses contain a generic message without driver/SQL/private details.
+Malformed JSON/types return 400, integrity conflicts 409, oversized bodies 413,
+and unsupported media types 415 where JSON parsing requires it. Existing
+resource concealment and disabled-operation statuses remain intact. Only the
+middleware's pre-execution `auth_token_invalid` denial permits browser refresh;
+resource conflicts and permission denials do not trigger refresh/replay.
+
+| Input | Ceiling / accepted range |
+| --- | --- |
+| Request body | 262144 bytes (256 KiB), including unknown-length terminated streams |
+| Query string | 8192 bytes |
+| Scoring `weekNumbers` | 128 entries |
+| Trade `fromTeamIds`, `toTeamIds` | 256 entries per side |
+| Public league search `q` | 128 characters |
+| Public league search `limit` | 1–50 |
+| Public league search `offset` | 0–10000 |
+
+These are operational ceilings; domain ownership, membership, week and trade
+rules still apply. Oversized arrays/query values return 400 before domain work;
+collections are never silently truncated. No roster/draft read is paginated by
+these changes. Gateway rate quotas, trusted proxy topology and distributed
+rate enforcement remain a separate decision.
+
+Draft order updates must contain every current league member exactly once.
+Start requires a Pre-Draft league, absent/pristine `pre` state and no existing
+turns/picks. Repeated starts return 409 with `draft_start_conflict`, preserving
+picks, cursor and timers. Paused drafts use the existing resume operation.

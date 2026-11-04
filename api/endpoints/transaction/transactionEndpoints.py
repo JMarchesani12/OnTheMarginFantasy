@@ -1,3 +1,6 @@
+from sqlalchemy.exc import IntegrityError
+from werkzeug.exceptions import HTTPException
+from sqlalchemy.exc import DataError
 # endpoints/league/transactionEndpoints.py
 
 from flask import request, jsonify
@@ -45,6 +48,8 @@ class TransactionEndpoints:
             return jsonify({'message': 'League member not found'}), 404
         except ValueError as e:
             return jsonify({"error": str(e)}), 400
+        except (HTTPException, DataError, IntegrityError):
+            raise
         except Exception:
             return jsonify({'message': 'Failed to propose trade'}), 500
 
@@ -89,6 +94,8 @@ class TransactionEndpoints:
             return jsonify({'message': 'Trade not found'}), 404
         except ValueError as exc:
             return jsonify({'error': str(exc)}), 400
+        except (HTTPException, DataError, IntegrityError):
+            raise
         except Exception:
             message = 'Failed to respond to trade' if operation == 'respond' else 'Failed to cancel trade'
             return jsonify({'message': message}), 500
@@ -137,6 +144,8 @@ class TransactionEndpoints:
             return jsonify({"message": "Max swaps reached", "details": str(e)}), 400
         except ValueError as e:
             return jsonify({"message": "Free agency move rejected", "details": str(e)}), 400
+        except (HTTPException, DataError, IntegrityError):
+            raise
         except Exception:
             return jsonify({"message": "Failed to process free agency move"}), 500
 
@@ -174,6 +183,8 @@ class TransactionEndpoints:
             return jsonify({'message': 'League member not found'}), 404
         except ValueError as exc:
             return jsonify({'error': str(exc)}), 400
+        except (HTTPException, DataError, IntegrityError):
+            raise
         except Exception:
             return jsonify({'error': 'Failed to get open trades'}), 500
 
@@ -198,6 +209,8 @@ class TransactionEndpoints:
             return jsonify({'message': 'Trade not found'}), 404
         except ValueError as exc:
             return jsonify({'error': str(exc)}), 400
+        except (HTTPException, DataError, IntegrityError):
+            raise
         except Exception:
             return jsonify({'message': 'Failed to veto trade'}), 500
 
@@ -224,5 +237,7 @@ class TransactionEndpoints:
             return jsonify({'message': 'League not found'}), 404
         except ValueError as e:
             return jsonify({"error": str(e)}), 400
+        except (HTTPException, DataError, IntegrityError):
+            raise
         except Exception:
             return jsonify({"error": "Failed to get transactions"}), 500

@@ -1,4 +1,5 @@
 """Sport catalog: real SQL, public HTTP, projection and connection lifecycle."""
+from http_error_assertions import assert_error_response
 import sqlite3
 import unittest
 from contextlib import contextmanager
@@ -97,7 +98,8 @@ class SportServiceTests(unittest.TestCase):
     def test_route_hides_database_failure_and_unwinds_scope(self):
         self.db.fail = True
         response = self.client().get('/api/sports')
-        self.assertEqual((response.status_code, response.json), (500, {'message': 'Failed to get sports'}))
+        self.assertEqual(response.status_code, 500)
+        assert_error_response(self, response, {'message': 'Failed to get sports'})
         self.assertEqual((self.db.outcomes, self.db.active), (['rollback'], False))
 
     def test_service_failure_propagates_and_unwinds_scope(self):

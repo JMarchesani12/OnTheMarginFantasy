@@ -3,6 +3,7 @@
 SQLite is a disposable executor for this compatible SQL subset, not a
 Postgres/RLS substitute. Numeric-ID isolation assertions protect MOD-002 stage 1.
 """
+from http_error_assertions import assert_error_response
 import sqlite3
 import sys
 import time
@@ -113,7 +114,7 @@ class ProfileRegressionTests(unittest.TestCase):
             with self.subTest(token=cases.index(headers)):
                 response = self.client.get('/api/user/1', headers=headers)
                 self.assertEqual(response.status_code, 401)
-                self.assertEqual(set(response.json), {'error', 'requestId'})
+                self.assertEqual(set(response.json), {'error', 'message', 'requestId'})
                 self.assertEqual(response.json['error']['code'], 'auth_token_invalid')
 
     def test_preflight_cannot_execute_a_profile_update(self):
@@ -174,10 +175,10 @@ class ProfileRegressionTests(unittest.TestCase):
                     json={"displayName": "Forged", "userId": foreign, "actingUserId": foreign,
                           "uuid": subject, "id": own})
                 self.assertEqual(response.status_code, 404)
-                self.assertEqual(response.json, {"message": "User not found"})
+                assert_error_response(self, response, {"message": "User not found"})
                 foreign_read = self.client.get(f'/api/user/{foreign}', headers=headers)
                 self.assertEqual(foreign_read.status_code, 404)
-                self.assertEqual(foreign_read.json, {"message": "User not found"})
+                assert_error_response(self, foreign_read, {"message": "User not found"})
         self.assertEqual(self.db.profile(1)['displayName'], 'Alice')
         self.assertEqual(self.db.profile(2)['displayName'], 'Bob')
 
@@ -187,7 +188,7 @@ class ProfileRegressionTests(unittest.TestCase):
                 response = getattr(self.client, method)('/api/user/1', headers=headers,
                     json={"displayName": "Forbidden", "userId": 1})
                 self.assertEqual(response.status_code, status)
-                self.assertEqual(response.json, {"error": code})
+                assert_error_response(self, response, {"error": code})
         self.assertEqual(self.db.profile(1)['displayName'], 'Alice')
 
     def test_numeric_routes_reject_missing_application_identity(self):
