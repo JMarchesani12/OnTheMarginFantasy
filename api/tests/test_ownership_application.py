@@ -60,3 +60,20 @@ class FreeAgentApplicationIntegrityTests(unittest.TestCase):
         self.assertEqual(result['status'], 'PENDING_APPLY')
         self.assertEqual(self.base.state()['Transaction'][0]['toTeamIds'], '[103]')
         self.assertEqual((engine.begins, engine.connects), (1, 0))
+
+class SuppliedFreeAgentApplicationTests(unittest.TestCase):
+    setUp = FreeAgentApplicationIntegrityTests.setUp
+    pending = FreeAgentApplicationIntegrityTests.pending
+
+    def test_supplied_pending_dispatch_rolls_back_with_caller(self):
+        from endpoints.transaction.workflow_service import TransactionWorkflowService
+        from test_transaction_service import ConnectionOwner
+        self.pending([101],[103]);before=self.base.state()
+        engine=ConnectionOwner(self.db);service=TransactionWorkflowService(engine)
+        with self.assertRaisesRegex(RuntimeError,'caller failure'):
+            with engine.begin() as conn:
+                service.apply_pending_for_job(1,conn=conn)
+                self.assertEqual(self.base.state()['Transaction'][0]['status'],'COMPLETED')
+                raise RuntimeError('caller failure')
+        self.assertEqual(self.base.state(),before)
+        self.assertEqual((engine.begins,engine.connects),(1,0))

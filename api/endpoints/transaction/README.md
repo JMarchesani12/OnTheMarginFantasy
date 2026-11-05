@@ -9,3 +9,13 @@ The former TransactionModel facade is retired. Tests and tools use TransactionWo
 Preserve original role/status/deadline checks, pre/post ownership checks, row locks and query-time read predicates. Free-agent apply still uses a separate week lookup and original apply-time validation behavior; dispatcher preflight then application/re-lock remains. Caps/membership joins/swap counting, JSON/array/executemany semantics, reject-before-deadline distinction and revocation boundaries are unchanged. This extraction does not add stronger replay/revocation/atomic snapshot or correctness guarantees.
 
 [Complete native evidence](../../../docs/modernization/evidence/mod-038-transaction-complete-postgres-2026-11-02.json) covers all33 workflow operations and reruns original trade/read pilots, including native arrays/JSONB/LATERAL/executemany, rollback, late revocation and observed row-lock contention. [Ledger](../../../docs/superpowers/plans/2026-10-30-mod-038-transaction-complete-implementation.md). Original pilot report is historical; complete report supersedes its source capture.
+
+## MOD-013 current weekly integration — 2026-11-05
+
+The extraction behavior above is historical. Trade/free-agent application and
+pending dispatch now accept an optional supplied `conn`; that path never acquires
+or commits a separate connection. Trade actions acquire the existing v1 ownership
+mutex before their transaction row lock. Weekly eligibility/order and completion
+are owned by `WeeklyCompletionService`; the trusted per-command application ports
+retain their existing validation/replay/deadline contracts. They are not a substitute
+for weekly eligibility checks. See [operations](../../README.md#weekly-completion-and-retry-mod-013).

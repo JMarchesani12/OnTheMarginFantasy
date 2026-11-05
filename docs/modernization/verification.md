@@ -1648,3 +1648,32 @@ planning/statement/deferred-commit rollback/retry and prior native suites.
 [Hashed evidence](evidence/mod-012-postgres-2026-11-04.json). Independent review
 found no blocking issues; count-policy documentation corrected. Synthetic resources
 removed. No new migration, configured league mutation or application deployment.
+
+## Priority 6 MOD-013 — 2026-11-05
+
+Approved predecessor-close timing implemented with no new schema. Failure-first
+supplied score/trade/free-agent tests initially failed for missing `conn` support;
+new caller-owned paths preserve rollback without nested acquisition/commit. Native
+ACCEPT during weekly closure initially succeeded after the pending snapshot;
+trade actions now acquire v1 ownership mutex before row locks, wait, then reject
+acceptance into the closed/locked period. Score completion also locks its own week.
+Initial/gapped calendar and failure/retry regressions were observed RED → GREEN.
+
+Final `python3 api/tests/run_isolated.py`: **649/649 PASS**, exit0.
+Frontend `node --test --experimental-strip-types tests/*.test.ts`: **64/64 PASS**;
+`npm run build` and `git diff --check` pass. Native
+`python3 scripts/modernization/verify_mod013.py`: PASS on fresh marked owned
+loopback PostgreSQL using frozen schema plus kickoff/identity/week/ownership
+migrations. Actual schedule/scoring calculations and trade/free-agent commands;
+strict supplied connection guard; catch-up/no-new-score retry; first/missing/
+wrong-league/scored target boundaries and week0; score/mark/lock/ownership statement
+faults and deferred score/mark/application commit rollback; partial-command progress;
+same-league workers, independent leagues, ACCEPT and free-agent submission versus
+closure under observed lock waits. Previous full MOD010 ownership, MOD008 keys/
+calendar/scoring and complete scoring suites rerun successfully without overwriting
+historical evidence. [Current hashes/evidence](evidence/mod-013-postgres-2026-11-05.json)
+match current sources. Independent final review found no actionable issues and
+independently passed33 focused tests. Owned random test DBs and container removed.
+No configured job/data mutation, migration, scheduler, dependency, merge/push or
+application deployment. Changes left uncommitted in the audit checkout. MOD-014
+season finalization remains next; manual historical safeguards remain MOD-016.

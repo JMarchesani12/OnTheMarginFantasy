@@ -217,3 +217,33 @@ POSTs are not deduplicated. Existing partial leagues need explicit investigation
 approval derives it from memberships under the league lock. Membership is uncapped;
 the existing draft-round formula remains pending a separate fairness design.
 This change requires the updated backend; no MOD-012 SQL migration is needed.
+
+## Weekly completion and retry (MOD-013)
+
+The weekly cron delegates to `WeeklyCompletionService`. Scores, the exact week's
+completion flag, and its own/next numbered period's locks commit together. Pending
+trades/free-agent changes apply only after their assigned week's predecessor has
+successfully closed, before scoring that target. Retries also examine eligible
+pending work when no new weeks need scoring. Catch-up runs process periods in order.
+
+Each application commits independently under the shared v1 league ownership mutex.
+An application failure preserves the pending command and stops that league for the
+run; other leagues continue. Earlier successful applications remain committed and
+are skipped on retry. Trade acceptance/veto/cancellation share the mutex so they
+cannot enqueue or alter a command while weekly closure/application uses its state.
+Standalone scoring/application calls retain their existing contracts; supplied
+`conn=` calls leave commit/rollback to their caller. Manual rebuild/rescore safety
+remains MOD-016; these job guarantees do not make maintenance history-safe.
+
+The job prints a JSON report with `closed` week IDs, `applied` transaction IDs,
+`blocked` reasons and safe failure categories. CLI exit is nonzero if blocked work
+or failures remain. Correct the cause through an approved workflow and rerun the
+same job; there is no automatic cancellation, retargeting or historical repair.
+First-period pending commands (no predecessor), missing calendar periods, wrong-
+league targets and already-scored targets are retained/reported for investigation.
+Do not bypass these reports by applying ownership changes to scored periods.
+
+MOD-013 needs the updated backend/job code and existing Priority 5 guards, with no
+new migration, scheduler, queue, or dependency. No configured job was run during
+verification. [Design](../docs/superpowers/specs/2026-11-05-mod-013-design.md),
+[native evidence](../docs/modernization/evidence/mod-013-postgres-2026-11-05.json).

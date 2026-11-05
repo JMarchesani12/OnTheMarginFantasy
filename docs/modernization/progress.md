@@ -1,5 +1,13 @@
 # Modernization progress
 
+## Priority 6 MOD-013 — 2026-11-05
+
+MOD-013 complete in application/synthetic PostgreSQL scope. User approved applying pending changes after their target’s preceding week successfully closes, including retry runs with no new scoring. Scores, completion and current/next period locks now share one transaction; each pending command commits separately before its target can score. Catch-up runs preserve period order and committed progress. Failures stop the affected league while other leagues continue. Existing v1 ownership locking now includes trade actions to prevent demonstrated acceptance-versus-close races.
+
+First-period, missing-predecessor, wrong-league and already-scored pending targets remain retained/reported for investigation. CLI reports safe scoped outcomes and exits nonzero on failure/blocks; no automatic retargeting/history repair. No new migration or dependency, configured job execution, scheduler change or application deployment. Current checkout changes remain uncommitted. Manual rebuild/rescore history safety is MOD-016; next Priority6 task is remaining MOD-014 finalization.
+
+Backend **649/649**, frontend **64/64**, production build and diff checks pass. Native owned full-schema PostgreSQL verifies actual schedule/scoring/ownership commands, strict supplied connections, catch-up/no-new-score retry, week0/first/gap/history scope, statement/deferred-commit rollback and partial-command progress, same/independent league workers and trade/free-agent races. Prior full MOD010/MOD008/scoring native suites pass. Independent review found no actionable issues and independently passed33 focused tests. [Evidence](evidence/mod-013-postgres-2026-11-05.json), [plan](../superpowers/plans/2026-11-05-mod-013.md), [operations](../../api/README.md#weekly-completion-and-retry-mod-013). Disposable resources removed after verification; frozen baseline unchanged.
+
 ## Priority 5 MOD-012 — 2026-11-04
 
 MOD-012 complete in application/synthetic PostgreSQL scope. Pending request creation locks League and reuses the same request under contention. Checked/trusted/supplied approvals lock League before Request and allocate distinct orders. New leagues start at one member; approval derives numPlayers from actual membership. Membership remains uncapped and the existing round formula is preserved. Fair draft-round scaling remains an explicit policy follow-up.

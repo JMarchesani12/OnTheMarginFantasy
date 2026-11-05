@@ -325,6 +325,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 - **Acceptance / verification:** Fault injection at each stage and concurrent runners converge; failed leagues do not advance/application-skip incorrectly; no-week case follows agreed timing; one failed transaction does not silently lose remaining work; J5 synthetic replay passes.
 - **Contract impact:** Behavior: job timing/recovery yes; API: no intended; schema: only if explicit durable state proves needed.
 
+- **Completed — 2026-11-05 (application/synthetic PostgreSQL scope):** User confirmed predecessor-close timing and retries with no new scoring. WeeklyCompletionService commits score replacement/completion/period locks atomically, processes pending commands before target scoring, serializes under the existing ownership mutex, and isolates failed leagues. Pending commands retain individual durable progress. Trade acceptance/veto/cancellation join that mutex after native reproduction of acceptance during closure. First/missing predecessor and wrong-league/scored targets are retained/reported; CLI returns nonzero for failures/blocks. Backend649/649, frontend64/64, build and native full-schema failure/concurrency plus prior ownership/week/scoring suites pass. Independent review found no actionable issues. [Evidence](evidence/mod-013-postgres-2026-11-05.json), [plan](../superpowers/plans/2026-11-05-mod-013.md). No new SQL migration, configured job run or deployment. Remaining MOD-014 finalization is next; manual historical maintenance remains MOD-016.
+
 ### MOD-014 — Decouple scoring jobs from Flask and repair season finalization
 
 - **Priority / size / risk:** P1 / S–M / High.

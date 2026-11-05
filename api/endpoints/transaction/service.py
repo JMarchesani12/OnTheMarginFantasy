@@ -1,4 +1,5 @@
 """Transaction use cases and connection ownership, independent of transport."""
+from contextlib import nullcontext
 from actors import UserActor
 from utils.ownership import lock_ownership, transaction_league_hint
 from .contracts import TransactionAccessDenied, TransactionNotFound, TradeRejected
@@ -57,8 +58,8 @@ class TransactionService:
             if to_counts.get(conf_id, 0) + add > limits.get(conf_id, 999):
                 raise TradeRejected('Conference limit exceeded for receiving member')
 
-    def apply_trade_for_job(self, transaction_id: int) -> None:
-        with self.engine.begin() as conn:
+    def apply_trade_for_job(self, transaction_id: int, conn=None) -> None:
+        with (nullcontext(conn) if conn is not None else self.engine.begin()) as conn:
             league_id = transaction_league_hint(conn, transaction_id)
             if league_id is None:
                 raise TransactionNotFound('Transaction not found')

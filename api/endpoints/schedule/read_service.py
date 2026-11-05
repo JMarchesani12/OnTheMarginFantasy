@@ -4,6 +4,7 @@ Internal trusted capabilities preserve existing caller policy; transport/job wir
 is migrated separately. No provider URL/client or configured engine is needed.
 """
 import re
+from contextlib import nullcontext
 from typing import Any, Dict, List, Optional
 from rules.leagueRules import resolve_rules, adjust_margin, rule_summary
 from rules.tournamentRules import score_margin
@@ -30,17 +31,18 @@ class ScheduleReadService(ScheduleCalendarService):
         member_id: int,
         week_number: int,
         resolved_rules: Optional[dict] = None,
+        conn=None,
     ) -> list[dict]:
         """
         Return all games that count for this member in this week, with memberPointDiff
         already computed (everyone-vs-everyone, single-owner perspective).
         """
         if resolved_rules is None:
-            league = self._get_league(league_id)
+            league = self._get_league(league_id, **({'conn': conn} if conn is not None else {}))
             resolved_rules = resolve_rules(league['sport'], league.get('settings'))
         
 
-        with self.db.begin() as conn:
+        with (nullcontext(conn) if conn is not None else self.db.begin()) as conn:
             rows = self.read_repository.member_games(conn, {
                     "leagueId": league_id,
                     "memberId": member_id,
@@ -81,6 +83,7 @@ class ScheduleReadService(ScheduleCalendarService):
         member_a_id: int,
         member_b_id: int,
         week_number: int,
+        conn=None,
     ) -> list[dict]:
         """
         All games in this week where a team owned by member A played
@@ -88,7 +91,7 @@ class ScheduleReadService(ScheduleCalendarService):
         """
         
 
-        with self.db.begin() as conn:
+        with (nullcontext(conn) if conn is not None else self.db.begin()) as conn:
             rows = self.read_repository.head_to_head_games(conn, {
                     "leagueId": league_id,
                     "weekNumber": week_number,

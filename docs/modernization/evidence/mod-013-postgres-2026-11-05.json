@@ -1,0 +1,235 @@
+{
+  "result": "PASS",
+  "scope": "Owned marked loopback PostgreSQL only; no configured jobs or leagues",
+  "tests": {
+    "actual_scoring_catchup_replay": "PASS",
+    "no_new_scoring_retry": "PASS",
+    "scored_target_refusal": "PASS",
+    "eligibility_boundaries": [
+      "first_period",
+      "missing_predecessor",
+      "wrong_league_target",
+      "week_zero"
+    ],
+    "partial_command_progress_retry": "PASS",
+    "statement_faults": [
+      "INSERT INTO \"WeeklyTeamScore\"",
+      "SET \"scoringComplete\"",
+      "SET \"isLocked\"",
+      "INSERT INTO \"LeagueTeamSlot\""
+    ],
+    "deferred_score_mark_apply_failures": "PASS",
+    "trade_and_free_agent": "PASS",
+    "races": {
+      "same_league_workers": {
+        "observed_lock_wait": true,
+        "outcomes": {
+          "first": "ok",
+          "second": "ok"
+        }
+      },
+      "accept_during_close": {
+        "observed_lock_wait": true,
+        "outcomes": {
+          "second": "rejected",
+          "first": "ok"
+        }
+      },
+      "independent_league": {
+        "observed_lock_wait": false,
+        "outcomes": {
+          "second": "ok",
+          "first": "ok"
+        }
+      },
+      "free_agent_submission_during_close": {
+        "observed_lock_wait": true,
+        "outcomes": {
+          "second": "ok",
+          "first": "ok"
+        }
+      }
+    },
+    "prior_ownership": {
+      "schema_empty_adjacent_future_exclusion_check_fk": "PASS",
+      "dirty_refusal_and_shape_replay": "PASS",
+      "application_statement_commit_rollback": "PASS",
+      "cross_command_races": [
+        {
+          "observed_lock_wait": true,
+          "outcomes": {
+            "first": "ok",
+            "second": "rejected"
+          },
+          "mode": "manual",
+          "database_guard": false
+        },
+        {
+          "observed_lock_wait": true,
+          "outcomes": {
+            "first": "ok",
+            "second": "rejected"
+          },
+          "mode": "live",
+          "database_guard": false
+        },
+        {
+          "observed_lock_wait": true,
+          "outcomes": {
+            "first": "ok",
+            "second": "rejected"
+          },
+          "mode": "timeout",
+          "database_guard": false
+        },
+        {
+          "observed_lock_wait": true,
+          "outcomes": {
+            "first": "ok",
+            "second": "rejected"
+          },
+          "mode": "different_trades",
+          "database_guard": false
+        },
+        {
+          "observed_lock_wait": true,
+          "outcomes": {
+            "first": "ok",
+            "second": "rejected"
+          },
+          "mode": "cap",
+          "database_guard": false
+        },
+        {
+          "observed_lock_wait": false,
+          "outcomes": {
+            "second": "ok",
+            "first": "ok"
+          },
+          "mode": "independent_league",
+          "database_guard": false
+        },
+        {
+          "observed_lock_wait": true,
+          "outcomes": {
+            "first": "ok",
+            "second": "rejected"
+          },
+          "mode": "manual",
+          "database_guard": true
+        },
+        {
+          "observed_lock_wait": true,
+          "outcomes": {
+            "first": "ok",
+            "second": "rejected"
+          },
+          "mode": "live",
+          "database_guard": true
+        },
+        {
+          "observed_lock_wait": true,
+          "outcomes": {
+            "first": "ok",
+            "second": "rejected"
+          },
+          "mode": "timeout",
+          "database_guard": true
+        },
+        {
+          "observed_lock_wait": true,
+          "outcomes": {
+            "first": "ok",
+            "second": "rejected"
+          },
+          "mode": "different_trades",
+          "database_guard": true
+        },
+        {
+          "observed_lock_wait": true,
+          "outcomes": {
+            "first": "ok",
+            "second": "rejected"
+          },
+          "mode": "cap",
+          "database_guard": true
+        },
+        {
+          "observed_lock_wait": false,
+          "outcomes": {
+            "second": "ok",
+            "first": "ok"
+          },
+          "mode": "independent_league",
+          "database_guard": true
+        }
+      ],
+      "direct_exclusion_race": {
+        "observed_lock_wait": true,
+        "outcomes": {
+          "first": "ok",
+          "second": "database_error_23P01"
+        }
+      }
+    },
+    "prior_week_keys": {
+      "dirty_aggregate_and_atomic_refusal": "PASS",
+      "upgrade_replay_and_independent_keys_fks": "PASS",
+      "direct_unique_cross_league_and_cascade": "PASS",
+      "whole_plan_statement_commit_rollback_retry": "PASS",
+      "races": [
+        {
+          "operation": "ensure",
+          "preexisting_scores": false,
+          "observed_lock_wait": true,
+          "converged": true
+        },
+        {
+          "operation": "score",
+          "preexisting_scores": false,
+          "observed_lock_wait": true,
+          "converged": true
+        },
+        {
+          "operation": "score",
+          "preexisting_scores": true,
+          "observed_lock_wait": true,
+          "converged": true
+        }
+      ]
+    },
+    "prior_scoring": {
+      "atomic_replacement_statement_and_commit_rollback": "PASS",
+      "scoped_repeat_convergence_week_zero": "PASS",
+      "weekly_tiebreaks_and_waterfall": "PASS",
+      "all_season_tiebreak_query_families": "PASS",
+      "all_bonus_families_and_primary_phase_filter": "PASS",
+      "actor_standings_and_revocation": "PASS",
+      "empty_phase_facts": "PASS",
+      "split_and_future_final_period_guards": "PASS"
+    }
+  },
+  "sha256": {
+    "api/utils/ownership.py": "79016d10aeccb4efdd2b66dc61ea6f38a295eb2218929f15fb1da6edf06adce5",
+    "api/endpoints/scoring/repository.py": "e91972dc49673520c439061b0cff92d3b0a42e70b609d254da482e3f0e7a4232",
+    "api/endpoints/scoring/rules.py": "0887d100552042048e0b783e3b79bb1c9b1acae095a36b1176b3eeb1035da348",
+    "api/endpoints/schedule/read_repository.py": "6ea5187661ffbe637ea3b27ead6edc7da1e6ce4b4e9e9c7b2ade897065578549",
+    "api/endpoints/schedule/calendar_service.py": "7a127e10318c9d9aa0366027ff910f6d37be662ad5e7dfe7fde310678dbcd1c1",
+    "api/migrations/20261030_game_kickoff_tbd.sql": "4fa4d40cf16cf0600a37aec2f915e31efe024c294fe5c5a047d32ad599cf33d4",
+    "api/migrations/20261104_user_identity_unique.sql": "64631ad06193c79bded2e52849e0264b281468ea098e3dfd72d9def01f3dab88",
+    "api/migrations/20261104_week_score_identity.sql": "b6a040b0d2599e32e4d87d7c59c30aecbbaa22cca7d79c07d988279a36c2e244",
+    "api/migrations/20261104_ownership_integrity.sql": "fb3b6c5dd445a6e8da5dd67784d882032a698917e7ac1d9eebb1167120480116",
+    "api/endpoints/scoring/weekly_service.py": "a5b0975d5d754143ca864389d43971837c4666617e6718178a2ba5a7c235b0f4",
+    "api/endpoints/scoring/weekly_repository.py": "698d55af721f0ea7acbdc5e3e45b8f5cbbeb4066abc7cf6730cc20b61b25ce32",
+    "api/endpoints/scoring/service.py": "1825270c251fdb703a04f63cf7d1e510f25478eaca21c9a697eb6c8bb70dcfdd",
+    "api/endpoints/schedule/read_service.py": "d71c97ceabbd3c607b428390cbd163d7dd19fc17fc0e6d09f4ad53b203190a6a",
+    "api/endpoints/transaction/service.py": "89e79379f38436867e2c5f397db014abd8b01775b5466986edcd05119a8ec89d",
+    "api/endpoints/transaction/workflow_service.py": "2f6b57c3ef43dc1a837979d09a7d3eb5a3380e3b140a1778cea69bba08ddd258",
+    "api/cronJobs/cronComputeWeeklyScores.py": "8fedba75011d699eff6a77c4e82b38baf851f01acd62cc9aff342d871340c5ee",
+    "scripts/modernization/verify_mod010.py": "611665947aeb54b0fd67e5649805923a3ab7c596a04c3365e413e9897b5211c4",
+    "scripts/modernization/verify_mod008.py": "fe70b0cf451720915c861fb3eabb155ec62b67e7faad3b493dd3ebe6d800f488",
+    "scripts/modernization/verify_scoring_complete.py": "dbb4aeaa47836182ed02746c740dd0feafb5380dbe3b8fcb0a31996343381aef",
+    "scripts/modernization/verify_mod013.py": "5898cb76cd234d0b34e6989ee6bc744b97090866bb008b396a8d6e236385c3a6",
+    "db/baselines/20261029/001_schema.sql": "7fe1c17223dd2cf3ebbfdb9d2ca318d4f7ad24f9a6578309c40aad3cfb58a109"
+  }
+}

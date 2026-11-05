@@ -59,3 +59,32 @@ class WeeklyScoreAtomicityTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.model.compute_weekly_scores_for_job(33, 0)
         self.assertEqual(self.rows(), before)
+
+class SuppliedWeeklyScoreTests(unittest.TestCase):
+    setUp = WeeklyScoreAtomicityTests.setUp
+    rows = WeeklyScoreAtomicityTests.rows
+
+    def test_supplied_connection_reads_and_writes_roll_back_with_caller(self):
+        from endpoints.scoring.service import ScoringService
+        database=self.db
+        class Schedule:
+            def get_member_games_for_week(self, **kwargs):
+                self.assert_connection(kwargs.pop('conn'))
+                return [{'memberPointDiff':kwargs['member_id']}]
+            def assert_connection(self, conn):
+                if conn is not database: raise AssertionError('Wrong scoring connection')
+        class Scoring(ScoringService):
+            def _get_week_by_number(self, league_id, week_number, conn=None):
+                if conn is not database: raise AssertionError('Detached metadata')
+                return {'id':100,'weekNumber':0}
+            def _get_league_members(self, league_id, conn=None):
+                if conn is not database: raise AssertionError('Detached members')
+                return [{'id':1,'teamName':'A'},{'id':2,'teamName':'B'}]
+        scoring=Scoring(database,Schedule())
+        before=self.rows()
+        with self.assertRaisesRegex(RuntimeError,'caller failure'):
+            with database.begin() as conn:
+                scoring.compute_weekly_scores_for_job(33,0,conn=conn)
+                self.assertNotEqual(self.rows(),before)
+                raise RuntimeError('caller failure')
+        self.assertEqual(self.rows(),before)

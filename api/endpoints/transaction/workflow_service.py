@@ -186,8 +186,8 @@ class TransactionWorkflowService:
             return [int(x) for x in json.loads(raw)]
         return [int(x) for x in list(raw)]
 
-    def apply_free_agent_transaction(self, transaction_id: int) -> None:
-        with self.db.begin() as conn:
+    def apply_free_agent_transaction(self, transaction_id: int, conn=None) -> None:
+        with (nullcontext(conn) if conn is not None else self.db.begin()) as conn:
             league_id = transaction_league_hint(conn, transaction_id)
             if league_id is None:
                 raise ValueError('Transaction not found')
@@ -251,8 +251,9 @@ class TransactionWorkflowService:
 
             self.workflow_repository.complete_free_agent(conn, {"status": self.STATUS_COMPLETED, "id": transaction_id})
 
-    def apply_pending_transaction(self, transaction_id: int) -> None:
-        with self.db.connect() as conn:
+    def apply_pending_transaction(self, transaction_id: int, conn=None) -> None:
+        supplied = conn is not None
+        with (nullcontext(conn) if conn is not None else self.db.connect()) as conn:
             tx = self.workflow_repository.pending_transaction(conn, {"id": transaction_id}).fetchone()
 
         if not tx:
@@ -263,9 +264,9 @@ class TransactionWorkflowService:
             raise ValueError("Transaction is not pending apply")
 
         if txm["type"] == self.TYPE_TRADE:
-            self.apply_trade(transaction_id)
+            self.apply_trade(transaction_id, **({'conn': conn} if supplied else {}))
         elif txm["type"] == self.TYPE_FREE_AGENT:
-            self.apply_free_agent_transaction(transaction_id)
+            self.apply_free_agent_transaction(transaction_id, **({'conn': conn} if supplied else {}))
         else:
             raise ValueError(f"Unsupported transaction type: {txm['type']}")
 
@@ -395,7 +396,7 @@ class TransactionWorkflowService:
 
         HTTP must supply both verified actor and URL league. Trusted model calls
         omit both. Role predicates come only from this fixed server-side mapping.
-        Existing transaction row locking is retained; no new concurrency guarantee.
+        Ownership mutex precedes transaction row locking and weekly closure.
         """
         if (league_id is None) != (acting_user_id is None):
             raise ValueError('league_id and acting_user_id must be supplied together')
@@ -409,6 +410,10 @@ class TransactionWorkflowService:
         with self.db.begin() as conn:
             if interactive:
                 self.workflow_repository.assert_owned_member(conn, league_id, member_id, acting_user_id)
+            # Acceptance/veto/cancellation must not race weekly closure or apply.
+            actual_league = transaction_league_hint(conn, transaction_id)
+            if actual_league is not None:
+                lock_ownership(conn, actual_league)
             tx = self.workflow_repository.trade_for_action(conn, params, role).fetchone()
             if tx is None:
                 if interactive:
@@ -479,10 +484,11 @@ class TransactionWorkflowService:
     def apply_trade(
         self,
         transaction_id: int,
+        conn=None,
     ):
         # Compatibility boundary for the dispatcher, jobs and existing callers.
         try:
-            return self._transaction_service.apply_trade_for_job(transaction_id)
+            return self._transaction_service.apply_trade_for_job(transaction_id, **({'conn': conn} if conn is not None else {}))
         except (TradeRejected, TransactionNotFound) as exc:
             raise ValueError(str(exc)) from exc
 
@@ -1039,8 +1045,8 @@ class TransactionWorkflowService:
     def open_trades_for_job(self, league_id, member_id):
         return self.get_open_trade_transactions_for_member(league_id, member_id)
 
-    def apply_pending_for_job(self, transaction_id):
-        return self.apply_pending_transaction(transaction_id)
+    def apply_pending_for_job(self, transaction_id, conn=None):
+        return self.apply_pending_transaction(transaction_id, **({'conn': conn} if conn is not None else {}))
 
     def apply_free_agent_for_job(self, transaction_id):
         return self.apply_free_agent_transaction(transaction_id)
