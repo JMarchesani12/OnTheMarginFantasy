@@ -1677,3 +1677,30 @@ independently passed33 focused tests. Owned random test DBs and container remove
 No configured job/data mutation, migration, scheduler, dependency, merge/push or
 application deployment. Changes left uncommitted in the audit checkout. MOD-014
 season finalization remains next; manual historical safeguards remain MOD-016.
+
+## Priority 6 MOD-014 — 2026-11-05
+
+Failure-first supplied standings rejected conn; orchestration tests failed for the
+missing finalization service and old cron's missing outcome. Implemented supplied
+season reads, atomic readiness/standings/status/flag service, safe CLI outside Flask.
+Native previous scoring tests exposed a closed read connection forwarded on the
+standalone path; active-scope regression observed RED → GREEN after separating
+caller conn from local read_conn variables. Independent review's P2 discovery-error
+report finding fixed with acquisition/query/commit and CLI discovery/startup tests
+RED → GREEN; no SQL/payload appears on stdout/stderr and CLI exits1 on failure.
+
+Final isolated backend **663/663 PASS**, frontend **64/64 PASS**, production build
+and diff checks pass. Owned marked full-schema PostgreSQL plus kickoff/identity/week/
+ownership migrations verifies real bonus/all season-tiebreak supplied reads, exact
+scope/no score or roster writes, inclusive end-day and lifecycle/readiness guards,
+empty/missing/future/pending boundaries, statement/deferred league/season commit
+rollback/retry, detected concurrent matching-league insertion refusal, competing
+finalizer replay, independent seasons and weekly/application mutex waits. Prior
+MOD013 weekly and complete-scoring native suites pass without rewriting historical
+evidence. [Hashed evidence](evidence/mod-014-postgres-2026-11-05.json) matches current
+sources. Reviewer independently passed12 focused tests before final reporting fix;
+post-fix full663-test suite passes. No other material review findings.
+
+No configured job, new migration, dependency, scheduler, merge/push or deployment.
+Owned random DBs/container removed; current checkout uncommitted. Marker validates
+the scoped league set and does not prevent future admin/provider/history changes.

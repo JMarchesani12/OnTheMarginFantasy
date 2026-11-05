@@ -247,3 +247,35 @@ MOD-013 needs the updated backend/job code and existing Priority 5 guards, with 
 new migration, scheduler, queue, or dependency. No configured job was run during
 verification. [Design](../docs/superpowers/specs/2026-11-05-mod-013-design.md),
 [native evidence](../docs/modernization/evidence/mod-013-postgres-2026-11-05.json).
+
+## Atomic season finalization (MOD-014)
+
+The final-scoreboard cron delegates to `SeasonFinalizationService`. A sport-season
+is eligible only after its inclusive `seasonEnd` date has passed in UTC. Every
+matching league, including lifecycle `Completed` leagues, needs a nonempty,
+contiguous calendar with ended/completed periods, no `PENDING_APPLY` commands,
+and valid nonempty standings covering its current membership. Empty season scopes
+or incomplete Pre-Draft leagues block finalization; there is no implicit exemption.
+
+One transaction validates all scoped leagues and commits their completion updates
+and `SportSeason.seasonFinalized` together. Season-row locking precedes sorted v1
+league ownership mutexes and row locks, serializing competing finalizers and weekly
+work. The supplied `conn=` path through trusted season standings and all bonus/
+tiebreak helpers owns no separate connection or commit. Standalone/HTTP standings
+contracts and formulas remain; bonuses/standings are computed reads, not snapshots.
+
+The CLI prints `finalized`, `skipped`, `blocked` and `failures` and exits nonzero for
+blocks/failures. Discovery/startup errors receive category-only reports with null
+`sportSeasonId` and a `discovery`/`job` stage; SQL/payload/exception messages are not
+printed. A failed season rolls back this run's updates; other seasons continue.
+Pre-existing lifecycle completion statuses remain as they were. Correct the cause
+and rerun: a successfully finalized season skips, an unfinished season revalidates.
+Run weekly recovery first for incomplete periods/pending applications. Finalization
+does not apply/cancel/retarget commands or automatically resolve PROPOSED trades.
+
+The marker records validation of the scoped league set, not an immutable seal.
+Detected concurrent scope changes refuse completion; future administrative/provider/
+historical changes are not prevented. Historical snapshot/maintenance policy remains
+MOD-015/016. No new migration, queue or dependency; no configured job ran during
+verification. [Design](../docs/superpowers/specs/2026-11-05-mod-014-design.md),
+[native evidence](../docs/modernization/evidence/mod-014-postgres-2026-11-05.json).

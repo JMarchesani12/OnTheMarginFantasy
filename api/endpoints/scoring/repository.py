@@ -1,4 +1,4 @@
-"""Scoring read persistence on caller-supplied connections."""
+"""Scoring SQL on caller-supplied connections; season standings/bonuses are computed reads."""
 from sqlalchemy import bindparam, text
 from utils.authorization import league_read_scope
 

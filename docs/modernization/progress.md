@@ -1,5 +1,13 @@
 # Modernization progress
 
+## Priority 6 MOD-014 — 2026-11-05
+
+MOD-014 complete in application/synthetic PostgreSQL scope. Approved atomic finalization now validates every scoped league before committing exact league completion updates and the season flag together. Requires inclusive seasonEnd date passed in UTC, nonempty ended/completed calendars, no PENDING_APPLY and valid finite standings covering current members. Lifecycle Completed is not proof of finalization. Season-first/sorted ownership/row locking serializes competitors and weekly work; failure rolls back that season while others continue. Bonus/standings computation and HTTP responses remain unchanged, with supplied-connection composition through every season helper.
+
+Backend **663/663**, frontend **64/64**, production build and diff checks pass. Native current full-schema PostgreSQL proves actual bonuses/all tiebreaks with strict supplied connections, readiness/date/scope/replay boundaries, detected concurrent league insertion, statement/deferred-commit rollback/retry, concurrent/independent finalizers and weekly/transaction lock waits; previous weekly/full-scoring suites pass. Native prior-scoring tests caught a standalone closed-connection regression, fixed with an isolated RED→GREEN case. Independent review found one safe-reporting gap in discovery failures; acquisition/query/commit and CLI discovery/startup regressions now pass RED→GREEN, with category-only reports and nonzero exit. [Evidence](evidence/mod-014-postgres-2026-11-05.json), [plan](../superpowers/plans/2026-11-05-mod-014.md), [operations](../../api/README.md#atomic-season-finalization-mod-014).
+
+No new migration/dependency, configured job execution, scheduler change or deployment. Current changes remain uncommitted. Owned synthetic databases/container removed after verification; frozen baseline unchanged. Finalized is a scoped validation marker, not a seal against future administrative/provider/history changes; empty/incomplete scopes stay blocked. Next Priority6 task is MOD-015 seasonal membership/consistency, subject to its historical-policy decision; MOD-016/023/024 also remain.
+
 ## Priority 6 MOD-013 — 2026-11-05
 
 MOD-013 complete in application/synthetic PostgreSQL scope. User approved applying pending changes after their target’s preceding week successfully closes, including retry runs with no new scoring. Scores, completion and current/next period locks now share one transaction; each pending command commits separately before its target can score. Catch-up runs preserve period order and committed progress. Failures stop the affected league while other leagues continue. Existing v1 ownership locking now includes trade actions to prevent demonstrated acceptance-versus-close races.

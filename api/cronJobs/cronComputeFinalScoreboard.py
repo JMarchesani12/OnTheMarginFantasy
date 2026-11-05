@@ -1,107 +1,30 @@
-import os
-from datetime import datetime, timezone
-
-from sqlalchemy import text
-
+"""Configured CLI adapter; season validation/completion lives outside HTTP."""
+import json
 from endpoints.schedule.read_service import ScheduleReadService
 from endpoints.scoring.service import ScoringService
+from endpoints.scoring.finalization_service import SeasonFinalizationService
 
 
 def build_scoring(engine):
     schedule_model = ScheduleReadService(engine)
-    scoring = ScoringService(engine, schedule_model)
-    return scoring
+    return ScoringService(engine, schedule_model)
 
 
 def main(engine=None):
-    if engine is None:
-        from runtime import configured_engine
-        engine = configured_engine()
-    scoring = build_scoring(engine)
-    today = datetime.now(timezone.utc).date()
-
-    # 1. Find SportSeasons whose seasonEnd has passed,
-    #    and that we haven't finalized yet.
-    #
-    # You may want a flag on SportSeason or League, e.g. "seasonFinalized".
-    # Here I’ll assume a boolean "seasonFinalized" on SportSeason.
-    with engine.begin() as conn:
-        sport_seasons = conn.execute(
-            text(
-                """
-                SELECT
-                    ss.id          AS "sportSeasonId",
-                    ss."sportId"   AS "sportId",
-                    ss."seasonYear" AS "seasonYear"
-                FROM "SportSeason" ss
-                WHERE ss."seasonEnd" <= :today
-                  AND COALESCE(ss."seasonFinalized", FALSE) = FALSE
-                """
-            ),
-            {"today": today},
-        ).fetchall()
-
-    if not sport_seasons:
-        print("No SportSeasons ready for finalization.")
-        return
-
-    for ss in sport_seasons:
-        sport_season_id = int(ss._mapping["sportSeasonId"])
-        sport_id = int(ss._mapping["sportId"])
-        season_year = int(ss._mapping["seasonYear"])
-
-        print(
-            f"Finalizing SportSeason {sport_season_id} "
-            f"(sportId={sport_id}, seasonYear={season_year})"
-        )
-
-        # 2. Find all leagues that belong to this sport + seasonYear
-        with engine.begin() as conn:
-            leagues = conn.execute(
-                text(
-                    """
-                    SELECT l.id AS "leagueId"
-                    FROM "League" l
-                    WHERE l."sport" = :sport_id
-                      AND l."seasonYear" = :season_year
-                    """
-                ),
-                {"sport_id": sport_id, "season_year": season_year},
-            ).fetchall()
-
-        for row in leagues:
-            league_id = int(row._mapping["leagueId"])
-            print(f"  Computing end-of-year standings for league {league_id}")
-            scoring.get_season_standings_for_job(league_id)
-            
-            with engine.begin() as conn:
-                conn.execute(
-                    text(
-                        """
-                        UPDATE "League"
-                        SET status = 'Completed',
-                            "updatedAt" = now()
-                        WHERE id = :league_id
-                        """
-                    ),
-                    {"league_id": league_id},
-                )
-
-        # 3. Mark SportSeason as finalized
-        with engine.begin() as conn:
-            conn.execute(
-                text(
-                    """
-                    UPDATE "SportSeason"
-                       SET "seasonFinalized" = TRUE
-                     WHERE id = :sport_season_id
-                    """
-                ),
-                {"sport_season_id": sport_season_id},
-            )
-
-    print("Season finalization complete.")
+    try:
+        if engine is None:
+            from runtime import configured_engine
+            engine = configured_engine()
+        report = SeasonFinalizationService(engine, build_scoring(engine)).run()
+    except Exception as exc:
+        report = {'finalized': [], 'skipped': [], 'blocked': [], 'failures': [
+            {'sportSeasonId': None, 'stage': 'job', 'category': type(exc).__name__},
+        ]}
+    print(json.dumps(report, sort_keys=True))
+    return report
 
 
 if __name__ == "__main__":
-    main()
+    outcome = main()
+    if outcome['failures'] or outcome['blocked']:
+        raise SystemExit(1)

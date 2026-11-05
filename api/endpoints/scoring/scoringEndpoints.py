@@ -1,7 +1,7 @@
 from sqlalchemy.exc import IntegrityError
 from werkzeug.exceptions import HTTPException
 from sqlalchemy.exc import DataError
-"""HTTP scoring adapters; trusted jobs call the transport-independent model."""
+"""HTTP scoring adapters; trusted jobs call transport-independent services."""
 from flask import jsonify, request
 from authenticatedPrincipal import PrincipalResolutionError, resolve_authenticated_principal
 from utils.requestValidation import integer_list_field
