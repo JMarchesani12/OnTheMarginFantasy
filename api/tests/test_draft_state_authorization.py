@@ -66,6 +66,7 @@ class DraftStateAuthorizationTests(unittest.TestCase):
                 (10, 2, '{"draft":{"type":"snake","rounds":2}}', 2026, 1, true),
                 (20, 1, '{"draft":{"type":"linear","rounds":2}}', 2026, 2, false),
                 (30, 1, '{"draft":{"privateMarker":"hidden"}}', 2026, 1, false);
+            ALTER TABLE "League" ADD COLUMN sport INTEGER DEFAULT 1;
             CREATE TABLE "LeagueMember" (id INTEGER PRIMARY KEY, "leagueId" INTEGER,
                 "userId" INTEGER, "teamName" TEXT, "draftOrder" INTEGER);
             INSERT INTO "LeagueMember" VALUES

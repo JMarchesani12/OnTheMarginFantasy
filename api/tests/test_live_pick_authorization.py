@@ -48,6 +48,7 @@ class LivePickAuthorizationTests(unittest.TestCase):
             UPDATE "DraftState" SET status = 'live' WHERE "leagueId" = 20;
             ALTER TABLE "SportConference" ADD COLUMN "maxTeamsPerOwner" INTEGER DEFAULT 2;
             INSERT INTO "SportTeam" VALUES (102, 1, 'Available Team');
+            INSERT INTO "ConferenceMembership" VALUES (102,1,2026,501);
             ALTER TABLE "DraftPick" RENAME TO old_pick;
             CREATE TABLE "DraftPick" (id INTEGER PRIMARY KEY AUTOINCREMENT, "leagueId" INTEGER,
                 "createdAt" TEXT DEFAULT '2026-10-28T12:00:00Z', "overallPickNumber" INTEGER,

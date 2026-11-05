@@ -136,15 +136,9 @@ const LeagueDraftPage = () => {
   const initialSnapshotLoadedRef = useRef(false);
   const resolveConferenceName = useCallback(
     (conferenceName: string | null) => {
-      if (conferenceName) {
-        return conferenceName;
-      }
-      if (conferenceLimits.has("Independent")) {
-        return "Independent";
-      }
-      return "Unassigned";
+      return conferenceName?.trim() || "Conference unavailable";
     },
-    [conferenceLimits]
+    []
   );
 
   const isBrowser = typeof window !== "undefined";
@@ -1061,7 +1055,7 @@ const LeagueDraftPage = () => {
               groupDraftedTeams(draftSummaryPicks, draftedTeamsView).map((group) => (
                 <section key={group.label} aria-label={group.label}>
                   <h3>{group.label}{draftedTeamsView === "conference" && (
-                    <span className="draft-page__conference-count"> · {conferencePickCountLabel(resolveConferenceName(group.label === "Independent" ? null : group.label))}</span>
+                    <span className="draft-page__conference-count"> · {conferencePickCountLabel(resolveConferenceName(group.label))}</span>
                   )}</h3>
                   <ul className="draft-page__drafted-picks">
                     {group.picks.map((pick) => (

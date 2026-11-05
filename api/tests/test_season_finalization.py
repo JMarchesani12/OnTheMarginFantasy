@@ -28,8 +28,6 @@ class SeasonFinalizationTests(unittest.TestCase):
         self.fixture=scoring_fixture.ScoringAuthorizationTests();self.fixture.setUp();self.addCleanup(self.fixture.doCleanups)
         self.db=self.fixture.db
         self.db.connection.executescript('''
-            ALTER TABLE League ADD COLUMN sport INTEGER DEFAULT 1;
-            ALTER TABLE League ADD COLUMN seasonYear INTEGER DEFAULT 2026;
             ALTER TABLE League ADD COLUMN status TEXT DEFAULT 'In-Season';
             ALTER TABLE League ADD COLUMN updatedAt TEXT;
             UPDATE League SET sport=2 WHERE id=30;

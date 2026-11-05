@@ -31,7 +31,6 @@ class AvailableAuthorizationTests(unittest.TestCase):
     def setUp(self):
         member_roster_tests.RosterReadTests.setUp(self)
         self.db.connection.executescript('''
-            ALTER TABLE League ADD COLUMN sport INTEGER DEFAULT 1;
             ALTER TABLE League ADD COLUMN isDiscoverable BOOLEAN DEFAULT true;
             ALTER TABLE SportTeam ADD COLUMN schoolId INTEGER DEFAULT 1;
             INSERT INTO SportTeam VALUES (102,'Available',1,1,'free',2),

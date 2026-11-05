@@ -1,3 +1,4 @@
+from utils.conference_membership import require_member_roster_mappings
 """Draft allocation and timeout policy, owning each write transaction.
 
 Interactive callers use pick_live(UserActor, ...); worker/trusted callers use
@@ -345,7 +346,7 @@ class DraftPickService:
 
                 on_clock_member_id = int(turn_row._mapping["memberId"])
 
-                # Pick truly random by conference-bucket (plus Independent bucket), retrying buckets as needed
+                # Pick truly random by conference-bucket (mapped conferences only), retrying buckets as needed
                 sport_team_id = self._choose_random_team_for_auto_pick(
                     conn=conn,
                     league_id=league_id,
@@ -386,7 +387,7 @@ class DraftPickService:
         """
         Returns:
           { sportConferenceId, conferenceName, maxTeamsPerOwner }
-        or None if the team has no conference membership (Independent).
+        or None when conference configuration is unavailable.
         """
 
         row = self.pick_repository.conference_info(conn, {"leagueId": league_id, "sportTeamId": sport_team_id}).fetchone()
@@ -402,7 +403,7 @@ class DraftPickService:
     ) -> int:
         """
         Counts how many teams this member owns (for the given week) in this sportConferenceId.
-        Uses DISTINCT to avoid double counting if ConferenceMembership has duplicates.
+        Uses the effective league-season membership.
         """
 
         row = self.pick_repository.member_conference_count(conn, {
@@ -426,13 +427,12 @@ class DraftPickService:
         Raises ValueError if the member has already hit maxTeamsPerOwner
         for the conference of sport_team_id.
 
-        Policy for teams with no conference membership:
-          - allowed (treated as Independent).
+        Missing conference mapping is a configuration error.
         """
+        require_member_roster_mappings(conn, league_id, [member_id], acquired_week, [sport_team_id])
         conf = self._get_conference_info_for_team(conn, league_id, sport_team_id)
         if conf is None:
-            # Independent / no membership: allow
-            return
+            raise ValueError('Conference configuration unavailable for team')
 
         max_allowed = int(conf["maxTeamsPerOwner"])
         if max_allowed <= 0:
@@ -577,15 +577,6 @@ class DraftPickService:
         return [int(r._mapping["id"]) for r in rows]
 
 
-    def _random_choice_with_independent_bucket(self, sport_conference_ids: List[int]) -> Optional[int]:
-        """
-        Option A: choose a random conference uniformly.
-        Independent teams are included as an extra bucket (None) with equal probability.
-        """
-        buckets: List[Optional[int]] = [None] + sport_conference_ids  # None = Independent
-        return secrets.choice(buckets)
-
-
     def _count_owned_in_conference(
         self,
         conn,
@@ -629,23 +620,6 @@ class DraftPickService:
         return int(row._mapping["sportTeamId"]) if row else None
 
 
-    def _pick_random_available_independent_team(
-        self,
-        conn,
-        league_id: int,
-        sport_id: int,
-        week: int,
-    ) -> Optional[int]:
-        """
-        Independent = team in this sport that has NO ConferenceMembership row.
-        NOTE: This assumes SportTeam has a column "sportId".
-        If your column is named differently, update this query.
-        """
-        row = self.pick_repository.random_independent_team(conn, {"leagueId": league_id, "sportId": sport_id, "week": week}).fetchone()
-
-        return int(row._mapping["sportTeamId"]) if row else None
-
-
     def _choose_random_team_for_auto_pick(
         self,
         conn,
@@ -654,26 +628,17 @@ class DraftPickService:
         week: int,
     ) -> Optional[int]:
         """
-        Option A (uniform by conference bucket, plus Independent bucket):
-        - Choose a random bucket: one SportConference OR Independent
+        Option A (uniform by conference bucket, mapped conferences only):
+        - Choose a random bucket: one mapped SportConference
         - If bucket yields no valid teams, remove it and retry
         - Conference bucket must also satisfy maxTeamsPerOwner
         """
         sport_id = self._get_league_sport_id(conn, league_id)
         conference_ids = self._list_sport_conference_ids_for_sport(conn, sport_id)
 
-        # Buckets: None = Independent, plus each SportConference id
-        remaining: List[Optional[int]] = [None] + conference_ids
-
+        remaining = conference_ids[:]
         while remaining:
             bucket = secrets.choice(remaining)
-
-            if bucket is None:
-                team_id = self._pick_random_available_independent_team(conn, league_id, sport_id, week)
-                if team_id is not None:
-                    return team_id
-                remaining.remove(bucket)
-                continue
 
             # Conference bucket: enforce cap first
             cap = self._get_conference_cap(conn, bucket)
@@ -726,6 +691,8 @@ class DraftPickService:
         if expected_member_id != member_id:
             raise ValueError("AUTO-PICK attempted for non-on-the-clock member")
 
+
+        require_member_roster_mappings(conn, league_id, [member_id], acquired_week, [sport_team_id])
 
         # Compute round/pickInRound for DraftPick row (keeps your existing fields consistent)
         round_number, pos_in_round = self._compute_round_and_pos(current_overall, int(num_players))

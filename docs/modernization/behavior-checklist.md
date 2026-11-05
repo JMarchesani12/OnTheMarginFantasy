@@ -122,6 +122,7 @@ Fields below are important subsets, not closed schemas. Keep numeric IDs distinc
 - **Q4 Operational APIs/helpers:** who uses manual picks, scoring triggers, week generation, explicit trade application and lock helper? Manual acquired-week default differs from live picks; no role assumption should silently become authorization policy.
 - **Q5 Operations:** desired job cadence, recovery/delivery guarantees and health liveness/readiness meaning? None are established from source alone.
 - **Q6 Historical integrity:** should tiers, ownership and transactions be migrated/snapshotted when rebuilding periods? Current tool/docs do not guarantee those migrations. Preserve demonstrated rule-version pinning independently.
+  **MOD-015 policy resolved 2026-11-05:** conference membership uses exact season then current default; all drafting/ownership-changing teams must map to a conference, never an independent bucket. Historical seasons lacking explicit rows still follow mutable default fallback. This decision does not settle tier/rule snapshots or period/ownership/transaction remapping for MOD-016.
 - **Q7 Legacy compatibility:** any external callers of deprecated wrappers, magic-link helper or NCAA/socket alternatives? No removal inferred from no imports/navigation.
 - **Q8 Navigation/state:** which cold links and selections must survive refresh/back/account switching? Discover's state dependence and local-storage selection scope need explicit acceptance criteria, not preservation of accidental failures.
 

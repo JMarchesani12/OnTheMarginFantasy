@@ -20,6 +20,7 @@ class RosterReadTests(unittest.TestCase):
         self.db.connection.executescript('''
             CREATE TABLE League (id INTEGER, commissioner INTEGER, seasonYear INTEGER);
             INSERT INTO League VALUES (10,1,2026),(20,2,2026),(30,1,2026);
+            ALTER TABLE League ADD COLUMN sport INTEGER DEFAULT 1;
             CREATE TABLE LeagueMember (id INTEGER, leagueId INTEGER, userId INTEGER);
             INSERT INTO LeagueMember VALUES (11,10,1),(12,10,2),(21,20,2),(31,30,2);
             CREATE TABLE Week (id INTEGER, leagueId INTEGER, weekNumber INTEGER, isLocked BOOLEAN);

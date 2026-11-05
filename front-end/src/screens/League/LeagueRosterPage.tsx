@@ -261,7 +261,7 @@ const LeagueRosterPage = () => {
     const map = new Map<string, OwnedTeam[]>();
 
     teams.forEach((team) => {
-      const key = team.conferenceName ?? "Independent";
+      const key = team.conferenceName ?? "Conference unavailable";
       const current = map.get(key) ?? [];
       current.push(team);
       map.set(key, current);
@@ -272,7 +272,7 @@ const LeagueRosterPage = () => {
 
   const uniqueConferences = useMemo(() => {
     const all = [...ownedTeams, ...availableTeams, ...tradeMemberTeams]
-      .map((team) => team.conferenceName ?? "Independent")
+      .map((team) => team.conferenceName ?? "Conference unavailable")
       .filter(Boolean);
     return Array.from(new Set(all)).sort((a, b) => a.localeCompare(b));
   }, [ownedTeams, availableTeams, tradeMemberTeams]);
@@ -285,7 +285,7 @@ const LeagueRosterPage = () => {
         .includes(searchTerm.toLowerCase());
       const matchesConference =
         conferenceFilter === "all" ||
-        (team.conferenceName ?? "Independent") === conferenceFilter;
+        (team.conferenceName ?? "Conference unavailable") === conferenceFilter;
       return matchesSearch && matchesConference;
     });
 

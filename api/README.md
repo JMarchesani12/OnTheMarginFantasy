@@ -279,3 +279,37 @@ historical changes are not prevented. Historical snapshot/maintenance policy rem
 MOD-015/016. No new migration, queue or dependency; no configured job ran during
 verification. [Design](../docs/superpowers/specs/2026-11-05-mod-014-design.md),
 [native evidence](../docs/modernization/evidence/mod-014-postgres-2026-11-05.json).
+
+## Seasonal conference membership (MOD-015)
+
+For the league/requested season, one exact-season membership overrides the default
+`seasonYear=NULL` row. Other seasons are ignored. Without a seasonal row, the valid
+current row remains fallback; an invalid exact-season row suppresses fallback rather
+than hiding dirty configuration. Team, membership and conference sports must agree.
+Every draftable team needs an assigned conference, including real-world independents;
+there is no implicit independent/uncapped bucket. No assignments were guessed.
+
+Manual/live/timeout picks, trade validation/application and free-agent submission/
+application validate affected and retained roster mappings on their transaction.
+Missing or cross-sport configuration refuses writes without changing ownership,
+commands or draft progress. Auto-pick samples mapped conference buckets only; the
+existing no-candidate outcome remains. Configured cap-value semantics and draft-round
+scaling are unchanged. Private transaction mapping helpers now require league context;
+retired independent-selection helpers have no replacement bypass.
+
+Roster/history/search reads keep existing team/slot/pick rows and response fields.
+Missing or league-sport-inconsistent conference metadata stays null; the UI labels
+it **Conference unavailable**, not Independent. Configured conference names remain
+unchanged and follow their actual caps. Explicit seasonal mappings resist default
+moves; historical seasons without one deliberately still follow default fallback.
+This is not a historical snapshot guarantee (MOD-016 remains separate).
+
+Game upsert validates and locks its season, optional phase and known participant
+team references using the supplied transaction before writing. Nullable external
+participants/phases remain supported. This protects that application boundary,
+not arbitrary SQL or future parent metadata edits. The read-only
+[MOD-015 preflight and constraint proposal](../db/preflights/MOD-015.md) documents
+remaining composite-key/nullable-sport decisions. No migration or configured-target
+preflight ran, and no historical data was repaired during implementation.
+
+[Consumer inventory and verification](../docs/modernization/mod-015-conference-membership.md).

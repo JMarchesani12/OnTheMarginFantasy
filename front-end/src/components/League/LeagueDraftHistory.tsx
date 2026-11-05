@@ -57,7 +57,7 @@ export default function LeagueDraftHistory({ leagueId }: { leagueId: number }) {
                         {(expanded ? memberPicks : memberPicks.slice(0, 5)).map((pick, index) => (
                           <li key={pick.id}>
                             <span className="league-draft-history__number">{index + 1}</span>
-                            <span>{pick.sportTeamName || `Team ${pick.sportTeamId}`} ({pick.conferenceName || "Independent"})</span>
+                            <span>{pick.sportTeamName || `Team ${pick.sportTeamId}`} ({pick.conferenceName || "Conference unavailable"})</span>
                             <span className="league-draft-history__overall" aria-label={`Overall pick ${pick.overallPickNumber}`} title="Overall pick">#{pick.overallPickNumber}</span>
                           </li>
                         ))}

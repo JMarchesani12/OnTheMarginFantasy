@@ -36,7 +36,7 @@ class ScoringAuthorizationTests(unittest.TestCase):
         self.db,self.headers=self.fixture.db,self.fixture.headers
         self.db.connection.executescript('''
             ALTER TABLE League ADD COLUMN isDiscoverable BOOLEAN DEFAULT true;
-            INSERT INTO League VALUES (30,1,'{}',NULL,true);
+            INSERT INTO League (id,commissioner,settings,freeAgentDeadline,isDiscoverable) VALUES (30,1,'{}',NULL,true);
             ALTER TABLE LeagueMember ADD COLUMN teamName TEXT DEFAULT 'Synthetic';
             INSERT INTO "User" (id,uuid) VALUES (3,'nonmember');
             ALTER TABLE Week ADD COLUMN startDate TEXT DEFAULT '2026-10-01';

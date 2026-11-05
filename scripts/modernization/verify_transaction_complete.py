@@ -29,6 +29,12 @@ CREATE TABLE "ConferenceMembership" ("sportTeamId" bigint,"sportConferenceId" bi
 INSERT INTO "ConferenceMembership" VALUES (101,500),(102,500),(103,500),(104,501),(105,501);
 CREATE TABLE "SportConference" (id bigint PRIMARY KEY,"maxTeamsPerOwner" integer);
 INSERT INTO "SportConference" VALUES (500,3),(501,1);
+ALTER TABLE "League" ADD COLUMN sport bigint DEFAULT 1;
+ALTER TABLE "League" ADD COLUMN "seasonYear" bigint DEFAULT 2026;
+ALTER TABLE "SportTeam" ADD COLUMN "sportId" bigint DEFAULT 1;
+ALTER TABLE "SportConference" ADD COLUMN "sportId" bigint DEFAULT 1;
+ALTER TABLE "ConferenceMembership" ADD COLUMN "sportId" bigint DEFAULT 1;
+ALTER TABLE "ConferenceMembership" ADD COLUMN "seasonYear" bigint;
 CREATE TABLE "LeagueTeamSlot" (id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,"leagueId" bigint,"memberId" bigint,
  "sportTeamId" bigint,"acquiredWeek" integer,"droppedWeek" integer,"acquiredVia" text);
 INSERT INTO "LeagueTeamSlot" ("leagueId","memberId","sportTeamId","acquiredWeek","acquiredVia")
@@ -122,7 +128,7 @@ def tests(engine,database):
     expect(ValueError,free,'deadline');assert state()==before
     reset();query('UPDATE "SportConference" SET "maxTeamsPerOwner"=1 WHERE id=500')
     expect(ValueError,lambda:service.free_agency(alice,10,100,1,11,103,None),'maxTeamsPerOwner')
-    reset();expect(ValueError,lambda:service.free_agency(alice,10,100,1,11,999,None),'Missing ConferenceMembership')
+    reset();expect(ValueError,lambda:service.free_agency(alice,10,100,1,11,999,None),'Conference configuration unavailable')
     expect(ValueError,lambda:service.free_agency(alice,10,100,1,11,None,102),'does not own')
     expect(ValueError,lambda:service.free_agency(alice,10,100,1,11,102,None),'not a free agent')
     reset();free();query('UPDATE "League" SET settings=jsonb_set(settings,\'{roster,maxSwaps}\',\'1\') WHERE id=10')

@@ -1,5 +1,15 @@
 # Modernization progress
 
+## Priority 6 MOD-015 — 2026-11-05
+
+MOD-015 complete in approved application + preflight/proposal scope. User confirmed season-first membership with current fallback and explicitly rejected independent/uncapped drafting. Shared effective SQL now covers search/roster/history, conference counts, draft pools/caps, transactions and ingestion routing. Invalid exact-season rows suppress defaults, including wrong-sport metadata. All manual/live/timeout and affected/retained trade/free-agent ownership writes require configured mappings. Read-only rows remain visible with nullable metadata; UI fallback is Conference unavailable. Actual configured conference names and cap-value interpretations remain.
+
+Game ingestion validates/locks season/optional phase/known team references on its supplied transaction; nullable external participants/phases remain valid. Read-only aggregate preflight and composite-constraint proposal delivered, with **no migration authored/applied or configured preflight run**. Target catalog/data review and membership sportId/parent-key decisions remain a schema-rollout follow-up; no arbitrary SQL/future metadata protection is claimed. Historical seasons without explicit rows still follow mutable current fallback; no guessed assignments, historical cleanup, snapshot or scoring formula rewrite.
+
+Backend **672/672**, frontend **64/64**, production build/diff and owned PostgreSQL tests pass. Native checks cover actual read families, season/default/other/missing/invalid mapping cases, cap/command rollback, timeout retained-roster refusal without cursor changes, null metadata for cross-sport history and clean/dirty reference preflight. Affected prior ownership, draft allocation/snapshot/finalization/control/order, transaction, calendar/member/view/ingestion and roster suites pass with explicit policy fixture updates. Independent review found two material gaps; both reproduced RED and fixed in one pass. [Inventory/evidence](mod-015-conference-membership.md), [plan](../superpowers/plans/2026-11-05-mod-015.md), [schema follow-up](../../db/preflights/MOD-015.md).
+
+Current changes remain uncommitted and undeployed. No configured job/provider/data access or new dependencies. Owned test DBs/container removed after verification; frozen baseline unchanged. Next Priority6 task is MOD-016 history safeguards; draft-round scaling remains a separate feature.
+
 ## Priority 6 MOD-014 — 2026-11-05
 
 MOD-014 complete in application/synthetic PostgreSQL scope. Approved atomic finalization now validates every scoped league before committing exact league completion updates and the season flag together. Requires inclusive seasonEnd date passed in UTC, nonempty ended/completed calendars, no PENDING_APPLY and valid finite standings covering current members. Lifecycle Completed is not proof of finalization. Season-first/sorted ownership/row locking serializes competitors and weekly work; failure rolls back that season while others continue. Bonus/standings computation and HTTP responses remain unchanged, with supplied-connection composition through every season helper.

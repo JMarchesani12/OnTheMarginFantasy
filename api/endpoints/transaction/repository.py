@@ -1,3 +1,4 @@
+from utils.conference_membership import conference_sql
 """Transaction persistence. Connections come from the calling service."""
 from typing import Any, Dict, List
 from sqlalchemy import text
@@ -108,7 +109,7 @@ class TransactionRepository:
 
     def conference_counts(self, conn, league_id, week_number, member_id: int, exclude_ids: List[int]) -> Dict[int, int]:
         rows = conn.execute(
-            text("""
+            text(conference_sql("""
                 SELECT cm."sportConferenceId", COUNT(*) AS cnt
                 FROM "LeagueTeamSlot" lts
                 JOIN "ConferenceMembership" cm
@@ -119,7 +120,7 @@ class TransactionRepository:
                 AND (lts."droppedWeek" IS NULL OR lts."droppedWeek" > :week_number)
                 AND NOT (lts."sportTeamId" = ANY(:exclude_ids))
                 GROUP BY cm."sportConferenceId"
-            """),
+            """, '(SELECT "seasonYear" FROM "League" WHERE id=:league_id)')),
             {
                 "league_id": league_id,
                 "week_number": week_number,
@@ -131,15 +132,15 @@ class TransactionRepository:
 
         return {r._mapping["sportConferenceId"]: r._mapping["cnt"] for r in rows}
 
-    def incoming_confs(self, conn, team_ids: List[int]) -> Dict[int, int]:
+    def incoming_confs(self, conn, team_ids: List[int], league_id: int) -> Dict[int, int]:
         rows = conn.execute(
-            text("""
+            text(conference_sql("""
                 SELECT "sportConferenceId", COUNT(*) AS cnt
-                FROM "ConferenceMembership"
+                FROM "ConferenceMembership" cm
                 WHERE "sportTeamId" = ANY(:team_ids)
                 GROUP BY "sportConferenceId"
-            """),
-            {"team_ids": team_ids},
+            """, '(SELECT "seasonYear" FROM "League" WHERE id=:league_id)')),
+            {"team_ids": team_ids, "league_id": league_id},
         ).fetchall()
         return {r._mapping["sportConferenceId"]: r._mapping["cnt"] for r in rows}
 

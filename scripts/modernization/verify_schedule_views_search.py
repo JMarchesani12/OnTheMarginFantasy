@@ -97,12 +97,12 @@ def tests(engine):
     query('DELETE FROM "Week"')
     assert service.team_games_for_job(104,2026,10)[0]['ownerMemberId']==11
     assert next(r for r in service.search_teams_for_job(10,'iowa st') if r['teamId']==104)['ownerMemberId']==11
-    # Search current-season/NULL joins retain duplicate rows when both memberships exist.
+    # MOD015: exact-season mapping suppresses default without duplicate rows.
     query('INSERT INTO "SportConference" VALUES (502,1,402)');query('INSERT INTO "Conference" VALUES (402,\'Historic\')')
     query('INSERT INTO "ConferenceMembership" VALUES (101,1,2025,502)')
     assert service.search_teams_for_job(10,'iowa state')[0]['conferenceName']=='Synthetic Conference'
     query('INSERT INTO "ConferenceMembership" VALUES (101,1,NULL,501)')
-    assert len([r for r in service.search_teams_for_job(10,'iowa state') if r['teamId']==101])==2
+    assert len([r for r in service.search_teams_for_job(10,'iowa state') if r['teamId']==101])==1
     reset()
     query('''INSERT INTO "SportTeam" SELECT 1000+i,1,'Iowa State Variant '||lpad(i::text,2,'0'),NULL
         FROM generate_series(0,59) AS i''')
@@ -128,9 +128,9 @@ def tests(engine):
         'team_season_home_away_opponent_optional_missing_league_and_nullable_binds':'PASS',
         'native_lateral_current_before_latest_and_no_week_999_ownership':'PASS',
         'search_abbreviation_rank_limits_owners_sport_season_global_memberships':'PASS',
-        'original_duplicate_rows_missing_guards_read_failure_no_writes_and_legacy':'PASS',
+        'seasonal_cardinality_missing_guards_read_failure_no_writes_and_legacy':'PASS',
         'repository_queries_exercised':sorted(covered),
-        'scope_limit':'Read views/search only; original SQL, context, duplicate, coercion and scope policies retained. Ingestion/bootstrap and final caller composition remain.'}
+        'scope_limit':'Read views/search with MOD015 seasonal precedence; response/ranking/auth contracts retained. Ingestion/bootstrap verified separately.'}
 
 
 def main():

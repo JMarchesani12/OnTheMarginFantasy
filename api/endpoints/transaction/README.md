@@ -19,3 +19,12 @@ mutex before their transaction row lock. Weekly eligibility/order and completion
 are owned by `WeeklyCompletionService`; the trusted per-command application ports
 retain their existing validation/replay/deadline contracts. They are not a substitute
 for weekly eligibility checks. See [operations](../../README.md#weekly-completion-and-retry-mod-013).
+
+## MOD-015 current conference semantics — 2026-11-05
+
+League-season membership overrides default; invalid exact-season rows block fallback.
+Trade incoming/retained counts and free-agent checks use that same effective mapping
+with explicit league context. Affected/retained unmapped or cross-sport teams reject
+before ownership/command mutation, including queued apply. No uncapped Independent
+fallback. Existing cap-value interpretations, deadlines, vetoes, ownership locks and
+transaction boundaries remain. [Inventory](../../../docs/modernization/mod-015-conference-membership.md).

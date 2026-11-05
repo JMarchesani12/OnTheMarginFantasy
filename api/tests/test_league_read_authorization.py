@@ -37,7 +37,7 @@ class ReadDatabase(ProfileDatabase):
         return self
 
     def execute(self, statement, params):
-        sql = str(statement).replace('FOR UPDATE', '').replace(
+        sql = str(statement).replace('FOR UPDATE', '').replace('FOR SHARE', '').replace(
             "w.\"endDate\" + interval '1 microsecond' - interval '7 days'",
             "datetime(w.\"endDate\", '-7 days')")
         if self.before_query:
@@ -108,8 +108,8 @@ class LeagueReadAuthorizationTests(unittest.TestCase):
             INSERT INTO "Conference" VALUES (1, 'Synthetic Conference');
             CREATE TABLE "SportConference" (id INTEGER, "conferenceId" INTEGER, "sportId" INTEGER, "maxTeamsPerOwner" INTEGER);
             INSERT INTO "SportConference" VALUES (1, 1, 1, 2);
-            CREATE TABLE "ConferenceMembership" ("sportConferenceId" INTEGER, "seasonYear" INTEGER);
-            INSERT INTO "ConferenceMembership" VALUES (1, 2026);
+            CREATE TABLE "ConferenceMembership" ("sportConferenceId" INTEGER, "seasonYear" INTEGER, "sportTeamId" INTEGER, "sportId" INTEGER);
+            INSERT INTO "ConferenceMembership" VALUES (1, 2026,1,1);
         ''')
         self.sync = self.enterContext(patch.object(LeagueLifecycleService, 'synchronize_for_job'))
         app = Flask(__name__)

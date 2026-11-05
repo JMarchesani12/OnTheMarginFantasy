@@ -3,7 +3,7 @@ type DraftedPick = { overallPickNumber: number; roundNumber: number; conferenceN
 export function groupDraftedTeams<T extends DraftedPick>(picks: readonly T[], view: "conference" | "round") {
   const groups = new Map<string | number, T[]>();
   for (const pick of [...picks].sort((a, b) => a.overallPickNumber - b.overallPickNumber)) {
-    const key = view === "round" ? pick.roundNumber : pick.conferenceName?.trim() || "Independent";
+    const key = view === "round" ? pick.roundNumber : pick.conferenceName?.trim() || "Conference unavailable";
     const group = groups.get(key) ?? [];
     group.push(pick);
     groups.set(key, group);
@@ -16,7 +16,7 @@ export function groupDraftedTeams<T extends DraftedPick>(picks: readonly T[], vi
 export function countConferenceDrafters(picks: readonly { memberId: number; conferenceName?: string | null }[], minimumPicks = 1) {
   const members = new Map<string, Map<number, number>>();
   for (const pick of picks) {
-    const conference = pick.conferenceName?.trim() || "Independent";
+    const conference = pick.conferenceName?.trim() || "Conference unavailable";
     const group = members.get(conference) ?? new Map<number, number>();
     group.set(pick.memberId, (group.get(pick.memberId) ?? 0) + 1);
     members.set(conference, group);

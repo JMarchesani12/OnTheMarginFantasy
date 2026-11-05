@@ -1,3 +1,4 @@
+from utils.conference_membership import conference_sql
 """Named draft pick/timeout queries; transaction and result consumption belong to caller."""
 from sqlalchemy import text
 from .notifyChannel import notify_draft_updated
@@ -215,7 +216,7 @@ class DraftPickRepository:
                     """), params)
 
     def conference_info(self, conn, params):
-        return conn.execute(text("""
+        return conn.execute(text(conference_sql("""
             WITH league_info AS (
               SELECT "seasonYear"
               FROM "League"
@@ -238,10 +239,10 @@ class DraftPickRepository:
             WHERE st.id = :sportTeamId
               AND (cm."seasonYear" IS NULL OR cm."seasonYear" = li."seasonYear")
             LIMIT 1
-        """), params)
+        """, '(SELECT "seasonYear" FROM "League" WHERE id=:leagueId)')), params)
 
     def member_conference_count(self, conn, params):
-        return conn.execute(text("""
+        return conn.execute(text(conference_sql("""
             WITH league_info AS (
               SELECT "seasonYear"
               FROM "League"
@@ -268,7 +269,7 @@ class DraftPickRepository:
              AND sc."sportId" = st."sportId"
             WHERE sc.id = :sportConferenceId
               AND (cm."seasonYear" IS NULL OR cm."seasonYear" = li."seasonYear")
-        """), params)
+        """, '(SELECT "seasonYear" FROM "League" WHERE id=:leagueId)')), params)
 
     def manual_league(self, conn, params):
         return conn.execute(text('SELECT "numPlayers" FROM "League" WHERE id = :leagueId'), params)
@@ -326,7 +327,7 @@ class DraftPickRepository:
             """), params)
 
     def owned_conference_count(self, conn, params):
-        return conn.execute(text("""
+        return conn.execute(text(conference_sql("""
                 WITH league_info AS (
                   SELECT "seasonYear"
                   FROM "League"
@@ -349,7 +350,7 @@ class DraftPickRepository:
                 AND (lts."droppedWeek" IS NULL OR lts."droppedWeek" > :week)
                 AND sc.id = :sportConferenceId
                 AND (cm."seasonYear" IS NULL OR cm."seasonYear" = li."seasonYear")
-            """), params)
+            """, '(SELECT "seasonYear" FROM "League" WHERE id=:leagueId)')), params)
 
     def conference_cap(self, conn, params):
         return conn.execute(text("""
@@ -359,7 +360,7 @@ class DraftPickRepository:
             """), params)
 
     def random_conference_team(self, conn, params):
-        return conn.execute(text("""
+        return conn.execute(text(conference_sql("""
                 WITH league_info AS (
                   SELECT "seasonYear"
                   FROM "League"
@@ -388,39 +389,7 @@ class DraftPickRepository:
                 AND lts.id IS NULL
                 ORDER BY random()
                 LIMIT 1
-            """), params)
-
-    def random_independent_team(self, conn, params):
-        return conn.execute(text("""
-                WITH league_info AS (
-                  SELECT "seasonYear"
-                  FROM "League"
-                  WHERE id = :leagueId
-                )
-                SELECT st.id AS "sportTeamId"
-                FROM "SportTeam" st
-                CROSS JOIN league_info li
-                LEFT JOIN "DraftPick" dp
-                ON dp."leagueId" = :leagueId
-                AND dp."sportTeamId" = st.id
-                LEFT JOIN "LeagueTeamSlot" lts
-                ON lts."leagueId" = :leagueId
-                AND lts."sportTeamId" = st.id
-                AND lts."acquiredWeek" <= :week
-                AND (lts."droppedWeek" IS NULL OR lts."droppedWeek" > :week)
-                WHERE st."sportId" = :sportId
-                AND NOT EXISTS (
-                  SELECT 1
-                  FROM "ConferenceMembership" cm
-                  WHERE cm."sportTeamId" = st.id
-                    AND cm."sportId" = st."sportId"
-                    AND (cm."seasonYear" IS NULL OR cm."seasonYear" = li."seasonYear")
-                )
-                AND dp.id IS NULL
-                AND lts.id IS NULL
-                ORDER BY random()
-                LIMIT 1
-            """), params)
+            """, '(SELECT "seasonYear" FROM "League" WHERE id=:leagueId)')), params)
 
     def auto_state_for_update(self, conn, params):
         return conn.execute(text("""

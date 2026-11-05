@@ -1,3 +1,4 @@
+from utils.conference_membership import conference_sql
 """Schedule ingestion persistence queries on caller-supplied connections."""
 from sqlalchemy import text
 
@@ -17,6 +18,20 @@ class ScheduleIngestionRepository:
         """), params)
 
     def upsert_game(self, conn, params):
+        # Lock reference rows on this connection so their sport/season cannot
+        # change between validation and insertion/update.
+        season = conn.execute(text('SELECT id FROM "SportSeason" WHERE id=:sportSeasonId AND "sportId"=:sport FOR SHARE'), params).fetchone()
+        if season is None:
+            raise ValueError('Game sport/season mismatch')
+        if params.get('seasonPhaseId') is not None:
+            phase = conn.execute(text('SELECT id FROM "SeasonPhase" WHERE id=:seasonPhaseId AND "sportSeasonId"=:sportSeasonId FOR SHARE'), params).fetchone()
+            if phase is None:
+                raise ValueError('Game phase/season mismatch')
+        for field in ('homeTeamId', 'awayTeamId'):
+            if params.get(field) is not None:
+                team = conn.execute(text('SELECT id FROM "SportTeam" WHERE id=:teamId AND "sportId"=:sport FOR SHARE'), {'teamId': params[field], 'sport': params['sport']}).fetchone()
+                if team is None:
+                    raise ValueError('Game team/sport mismatch')
         return conn.execute(text("""
             INSERT INTO "GameResult" (
                 sport,
@@ -123,20 +138,13 @@ class ScheduleIngestionRepository:
                 """), params)
 
     def shared_conferences(self, conn, params):
-        return conn.execute(text('''
-                        SELECT DISTINCT a."sportConferenceId"
-                        FROM "ConferenceMembership" a
-                        JOIN "ConferenceMembership" b
-                          ON b."sportConferenceId"=a."sportConferenceId" AND b."sportId"=a."sportId"
-                        JOIN "SportSeason" ss ON ss.id=:season AND ss."sportId"=a."sportId"
-                        WHERE a."sportTeamId"=:home AND b."sportTeamId"=:away
-                          AND (a."seasonYear"=ss."seasonYear" OR (a."seasonYear" IS NULL AND NOT EXISTS (
-                              SELECT 1 FROM "ConferenceMembership" x WHERE x."sportTeamId"=a."sportTeamId"
-                              AND x."sportId"=a."sportId" AND x."seasonYear"=ss."seasonYear")))
-                          AND (b."seasonYear"=ss."seasonYear" OR (b."seasonYear" IS NULL AND NOT EXISTS (
-                              SELECT 1 FROM "ConferenceMembership" x WHERE x."sportTeamId"=b."sportTeamId"
-                              AND x."sportId"=b."sportId" AND x."seasonYear"=ss."seasonYear")))
-                    '''), params)
+        return conn.execute(text(conference_sql('''
+            SELECT a."sportConferenceId"
+            FROM "ConferenceMembership" a
+            JOIN "ConferenceMembership" b ON b."sportConferenceId"=a."sportConferenceId" AND b."sportId"=a."sportId"
+            JOIN "SportSeason" ss ON ss.id=:season AND ss."sportId"=a."sportId"
+            WHERE a."sportTeamId"=:home AND b."sportTeamId"=:away
+        ''', '(SELECT "seasonYear" FROM "SportSeason" WHERE id=:season)')), params)
 
     def fallback_phase(self, conn, params):
         return conn.execute(text("""

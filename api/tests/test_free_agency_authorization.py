@@ -58,8 +58,8 @@ class FreeAgencyAuthorizationTests(unittest.TestCase):
         self.db = self.database_type()
         self.addCleanup(self.db.connection.close)
         self.db.connection.executescript('''
-            CREATE TABLE League (id INTEGER,commissioner INTEGER,settings TEXT,freeAgentDeadline TEXT);
-            INSERT INTO League VALUES (10,1,'{"roster":{"maxSwaps":5}}',NULL),(20,2,'{}',NULL);
+            CREATE TABLE League (id INTEGER,commissioner INTEGER,settings TEXT,freeAgentDeadline TEXT,sport INTEGER DEFAULT 1,seasonYear INTEGER DEFAULT 2026);
+            INSERT INTO League (id,commissioner,settings,freeAgentDeadline) VALUES (10,1,'{"roster":{"maxSwaps":5}}',NULL),(20,2,'{}',NULL);
             CREATE TABLE LeagueMember (id INTEGER,leagueId INTEGER,userId INTEGER);
             INSERT INTO LeagueMember VALUES (11,10,1),(12,10,2),(21,20,2);
             CREATE TABLE Week (id INTEGER,leagueId INTEGER,weekNumber INTEGER,isLocked BOOLEAN);
@@ -68,10 +68,12 @@ class FreeAgencyAuthorizationTests(unittest.TestCase):
                 sportTeamId INTEGER,acquiredWeek INTEGER,droppedWeek INTEGER,acquiredVia TEXT);
             INSERT INTO LeagueTeamSlot VALUES (1,10,11,101,1,NULL,'Draft'),(2,10,12,102,1,NULL,'Draft'),
                 (3,20,21,101,1,NULL,'Draft');
-            CREATE TABLE ConferenceMembership (sportTeamId INTEGER,sportConferenceId INTEGER);
-            INSERT INTO ConferenceMembership VALUES (101,500),(102,500),(103,500);
-            CREATE TABLE SportConference (id INTEGER,maxTeamsPerOwner INTEGER);
-            INSERT INTO SportConference VALUES (500,3);
+            CREATE TABLE SportTeam (id INTEGER,sportId INTEGER);
+            INSERT INTO SportTeam VALUES (101,1),(102,1),(103,1);
+            CREATE TABLE ConferenceMembership (sportTeamId INTEGER,sportConferenceId INTEGER,sportId INTEGER DEFAULT 1,seasonYear INTEGER);
+            INSERT INTO ConferenceMembership (sportTeamId,sportConferenceId) VALUES (101,500),(102,500),(103,500);
+            CREATE TABLE SportConference (id INTEGER,maxTeamsPerOwner INTEGER,sportId INTEGER DEFAULT 1);
+            INSERT INTO SportConference (id,maxTeamsPerOwner) VALUES (500,3);
             CREATE TABLE "Transaction" (id INTEGER PRIMARY KEY AUTOINCREMENT,leagueId INTEGER,weekId INTEGER,
                 type TEXT,memberFromId INTEGER,memberToId INTEGER,status TEXT,fromTeamIds TEXT,toTeamIds TEXT);
         ''')

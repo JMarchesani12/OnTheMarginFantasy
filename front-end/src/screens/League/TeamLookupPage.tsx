@@ -208,7 +208,7 @@ const TeamLookupPage = () => {
                 <span className="team-lookup__result-main">
                   <span className="team-lookup__team-name">{team.teamName}</span>
                   <span className="team-lookup__meta">
-                    {team.conferenceName ?? "Independent"}
+                    {team.conferenceName ?? "Conference unavailable"}
                   </span>
                 </span>
                 <span

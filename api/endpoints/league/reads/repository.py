@@ -1,3 +1,4 @@
+from utils.conference_membership import conference_sql
 """League read SQL; callers supply connections and explicit reader scope."""
 from sqlalchemy import text
 from utils.authorization import league_read_scope
@@ -36,7 +37,7 @@ class LeagueReadRepository:
         return dict(row._mapping) if row else None
 
     def season_conferences(self, conn, sport_id, season_year):
-        rows = conn.execute(text("""
+        rows = conn.execute(text(conference_sql("""
                 SELECT
                   sc.id AS "sportConferenceId",
                   sc."conferenceId" AS "conferenceId",
@@ -55,7 +56,7 @@ class LeagueReadRepository:
                 ) t ON t."sportConferenceId" = sc.id
                 WHERE sc."sportId" = :sportId
                 ORDER BY c.name;
-            """), {'sportId': sport_id, 'seasonYear': season_year}).fetchall()
+            """, ':seasonYear')), {'sportId': sport_id, 'seasonYear': season_year}).fetchall()
         return [dict(row._mapping) for row in rows]
 
     def access_metadata(self, conn, league_id, user_id):

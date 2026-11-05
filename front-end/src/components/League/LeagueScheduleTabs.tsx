@@ -256,8 +256,8 @@ export const LeagueScheduleTabs = ({
         cellsByDate
       }))
       .sort((a, b) => {
-        const aConference = a.conferenceName ?? "Independent";
-        const bConference = b.conferenceName ?? "Independent";
+        const aConference = a.conferenceName ?? "Conference unavailable";
+        const bConference = b.conferenceName ?? "Conference unavailable";
         const conferenceMatch = aConference.localeCompare(bConference);
         if (conferenceMatch !== 0) {
           return conferenceMatch;
@@ -466,7 +466,7 @@ export const LeagueScheduleTabs = ({
                     <td className="league-schedule__team-col">
                       <div className="league-schedule__team-col-content">
                         <div className="league-schedule__team-conf">
-                          {row.conferenceName ?? "Independent"}
+                          {row.conferenceName ?? "Conference unavailable"}
                         </div>
                         <div className="league-schedule__team-name">
                           {row.teamName}

@@ -14,7 +14,8 @@ class LeagueConferenceServiceTests(unittest.TestCase):
         self.db.connection.executescript('''DELETE FROM "ConferenceMembership"; DELETE FROM "SportConference"; DELETE FROM "Conference";
             INSERT INTO "Conference" VALUES (1,'Zulu'),(2,'Alpha'),(3,'Other');
             INSERT INTO "SportConference" VALUES (1,1,1,2),(2,2,1,1),(3,3,2,5);
-            INSERT INTO "ConferenceMembership" VALUES (1,NULL),(1,2026),(1,2025),(2,2025),(3,NULL);''')
+            INSERT INTO SportTeam VALUES (2,1,'Other Team',1),(3,2,'Other Sport',1);
+            INSERT INTO "ConferenceMembership" VALUES (1,NULL,1,1),(1,2026,1,1),(1,2025,1,1),(2,2025,2,1),(3,NULL,3,2);''')
 
     def test_actor_required_before_io(self):
         self.assertTrue(callable(getattr(self.service,'conferences',None)), 'actor conference operation missing')
@@ -27,7 +28,7 @@ class LeagueConferenceServiceTests(unittest.TestCase):
         row=self.service.conferences(UserActor(2,'bob'),10)
         self.assertEqual(row,{'leagueId':10,'sportId':1,'seasonYear':2026,'conferences':[
             {'sportConferenceId':2,'conferenceId':2,'displayName':'Alpha','maxTeamsPerOwner':1,'teamsInConference':0},
-            {'sportConferenceId':1,'conferenceId':1,'displayName':'Zulu','maxTeamsPerOwner':2,'teamsInConference':2}]})
+            {'sportConferenceId':1,'conferenceId':1,'displayName':'Zulu','maxTeamsPerOwner':2,'teamsInConference':1}]})
         self.assertEqual((self.engine.begins,self.engine.connects),(1,0))
 
     def test_missing_denied_and_null_season_skip_aggregate(self):

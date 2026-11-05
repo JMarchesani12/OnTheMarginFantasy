@@ -1,3 +1,4 @@
+from utils.conference_membership import conference_sql
 """Roster persistence on a service-supplied connection; no engine or commits."""
 from sqlalchemy import text
 from utils.authorization import league_read_scope
@@ -47,7 +48,7 @@ class RosterRepository:
 
     def member_teams(self, conn, league_id, member_id, week_number, reader_user_id=None):
         scope, reader_params = league_read_scope(league_id, reader_user_id)
-        sql = text("""
+        sql = text(conference_sql("""
             WITH league_info AS (
               SELECT "seasonYear"
               FROM "League"
@@ -75,6 +76,7 @@ class RosterRepository:
             LEFT JOIN "ConferenceMembership" cm
               ON cm."sportTeamId" = st.id
              AND cm."sportId" = st."sportId"
+             AND cm."sportId" = (SELECT sport FROM "League" WHERE id=:leagueId)
              AND (cm."seasonYear" IS NULL OR cm."seasonYear" = li."seasonYear")
             LEFT JOIN "SportConference" sc
               ON sc.id = cm."sportConferenceId"
@@ -91,14 +93,14 @@ class RosterRepository:
                             AND target_member."leagueId" = lts."leagueId")
             """ if reader_user_id is not None else "") + """
             ORDER BY st."displayName"
-        """)
+        """, '(SELECT "seasonYear" FROM "League" WHERE id=:leagueId)'))
         result = conn.execute(sql, {**reader_params, 'leagueId': league_id,
                                    'memberId': member_id, 'weekNumber': week_number})
         return [dict(r._mapping) for r in result]
 
     def available_teams(self, conn, league_id, sport_id, season_year, week_id, week_number, reader_user_id=None):
         scope, reader_params = league_read_scope(league_id, reader_user_id)
-        sql = text("""
+        sql = text(conference_sql("""
             WITH pending_adds AS (
               SELECT DISTINCT (jsonb_array_elements_text(t."toTeamIds"))::int AS team_id
               FROM "Transaction" t
@@ -156,7 +158,7 @@ class RosterRepository:
               )
             """ + scope + """
             ORDER BY conf.name, st."displayName"
-        """)
+        """, ':seasonYear'))
         result = conn.execute(sql, {**reader_params, 'leagueId': league_id, 'sportId': sport_id,
                                    'seasonYear': season_year, 'weekId': week_id, 'weekNumber': week_number})
         return [dict(r._mapping) for r in result]

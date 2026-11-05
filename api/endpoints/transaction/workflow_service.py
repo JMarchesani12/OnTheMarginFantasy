@@ -1,3 +1,4 @@
+from utils.conference_membership import require_member_roster_mappings
 """Trade/free-agent workflows, actor policy and supplied ownership transactions.
 
 The initial TransactionService read/apply pilot remains an independent capability.
@@ -212,6 +213,7 @@ class TransactionWorkflowService:
             add_team_ids = self._parse_team_ids(txm["toTeamIds"])
 
             self._validate_members_in_league(league_id, [txm['memberFromId']], conn=conn)
+            require_member_roster_mappings(conn, league_id, [txm['memberFromId']], week_number, drop_team_ids + add_team_ids)
             if len(set(drop_team_ids)) != len(drop_team_ids) or len(set(add_team_ids)) != len(add_team_ids):
                 raise ValueError('Duplicate teams in queued add/drop')
             for team_id in drop_team_ids:
@@ -226,7 +228,7 @@ class TransactionWorkflowService:
                     })
 
             if add_team_ids:
-                info = self._get_team_conference_info(conn, add_team_ids)
+                info = self._get_team_conference_info(conn, add_team_ids, league_id)
                 counts = self._get_member_conference_counts(conn, league_id, txm['memberFromId'], week_number)
                 for team_id in add_team_ids:
                     if self._is_team_owned_in_week(conn, league_id, team_id, week_number):
@@ -558,7 +560,7 @@ class TransactionWorkflowService:
         return row is not None
 
 
-    def _get_team_conference_info(self, conn, team_ids: List[int]) -> Dict[int, Dict[str, int]]:
+    def _get_team_conference_info(self, conn, team_ids: List[int], league_id: int) -> Dict[int, Dict[str, int]]:
         """
         For each team_id, returns its sportConferenceId and that conference's maxTeamsPerOwner.
 
@@ -570,13 +572,11 @@ class TransactionWorkflowService:
         if not team_ids:
             return {}
 
-        rows = self.workflow_repository.team_conference_info(conn, {"team_ids": team_ids}).mappings().all()
+        rows = self.workflow_repository.team_conference_info(conn, {"team_ids": team_ids, "league_id": league_id}).mappings().all()
 
         info: Dict[int, Dict[str, int]] = {}
         for r in rows:
             tid = int(r["sportTeamId"])
-            # If you ever add seasonYear to ConferenceMembership filtering,
-            # this is where you'd apply it.
             info[tid] = {
                 "sportConferenceId": int(r["sportConferenceId"]),
                 "maxTeamsPerOwner": int(r["maxTeamsPerOwner"]),
@@ -637,6 +637,7 @@ class TransactionWorkflowService:
             self._ensure_member_can_swap(league_id, member_id, conn=conn)
             self._validate_members_in_league(league_id, [member_id], conn=conn)
             self._assert_free_agent_deadline(conn, league_id)
+            require_member_roster_mappings(conn, league_id, [member_id], week_number, [team for team in (add_team_id, drop_team_id) if team is not None])
             pending = self._get_pending_free_agent_team_ids_for_week(
                 conn,
                 league_id=league_id,
@@ -662,7 +663,7 @@ class TransactionWorkflowService:
                 involved_team_ids.append(drop_team_id)
 
             team_conf_info = (
-                self._get_team_conference_info(conn, involved_team_ids)
+                self._get_team_conference_info(conn, involved_team_ids, league_id)
                 if involved_team_ids
                 else {}
             )

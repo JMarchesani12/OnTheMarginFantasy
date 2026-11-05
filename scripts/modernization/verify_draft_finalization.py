@@ -12,7 +12,6 @@ from endpoints.draft.control_service import DraftControlService
 from endpoints.draft.pick_service import DraftPickService
 
 FIXTURE=SNAPSHOT_FIXTURE+'''
-ALTER TABLE "League" ADD COLUMN sport bigint DEFAULT 1;
 ALTER TABLE "League" ADD COLUMN status text DEFAULT 'Drafting';
 ALTER TABLE "League" ADD COLUMN "updatedAt" timestamptz DEFAULT '2000-01-01T00:00:00Z';
 CREATE TABLE "SportSeason" ("sportId" bigint,"seasonYear" integer,"seasonStart" date,"seasonEnd" date);

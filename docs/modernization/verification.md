@@ -1704,3 +1704,36 @@ post-fix full663-test suite passes. No other material review findings.
 No configured job, new migration, dependency, scheduler, merge/push or deployment.
 Owned random DBs/container removed; current checkout uncommitted. Marker validates
 the scoped league set and does not prevent future admin/provider/history changes.
+
+## Priority 6 MOD-015 — 2026-11-05
+
+Failure-first tests reproduced duplicate roster rows, unmapped manual/live/trade
+acceptance, invalid ingestion references and Independent UI fallback. Effective
+membership picks exact season, then current only if exact absent; invalid exact
+sport/reference suppresses fallback and other years cannot override. No independent
+bucket or uncapped missing configuration. Role/status/history/resource contracts
+retain their existing checks; minimal synthetic schemas/candidates were explicitly
+upgraded rather than adding production fallbacks for incomplete fixtures.
+
+Independent review found P1 timeout retained-roster bypass and P2 missing league-
+sport predicates in member roster/schedule-owned/draft history reads. Actual timeout
+and three-family projection regressions observed RED → GREEN in one fix pass;
+PostgreSQL proves no cursor/turn/pick/slot mutation on refusal and retained null-
+metadata cross-sport history. No other material findings or deferred minors.
+
+Final backend `python3 api/tests/run_isolated.py`: **672/672 PASS**. Frontend
+`node --test --experimental-strip-types tests/*.test.ts`: **64/64 PASS**, production
+build and `git diff --check` pass. `verify_mod015.py` passes on fresh marked owned
+PostgreSQL with frozen schema/current kickoff/identity/week/ownership migrations:
+actual query/cardinality/count/cap/command families, mapped-only auto, missing/
+wrong-sport write rollback, game season/phase/team reference checks and valid nulls,
+clean/dirty membership/coverage/game/phase/tournament preflight. Previous ownership,
+draft allocation/snapshot/finalization/control/order, transaction, calendar/member/
+view/ingestion and roster suites pass; historical reports remain untouched.
+[Source/test hashes and evidence](evidence/mod-015-postgres-2026-11-05.json).
+
+No migration authored/applied, configured target preflight, guessed conference
+assignment, history repair, dependency/scheduler/job/provider run or deployment.
+[Preflight/constraint proposal](../../db/preflights/MOD-015.md) separates application
+checks from remaining direct-SQL/parent metadata guarantees. Owned random DBs and
+container removed; checkout uncommitted; frozen baseline unchanged.

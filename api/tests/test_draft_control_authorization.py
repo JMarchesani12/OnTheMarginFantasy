@@ -52,7 +52,6 @@ class DraftControlAuthorizationTests(unittest.TestCase):
         self.db, self.model, self.client = self.fixture.db, self.fixture.model, self.fixture.client
         self.headers, self.emit = self.fixture.headers, self.fixture.emit
         self.db.connection.executescript('''
-            ALTER TABLE "League" ADD COLUMN sport INTEGER DEFAULT 1;
             ALTER TABLE "League" ADD COLUMN status TEXT DEFAULT 'Pre-Draft';
             ALTER TABLE "League" ADD COLUMN "updatedAt" TEXT;
             CREATE TABLE "SportSeason" ("sportId" INTEGER, "seasonYear" INTEGER, "seasonStart" TEXT, "seasonEnd" TEXT);
