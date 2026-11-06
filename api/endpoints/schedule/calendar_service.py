@@ -333,11 +333,11 @@ class ScheduleCalendarService:
     def ensure_weeks_for_job(self, league_id, conn=None):
         return self.ensure_weeks_for_league(league_id, conn=conn)
 
-    def boundaries_for_job(self, league_id):
-        return self.get_week_boundaries(league_id)
+    def boundaries_for_job(self, league_id, conn=None):
+        return self.get_week_boundaries(league_id, **({'conn': conn} if conn is not None else {}))
 
     def timezone_for_job(self, league_id):
         return self.get_league_timezone(league_id)
 
-    def season_for_job(self, league_id):
-        return self._get_sport_season_for_league(league_id)
+    def season_for_job(self, league_id, conn=None):
+        return self._get_sport_season_for_league(league_id, **({'conn': conn} if conn is not None else {}))

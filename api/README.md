@@ -313,3 +313,27 @@ remaining composite-key/nullable-sport decisions. No migration or configured-tar
 preflight ran, and no historical data was repaired during implementation.
 
 [Consumer inventory and verification](../docs/modernization/mod-015-conference-membership.md).
+
+## Calendar maintenance safeguards (MOD-016)
+
+`rebuild_weeks_and_rescore.py` now previews by default and requires `--apply` for
+unused Pre-Draft repair. Every historical/active/finalized case is preview-only,
+including historical rescores with unchanged calendar boundaries. The preview
+reports exact season/ID scope, before/after period boundaries, retained week IDs,
+history counts, ownership/transaction temporal impacts and stored score totals.
+
+Permitted calendar changes, ended-period scoring and flags share one transaction
+per league. Season → ownership mutex → existing DraftState → League → Week ordering
+matches draft controls; newly appeared state causes refusal without taking its lock
+under League. Pristine state requires pick1 and null currentMemberId/expiresAt/
+lastPickAt. History/reference checks occur after locks, including foreign-league
+references that would otherwise cascade-delete. No transaction/score deletion is
+used to bypass those checks. Other selected leagues continue after failure; inspect
+the report for partial success. Discovery/startup/commit failures use category-only
+reporting, without SQL/exception payloads.
+
+No new migration, history remapping, snapshots, provider run or deployment.
+Standalone scoring contracts remain; the new maintenance tool is not a historical
+rescore authorization or immutable-input snapshot. [Usage and retry guidance](startSeasonJobs/README.md),
+[design](../docs/superpowers/specs/2026-11-06-mod-016-design.md),
+[evidence](../docs/modernization/evidence/mod-016-postgres-2026-11-06.json).

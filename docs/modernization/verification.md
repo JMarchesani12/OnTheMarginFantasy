@@ -1737,3 +1737,34 @@ assignment, history repair, dependency/scheduler/job/provider run or deployment.
 [Preflight/constraint proposal](../../db/preflights/MOD-015.md) separates application
 checks from remaining direct-SQL/parent metadata guarantees. Owned random DBs and
 container removed; checkout uncommitted; frozen baseline unchanged.
+
+## Priority 6 MOD-016 — 2026-11-06
+
+Failure-first preview/guards/atomic apply/CLI tests initially failed for missing
+maintenance service and preview composition. Actual SQL on strict supplied-conn
+SQLite now proves no preview writes, exact year/IDs, every observable history and
+active/finalized guard, reference impacts/totals, retained IDs, foreign reference
+refusal, scoring rollback/retry/isolation and safe CLI defaults/exit/error reporting.
+
+Independent review found P2 League-before-DraftState inversion against draft controls
+and omitted currentMemberId. Pristine-field test and valid-draft native lock race
+observed RED; fixed in one pass with DraftState-before-League and nonlocking refusal
+when a state appears while waiting. Existing/no-state start and order races GREEN;
+non-null pre-state pointer refuses writes. No other material findings or deferred
+minors. Reviewer independently passed14 maintenance tests before the fix.
+
+Final backend **687/687**, frontend **64/64**, production build and diff checks PASS.
+Owned marked current full-schema PostgreSQL verifies actual calendar/scoring on
+supplied connections, preview invariance, historical ownership/completed trade/
+postseason period impacts and exact stored totals/reference invariance when refused,
+football week0, foreign-reference cascade protection, calendar insert/update/delete/
+score/flag statement faults and deferred commit restoration/retry. Supported weekly,
+manual draft, pending transaction, existing/first draft start, order, finalization
+and foreign-key insertion races show real waits and fresh eligibility checks.
+Previous calendar, weekly, season-finalization and complete-scoring native suites
+pass without changing historical reports. [Hashed evidence](evidence/mod-016-postgres-2026-11-06.json)
+contains current source/test hashes.
+
+No new migration, snapshots/remapping, historical rescore input approval, configured
+maintenance/job/provider run, dependency/scheduler change or deployment. Owned random
+databases/container removed; audit checkout uncommitted; frozen baseline unchanged.
