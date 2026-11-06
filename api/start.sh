@@ -5,4 +5,4 @@ set -e
 cd "$(dirname "$0")"
 # Gunicorn needs PORT before loading wsgi; Python loads the optional .env too.
 PORT="${PORT:-$(python3 -c 'from runtime import load_runtime_environment; import os; load_runtime_environment(); print(os.environ.get("PORT", "5050"))')}"
-exec gunicorn -k eventlet -w 1 -b "0.0.0.0:${PORT}" wsgi:app
+exec gunicorn -c gunicorn_conf.py -k eventlet -w 1 -b "0.0.0.0:${PORT}" wsgi:app

@@ -1825,3 +1825,68 @@ Final checks: backend **704/704**, frontend **74/74**, TypeScript/production bui
 native MOD-023 + prior draft and MOD-010 ownership race suites, and whitespace diff
 check PASS. Source hashes refreshed after fixes. Owned random database and the
 MOD-023 container removed. Changes remain uncommitted and undeployed.
+
+## Priority 6 MOD-024 — operational recovery — 2026-11-06
+
+Approved [design](../superpowers/specs/2026-11-06-mod-024-design.md) and
+[plan](../superpowers/plans/2026-11-06-mod-024.md). The dedicated listener now uses
+engine-derived connection parameters, privately rejects mismatched legacy targets,
+reconnects with capped backoff, probes idle transport, retries bounded/coalesced
+league work and resynchronizes subscribed rooms after reconnect. MOD023 authorization
+and stop checks guard every delivery. Resource ownership and cooperative shutdown
+are explicit; no pooled LISTEN session is returned to application traffic.
+
+/health is unchanged; public cached/no-store /ready follows the user-approved503
+policy for required unhealthy listeners and200 for intentional disablement. Its
+fixed503 body is explicitly tagged to avoid normal REST error-body replacement;
+all existing error-envelope tests remain green. Dev/Gunicorn cleanup hooks and
+standalone timeout signal/stop behavior are covered without serving configured apps.
+
+Four standard cron adapters use stable per-command session advisory gates. Same
+command contention skips before domain/provider work; exception/disconnect/interrupted
+setup/unlock cleanup releases or invalidates physical sessions. Gate checks never
+reconnect and continue unlocked. Domain transaction/ownership locks, weekly/season
+atomicity, formulas and date policies remain unchanged. Safe allowlisted correlated
+events use stderr; weekly/final JSON stdout remains compatible. Ingestion partial
+failures return nonzero, and nested provider parser errors no longer print data or
+tracebacks. Broad bootstrap/checkpoint logging remains outside this card.
+
+[Native evidence](evidence/mod-024-postgres-2026-11-06.json) exercises the production
+controller in controlled steps with actual PostgreSQL LISTEN delivery, backend
+termination, reconnect/current snapshot refresh, removed-member revocation and
+owned-session closure. Real session-lock contention/release/loss and busy adapter
+no-work behavior pass. Prior MOD023 notification rollback, all draft slices and
+ownership native suites pass. Native tests wait for actual socket readiness and
+advance the injected clock through the idle-probe deadline; they do not claim
+instant failure detection from psycopg2.poll alone. No real listener/worker process,
+configured DSN/job/provider call or hosted operation was launched.
+
+Pre-review full checks: backend728/728, frontend74/74, production build and diff
+whitespace PASS. [Operations handoff](mod-024-operations.md) distinguishes source
+commands/cadence hints from unknown hosted schedules, roles, revision and restart
+policy. The intentionally suspended service is preserved. No schema/dependency,
+production SQL, environment change, deployment, commit or push.
+
+Independent final review reproduced three Important gaps: dev eventlet starvation,
+overflow repeatedly restarting a failing room prefix, and ignored hostaddr target
+overrides. A fourth finding—missing busy-job JSON stdout—was treated as Important
+for machine-consumer compatibility. All four reproduced RED and passed after one
+fix pass. Dev now patches before lazy runtime imports (definition imports remain
+inert); an actual eventlet scheduling child test with fake I/O confirms another
+socket task runs while the listener is active. Rotating reconnect resync makes
+progress past persistently failing early rooms with bounded pending storage.
+Hostaddr/service selectors participate in private target comparison. Busy scoring
+jobs retain their one-report JSON stdout contract. No deferred minor findings.
+
+Final backend **732/732**; final frontend/build/native results recorded after the
+review fix pass. Hosted runtime inspection remains excluded and necessary before
+rollout. Arbitrary injected engine creator hooks/connect_args remain outside the
+supported URL-configured factory contract; custom non-URL SSL/auth behavior needs
+an explicit listener adapter. These limitations are recorded in the operations
+handoff rather than inferred from synthetic tests.
+
+Final frontend **74/74**, production TypeScript/build, native MOD024 + all prior
+MOD023/draft/ownership suites, current source/test hash comparison and whitespace
+diff check PASS after review fixes. Owned random databases and MOD024 container
+removed. Changes remain uncommitted/undeployed. Priority6 application work is
+complete; no Priority7 implementation or hosted rollout was started.

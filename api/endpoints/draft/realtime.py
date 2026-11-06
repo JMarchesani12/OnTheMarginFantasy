@@ -61,11 +61,12 @@ class DraftSocketAccess:
         self.socket.server.leave_room(sid, f'draft:{league_id}', namespace='/')
         self.socket.emit('draft:error', {'message': 'Draft access denied'}, to=sid)
 
-    def deliver(self, sid, league_id, event, payload):
+    def deliver(self, sid, league_id, event, payload, *, should_deliver=None):
         try:
             self.reader(sid, league_id)
         except Exception:
             self.deny(sid, league_id)
             return False
+        if should_deliver is not None and not should_deliver(): return False
         self.socket.emit(event, jsonSafe(payload), to=sid)
         return True

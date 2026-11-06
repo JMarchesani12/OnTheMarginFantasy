@@ -6,6 +6,7 @@ state, without configured DB, app factory, provider or scheduler startup.
 import io
 from contextlib import redirect_stdout
 import unittest
+from test_operational_jobs import fake_gate
 import test_trade_action_authorization as actions
 import test_free_agency_authorization as fixture
 
@@ -44,7 +45,7 @@ class TrustedOperationalTests(unittest.TestCase):
         from test_season_finalization import SeasonFinalizationTests
         from cronJobs import cronComputeFinalScoreboard as final
         base=SeasonFinalizationTests();base.setUp();self.addCleanup(base.doCleanups)
-        with patch.object(final,'build_scoring',return_value=base.scoring), redirect_stdout(io.StringIO()):
+        with patch.object(final,'job_gate',fake_gate), patch.object(final,'build_scoring',return_value=base.scoring), redirect_stdout(io.StringIO()):
             report=final.main(engine=base.engine)
         self.assertEqual(report,{'finalized':[1,2],'skipped':[],'blocked':[],'failures':[]})
         self.assertEqual([row[1] for row in base.state()[0]],['Completed']*3)
@@ -66,10 +67,11 @@ class TrustedOperationalTests(unittest.TestCase):
             with self.subTest(stage=stage):
                 stdout,stderr=io.StringIO(),io.StringIO()
                 target=(patch.object(SeasonFinalizationRepository,'candidates',side_effect=RuntimeError('private SQL row token')) if stage=='discovery' else patch.object(final,'build_scoring',side_effect=RuntimeError('private SQL row token')))
-                with target,redirect_stdout(stdout),redirect_stderr(stderr):
+                with target,patch.object(final,'job_gate',fake_gate),redirect_stdout(stdout),redirect_stderr(stderr):
                     with self.assertRaises(SystemExit) as exit_result:
                         exec(code,{'main':lambda:final.main(engine=base.engine)})
                 self.assertEqual(exit_result.exception.code,1)
-                self.assertEqual(stderr.getvalue(),'')
+                self.assertNotIn('private',stderr.getvalue())
+                self.assertTrue(all('runId' in json.loads(line) for line in stderr.getvalue().splitlines()))
                 self.assertNotIn('private',stdout.getvalue())
                 self.assertEqual(json.loads(stdout.getvalue())['failures'],[{'sportSeasonId':None,'stage':stage,'category':'RuntimeError'}])

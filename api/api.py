@@ -1,5 +1,5 @@
 import os
-from flask import Flask
+from flask import Flask, g, jsonify
 from flask_cors import CORS
 from socketioInstance import socketio
 from endpoints.league.routes import setup_routes as LeagueRoutes
@@ -20,10 +20,25 @@ def create_app(engine=None):
         engine = configured_engine()
 
     app = Flask(__name__)
+    from runtime import listener_enabled
+    app.extensions["draft_listener_enabled"] = listener_enabled()
 
     @app.get("/health")
     def health():
         return {"ok": True}, 200
+
+    @app.get("/ready")
+    def ready():
+        enabled = app.extensions.get('draft_listener_enabled', True)
+        controller = app.extensions.get('draft_notify_listener')
+        status = (controller.status() if controller is not None and enabled else
+                  {'enabled': enabled, 'state': 'not_started' if enabled else 'disabled', 'category': None})
+        ok = not enabled or status['state'] == 'connected'
+        g.operational_readiness_response = True
+        response = jsonify({'ok': ok, 'listener': status})
+        response.status_code = 200 if ok else 503
+        response.headers['Cache-Control'] = 'no-store'
+        return response
 
     cors_origins = [
         o.strip()
@@ -37,6 +52,7 @@ def create_app(engine=None):
             r"/api/*": {"origins": cors_origins},
             r"/socket.io/*": {"origins": cors_origins},
             r"/health": {"origins": cors_origins},
+            r"/ready": {"origins": cors_origins},
         },
         supports_credentials=True,
         allow_headers=["Content-Type", "Authorization"],
@@ -48,6 +64,7 @@ def create_app(engine=None):
         app,
         public_paths={
             "/health",
+            "/ready",
             "/api/sports",
             "/api/leagues/search",
         },

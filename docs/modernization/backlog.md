@@ -453,6 +453,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-024 — Verify operational supervision, listener recovery and sanitized observability
 
+- **Completed — 2026-11-06 (application/synthetic verification scope):** Dedicated engine-derived listener recovery, bounded fair wakeup retries/reconnect resync, explicit stop hooks, cached readiness and safe operational logs. Same-command cron session gates skip overlaps; timeout stop/signals and partial job failure reporting are covered. [Operations/hosted boundary](mod-024-operations.md), [native evidence](evidence/mod-024-postgres-2026-11-06.json). Priority6 application work closes; hosted commands/schedules/roles/supervision remain unverified and the intentionally suspended service remains unchanged. No migration, configured job/provider run or deployment.
+
 - **Priority / size / risk:** P1 / M / Medium.
 - **Features:** F-022–028, F-034, F-036.
 - **Problem / evidence:** BE S05/S06; DB functions/jobs section: LISTEN failures, mismatched DSN names, static health, unknown scheduler.

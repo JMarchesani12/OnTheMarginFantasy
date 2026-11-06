@@ -79,3 +79,18 @@ Choose MOD-009 for the next implementation run: inspect the locked application p
 ## Priority 4 status — 2026-11-03
 
 MOD-034 startup isolation and MOD-028A bounded auth refresh were already implemented. MOD-025 now enforces exact draft-order permutations and start replay conflicts, including native PostgreSQL start/order/finalization lock-race verification. MOD-019 safe errors and documented local resource ceilings are implemented; gateway rate/proxy policy remains open. See [current progress](progress.md#priority-4-continuation--2026-11-03) and [verification](verification.md#priority-4-continuation--2026-11-03). No deployment is implied by this status update.
+
+## Priority 6 status — 2026-11-06
+
+MOD-013 weekly completion/retry, MOD-014 atomic season finalization, MOD-015 seasonal
+conference membership, MOD-016 historical maintenance safeguards, MOD-023 draft
+convergence and MOD-024 runtime recovery are complete in their recorded application/
+synthetic verification scopes. MOD-024 adds listener recovery/shutdown, user-approved
+readiness, safe logs and same-command job overlap handling. See the
+[operational handoff](mod-024-operations.md) and [verification](verification.md#priority-6-mod-024--operational-recovery--2026-11-06).
+
+This closes Priority6 application implementation, without claiming hosted rollout
+or supervision verification. Actual hosted commands/schedules/roles/restart policy,
+MOD-015 composite-constraint rollout and separate historical snapshot/remapping
+work retain their documented boundaries. The intentionally suspended service is
+unchanged. Priority7 is next in the planning queue; no Priority7 work starts here.

@@ -353,7 +353,6 @@ class ScheduleIngestionService(ScheduleReadService):
         client = self._new_client(self.espn_base_url, api_keyword)
         datestr = target_date.strftime("%Y%m%d")
 
-        print(f"Ingesting scoreboard for league {league_id} (sport={sport_id}, sportSeasonId={sport_season_id}) date={datestr}")
 
         events_seen = 0
 

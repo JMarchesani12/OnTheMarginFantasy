@@ -1,5 +1,6 @@
-import time
-import traceback
+import threading
+import signal
+from operations import safe_event, run_id
 from typing import Optional, Tuple
 
 
@@ -29,20 +30,25 @@ def _get_next_expired_or_soonest_deadline(conn) -> Optional[Tuple[int, float]]:
     return league_id, secs
 
 
-def run(engine=None):
+def run(engine=None, stop_event=None):
     if engine is None:
         from runtime import configured_engine
         engine = configured_engine()
+    stop_event = stop_event if stop_event is not None else threading.Event()
+    identity = run_id()
+    safe_event('timeout', 'started', identity)
     service = DraftPickService(engine)
 
-    while True:
+    while not stop_event.is_set():
         try:
             with engine.begin() as conn:
                 nxt = _get_next_expired_or_soonest_deadline(conn)
 
+            if stop_event.is_set():break
+
             if not nxt:
                 # No live drafts with a clock running
-                time.sleep(MAX_SLEEP_SECONDS)
+                stop_event.wait(MAX_SLEEP_SECONDS)
                 continue
 
             league_id, seconds_until_deadline = nxt
@@ -50,7 +56,7 @@ def run(engine=None):
             if seconds_until_deadline > 0:
                 # Sleep until the soonest deadline (bounded)
                 sleep_for = max(MIN_SLEEP_SECONDS, min(MAX_SLEEP_SECONDS, seconds_until_deadline))
-                time.sleep(sleep_for)
+                stop_event.wait(sleep_for)
                 continue
 
             # If we're here, it's expired now (or overdue): process it
@@ -60,13 +66,28 @@ def run(engine=None):
             # Existing timeout publication remains inside the service transaction.
 
             # Tiny pause to avoid tight loop if multiple expirations are at same instant
-            time.sleep(MIN_SLEEP_SECONDS)
+            stop_event.wait(MIN_SLEEP_SECONDS)
 
-        except Exception:
-            print("Draft timeout worker error:")
-            traceback.print_exc()
-            time.sleep(2)
+        except Exception as exc:
+            safe_event('timeout', 'failed', identity, category=exc)
+            stop_event.wait(2)
+    safe_event('timeout','stopped',identity)
+
+
+def main():
+    stop = threading.Event()
+    previous = {}
+    def halt(signum, frame): stop.set()
+    try:
+        for sig in (signal.SIGTERM, signal.SIGINT):
+            previous[sig] = signal.signal(sig, halt)
+        run(stop_event=stop)
+    except Exception as exc:
+        safe_event('timeout','failed',run_id(),category=exc)
+        raise SystemExit(1) from None
+    finally:
+        for sig, handler in previous.items(): signal.signal(sig, handler)
 
 
 if __name__ == "__main__":
-    run()
+    main()

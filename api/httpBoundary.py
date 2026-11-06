@@ -58,7 +58,9 @@ def install_http_boundary(app):
 
     @app.after_request
     def finalize_response(response):
-        if response.status_code >= 400:
+        # /ready intentionally returns a fixed operational body with 503.
+        readiness = getattr(g, 'operational_readiness_response', False) and response.status_code == 503
+        if response.status_code >= 400 and not readiness:
             payload = response.get_json(silent=True)
             payload = payload if isinstance(payload, dict) else {}
             default_code, default_message = error_defaults(response.status_code)

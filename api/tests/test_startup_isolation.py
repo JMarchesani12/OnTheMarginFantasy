@@ -112,7 +112,7 @@ with patch.dict(os.environ, {}, clear=True), patch.object(dotenv, 'load_dotenv',
         engine = Mock()
         engine.begin.return_value.__enter__ = Mock(return_value=engine)
         engine.begin.return_value.__exit__ = Mock(return_value=False)
-        with patch('runtime.configured_engine', side_effect=AssertionError('configuration loaded')), patch.object(worker, '_get_next_expired_or_soonest_deadline', return_value=None), patch.object(worker.time, 'sleep', side_effect=KeyboardInterrupt('stop fake worker')):
+        with patch('runtime.configured_engine', side_effect=AssertionError('configuration loaded')), patch.object(worker, '_get_next_expired_or_soonest_deadline', return_value=None), patch.object(worker.threading.Event, 'wait', side_effect=KeyboardInterrupt('stop fake worker')):
             with self.assertRaises(KeyboardInterrupt):
                 worker.run(engine=engine)
 
@@ -138,10 +138,11 @@ with patch.dict(os.environ, {}, clear=True), patch.object(dotenv, 'load_dotenv',
         import dev
         from socketioInstance import socketio
         sentinel = object()
-        with patch.object(dev, 'create_web_app', return_value=sentinel) as compose, patch.object(socketio, 'run') as run:
+        with patch('runtime.create_web_app', return_value=sentinel) as compose, patch.object(socketio, 'run') as run, patch('runtime.stop_web_listener') as stop, patch('eventlet.monkey_patch'):
             dev.main()
         compose.assert_called_once_with(use_reloader=True)
         run.assert_called_once_with(sentinel, host='0.0.0.0', port=5050, debug=True)
+        stop.assert_called_once_with(sentinel)
 
     def test_injected_factory_never_loads_dotenv(self):
         from api import create_app

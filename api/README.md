@@ -21,39 +21,49 @@ environment with `SUPABASE_DB_URL`, `SUPABASE_PROJECT_ID`, and
 resolve `.env` relative to the API directory, independent of the current directory.
 Never put credentials in checked-in files.
 
-## Notification listener
+## Notification listener, liveness and readiness
 
-Web startup retains the in-process PostgreSQL notification listener by default.
-It uses `DATABASE_URL`, separately from the application `SUPABASE_DB_URL`.
-To run the web server without notification listening:
+The in-process listener is enabled by default. It derives a dedicated, unpooled
+connection from the application engine's `SUPABASE_DB_URL`, preserving URL/dialect
+SSL options. `DATABASE_URL` is now only an optional legacy consistency assertion:
+if set, its effective host/port/database/role must match or startup fails safely.
+Never print either value. Proxy/direct aliases are not inferred equal; privately
+review the deployed targets before removing an obsolete legacy variable.
 
-```sh
-DRAFT_NOTIFY_LISTENER_ENABLED=false python3 dev.py
-```
+`DRAFT_NOTIFY_LISTENER_ENABLED=false` intentionally disables listening. The switch
+accepts true/1 and false/0 (case insensitive); invalid values fail startup. It does
+not change the separate timeout worker or restart the intentionally suspended
+Render service. Preserve that suspension until its actual command is verified.
 
-The switch accepts `true`/`1` and `false`/`0` (case insensitive); invalid values
-fail before startup. Disabling it removes database-driven draft broadcasts from
-that web process. It does not suspend or restart a Render service, or disable
-the independently invoked draft-timeout worker. Preserve the intentionally
-suspended service until its actual command is verified.
+`/health` stays `{ok:true}`/200. Public `/ready` returns fixed, no-store diagnostics
+without querying dependencies:200 when disabled or connected/healthy,503 when a
+required listener is absent, starting, retrying, degraded or stopped. This is local
+listener readiness, not proof of job schedules/provider health or deployed supervision.
 
-`create_app(engine=...)` only constructs the HTTP/socket application; it starts
-no listener. `runtime.create_web_app()` explicitly loads configuration, creates
-the engine/application and starts the enabled listener. The dev reload supervisor
-does not start a listener; its serving child does. Startup is idempotent per app.
-Production retains the existing single-worker eventlet topology:
+Transport faults retry indefinitely with capped1→30s backoff. Poll waits are≤1s,
+idle probes15s; disconnect detection is not instantaneous. Failed league wakeups
+retry independently in a bounded set; reconnect refreshes current subscribed rooms
+through the MOD023 authorization gate. No durable event replay platform is added.
+
+`create_app(engine=...)` constructs routes/sockets without starting background work;
+`runtime.create_web_app()` explicitly starts the enabled listener. The reload parent
+skips startup, and repeated startup is idempotent per app. Explicit stop closes the
+owned connection and prevents retries/emits; development finally and Gunicorn's
+worker_exit hook invoke it. No request teardown stops the listener.
+
+Production retains the single-worker eventlet topology:
 
 ```sh
 ./start.sh
 # Equivalent from api after runtime environment is configured:
-gunicorn -k eventlet -w 1 -b 0.0.0.0:5050 wsgi:app
+gunicorn -c gunicorn_conf.py -k eventlet -w 1 -b 0.0.0.0:5050 wsgi:app
 ```
 
-`wsgi.py` is an intentional runtime entry point: importing it initializes the web
-application and applies eventlet monkey patching. Importing definition modules
-(`api`, `db`, `dev`, domain and job modules) does neither. Do not preload the app
-in a Gunicorn master or increase worker count without a separate listener and
-Socket.IO coordination review.
+Do not preload the app or increase Socket.IO worker count without a separate
+coordination review. Definition imports stay free of configuration and runtime
+side effects; wsgi is an intentional composition/monkey-patching entry point.
+See the [MOD024 runbook](../docs/modernization/mod-024-operations.md) for connection
+mode requirements, shutdown limits and the outstanding hosted inspection.
 
 ## Jobs and maintenance commands
 
@@ -71,7 +81,13 @@ python3 -m scripts.rebuild_weeks_and_rescore --season-year 2026
 
 Cron `main(engine=...)` and timeout `run(engine=...)` accept injected engines for
 isolated callers. They resolve runtime configuration only when no engine is
-supplied. Job schedules, recovery rules and calculations are unchanged.
+supplied. Job schedules and calculations are unchanged. The four standard one-shot cron
+adapters use per-command PostgreSQL session locks: competing invocations skip
+without provider/domain work and exit0. Partial failures exit1; existing weekly/
+final JSON reports remain on stdout, safe structured events on stderr. The timeout
+worker has stop-aware waits and standalone SIGTERM/SIGINT cleanup. These gates need
+session-preserving connections and pool capacity for both gate and domain work;
+they are best-effort single flight between checks, not exactly-once execution.
 
 ## Credential-free verification
 

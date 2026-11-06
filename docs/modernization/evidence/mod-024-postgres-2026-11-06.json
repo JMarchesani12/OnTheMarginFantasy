@@ -1,0 +1,164 @@
+{
+  "result": "PASS",
+  "scope": "Owned marked PostgreSQL and controlled listener steps only; no configured runtime/provider/hosted operations",
+  "tests": {
+    "actual_listen_and_reconnect_resync": "PASS",
+    "revoked_member_reconnect_no_private_delivery": "PASS",
+    "owned_listener_shutdown_session_gone": "PASS",
+    "same_job_contention_skips_work_independent_keys": "PASS",
+    "gate_exception_disconnect_release_and_no_reconnect": "PASS",
+    "prior": {
+      "mod023": {
+        "commit_only_and_post_notify_rollback_and_deferred_rejection": [
+          "order",
+          "start",
+          "pause",
+          "resume",
+          "finalize",
+          "skip",
+          "extend",
+          "implicit_finalize"
+        ],
+        "noop_replay_no_notifications": "PASS",
+        "member_snapshots_after_worker_skip_extend_finalize": "PASS"
+      },
+      "pick": {
+        "native_live_manual_lookup_ownership_turn_grace_caps_season_defaults": "PASS",
+        "guarded_insert_rechecks_separate_transaction_revocation": "PASS",
+        "native_skip_rotation_unpicked_holes_last_turn_missing_turn_and_noops": "PASS",
+        "native_auto_random_buckets_caps_availability_sport_and_completion": "PASS",
+        "post_write_finalize_notify_statement_deferred_commit_rollback": "PASS",
+        "real_pick_timeout_lock_wait_rechecks_advanced_clock": "PASS",
+        "native_worker_deadline_without_worker_startup": "PASS",
+        "postgres_notify_commit_only_current_branch_placement": "PASS",
+        "repository_queries_exercised": [
+          "auto_advance_next",
+          "auto_advance_past_end",
+          "auto_state_for_update",
+          "conference_cap",
+          "conference_info",
+          "insert_auto_pick",
+          "insert_auto_slot",
+          "insert_live_pick",
+          "insert_live_slot",
+          "insert_manual_pick",
+          "insert_manual_slot",
+          "league_sport",
+          "live_advance_next",
+          "live_advance_past_end",
+          "live_advance_without_turn",
+          "live_owned_member",
+          "live_state_for_update",
+          "live_team_ownership",
+          "manual_league",
+          "manual_pick_count",
+          "manual_team_ownership",
+          "member_conference_count",
+          "member_for_order",
+          "membership_for_subject",
+          "next_timeout_deadline",
+          "notify",
+          "owned_conference_count",
+          "random_conference_team",
+          "sport_conference_ids",
+          "sport_rounds",
+          "timeout_advance",
+          "timeout_auto_member",
+          "timeout_expected_member",
+          "timeout_expired",
+          "timeout_extend_clock",
+          "timeout_last_unpicked",
+          "timeout_next_turn",
+          "timeout_rotate_turns",
+          "timeout_state_for_update"
+        ],
+        "scope_limit": "Current MOD-023 publication contract; legacy cap/random policies retained; no configured runtime or durable replay claim"
+      },
+      "snapshot": {
+        "member_only_scope_before_repair": "PASS",
+        "native_json_timestamps_picks_season_join_turn_skipping": "PASS",
+        "missing_state_trusted_legacy_supplied_connection": "PASS",
+        "repair_post_read_commit_caller_rollback": "PASS",
+        "separate_connection_pre_query_revocation": "PASS"
+      },
+      "controls": {
+        "native_generate_series_snake_straight_interval_upsert": "PASS",
+        "incomplete_order_config_missing_complete_guards": "PASS",
+        "post_write_deferred_commit_and_authority_rollback": "PASS",
+        "concurrent_pause_resume": [
+          {
+            "path": "actor_service",
+            "observed_lock_wait": true,
+            "outcomes": {
+              "first": "paused",
+              "second": "live"
+            }
+          },
+          {
+            "path": "user_id_service",
+            "observed_lock_wait": true,
+            "outcomes": {
+              "first": "paused",
+              "second": "live"
+            }
+          }
+        ],
+        "legacy_trusted_replay_rejection": "PASS",
+        "scope_limit": "MOD-025 rejects restart; finalization/start/order races covered in verify_mod025.py"
+      },
+      "order": {
+        "native_bigint_arrays_any_unnest_generate_series_unique_swap": "PASS",
+        "exact_projection_permutation_guard": "PASS",
+        "post_bump_assignment_read_statement_commit_rollback": "PASS",
+        "separate_connection_late_authority_rejection": "PASS",
+        "legacy_trusted_coercion": "PASS",
+        "scope_limit": "MOD-025 full permutation and coordinated lock order; additional races in verify_mod025.py"
+      },
+      "finalization": {
+        "native_final_state_season_date_boundaries_projection_timestamps": "PASS",
+        "no_season_and_missing_state_compatibility": "PASS",
+        "post_write_real_statement_commit_and_caller_rollback": "PASS",
+        "separate_connection_pre_post_authority_rejection": "PASS",
+        "trusted_and_legacy_supplied_connection": "PASS",
+        "scope_limit": "Original pre/post authority checks add no locks or replay/concurrency guarantee"
+      },
+      "ownership": {
+        "competing_pending_free_agent_reservations": {
+          "observed_lock_wait": true,
+          "outcomes": {
+            "first": "ok",
+            "second": "rejected"
+          }
+        }
+      }
+    }
+  },
+  "sha256": {
+    "api/endpoints/draft/realtime.py": "d4c646fc7f8fe761bf67c77a537f6c005dffff39b96a73cb1dcd63767808eb75",
+    "api/endpoints/draft/draftBroadcast.py": "d011911f4bbc0f50157f7b422448c83306fdddade03370fc676c5fa084ff7b07",
+    "api/operations.py": "2f89e48da5e8d45e964699794b7caae909b005733b08c5ea9fc11343b8f61116",
+    "api/endpoints/draft/listener.py": "1d7b89e092e44019e57a43591ad7dc68268d271f7b0b7b275b2efa9e1f76e791",
+    "api/endpoints/draft/startDraftNotifyListener.py": "47482182cdcd1a3334ab22518e9f73c90281a089ea5f0c3c1e81ee5023b7af39",
+    "api/runtime.py": "16cdc1e1bc105678b63a45b5741fddea29f1ffe2b1419928749df85a35df6f93",
+    "api/api.py": "a0b291b9e71843152178dfd85e7f19d907bab846a58180f32af3c1fec8ad376b",
+    "api/httpBoundary.py": "4d40910f1bea64f128e96c29bf6666face3a291a3a0b8c5bfe87965c1239bc74",
+    "api/dev.py": "c5802d3e5979472495791a6d9fa7c62aeb5595a16d132c262271a82b5e40f67f",
+    "api/start.sh": "c06442150f4411851a12d662c3b46560ee349272e55af374ca0a8865990d5ded",
+    "api/gunicorn_conf.py": "05efd20d71a2f2099aaa0c83059a5de396724504f29c054105adc6f96e161162",
+    "api/worker/draftTimeoutWorker.py": "e537d7667414bef8c800e798ca13fbd404fef790f5f7d9b1f7881a236f89d03e",
+    "api/cronJobs/cronComputeWeeklyScores.py": "6c5af7fd0da8a5f0844845cb6d42750181c518b76defb1b34b7491633134fb07",
+    "api/cronJobs/cronComputeFinalScoreboard.py": "45632102690a8f5390c9668478c16a9d45bc47e6e08b15609d37a16f039e25de",
+    "api/cronJobs/cronIngestScoreboard.py": "2f1fe60b10b771a23b856277a286cd9370c81e7185d775b2c85485e17bc325fb",
+    "api/cronJobs/cronRefreshSchedules.py": "7c9ca46b0a1721485d2b91e13a4a015efaab504e19f1e3207cd144c14bd6d9f6",
+    "api/endpoints/schedule/ingestion_service.py": "5aeadfc48be85c00b848ce4b3d73894f96e6c15164311938db201ce3afd8aebe",
+    "api/endpoints/schedule/helpers/espn/espnClient.py": "cda9a3fa6fdd63c101e3ba2cf3ad3dc9d71594076033c0f12522757181dff10a",
+    "api/tests/test_dev_cooperative.py": "61c85f3498159446a96e1a2b3ed4ba545f68bed82ef52ab5498e624e31a98c14",
+    "api/tests/test_operations.py": "c7adbb6d740d6d830655659ab6b520d6c60b24cc10f1533cf03e564fc875aae0",
+    "api/tests/test_draft_listener.py": "a791a1cf13a1c1ac9c942dd9020e9c263b20b6b3c58df881e8b26430ed73e116",
+    "api/tests/test_runtime_readiness.py": "4d1975561d3b003ff958cb2b824e032d9f1266bc9804eab31bc6ebddc3994a14",
+    "api/tests/test_operational_jobs.py": "6c9cb05a69ec4ca27ec82c46fa2587005d51e42be156bc61606b3c7212c78776",
+    "api/tests/test_operational_trusted_contract.py": "5fe73dfe86771b06012ddf281b9422d501b2493f275d208b996b99645c05efc0",
+    "api/tests/test_startup_isolation.py": "6dcd89488694d5356dff6efff1e927b4d4dfea873fef6246ba65804afe61f83f",
+    "scripts/modernization/verify_mod024.py": "ac75bc8abc45b3f1a44bd4d812ba30a89b2efb9c83839a45bb25879e0d15f73d"
+  }
+}
