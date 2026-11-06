@@ -54,6 +54,7 @@ class DraftEndpoints:
             broadcast_draft_update(
                 league_id,
                 {"type": "pick", "snapshot": snapshot, "pick": draft_pick},
+                engine=self.db_engine,
             )
             
             return jsonify(jsonSafe(draft_pick)), 201
@@ -135,7 +136,7 @@ class DraftEndpoints:
             elif action == 'finalize':
                 result = self.control_service.finalize(UserActor(principal.user_id, principal.subject), league_id)
                 snapshot = self.snapshot_service.snapshot_for_job(league_id)
-                broadcast_draft_update(league_id, {'type': action, 'snapshot': snapshot})
+                broadcast_draft_update(league_id, {'type': action, 'snapshot': snapshot}, engine=self.db_engine)
             else:
                 method = {
                     'start': self.control_service.start,
@@ -143,7 +144,7 @@ class DraftEndpoints:
                     'resume': self.control_service.resume,
                 }[action]
                 result = method(UserActor(principal.user_id, principal.subject), league_id)
-                broadcast_draft_update(league_id, {'type': action, 'snapshot': result})
+                broadcast_draft_update(league_id, {'type': action, 'snapshot': result}, engine=self.db_engine)
             return jsonify(result), 200
         except PrincipalResolutionError as exc:
             return jsonify({'error': exc.code}), exc.status_code

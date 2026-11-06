@@ -1,5 +1,6 @@
 """Draft finalization authority and owned/supplied transaction orchestration."""
 from actors import UserActor
+from .notifyChannel import notify_draft_updated
 from .control_repository import DraftControlRepository
 from .snapshot_service import DraftSnapshotService
 from .draft_rules import settings_from_league, compute_round_and_pos, draft_order_for_pick
@@ -47,6 +48,7 @@ class DraftControlService:
         if not state:
             raise ValueError(f'DraftState not found for league {league_id}')
         league = self.repository.finalize_league(conn, league_id)
+        notify_draft_updated(conn, league_id, 'draft_finalize')
         return {'leagueId': league_id, 'draftComplete': True, 'state': state,
                 'leagueStatus': league['leagueStatus'] if league else None}
 
@@ -149,6 +151,7 @@ class DraftControlService:
             raise ValueError('DraftTurn not seeded correctly (missing overallPickNumber=1)')
         self.repository.start_state(conn, league_id, first, cfg['selectionTime'])
         self.repository.mark_drafting(conn, league_id)
+        notify_draft_updated(conn, league_id, 'draft_start')
         return DraftSnapshotService(self.engine).snapshot_for_job(league_id, conn)
 
     @staticmethod
@@ -162,6 +165,7 @@ class DraftControlService:
         state = self.repository.lock_state(conn, league_id)
         self._require_active_state(state)
         self.repository.pause_state(conn, league_id)
+        notify_draft_updated(conn, league_id, 'draft_pause')
         return DraftSnapshotService(self.engine).snapshot_for_job(league_id, conn)
 
     def _resume(self, conn, league_id):
@@ -169,6 +173,7 @@ class DraftControlService:
         state = self.repository.lock_state(conn, league_id)
         self._require_active_state(state)
         self.repository.resume_state(conn, league_id, cfg['selectionTime'])
+        notify_draft_updated(conn, league_id, 'draft_resume')
         return DraftSnapshotService(self.engine).snapshot_for_job(league_id, conn)
 
     def set_order(self, actor, league_id, member_ids):
@@ -197,4 +202,5 @@ class DraftControlService:
             raise ValueError('Draft order must include every league member exactly once')
         self.repository.bump_orders(conn, league_id)
         self.repository.assign_order(conn, league_id, member_ids)
+        notify_draft_updated(conn, league_id, 'draft_order')
         return {'members': self.repository.ordered_members(conn, league_id)}

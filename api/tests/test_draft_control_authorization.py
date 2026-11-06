@@ -115,10 +115,10 @@ class DraftControlAuthorizationTests(unittest.TestCase):
                             self.assertEqual(set(response.json), {'leagueId', 'draftSettings', 'serverNow', 'state', 'members', 'picks', 'onDeck', 'inTheHole'})
                         self.emit.assert_called_once()
                         args, kwargs = self.emit.call_args
-                        self.assertEqual(args[0], 'draft:updated')
+                        self.assertEqual(args[0], league_id)
                         self.assertEqual(args[1]['type'], action)
                         self.assertEqual(args[1]['snapshot']['leagueId'], league_id)
-                        self.assertEqual(kwargs, {'room': f'draft:{league_id}'})
+                        self.assertEqual(kwargs, {'engine': self.db})
 
     def test_members_nonmembers_and_foreign_commissioners_cannot_control(self):
         for action in self.actions:

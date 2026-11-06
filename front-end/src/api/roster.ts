@@ -29,7 +29,8 @@ export async function getMemberTeams(
 
 export async function getAvailableTeams(
   weekNumber: number,
-  leagueId: number
+  leagueId: number,
+  signal?: AbortSignal
 ): Promise<OwnedTeam[]> {
   const payload = {
     "leagueId": leagueId,
@@ -37,13 +38,14 @@ export async function getAvailableTeams(
   };
 
   const res = await apiFetch(`${API_BASE_URL}/api/roster/availableTeams`, {
+    signal,
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
 
   if (!res.ok) {
-    throw new Error(`Failed to get available teams: ${res.status}`);
+    throw Object.assign(new Error(`Failed to get available teams: ${res.status}`), {status: res.status});
   }
 
   const data = (await res.json()) as OwnedTeam[];

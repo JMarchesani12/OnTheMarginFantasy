@@ -223,6 +223,7 @@ class DraftPickService:
             draft_pick["draftComplete"] = False
             draft_pick["nextMemberId"] = next_member_id
             draft_pick["nextOverallPickNumber"] = next_overall
+            self.pick_repository.notify(conn, league_id, "draft_pick")
 
             return draft_pick
 
@@ -296,6 +297,7 @@ class DraftPickService:
                 # If current_overall is the last unpicked already, "moving to end" changes nothing.
                 if current_overall == last_unpicked_overall:
                     self.pick_repository.timeout_extend_clock(conn, {"leagueId": league_id, "selectionTime": selection_time})
+                    self.pick_repository.notify(conn, league_id, "auto_skip_extend")
                     return {
                         "type": "AUTO-SKIP-MOVE-TO-END",
                         "moved": False,
@@ -326,6 +328,7 @@ class DraftPickService:
                         "selectionTime": selection_time,
                     })
 
+                self.pick_repository.notify(conn, league_id, "auto_skip")
                 return {
                     "type": "AUTO-SKIP-MOVE-TO-END",
                     "timedOutOverallPickNumber": current_overall,

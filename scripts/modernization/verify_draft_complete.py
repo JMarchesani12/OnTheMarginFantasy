@@ -106,7 +106,7 @@ def tests(engine, database, probe=False):
         row=service.pick_live(bob,10,12,102,3)
         assert (row['memberId'],row['overallPickNumber'],row['roundNumber'],row['pickInRound'],row['nextMemberId'])==(12,2,1,2,12)
         slot=state()['LeagueTeamSlot'][0];assert (slot['acquiredWeek'],slot['acquiredVia'])==(3,'Draft')
-        assert not messages()  # Existing nonterminal live publication is HTTP post-commit.
+        assert [json.loads(m.payload)['reason'] for m in messages()]==['draft_pick']  # MOD-023 committed wakeup contract.
         # Actor authority, turn, expiry/grace, active ownership and duplicate pick rejection.
         for actor,member,error,fragment in ((alice,12,PermissionError,None),(bob,11,PermissionError,None),
                 (bob,12,ValueError,'Not your turn')):
@@ -172,7 +172,7 @@ def tests(engine, database, probe=False):
         assert service.process_timeout_for_job(10) is None and state()==before
         reset();expire();row=service.process_timeout_for_job(10)
         assert (row['timedOutMemberId'],row['movedToOverallPickNumber'],row['nextMemberId'])==(12,4,12)
-        assert [r['memberId'] for r in state()['DraftTurn'][:4]]==[11,12,11,12] and not messages()
+        assert [r['memberId'] for r in state()['DraftTurn'][:4]]==[11,12,11,12] and [json.loads(m.payload)['reason'] for m in messages()]==['auto_skip']
         reset();query('INSERT INTO "DraftPick" ("leagueId","overallPickNumber","roundNumber","pickInRound","memberId","sportTeamId") VALUES (10,3,2,1,12,102)');expire()
         assert service.process_timeout_for_job(10)['nextMemberId']==11
         assert [r['memberId'] for r in state()['DraftTurn'][:4]]==[11,11,12,12]
@@ -246,9 +246,9 @@ def tests(engine, database, probe=False):
                 'post_write_finalize_notify_statement_deferred_commit_rollback':'PASS',
                 'real_pick_timeout_lock_wait_rechecks_advanced_clock':'PASS',
                 'native_worker_deadline_without_worker_startup':'PASS',
-                'postgres_notify_commit_only_existing_branch_placement':'PASS',
+                'postgres_notify_commit_only_current_branch_placement':'PASS',
                 'repository_queries_exercised':sorted(covered),
-                'scope_limit':'Original publication placement, restart and legacy cap/random policies preserved; this is extraction, not MOD-023/025/startup redesign'}
+                'scope_limit':'Current MOD-023 publication contract; legacy cap/random policies retained; no configured runtime or durable replay claim'}
     finally:listener.close()
 
 

@@ -37,7 +37,7 @@ class DraftContractTests(unittest.TestCase):
                                 exp=int(time.time()) + 600), SUPABASE_JWT_SECRET, algorithm='HS256')
         self.client.environ_base['HTTP_AUTHORIZATION'] = f'Bearer {token}'
         self.body = {"leagueId": 7, "memberId": 11, "sportTeamId": 21}
-        self.emitter = patch.object(socketio, 'emit')
+        self.emitter = patch('endpoints.draft.draftEndpoints.broadcast_draft_update')
         self.emitted = self.emitter.start()
         self.addCleanup(self.emitter.stop)
 
@@ -57,10 +57,10 @@ class DraftContractTests(unittest.TestCase):
             "overallPickNumber": 1, "roundNumber": 1, "pickInRound": 1,
             "createdAt": "2026-01-01T00:00:00+00:00",
         })
-        self.emitted.assert_called_once_with('draft:updated', {
-            "type": "pick", "pick": response.json,
+        self.emitted.assert_called_once_with(7, {
+            "type": "pick", "pick": self.model.pick_live.return_value,
             "snapshot": {"leagueId": 7, "state": {"currentOverallPickNumber": 2}},
-        }, room='draft:7')
+        }, engine=self.db)
 
     def test_rejected_or_conflicting_pick_never_emits_success(self):
         for error, status in [

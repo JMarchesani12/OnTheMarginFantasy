@@ -440,6 +440,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-023 — Publish every committed draft transition and verify reconnect convergence
 
+- **Status — 2026-11-06:** Implemented in application/synthetic verification scope: transaction-local notifications, guarded per-recipient socket delivery, and serialized HTTP refresh/reconnect. [Design](../superpowers/specs/2026-11-06-mod-023-design.md), [native evidence](evidence/mod-023-postgres-2026-11-06.json). Final verification/review recorded in verification.md. Listener recovery/supervision remains MOD-024; no deployment implied.
+
 - **Priority / size / risk:** P1 / M / Medium–High.
 - **Features:** F-013, F-020, F-023, F-024.
 - **Problem / evidence:** BE D09/S05; FE S02; DB notification section: AUTO-SKIP/finalize missing notify, joins not reissued on connect.

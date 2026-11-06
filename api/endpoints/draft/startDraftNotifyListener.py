@@ -5,9 +5,16 @@ import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 from endpoints.draft.snapshot_service import DraftSnapshotService
-from utils.jsonSafe import jsonSafe
+from .draftBroadcast import broadcast_draft_update
+from .realtime import league_id_from
 
 DRAFT_NOTIFY_CHANNEL = "draft_updated"
+
+def dispatch_draft_notification(socketio, engine, payload):
+    league_id = league_id_from(payload)
+    snapshot = DraftSnapshotService(engine).snapshot_for_job(league_id)
+    broadcast_draft_update(league_id, {"type": "notify", "snapshot": snapshot},
+                           engine=engine, socket_server=socketio)
 
 def start_draft_notify_listener(socketio, engine):
     """
@@ -22,7 +29,6 @@ def start_draft_notify_listener(socketio, engine):
         cur = conn.cursor()
         cur.execute(f"LISTEN {DRAFT_NOTIFY_CHANNEL};")
 
-        snapshots = DraftSnapshotService(engine)
 
         while True:
             # Wait up to 10s for a notify (keeps CPU low)
@@ -40,12 +46,7 @@ def start_draft_notify_listener(socketio, engine):
 
                 # Build the latest snapshot and emit it
                 try:
-                    snapshot = snapshots.snapshot_for_job(league_id)
-                    socketio.emit(
-                        "draft:updated",
-                        {"type": "notify", "snapshot": jsonSafe(snapshot)},
-                        room=f"draft:{league_id}",
-                    )
+                    dispatch_draft_notification(socketio, engine, {"leagueId": league_id})
                 except Exception:
                     # Don't crash listener on snapshot errors
                     pass

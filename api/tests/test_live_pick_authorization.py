@@ -13,6 +13,10 @@ from socketioInstance import socketio
 
 
 class LivePickDatabase(fixture.DraftStateDatabase):
+    def __init__(self):
+        super().__init__()
+        self.connection.create_function("pg_notify", 2, lambda channel, payload: None)
+
     def execute(self, statement, params):
         sql = str(statement).replace('FOR UPDATE', '').replace(')::int AS cnt', ') AS cnt').replace(
             "now() + (:selectionTime || ' seconds')::interval",
@@ -60,7 +64,7 @@ class LivePickAuthorizationTests(unittest.TestCase):
                 "memberId" INTEGER, "sportTeamId" INTEGER, "acquiredWeek" INTEGER,
                 "acquiredVia" TEXT, "droppedWeek" INTEGER);
         ''')
-        self.emit = self.enterContext(patch.object(socketio, 'emit'))
+        self.emit = self.enterContext(patch('endpoints.draft.draftEndpoints.broadcast_draft_update'))
         self.body = {'leagueId': 10, 'memberId': 12, 'sportTeamId': 102}
 
     def state(self):
@@ -86,11 +90,11 @@ class LivePickAuthorizationTests(unittest.TestCase):
                                  (league_id, member_id, 0, 'Draft'))
                 self.emit.assert_called_once()
                 args, kwargs = self.emit.call_args
-                self.assertEqual(args[0], 'draft:updated')
+                self.assertEqual(args[0], league_id)
                 self.assertEqual(args[1]['type'], 'pick')
                 self.assertEqual(args[1]['pick'], response.json)
                 self.assertEqual(args[1]['snapshot']['leagueId'], league_id)
-                self.assertEqual(kwargs, {'room': f'draft:{league_id}'})
+                self.assertEqual(kwargs, {'engine': self.db})
 
     def test_commissioner_may_pick_own_turn_and_explicit_week_is_preserved(self):
         self.db.connection.execute('UPDATE "DraftTurn" SET "memberId" = 11 WHERE "leagueId" = 10 AND "overallPickNumber" = 2')

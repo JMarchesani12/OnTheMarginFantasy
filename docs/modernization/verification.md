@@ -1768,3 +1768,60 @@ contains current source/test hashes.
 No new migration, snapshots/remapping, historical rescore input approval, configured
 maintenance/job/provider run, dependency/scheduler change or deployment. Owned random
 databases/container removed; audit checkout uncommitted; frozen baseline unchanged.
+
+## MOD-023 — committed draft publication and reconnect convergence — 2026-11-06
+
+Approved [design](../superpowers/specs/2026-11-06-mod-023-design.md) and
+[implementation plan](../superpowers/plans/2026-11-06-mod-023.md). New transaction-local
+notifications cover nonterminal live picks, controls/order, timeout skip rotation,
+last-turn clock extension, and direct/implicit finalization. Existing manual/auto
+pick wakeups remain; duplicate wakeups are permitted. Failure to notify rolls back
+the mutation. No schema/revision/outbox or event shape change.
+
+Server-held SID credentials and the current unique User/member binding are checked
+on joins and separately before every private delivery. Initial join uses the
+member-scoped snapshot service. HTTP and database-listener delivery share the
+same per-recipient boundary; registration/engine mismatch fails closed. Revoked,
+expired, missing/ambiguous identities or lookup failures are evicted with generic
+errors. Own leave/disconnect works after revocation. Tokens never enter payloads.
+The boundary authorizes new emissions; it cannot recall already delivered data.
+The supported single-process Socket.IO topology is unchanged.
+
+Browser socket events trigger one serialized, abortable HTTP reader. Every connect
+rejoins, event bursts coalesce, and disposed/disconnected/denied generations cannot
+apply late successes. Page command responses no longer apply draft state, and
+storage does not restore picks over authoritative state. Null/empty snapshots clear
+state and picks. The page keeps one subscription per league/token/endpoint; member
+metadata/callback changes refresh without rebuilding it. All hooks now execute
+before the league-loading return. Available-team refresh joins the same request
+lifecycle. API origin/auth refresh and mutation retry behavior remain unchanged.
+
+Verification uses actual Flask-SocketIO test clients with signed synthetic JWTs
+(no network server), the production TypeScript controller with controlled socket/
+HTTP dependencies, and a marked task-owned PostgreSQL17.6 container on loopback.
+Native LISTEN sees no uncommitted event; all eight newly covered control/worker
+branches restore rows and emit nothing on post-notify and deferred-commit failure.
+Native no-op/replay silence, member snapshots after worker transitions and previous
+snapshot/control/order/finalization/complete-pick suites pass. The prior native
+complete-pick harness now expects current live/skip publication; frozen historical
+reports are untouched. [Source-hashed native evidence](evidence/mod-023-postgres-2026-11-06.json).
+
+No real browser end-to-end run, configured application/listener/worker/provider,
+production SQL, dependency, deployment, commit or push. Delivery converges on a
+valid reconnect or later refresh signal, without durable replay during an outage.
+Listener reconnection/DSN parity/operational health remain MOD-024.
+
+Independent whole-change review found expiry during DB lookup, swallowed roster
+errors, stale route/account league context, and late command error/loading writes.
+All were reproduced RED and fixed in one pass: credentials are verified after DB
+I/O; roster failures preserve HTTP status and reach the refresh controller; route/
+account identity scopes authoritative member metadata; captured controllers guard
+late command UI changes. No deferred findings. Added actual page-module hook/JSX
+harness regressions with substituted transport (not a browser DOM/E2E claim),
+including navigation without cached state, account member changes, combined-reader
+failure propagation and overlapping command completion across token generations.
+
+Final checks: backend **704/704**, frontend **74/74**, TypeScript/production build,
+native MOD-023 + prior draft and MOD-010 ownership race suites, and whitespace diff
+check PASS. Source hashes refreshed after fixes. Owned random database and the
+MOD-023 container removed. Changes remain uncommitted and undeployed.

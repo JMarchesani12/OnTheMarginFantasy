@@ -138,10 +138,10 @@ export async function finalizeDraft(
   return await res.json();
 }
 
-export async function getDraftState(leagueId: number): Promise<DraftSnapshot> {
-  const res = await apiFetch(`${API_BASE_URL}/api/draft/state/${leagueId}`)
+export async function getDraftState(leagueId: number, signal?: AbortSignal): Promise<DraftSnapshot> {
+  const res = await apiFetch(`${API_BASE_URL}/api/draft/state/${leagueId}`, { signal })
   if (!res.ok) {
-    throw new Error(`Failed to start draft: ${res.status}`);
+    throw Object.assign(new Error(`Failed to read draft: ${res.status}`), {status: res.status});
   }
 
   const data = (await res.json()) as DraftSnapshot;

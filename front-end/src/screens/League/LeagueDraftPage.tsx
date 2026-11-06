@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { io, type Socket } from "socket.io-client";
+import { useNavigate, useParams } from "react-router-dom";
+import { io } from "socket.io-client";
+import { createDraftRealtime, type DraftRealtime } from "../../lib/draftRealtime";
 import type { League } from "../../types/league";
 import type { OwnedTeam } from "../../types/schedule";
 import type {
@@ -19,7 +20,7 @@ import {
   resumeDraft,
   startDraft,
 } from "../../api/draft";
-import { getConferences, getLeague, getLeaguesForUser } from "../../api/leagues";
+import { getConferences, getLeaguesForUser } from "../../api/leagues";
 import { useAuth } from "../../context/AuthContext";
 import { useCurrentUser } from "../../context/currentUserContext";
 import { normalizeOwnedTeams, type RawOwnedTeam } from "../../utils/teams";
@@ -33,79 +34,52 @@ import { countConferenceDrafters, getFilledConferences, groupDraftedTeams } from
 import { teamSearchMatches } from "../../utils/teamSearch";
 import "./LeagueDraftPage.css";
 
-type LocationState = {
-  league?: League;
-  autoJoin?: boolean;
-};
-
 type GroupedTeams = [string, OwnedTeam[]][];
 
 const LeagueDraftPage = () => {
   const navigate = useNavigate();
   const { league_id } = useParams();
-  const location = useLocation();
-  const state = location.state as LocationState | null;
-  const [league, setLeague] = useState<League | null>(state?.league ?? null);
-  const [leagueLoading, setLeagueLoading] = useState(false);
-  const [leagueError, setLeagueError] = useState<string | null>(null);
   const { session } = useAuth();
   const { userId: currentUserId } = useCurrentUser();
-
-  const leagueId = league?.leagueId ?? (league_id ? Number(league_id) : null);
+  const routeLeagueId = Number(league_id);
+  const leagueId = Number.isSafeInteger(routeLeagueId) && routeLeagueId > 0 ? routeLeagueId : null;
+  const accountId = session?.user?.id ?? null;
+  const hasSession = Boolean(session?.access_token);
+  const scopeKey = `${leagueId}:${accountId}:${currentUserId}`;
+  const [leagueContext, setLeagueContext] = useState<{scope: string; league: League} | null>(null);
+  const league = leagueContext?.scope === scopeKey ? leagueContext.league : null;
+  const [leagueLoading, setLeagueLoading] = useState(false);
+  const [leagueError, setLeagueError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (state?.league) {
-      setLeague(mapLeagueFromResponse(state.league));
-    }
-  }, [state?.league]);
-
-  useEffect(() => {
-    if (league || !league_id || !currentUserId) {
-      return;
-    }
-
+    if (!leagueId || !currentUserId || !hasSession) return;
     let isMounted = true;
-
+    setLeagueLoading(true);
+    setLeagueError(null);
     const loadLeague = async () => {
       try {
-        setLeagueLoading(true);
-        setLeagueError(null);
+        // Navigation state can belong to another account. Reload member metadata.
         const response = await getLeaguesForUser(currentUserId, "all");
         if (!isMounted) return;
-        const matches = normalizeLeaguesResponse(response);
-        const found = matches.find(
-          (item) => item.leagueId === Number(league_id)
-        );
-        if (found) {
-          setLeague(mapLeagueFromResponse(found));
-          return;
-        }
-        const fallback = await getLeague(Number(league_id));
-        if (isMounted) {
-          setLeague(mapLeagueFromResponse(fallback));
-        }
+        const found = normalizeLeaguesResponse(response).find(item => item.leagueId === leagueId);
+        if (!found) throw new Error("You are not a member of this league.");
+        setLeagueContext({scope: scopeKey, league: mapLeagueFromResponse(found)});
       } catch (err: any) {
         if (isMounted) {
+          setLeagueContext(null);
           setLeagueError(err?.message ?? "Failed to load league details.");
         }
       } finally {
-        if (isMounted) {
-          setLeagueLoading(false);
-        }
+        if (isMounted) setLeagueLoading(false);
       }
     };
-
-    loadLeague();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [league, league_id, currentUserId]);
+    void loadLeague();
+    return () => { isMounted = false; };
+  }, [leagueId, currentUserId, accountId, hasSession, scopeKey]);
 
   const [availableTeams, setAvailableTeams] = useState<OwnedTeam[]>([]);
   const [pickError, setPickError] = useState<string | null>(null);
   const [selectedTeam, setSelectedTeam] = useState<OwnedTeam | null>(null);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [conferenceFilter, setConferenceFilter] = useState("all");
@@ -118,8 +92,9 @@ const LeagueDraftPage = () => {
   const [draftActionLoading, setDraftActionLoading] = useState(false);
   const [draftSummaryPicks, setDraftSummaryPicks] = useState<DraftSummaryPick[]>([]);
   const [draftSummaryLoading, setDraftSummaryLoading] = useState(false);
+  const loading = draftSummaryLoading;
   const [showDraftComplete, setShowDraftComplete] = useState(false);
-  const [hasJoinedDraft, setHasJoinedDraft] = useState(false);
+  const [, setHasJoinedDraft] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [clockOffsetMs, setClockOffsetMs] = useState(0);
   const [onDeckSlot, setOnDeckSlot] = useState<DraftTurnSlot | null>(null);
@@ -129,11 +104,9 @@ const LeagueDraftPage = () => {
   );
   const teamMetaRef = useRef<Map<number, OwnedTeam>>(new Map());
   const draftWeekNumber = 1;
-  const socketRef = useRef<Socket | null>(null);
+  const realtimeRef = useRef<DraftRealtime | null>(null);
   const previousDraftStatusRef = useRef<string | null>(null);
-  const joinQueuedRef = useRef(false);
-  const pausedSnapshotLoadedRef = useRef(false);
-  const initialSnapshotLoadedRef = useRef(false);
+
   const resolveConferenceName = useCallback(
     (conferenceName: string | null) => {
       return conferenceName?.trim() || "Conference unavailable";
@@ -150,47 +123,6 @@ const LeagueDraftPage = () => {
     import.meta.env.VITE_SOCKET_URL ??
     import.meta.env.VITE_API_BASE_URL ??
     "http://127.0.0.1:5050";
-
-  const loadTeams = useCallback(async () => {
-    if (!leagueId) {
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      const data = await getAvailableTeams(draftWeekNumber, leagueId);
-      const normalized = normalizeOwnedTeams(data as RawOwnedTeam[]);
-      setAvailableTeams(normalized);
-    } catch (err: any) {
-      setError(err?.message ?? "Failed to load available teams");
-    } finally {
-      setLoading(false);
-    }
-  }, [leagueId, draftWeekNumber]);
-
-  useEffect(() => {
-    let cancelled = false;
-    loadTeams();
-
-    if (!leagueId || session?.access_token) {
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    const interval = window.setInterval(() => {
-      if (!cancelled) {
-        loadTeams();
-      }
-    }, 10000);
-
-    return () => {
-      cancelled = true;
-      window.clearInterval(interval);
-    };
-  }, [loadTeams, leagueId, session?.access_token]);
 
   useEffect(() => {
     if (!leagueId) {
@@ -222,22 +154,6 @@ const LeagueDraftPage = () => {
     };
   }, [leagueId]);
 
-  useEffect(() => {
-    if (!storageKey || !isBrowser) {
-      return;
-    }
-
-    try {
-      const stored = safeLocalStorage.getItem(storageKey);
-      if (stored) {
-        const parsed = JSON.parse(stored) as RawOwnedTeam[];
-        setDraftSelections(normalizeOwnedTeams(parsed));
-      }
-    } catch (err) {
-      console.warn("Failed to load draft selections", err);
-    }
-  }, [storageKey]);
-
   const persistSelections = useCallback(
     (teams: OwnedTeam[]) => {
       if (!storageKey || !isBrowser) {
@@ -261,7 +177,6 @@ const LeagueDraftPage = () => {
           : payload;
 
       if (!snapshot || typeof snapshot !== "object") {
-        void loadTeams();
         return;
       }
 
@@ -281,8 +196,6 @@ const LeagueDraftPage = () => {
         normalizedAvailable.forEach((team) => {
           teamMetaRef.current.set(team.teamId, team);
         });
-      } else {
-        void loadTeams();
       }
 
       if (Array.isArray(recent)) {
@@ -309,9 +222,7 @@ const LeagueDraftPage = () => {
         }
       }
 
-      if (state && typeof state === "object") {
-        setDraftState(state as DraftState);
-      }
+      setDraftState(state && typeof state === "object" ? state as DraftState : null);
 
       if (Array.isArray(members)) {
         setDraftMembers(members as DraftMember[]);
@@ -361,58 +272,47 @@ const LeagueDraftPage = () => {
         }
       }
     },
-    [loadTeams, persistSelections]
+    [league?.memberId, persistSelections]
   );
 
+  const snapshotCallbackRef = useRef(applyDraftSnapshot);
+  snapshotCallbackRef.current = applyDraftSnapshot;
+  const clearDraftView = useCallback(() => {
+    setDraftState(null);
+    setDraftMembers([]);
+    setDraftSummaryPicks([]);
+    setDraftSelections([]);
+    setAvailableTeams([]);
+    setSelectedTeam(null);
+    setOnDeckSlot(null);
+    setInTheHoleSlot(null);
+    setShowDraftComplete(false);
+    setHasJoinedDraft(false);
+    setPickError(null);
+    setDraftActionLoading(false);
+  }, []);
   useEffect(() => {
-    if (!leagueId || !session?.access_token) {
-      return;
-    }
-    const socket = io(socketUrl, {
-      auth: { token: session.access_token },
+    clearDraftView();
+    if (!leagueId || !session?.access_token) return;
+    const socket = io(socketUrl, {auth: {token: session.access_token}, autoConnect: false});
+    const controller = createDraftRealtime({
+      socket, leagueId,
+      read: async (signal) => {
+        const snapshot = await getDraftState(leagueId, signal);
+        const availableTeams = await getAvailableTeams(draftWeekNumber, leagueId, signal);
+        return {...snapshot, availableTeams};
+      },
+      apply: snapshot => snapshotCallbackRef.current(snapshot),
+      clear: clearDraftView, ready: setHasJoinedDraft, error: setError, loading: setDraftSummaryLoading,
     });
-
-    socketRef.current = socket;
-
-    socket.on("connect", () => {
-      setError(null);
-    });
-
-    socket.on("draft:snapshot", (payload) => {
-      applyDraftSnapshot(payload);
-    });
-
-    socket.on("draft:updated", (payload) => {
-      applyDraftSnapshot(payload);
-    });
-
-    socket.on("draft:error", (payload) => {
-      const message =
-        typeof payload === "string"
-          ? payload
-          : (payload as { message?: string } | null)?.message;
-      setError(message ?? "Draft socket error");
-    });
-
-    socket.on("connect_error", (err) => {
-      setError(err?.message ?? "Failed to connect to draft socket");
-    });
-
-    if (!joinQueuedRef.current) {
-      socket.emit("draft:join", { leagueId });
-      joinQueuedRef.current = true;
-      setHasJoinedDraft(true);
-    }
-
+    realtimeRef.current = controller;
     return () => {
-      if (hasJoinedDraft) {
-        socket.emit("draft:leave", { leagueId });
-      }
-      socket.disconnect();
-      socketRef.current = null;
-      joinQueuedRef.current = false;
+      controller.dispose();
+      if (realtimeRef.current === controller) realtimeRef.current = null;
     };
-  }, [applyDraftSnapshot, hasJoinedDraft, leagueId, session?.access_token, socketUrl]);
+  }, [leagueId, session?.access_token, socketUrl, clearDraftView, scopeKey]);
+  // Member metadata may arrive after the initial read; refresh without recreating the socket.
+  useEffect(() => { realtimeRef.current?.refresh(); }, [league?.memberId]);
 
   const groupTeams = (teams: OwnedTeam[]): GroupedTeams => {
     const map = new Map<string, OwnedTeam[]>();
@@ -496,104 +396,6 @@ const LeagueDraftPage = () => {
   const isCommissioner =
     currentUserId != null && league?.commissionerId === currentUserId;
 
-  const loadDraftSummary = useCallback(async () => {
-    if (!leagueId) {
-      return;
-    }
-
-    try {
-      setDraftSummaryLoading(true);
-      const data = await getDraftState(leagueId);
-      if (data && typeof data === "object") {
-        if (Array.isArray(data.picks)) {
-          const normalizedPicks = data.picks as DraftSummaryPick[];
-          setDraftSummaryPicks(normalizedPicks);
-          const memberId = league?.memberId ?? null;
-          if (memberId == null) {
-            return;
-          }
-          const userPicks = normalizedPicks.filter((pick) => pick.memberId === memberId);
-          setDraftSelections((current) => {
-            const currentById = new Map(current.map((team) => [team.teamId, team]));
-            const pickedTeams = userPicks.map((pick) => {
-              const known =
-                teamMetaRef.current.get(pick.sportTeamId) ??
-                currentById.get(pick.sportTeamId);
-              if (known) {
-                return known;
-              }
-              return {
-                teamId: pick.sportTeamId,
-                teamName: pick.sportTeamName ?? `Team ${pick.sportTeamId}`,
-                conferenceName:
-                  (pick as DraftSummaryPick & { conferenceName?: string | null })
-                    .conferenceName ?? null,
-              };
-            });
-            persistSelections(pickedTeams);
-            return pickedTeams;
-          });
-          const pickedIds = new Set(normalizedPicks.map((pick) => pick.sportTeamId));
-          setAvailableTeams((current) =>
-            current.filter((team) => !pickedIds.has(team.teamId))
-          );
-        }
-
-        if (Array.isArray(data.members)) {
-          setDraftMembers(data.members);
-        }
-
-        if (data.state && typeof data.state === "object") {
-          setDraftState(data.state as DraftState);
-        }
-
-        setOnDeckSlot(data.onDeck ?? data.state?.onDeck ?? null);
-        setInTheHoleSlot(data.inTheHole ?? data.state?.inTheHole ?? null);
-
-        if (data.serverNow) {
-          const serverMs = Date.parse(data.serverNow);
-          if (!Number.isNaN(serverMs)) {
-            setClockOffsetMs(serverMs - Date.now());
-          }
-        }
-      }
-    } catch (err: any) {
-      setError(err?.message ?? "Failed to load draft summary");
-    } finally {
-      setDraftSummaryLoading(false);
-    }
-  }, [leagueId]);
-
-  useEffect(() => {
-    if (!leagueId || initialSnapshotLoadedRef.current) {
-      return;
-    }
-    initialSnapshotLoadedRef.current = true;
-    void loadDraftSummary();
-  }, [leagueId, loadDraftSummary]);
-
-  if (!league || !leagueId) {
-    return (
-      <div className="draft-page">
-        <button
-          className="draft-page__back"
-          type="button"
-          onClick={() => navigate(-1)}
-        >
-          ← Back
-        </button>
-        {leagueLoading ? (
-          <p className="draft-page__empty">Loading league details…</p>
-        ) : (
-          <p className="draft-page__empty">
-            {leagueError ??
-              "League context missing. Return to your leagues list and try again."}
-          </p>
-        )}
-      </div>
-    );
-  }
-
   const toggleTeam = (team: OwnedTeam) => {
     setPickError(null);
     setSelectedTeam((current) =>
@@ -602,32 +404,19 @@ const LeagueDraftPage = () => {
   };
 
   const handleSubmit = async () => {
-    if (!selectedTeam) {
+    if (!selectedTeam || !league) {
       return;
     }
 
     setPickError(null);
+    const controller = realtimeRef.current;
     try {
-      const response = await createDraftPick(
-        league.memberId,
-        league.leagueId,
-        selectedTeam.teamId
-      );
-
-      const updatedSelections = [selectedTeam, ...draftSelections];
-      setDraftSelections(updatedSelections);
-      persistSelections(updatedSelections);
+      await createDraftPick(league.memberId, league.leagueId, selectedTeam.teamId);
+      if (realtimeRef.current !== controller) return;
       setSelectedTeam(null);
-      setAvailableTeams((current) =>
-        current.filter((team) => team.teamId !== selectedTeam.teamId)
-      );
-      teamMetaRef.current.set(selectedTeam.teamId, selectedTeam);
-
-      if (response?.draftComplete) {
-        setShowDraftComplete(true);
-        void loadDraftSummary();
-      }
+      controller?.refresh();
     } catch (err: any) {
+      if (realtimeRef.current !== controller) return;
       setPickError(err?.message ?? "Failed to submit draft pick");
     }
   };
@@ -701,33 +490,9 @@ const LeagueDraftPage = () => {
     isCommissioner && draftStatus !== "complete" && draftStatus !== null;
 
   useEffect(() => {
-    if (!draftStatus) {
-      return;
-    }
-
-    if (draftStatus === "paused" && !pausedSnapshotLoadedRef.current) {
-      pausedSnapshotLoadedRef.current = true;
-      void loadDraftSummary();
-    }
-
-    if (draftStatus === "complete" && previousDraftStatusRef.current !== "complete") {
-      setShowDraftComplete(true);
-      void loadDraftSummary();
-    }
-
+    if (draftStatus === "complete" && previousDraftStatusRef.current !== "complete") setShowDraftComplete(true);
     previousDraftStatusRef.current = draftStatus;
-  }, [draftStatus, loadDraftSummary]);
-
-  useEffect(() => {
-    if (hasJoinedDraft || !league?.memberId) {
-      return;
-    }
-
-    if (draftMembers.some((member) => member.memberId === league.memberId)) {
-      setHasJoinedDraft(true);
-    }
-  }, [draftMembers, hasJoinedDraft, league?.memberId]);
-
+  }, [draftStatus]);
 
   useEffect(() => {
     if (!isDraftLive) {
@@ -853,6 +618,28 @@ const LeagueDraftPage = () => {
     navigate(`/leagues/${leagueId}`);
   };
 
+  if (!league || !leagueId) {
+    return (
+      <div className="draft-page">
+        <button
+          className="draft-page__back"
+          type="button"
+          onClick={() => navigate(-1)}
+        >
+          ← Back
+        </button>
+        {leagueLoading ? (
+          <p className="draft-page__empty">Loading league details…</p>
+        ) : (
+          <p className="draft-page__empty">
+            {leagueError ??
+              "League context missing. Return to your leagues list and try again."}
+          </p>
+        )}
+      </div>
+    );
+  }
+
   const handleDraftAction = async (
     action: "start" | "pause" | "resume" | "finalize"
   ) => {
@@ -874,26 +661,18 @@ const LeagueDraftPage = () => {
       }
     }
 
+    const controller = realtimeRef.current;
     try {
       setDraftActionLoading(true);
       setError(null);
 
-      const response =
-        action === "start"
-          ? await startDraft(leagueId)
-          : action === "pause"
-          ? await pauseDraft(leagueId)
-          : action === "resume"
-          ? await resumeDraft(leagueId)
-          : (await finalizeDraft(leagueId, currentUserId as number),
-            await getDraftState(leagueId));
-
-      applyDraftSnapshot(response);
-      if (action === "finalize") {
-        setShowDraftComplete(true);
-        void loadDraftSummary();
-      }
+      if (action === "start") await startDraft(leagueId);
+      else if (action === "pause") await pauseDraft(leagueId);
+      else if (action === "resume") await resumeDraft(leagueId);
+      else await finalizeDraft(leagueId, currentUserId as number);
+      controller?.refresh();
     } catch (err: any) {
+      if (realtimeRef.current !== controller) return;
       const message =
         err?.message ??
         (action === "start"
@@ -905,20 +684,11 @@ const LeagueDraftPage = () => {
           : "Failed to finalize draft");
       setError(message);
     } finally {
-      setDraftActionLoading(false);
+      if (realtimeRef.current === controller) setDraftActionLoading(false);
     }
   };
 
-  const handleJoinDraft = () => {
-    if (!leagueId || !socketRef.current) {
-      setError("Draft connection not ready. Try again in a moment.");
-      return;
-    }
-
-    console.log("Draft socket join (manual)", { leagueId });
-    socketRef.current.emit("draft:join", { leagueId });
-    setHasJoinedDraft(true);
-  };
+  const handleJoinDraft = () => { realtimeRef.current?.join(); };
 
   return (
     <div className="draft-page">

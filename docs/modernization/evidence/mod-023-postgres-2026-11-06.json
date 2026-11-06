@@ -1,0 +1,153 @@
+{
+  "result": "PASS",
+  "scope": "Owned marked loopback PostgreSQL; no configured runtime/worker/listener/provider",
+  "tests": {
+    "commit_only_and_post_notify_rollback_and_deferred_rejection": [
+      "order",
+      "start",
+      "pause",
+      "resume",
+      "finalize",
+      "skip",
+      "extend",
+      "implicit_finalize"
+    ],
+    "noop_replay_no_notifications": "PASS",
+    "member_snapshots_after_worker_skip_extend_finalize": "PASS",
+    "previous": {
+      "snapshot": {
+        "member_only_scope_before_repair": "PASS",
+        "native_json_timestamps_picks_season_join_turn_skipping": "PASS",
+        "missing_state_trusted_legacy_supplied_connection": "PASS",
+        "repair_post_read_commit_caller_rollback": "PASS",
+        "separate_connection_pre_query_revocation": "PASS"
+      },
+      "controls": {
+        "native_generate_series_snake_straight_interval_upsert": "PASS",
+        "incomplete_order_config_missing_complete_guards": "PASS",
+        "post_write_deferred_commit_and_authority_rollback": "PASS",
+        "concurrent_pause_resume": [
+          {
+            "path": "actor_service",
+            "observed_lock_wait": true,
+            "outcomes": {
+              "first": "paused",
+              "second": "live"
+            }
+          },
+          {
+            "path": "user_id_service",
+            "observed_lock_wait": true,
+            "outcomes": {
+              "first": "paused",
+              "second": "live"
+            }
+          }
+        ],
+        "legacy_trusted_replay_rejection": "PASS",
+        "scope_limit": "MOD-025 rejects restart; finalization/start/order races covered in verify_mod025.py"
+      },
+      "order": {
+        "native_bigint_arrays_any_unnest_generate_series_unique_swap": "PASS",
+        "exact_projection_permutation_guard": "PASS",
+        "post_bump_assignment_read_statement_commit_rollback": "PASS",
+        "separate_connection_late_authority_rejection": "PASS",
+        "legacy_trusted_coercion": "PASS",
+        "scope_limit": "MOD-025 full permutation and coordinated lock order; additional races in verify_mod025.py"
+      },
+      "finalization": {
+        "native_final_state_season_date_boundaries_projection_timestamps": "PASS",
+        "no_season_and_missing_state_compatibility": "PASS",
+        "post_write_real_statement_commit_and_caller_rollback": "PASS",
+        "separate_connection_pre_post_authority_rejection": "PASS",
+        "trusted_and_legacy_supplied_connection": "PASS",
+        "scope_limit": "Original pre/post authority checks add no locks or replay/concurrency guarantee"
+      },
+      "complete_pick": {
+        "native_live_manual_lookup_ownership_turn_grace_caps_season_defaults": "PASS",
+        "guarded_insert_rechecks_separate_transaction_revocation": "PASS",
+        "native_skip_rotation_unpicked_holes_last_turn_missing_turn_and_noops": "PASS",
+        "native_auto_random_buckets_caps_availability_sport_and_completion": "PASS",
+        "post_write_finalize_notify_statement_deferred_commit_rollback": "PASS",
+        "real_pick_timeout_lock_wait_rechecks_advanced_clock": "PASS",
+        "native_worker_deadline_without_worker_startup": "PASS",
+        "postgres_notify_commit_only_current_branch_placement": "PASS",
+        "repository_queries_exercised": [
+          "auto_advance_next",
+          "auto_advance_past_end",
+          "auto_state_for_update",
+          "conference_cap",
+          "conference_info",
+          "insert_auto_pick",
+          "insert_auto_slot",
+          "insert_live_pick",
+          "insert_live_slot",
+          "insert_manual_pick",
+          "insert_manual_slot",
+          "league_sport",
+          "live_advance_next",
+          "live_advance_past_end",
+          "live_advance_without_turn",
+          "live_owned_member",
+          "live_state_for_update",
+          "live_team_ownership",
+          "manual_league",
+          "manual_pick_count",
+          "manual_team_ownership",
+          "member_conference_count",
+          "member_for_order",
+          "membership_for_subject",
+          "next_timeout_deadline",
+          "notify",
+          "owned_conference_count",
+          "random_conference_team",
+          "sport_conference_ids",
+          "sport_rounds",
+          "timeout_advance",
+          "timeout_auto_member",
+          "timeout_expected_member",
+          "timeout_expired",
+          "timeout_extend_clock",
+          "timeout_last_unpicked",
+          "timeout_next_turn",
+          "timeout_rotate_turns",
+          "timeout_state_for_update"
+        ],
+        "scope_limit": "Current MOD-023 publication contract; legacy cap/random policies retained; no configured runtime or durable replay claim"
+      },
+      "ownership": {
+        "competing_pending_free_agent_reservations": {
+          "observed_lock_wait": true,
+          "outcomes": {
+            "first": "ok",
+            "second": "rejected"
+          }
+        }
+      }
+    }
+  },
+  "sha256": {
+    "api/endpoints/draft/control_service.py": "1b9bed711ab06d7fe53a207dc9ed922db19892b90bb1006243fe289b754b0efc",
+    "api/endpoints/draft/pick_service.py": "ab10c88b581d5a59947e90a53acf28594385e642eee9e902e6c53daf30f45a9c",
+    "api/endpoints/draft/draftSocket.py": "3c8ed54464bb19c18d8fa93f0a60ee352ac72c1c56d8ab5bf2c3236b0631ad27",
+    "api/endpoints/draft/draftBroadcast.py": "22ca2079f0ceec37fd83dfd10873f71064ef764e94986eeb49adf2717159e4d8",
+    "api/endpoints/draft/realtime.py": "50f654e6c108eed8162458dab6bd195645119abe6ecd38cf5040649175f4488e",
+    "api/endpoints/draft/startDraftNotifyListener.py": "2c091aafc74ca023e30fc3ff94ff4ddda17edf62f2e650143188fb81b0c5f1e5",
+    "api/endpoints/draft/draftEndpoints.py": "9b24fdfd353088df2c83ba8a810295b80743dbdc3f1d2e6ff3d4b12fff87a53a",
+    "api/endpoints/draft/notifyChannel.py": "5b2bbcff7f14e98f27161564e43b1cef136d2b6efa1b18025fa46bb68ceac677",
+    "api/tests/test_draft_contracts.py": "036f3d08b2561740c959fbc3b4400ddf0b41d72128e4556075ae1ae2fa9eb025",
+    "api/tests/test_draft_control_authorization.py": "5831e1b6ee07752f9129cfeda1c61f41e570cc0f0cacf5d743aa2701d8044a32",
+    "api/tests/test_live_pick_authorization.py": "0575f865ae29b091102666ec0f01ba342418ec7dae044a0d76dddda0c1ada41d",
+    "api/tests/test_draft_notifications.py": "8c9a34bc0b40b30b62fcf585b6d5bdcc2a04476d813c33c9ca8e136d5ee490ff",
+    "api/tests/test_draft_realtime.py": "7f7bc3958b139815d41d146b6e7285341abeac9b7d539d2278a7d58f0c8c3132",
+    "front-end/src/lib/draftRealtime.ts": "751af40fc4a3818ce7415a6394e91ec22e610be5e9585fbcf4e53aa74ba98f0f",
+    "front-end/tests/draftRealtime.test.ts": "d8f1862be8cf86252c6b863a57095f478422800968cbe80e8378a35dc0a3fc28",
+    "front-end/tests/draftPageLifecycle.test.ts": "101b2378b3415e741434462739e3d6a11e760298af889d9d060c74c95c62629a",
+    "front-end/src/screens/League/LeagueDraftPage.tsx": "c317d53a2a85bc0024a501fd6fc46d3f76530c0f30c4b7d4e6d4259d7d3339fd",
+    "front-end/src/api/draft.ts": "63f88b6756c10cbd67d2f03a0dc056ce87961d0ffc37c3468f4c92a6e6c8188b",
+    "front-end/src/api/roster.ts": "42db4790c549ca082d6d867767e3b8cd5e5d9f446bd256d772a4b3f3abbfff96",
+    "front-end/src/types/draft.ts": "0132c644a5c4a8213a41879ad40278db3708873ddbb807035b05672cdecc1a16",
+    "scripts/modernization/verify_mod023.py": "0168ec106d357a80510ab6fc442385fc36c1510910ad22a928fc939bed511c5d",
+    "scripts/modernization/verify_draft_complete.py": "b9ca9f9aafc6f812d6095fdf8a822cc1051dea952adb6d5aa18c2ce72dae712b"
+  }
+}
