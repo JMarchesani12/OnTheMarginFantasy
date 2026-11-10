@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import ProfileStatus from "../../components/Profile/ProfileStatus";
 import LeagueCard from "../../components/LeagueCard/LeagueCard";
 import { getLeaguesForUser, searchLeagues } from "../../api/leagues";
 import { getSports } from "../../api/sport";
@@ -20,6 +21,8 @@ type StageValue = (typeof stageOptions)[number]["value"];
 type HomeTab = "leagues" | "search";
 
 const SEARCH_LIMIT = 6;
+const EMPTY_LEAGUES: League[] = [];
+type PrivateLeagues = { identityKey: string; items: League[] };
 
 const applyStageFilter = (items: League[], stage: StageValue) => {
   if (stage === "completed") {
@@ -54,8 +57,8 @@ const Home = () => {
   const navigate = useNavigate();
   const [tab, setTab] = useState<HomeTab>("leagues");
   const [stage, setStage] = useState<StageValue>("active");
-  const [leagues, setLeagues] = useState<League[]>([]);
-  const [memberLeagues, setMemberLeagues] = useState<League[]>([]);
+  const [leagueState, setLeagues] = useState<PrivateLeagues | null>(null);
+  const [memberLeagueState, setMemberLeagues] = useState<PrivateLeagues | null>(null);
   const [sports, setSports] = useState<Sport[]>([]);
   const [sportsLoading, setSportsLoading] = useState(false);
   const [sportsError, setSportsError] = useState<string | null>(null);
@@ -69,7 +72,9 @@ const Home = () => {
   const [hasMore, setHasMore] = useState(false);
   const [overviewOpen, setOverviewOpen] = useState(false);
 
-  const { userId, displayName, email } = useCurrentUser();
+  const { userId, displayName, email, identityKey, isCurrentIdentity } = useCurrentUser();
+  const leagues = userId && leagueState?.identityKey === identityKey ? leagueState.items : EMPTY_LEAGUES;
+  const memberLeagues = userId && memberLeagueState?.identityKey === identityKey ? memberLeagueState.items : EMPTY_LEAGUES;
 
   const { signOut } = useAuth();
 
@@ -79,18 +84,19 @@ const Home = () => {
     }
 
     let isMounted = true;
+    const controller = new AbortController();
 
     async function loadLeagues() {
       try {
-        const response = await getLeaguesForUser(userId, stage);
+        const response = await getLeaguesForUser(userId, stage, controller.signal);
 
-        if (!isMounted) {
+        if (!isMounted || !isCurrentIdentity()) {
           return;
         }
 
-        setLeagues(applyStageFilter(normalizeLeaguesResponse(response), stage));
+        setLeagues({ identityKey, items: applyStageFilter(normalizeLeaguesResponse(response), stage) });
       } catch (error) {
-        console.error("Failed to load leagues", error);
+        if (isMounted && isCurrentIdentity()) console.error("Failed to load leagues", error);
       }
     }
 
@@ -98,8 +104,9 @@ const Home = () => {
 
     return () => {
       isMounted = false;
+      controller.abort();
     };
-  }, [userId, stage]);
+  }, [userId, stage, identityKey, isCurrentIdentity]);
 
   useEffect(() => {
     if (!userId) {
@@ -107,18 +114,19 @@ const Home = () => {
     }
 
     let isMounted = true;
+    const controller = new AbortController();
 
     const loadMemberLeagues = async () => {
       try {
-        const response = await getLeaguesForUser(userId, "all");
-        if (!isMounted) {
+        const response = await getLeaguesForUser(userId, "all", controller.signal);
+        if (!isMounted || !isCurrentIdentity()) {
           return;
         }
-        setMemberLeagues(normalizeLeaguesResponse(response));
+        setMemberLeagues({ identityKey, items: normalizeLeaguesResponse(response) });
       } catch (error) {
-        console.error("Failed to load member leagues", error);
-        if (isMounted) {
-          setMemberLeagues([]);
+        if (isMounted && isCurrentIdentity()) {
+          console.error("Failed to load member leagues", error);
+          setMemberLeagues({ identityKey, items: [] });
         }
       }
     };
@@ -127,8 +135,9 @@ const Home = () => {
 
     return () => {
       isMounted = false;
+      controller.abort();
     };
-  }, [userId]);
+  }, [userId, identityKey, isCurrentIdentity]);
 
   useEffect(() => {
     let isMounted = true;
@@ -240,6 +249,7 @@ const Home = () => {
   
   return (
     <main className="home">
+      <ProfileStatus />
       <header className="home__header">
         <div>
           <p className="home__eyebrow">Welcome back {welcomeName}</p>

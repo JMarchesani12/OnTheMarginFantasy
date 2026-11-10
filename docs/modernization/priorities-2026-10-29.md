@@ -111,3 +111,16 @@ See [closeout evidence](evidence/mod-033-ownership-reads-2026-11-09.json) and
 These are bounded pilots, not a claim that every possible shared helper/query or
 screen has been migrated. Recorded follow-ups/minors and deployment/runtime limits
 remain; changes are uncommitted and undeployed. Priority8 is the next planning row.
+
+
+## Priority 8 status — 2026-11-10
+
+MOD-026 is implemented in its approved application/isolated scope: one API-backed
+profile owner, synchronous session continuity, bounded provisioning, safe signup
+hints, and narrow Home/Settings identity safeguards. Frontend150/150, build and
+import checks pass; the review's source-to-render gap was reproduced and fixed.
+See [evidence](evidence/mod-026-profile-ownership-2026-11-10.json).
+
+MOD-027A own-league feedback is next after this dependency; remaining MOD-027B–G,
+MOD-028B, performance measurement and cleanup retain their separate scope/approvals.
+No live provider/browser/hosted rollout is implied. Work remains uncommitted.

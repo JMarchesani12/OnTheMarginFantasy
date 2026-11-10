@@ -17,9 +17,11 @@ export async function getUser(
 
 export async function getUserByUuid(
   uuid: string,
-  accessToken?: string
+  accessToken?: string,
+  signal?: AbortSignal
 ): Promise<User | null> {
   const res = await apiFetch(`${API_BASE_URL}/api/user/byUuid/${uuid}`, {
+    signal,
     headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
   });
 
@@ -28,20 +30,23 @@ export async function getUserByUuid(
   }
 
   if (!res.ok) {
-    throw new Error(`Failed to get user: ${res.status}`);
+    throw Object.assign(new Error(`Failed to get user: ${res.status}`), { status: res.status });
   }
 
-  const data = (await res.json()) as User;
-  return data;
+  const data: unknown = await res.json();
+  if (!data || typeof data !== "object" || Array.isArray(data)) throw new Error("Invalid profile response");
+  return data as User;
 }
 
 export async function createUser(
   displayName: string,
-  accessToken?: string
+  accessToken?: string,
+  signal?: AbortSignal
 ): Promise<User> {
   const payload = { displayName };
 
   const res = await apiFetch(`${API_BASE_URL}/api/user`, {
+    signal,
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -51,7 +56,7 @@ export async function createUser(
   });
 
   if (!res.ok) {
-    throw new Error(`Failed to create user: ${res.status}`);
+    throw Object.assign(new Error(`Failed to create user: ${res.status}`), { status: res.status });
   }
 
   const data = (await res.json()) as User;

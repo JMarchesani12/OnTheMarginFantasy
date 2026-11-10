@@ -13,7 +13,7 @@ export function fixture() {
     useState(initial:any){const host=current,i=index++;if(!(i in host.slots))host.slots[i]=typeof initial==='function'?initial():initial;return [host.slots[i],(v:any)=>{host.slots[i]=typeof v==='function'?v(host.slots[i]):v;}];},
     useRef(initial:any){const i=index++;return current.slots[i]??(current.slots[i]={current:initial});},
     useMemo(fn:any,deps:any[]){const i=index++,old=current.slots[i];if(!old||!depsEqual(old.deps,deps))current.slots[i]={deps,value:fn()};return current.slots[i].value;},
-    useEffect(fn:any,deps:any[]){const host=current,i=index++,old=host.slots[i];if(!old||!depsEqual(old.deps,deps))effects.push(()=>{old?.cleanup?.();host.slots[i]={deps,cleanup:fn()};});},
+    useEffect(fn:any,deps:any[]){const host=current,i=index++,old=host.slots[i];if(!old||!depsEqual(old.deps,deps))effects.push(()=>{old?.cleanup?.();host.slots[i]={deps,cleanup:fn(),effect:fn};});},
     createContext(value:any){return {Provider:'provider',value};},useContext(ctx:any){return ctx.value;},
   };
   react.useCallback=(fn:any,deps:any[])=>react.useMemo(()=>fn,deps);
@@ -44,6 +44,7 @@ export function fixture() {
   function dispose(host:any){for(const slot of host.slots)slot?.cleanup?.();}
   return {load,react,jsx,
     render(Component:any,props:any={},commit=true){effects=[];seen=new Set();tree=walk({type:Component,props},'root');if(commit){for(const [id,host]of instances)if(!seen.has(id)){dispose(host);instances.delete(id);}const pending=effects;effects=[];pending.forEach(fn=>fn());}return tree;},
+    replayEffects(){const slots=[...instances.values()].flatMap(host=>host.slots).filter(slot=>typeof slot?.effect==='function');slots.forEach(slot=>slot.cleanup?.());slots.forEach(slot=>{slot.cleanup=slot.effect();});},
     dispose(){instances.forEach(dispose);instances.clear();},get tree(){return tree;},
   };
 }

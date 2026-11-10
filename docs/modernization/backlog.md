@@ -479,6 +479,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-026 — Coordinate profile ownership and identity transitions
 
+- **Completed application/isolated scope — 2026-11-10:** CurrentUserProvider is the sole API-backed profile read/provision owner; AuthProvider publishes coherent sessions with synchronous captured subject/credential epochs and validity checks before React batching. Profile attempts bind subject/token/signal, require confirmed404 before one create, converge409 by one reread, reject mismatched UUID/ID, and guard signup hints against obsolete/newer records. Token-only renewal preserves ready profile/form; explicit refresh failures reject and show retry feedback. Home masks private identity-keyed resources while preserving public discovery; Settings scopes input/save/refresh and avoids false success. Frontend150/150, build/import graph PASS; review Important source-to-render gap reproduced and fixed with five actual-module no-render regressions; no deferred Minor findings. Backend/apiFetch unchanged; no live browser/Supabase/provider/DB/deployment validation. [Design](../superpowers/specs/2026-11-10-mod-026-profile-ownership-design.md), [evidence](evidence/mod-026-profile-ownership-2026-11-10.json). MOD027/028B remain separate.
+
 - **Narrow dependency completed — 2026-11-09:** MOD-029 binds numeric profile outcomes to the authenticated subject and latest request; masks unresolved/failed/obsolete identity. Broader application-profile resource ownership, AuthContext session/provisioning coordination, and full acceptance matrix remain open; this is not MOD-026 completion. [Evidence](evidence/mod-029-league-context-2026-11-09.json).
 
 - **Priority / size / risk:** P1 / M / Medium.

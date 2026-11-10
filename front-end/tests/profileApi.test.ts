@@ -4,6 +4,7 @@ import test from 'node:test';
 import { runInNewContext } from 'node:vm';
 import ts from 'typescript';
 import { createAuthenticatedFetch } from '../src/api/authenticatedFetch.ts';
+import { fixture, settle } from './helpers/leagueContextHarness.ts';
 
 // Run real modules with SDK/transport substitutes; no env file or network.
 function loadModule(path: string, dependencies: Record<string, unknown>, globals: Record<string, unknown> = {}) {
@@ -94,33 +95,27 @@ test('ordinary authenticated requests still use the SDK session token', async ()
 
 
 for (const outcome of ['exists', 'missing', 'denied'] as const) {
-  test(`AuthProvider bootstrap ${outcome}: create only after missing lookup`, async () => {
-    const calls: { operation: string; args: unknown[] }[] = [];
+  test(`CurrentUserProvider bootstrap ${outcome}: create only after missing lookup`, async () => {
+    const h = fixture();
+    const calls: { operation: string; args: any[] }[] = [];
     const storage = new Map<string, string>();
     const session = { access_token: 'callback-token', user: {
       id: 'own-uuid', email: 'own@example.test', user_metadata: { username: 'New Name' },
     } };
-    const api = loadModule('../src/context/AuthContext.tsx', {
-      react: {
-        createContext: () => ({ Provider: 'provider' }),
-        useContext: () => undefined,
-        useState: () => [null, () => {}],
-        useEffect: (effect: () => void) => effect(),
-      },
-      'react/jsx-runtime': { jsx: () => null },
-      '../lib/supabaseClient': { supabase: { auth: {
-        getSession: async () => ({ data: { session } }),
-        onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),
-      } } },
+    const profile = { id: 1, uuid: 'own-uuid', email: 'own@example.test', displayName: 'New Name' };
+    const auth = { user: session.user, session, loading: false, sessionIdentityKey: 'fixture',
+      isSessionIdentityCurrent: () => true, isSessionCredentialCurrent: () => true };
+    const api = h.load('src/context/currentUserContext.tsx', {
+      './AuthContext': { useAuth: () => auth },
       '../api/user': {
-        getUserByUuid: async (...args: unknown[]) => {
+        getUserByUuid: async (...args: any[]) => {
           calls.push({ operation: 'lookup', args });
           if (outcome === 'denied') throw new Error('Identity denied');
-          return outcome === 'exists' ? { id: 1 } : null;
+          return outcome === 'exists' ? profile : null;
         },
-        createUser: async (...args: unknown[]) => {
+        createUser: async (...args: any[]) => {
           calls.push({ operation: 'create', args });
-          return { id: 1 };
+          return profile;
         },
       },
       '../utils/safeStorage': { safeLocalStorage: {
@@ -128,18 +123,22 @@ for (const outcome of ['exists', 'missing', 'denied'] as const) {
         setItem: (key: string, value: string) => storage.set(key, value),
         removeItem: (key: string) => storage.delete(key),
       } },
-    }, {
-      document: { addEventListener() {}, removeEventListener() {} },
-      console: { warn() {} },
     });
-    await api.AuthProvider({ children: null });
-    await new Promise<void>((resolve) => setImmediate(resolve));
-    assert.deepEqual(calls[0], { operation: 'lookup', args: ['own-uuid', 'callback-token'] });
+    h.render(api.CurrentUserProvider, { children: null });
+    await settle();
+    const value = h.render(api.CurrentUserProvider, { children: null }).props.value;
+    assert.equal(calls[0].operation, 'lookup');
+    assert.deepEqual(calls[0].args.slice(0, 2), ['own-uuid', 'callback-token']);
+    assert.equal(calls[0].args[2].aborted, false);
     if (outcome === 'missing') {
-      assert.deepEqual(calls[1], { operation: 'create', args: ['New Name', 'callback-token'] });
+      assert.equal(calls[1].operation, 'create');
+      assert.deepEqual(calls[1].args.slice(0, 2), ['New Name', 'callback-token']);
+      assert.equal(calls[1].args[2], calls[0].args[2]);
     }
     assert.equal(calls.length, outcome === 'missing' ? 2 : 1);
-    assert.equal(storage.has('otm:user-created:own-uuid'), outcome !== 'denied');
+    assert.equal(storage.has('otm:user-created:own-uuid'), false);
+    assert.equal(value.userId, outcome === 'denied' ? null : 1);
+    h.dispose();
   });
 }
 

@@ -1,23 +1,33 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCurrentUser } from "../../context/currentUserContext";
+import ProfileStatus from "../../components/Profile/ProfileStatus";
+import { useRequestScope } from "../../hooks/useRequestScope";
 import { updateUser } from "../../api/user";
 import "./SettingsPage.css";
 
 const SettingsPage = () => {
+  const profile = useCurrentUser();
+  return <SettingsForm key={profile.identityKey} profile={profile} />;
+};
+
+const SettingsForm = ({ profile }: { profile: ReturnType<typeof useCurrentUser> }) => {
   const navigate = useNavigate();
-  const { userId, displayName, email, loading, refreshUser } = useCurrentUser();
+  const { userId, displayName, email, loading, refreshUser, isCurrentIdentity } = profile;
+  const scope = useRequestScope(isCurrentIdentity);
   const [nameInput, setNameInput] = useState(displayName ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
-    setNameInput(displayName ?? "");
-  }, [displayName]);
+    if (!loading && userId && displayName !== null) setNameInput(displayName);
+  }, [displayName, loading, userId]);
 
   const handleSave: React.FormEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault();
+    if (!scope.isCurrent() || loading || saving) return;
+    const current = scope.capture();
     setError(null);
     setSuccess(null);
 
@@ -32,15 +42,21 @@ const SettingsPage = () => {
       return;
     }
 
+    let saved = false;
     try {
       setSaving(true);
       await updateUser(userId, nextName);
+      saved = true;
+      if (!current()) return;
       await refreshUser();
+      if (!current()) return;
       setSuccess("Display name updated.");
     } catch (err: any) {
-      setError(err?.message ?? "Failed to update display name.");
+      if (current()) setError(saved
+        ? "Display name saved, but your profile could not be refreshed. Retry loading your profile."
+        : err?.message ?? "Failed to update display name.");
     } finally {
-      setSaving(false);
+      if (current()) setSaving(false);
     }
   };
 
@@ -62,6 +78,7 @@ const SettingsPage = () => {
 
       <section className="settings__card">
         <h2>Profile</h2>
+        <ProfileStatus />
         <form onSubmit={handleSave} className="settings__form">
           <label className="settings__field">
             <span>Display Name</span>
@@ -85,7 +102,7 @@ const SettingsPage = () => {
             <button
               className="settings__save"
               type="submit"
-              disabled={saving}
+              disabled={saving || loading || !userId}
             >
               {saving ? "Saving…" : "Save Changes"}
             </button>
