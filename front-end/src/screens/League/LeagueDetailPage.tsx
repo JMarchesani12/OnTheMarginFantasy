@@ -1,11 +1,9 @@
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, type To, type NavigateOptions } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import type { League } from "../../types/league";
 import type { LeagueMember } from "../../types/leagueMember";
 import {
-  getLeaguesForUser,
   getMembersOfLeague,
-  getLeague,
   removeLeagueMember,
   updateLeagueMember,
 } from "../../api/leagues";
@@ -16,29 +14,35 @@ import LeagueScoreboard, {
 } from "../../components/League/LeagueScoreboard";
 import { getScoresForWeek } from "../../api/scoring";
 import type { ScoreWeek } from "../../types/scoring";
-import { useCurrentUser } from "../../context/currentUserContext";
+import { useLeagueContext } from "../../hooks/useLeagueContext";
+import { useRequestScope } from "../../hooks/useRequestScope";
 import { getEffectiveWeekNumber, MIN_SCHEDULE_WEEK_NUMBER } from "../../utils/weekCutoff";
 import { getDisplayedSeasonPoints, getLeagueRank } from "../../utils/leagueDetailCalculations";
-import {
-  mapLeagueFromResponse,
-  normalizeLeaguesResponse,
-} from "../../utils/leagueMapping";
 import "./LeagueDetailPage.css";
 
-type LocationState = {
-  league?: League;
-};
+type DetailContextProps = { initialLeague: League; currentUserId: number; isMember: boolean; isCurrent: () => boolean };
 
 const LeagueDetailPage = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
   const { league_id } = useParams();
-  const state = location.state as LocationState | null;
-  const { userId: currentUserId, error: userError } = useCurrentUser();
-  const [league, setLeague] = useState<League | null>(state?.league ?? null);
-  const [leagueLoading, setLeagueLoading] = useState(false);
-  const [leagueError, setLeagueError] = useState<string | null>(null);
+  const context = useLeagueContext(league_id);
+  const navigate = useNavigate();
+  if (!context.league) return (
+    <div className="league-detail">
+      <button className="league-detail__back" type="button" onClick={() => navigate("/leagues")}>← Back</button>
+      <p>{context.loading ? "Loading league details…" : context.error ?? "League data is not available. Try opening this page from your leagues list."}</p>
+      {context.canRetry && <button type="button" onClick={context.retry}>Retry</button>}
+    </div>
+  );
+  return <LeagueDetailView key={context.scopeKey} initialLeague={context.league} currentUserId={context.userId!} isMember={context.isMember} isCurrent={context.isCurrent} />;
+};
 
+const LeagueDetailView = ({ initialLeague, currentUserId, isMember, isCurrent }: DetailContextProps) => {
+  const rawNavigate = useNavigate();
+  const scope = useRequestScope(isCurrent);
+  const navigate = (to: To, options?: NavigateOptions) => {
+    if (scope.isCurrent()) return rawNavigate(to, options);
+  };
+  const [league] = useState(initialLeague);
   const [members, setMembers] = useState<LeagueMember[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [membersError, setMembersError] = useState<string | null>(null);
@@ -69,60 +73,6 @@ const LeagueDetailPage = () => {
   );
 
   useEffect(() => {
-    if (state?.league) {
-      setLeague(state.league);
-    }
-  }, [state?.league]);
-
-
-  useEffect(() => {
-    if (!league_id || !currentUserId) {
-      return;
-    }
-
-    let isMounted = true;
-
-    const loadLeague = async () => {
-      try {
-        setLeagueLoading(true);
-        setLeagueError(null);
-        const response = await getLeaguesForUser(currentUserId, "all");
-        if (!isMounted) return;
-
-        const matches = normalizeLeaguesResponse(response);
-        const found = matches.find(
-          (item) => item.leagueId === Number(league_id)
-        );
-        if (found) {
-          setLeague(mapLeagueFromResponse(found));
-          return;
-        }
-
-        const fallback = await getLeague(Number(league_id));
-        if (isMounted) {
-          setLeague(
-            mapLeagueFromResponse(fallback as unknown as League)
-          );
-        }
-      } catch (err: any) {
-        if (isMounted) {
-          setLeagueError(err?.message ?? "Failed to load league details.");
-        }
-      } finally {
-        if (isMounted) {
-          setLeagueLoading(false);
-        }
-      }
-    };
-
-    loadLeague();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [league_id, currentUserId]);
-
-  useEffect(() => {
     setTeamNameValue(league?.teamName ?? "");
     setTeamNameInput(league?.teamName ?? "");
   }, [league?.teamName]);
@@ -131,24 +81,26 @@ const LeagueDetailPage = () => {
 
   // Fetch members on init
   useEffect(() => {
-    if (!league) return;
+    if (!scope.isCurrent()) return;
+    const current = scope.capture("members");
 
     const loadMembers = async () => {
       setLoadingMembers(true);
       setMembersError(null);
 
       try {
-        const memberData = await getMembersOfLeague(league.leagueId);
-        setMembers(memberData);
+        const memberData = await getMembersOfLeague(league.leagueId, current.signal);
+        if (current()) setMembers(memberData);
       } catch (error: any) {
-        setMembersError(error?.message ?? "Failed to load league members");
+        if (current()) setMembersError(error?.message ?? "Failed to load league members");
       } finally {
-        setLoadingMembers(false);
+        if (current()) setLoadingMembers(false);
       }
     };
 
     loadMembers();
-  }, [league]);
+    return () => current.cancel();
+  }, [league, scope]);
 
   useEffect(() => {
     if (!league?.leagueId) {
@@ -161,6 +113,7 @@ const LeagueDetailPage = () => {
     }
 
     let isCancelled = false;
+    const current = scope.capture("scores");
 
     const loadScores = async () => {
       setScoreboardLoading(true);
@@ -172,7 +125,7 @@ const LeagueDetailPage = () => {
         if (currentWeek <= 10) {
           const { results } = await getScoresForWeek(
             Array.from({ length: currentWeek + 1 }, (_, idx) => idx),
-            league.leagueId
+            league.leagueId, current.signal
           );
 
           results.forEach((score) => {
@@ -182,11 +135,12 @@ const LeagueDetailPage = () => {
           });
         } else {
           for (let week = 0; week <= currentWeek; week += 10) {
+            if (isCancelled || !current()) return;
             const chunk = Array.from(
               { length: Math.min(10, currentWeek - week + 1) },
               (_, idx) => week + idx
             );
-            const { results } = await getScoresForWeek(chunk, league.leagueId);
+            const { results } = await getScoresForWeek(chunk, league.leagueId, current.signal);
 
             results.forEach((score) => {
               const list = scoresByWeek[score.weekNumber] ?? [];
@@ -196,15 +150,15 @@ const LeagueDetailPage = () => {
           }
         }
 
-        if (!isCancelled) {
+        if (!isCancelled && current()) {
           setScoreboard(scoresByWeek);
         }
       } catch (error: any) {
-        if (!isCancelled) {
+        if (!isCancelled && current()) {
           setScoreboardError(error?.message ?? "Failed to load scoreboard");
         }
       } finally {
-        if (!isCancelled) {
+        if (!isCancelled && current()) {
           setScoreboardLoading(false);
         }
       }
@@ -214,15 +168,18 @@ const LeagueDetailPage = () => {
 
     return () => {
       isCancelled = true;
+      current.cancel();
     };
-  }, [league?.leagueId, effectiveWeekNumber]);
+  }, [league?.leagueId, effectiveWeekNumber, scope]);
 
   const openRosterManagement = () => {
+    if (!isMember) return;
     if (!league) return;
     navigate(`/leagues/${league.leagueId}/roster`, { state: { league } });
   };
 
   const openDraftPage = (autoJoin = false) => {
+    if (!isMember) return;
     if (!league) return;
     navigate(`/leagues/${league.leagueId}/draft`, {
       state: { league, autoJoin },
@@ -240,12 +197,14 @@ const LeagueDetailPage = () => {
   };
 
   const openManageLeague = () => {
+    if (!isMember) return;
     if (!league) return;
     navigate(`/leagues/${league.leagueId}/manage`, { state: { league } });
   };
 
   const handleTeamNameSave = async () => {
-    if (!league?.memberId) return;
+    if (!scope.isCurrent() || !isMember || !league.memberId) return;
+    const current = scope.capture();
     setTeamNameError(null);
     setTeamNameSuccess(null);
 
@@ -258,6 +217,7 @@ const LeagueDetailPage = () => {
     try {
       setTeamNameSaving(true);
       await updateLeagueMember(league.memberId, nextName);
+      if (!current()) return;
 
       setTeamNameValue(nextName);
       setMembers((current) =>
@@ -268,14 +228,17 @@ const LeagueDetailPage = () => {
       setEditingTeamName(false);
       setTeamNameSuccess("Team name updated.");
     } catch (err: any) {
+      if (!current()) return;
       setTeamNameError(err?.message ?? "Failed to update team name.");
     } finally {
+      if (!current()) return;
       setTeamNameSaving(false);
     }
   };
 
   const handleLeaveLeague = async () => {
-    if (!league || !currentUserId) return;
+    if (!scope.isCurrent() || !isMember || !league.memberId || !currentUserId) return;
+    const current = scope.capture();
     const confirmed = window.confirm("Leave this league?");
     if (!confirmed) return;
 
@@ -284,10 +247,13 @@ const LeagueDetailPage = () => {
 
     try {
       await removeLeagueMember(league.leagueId, league.memberId, currentUserId);
+      if (!current()) return;
       navigate("/leagues");
     } catch (err: any) {
+      if (!current()) return;
       setLeaveError(err?.message ?? "Failed to leave league.");
     } finally {
+      if (!current()) return;
       setLeaveLoading(false);
     }
   };
@@ -514,43 +480,20 @@ const LeagueDetailPage = () => {
     currentMember?.currentWeekPointDifferential,
   ]);
 
-  // If you want, you can later add a fetch here if `league` is missing.
-  if (!league) {
-    return (
-      <div className="league-detail">
-        <button
-          className="league-detail__back"
-          type="button"
-          onClick={() => navigate("/leagues")}
-        >
-          ← Back
-        </button>
-        {leagueLoading ? (
-          <p>Loading league details…</p>
-        ) : (
-          <p>
-            {leagueError ??
-              "League data is not available. Try opening this page from your leagues list."}
-          </p>
-        )}
-      </div>
-    );
-  }
-
   const statusClass = `league-detail__status league-detail__status--${league.status
     .toLowerCase()
     .replace(/\s+/g, "-")}`;
   const canStartDraft =
     (league.status === "Pre-Draft" || league.status === "Drafting") &&
-    league.commissionerId === currentUserId;
-  const canManageLeague = league.commissionerId === currentUserId;
-  const canEditTeamName = league.memberId != null;
+    isMember && league.commissionerId === currentUserId;
+  const canManageLeague = isMember && league.commissionerId === currentUserId;
+  const canEditTeamName = isMember && league.memberId > 0;
   const canLeaveLeague =
-    league.status === "Pre-Draft" && league.commissionerId !== currentUserId;
+    isMember && league.status === "Pre-Draft" && league.commissionerId !== currentUserId;
   const showAdminActions = canManageLeague;
   const canJoinDraft =
     (league.status === "Pre-Draft" || league.status === "Drafting") &&
-    league.commissionerId !== currentUserId;
+    isMember && league.commissionerId !== currentUserId;
   const isDraftCompleted =
     league.status === "Post-Draft" || league.status === "In-Season" || league.status === "Completed";
   const rosterActionsLocked = tradeDeadlinePassed && freeAgentDeadlinePassed;
@@ -782,7 +725,7 @@ const LeagueDetailPage = () => {
                   className="league-detail__add-drop-btn"
                   type="button"
                   onClick={openRosterManagement}
-                  disabled={rosterActionsLocked}
+                  disabled={rosterActionsLocked || !isMember}
                 >
                   Manage Roster
                 </button>
@@ -872,9 +815,6 @@ const LeagueDetailPage = () => {
       )}
       {membersError && (
         <p className="league-detail__error-text">{membersError}</p>
-      )}
-      {userError && (
-        <p className="league-detail__error-text">{userError}</p>
       )}
       {members.length > 0 && (
         <LeagueScheduleTabs

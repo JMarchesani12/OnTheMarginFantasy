@@ -479,6 +479,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-026 — Coordinate profile ownership and identity transitions
 
+- **Narrow dependency completed — 2026-11-09:** MOD-029 binds numeric profile outcomes to the authenticated subject and latest request; masks unresolved/failed/obsolete identity. Broader application-profile resource ownership, AuthContext session/provisioning coordination, and full acceptance matrix remain open; this is not MOD-026 completion. [Evidence](evidence/mod-029-league-context-2026-11-09.json).
+
 - **Priority / size / risk:** P1 / M / Medium.
 - **Features:** F-002, F-004, F-005, F-022.
 - **Problem / evidence:** FE S01/S03; DB-03: two providers provision/read via different paths.
@@ -590,6 +592,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-029 — Consolidate league context, mapping and request identity incrementally
 
+- **Completed paired-screen pilot — 2026-11-09:** Detail and Roster share list/find/fallback resolution and require fresh matching route/account context before actions. Navigation seeds ignored; fallback never supplies membership. Subject-bound numeric profile lookup is a narrow MOD-026 prerequisite, not full provider/provisioning consolidation. Keyed screen state, scoped resource reads/commands and week-bound roster readiness prevent obsolete responses/selections/mutation completions crossing context. Frontend123/123, build/import graph PASS; fresh review Important week-generation finding reproduced and fixed, existing Minor pending-trade completion clearing a newer partner selection deferred. Seeded Roster intentionally adds one fresh context read; no cache/performance reduction claimed. [Design](../superpowers/specs/2026-11-09-mod-029-league-context-design.md), [evidence](evidence/mod-029-league-context-2026-11-09.json). Other screen migrations/caching remain follow-up scope; browser/real-session runtime unverified.
+
 - **Priority / size / risk:** P2 / M / Medium.
 - **Features:** F-005, F-008, F-009, F-011–019, F-021.
 - **Problem / evidence:** FE M01/S03–S05: six resolution copies, divergent seeds, Manage mapper, duplicate/waterfall resources.
@@ -600,6 +604,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 - **Contract impact:** Behavior: extraction no; later confirmed freshness fixes yes; API/schema: no.
 
 ### MOD-030 — Move shared BonusesEditor to component ownership
+
+- **Completed — 2026-11-07:** MOD040 frontend ownership pilot moved the byte-identical editor to components/League and updated exactly two consumer imports; exports, templates, props, styles and payload logic unchanged. [Import map/design](../superpowers/specs/2026-11-07-mod-040-bonuses-editor-move-design.md), [evidence](evidence/mod-040-bonuses-editor-move-2026-11-07.json). Frontend78/build and source import graph PASS. No component algorithm refactor or browser visual check claimed.
 
 - **Priority / size / risk:** P3 / S / Low.
 - **Features:** F-007, F-017.
@@ -612,6 +618,10 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-031A — Extract draft clock and connection responsibilities
 
+- **Completed — 2026-11-09:** Separately reviewed clock and connection hooks now own their page responsibilities. useDraftConnection returns the actual controller ref, preserves epoch/command guards and member refresh, and delegates to unchanged createDraftRealtime. Parent loader retains order/signal/errors/payload. Hook4 RED→GREEN; focused12/frontend96/build/import graph PASS; independent connection review no findings. [Connection evidence](evidence/mod-031a-draft-connection-2026-11-09.json). No backend/browser/runtime/deployment behavior change is claimed.
+
+- **Clock stage completed — 2026-11-07:** useDraftClock owns existing now/offset state, live-only interval/cleanup and countdown formatting. Stable offset callback preserves authoritative snapshot wiring without recreating controller. Page2 characterized before extraction, hook3 RED→GREEN, focused10/frontend91/build/import graph PASS; independent review no findings. [Design](../superpowers/specs/2026-11-07-mod-031a-draft-clock-design.md), [evidence](evidence/mod-031a-draft-clock-2026-11-07.json). Existing paused samples/retained offsets deliberately preserved. Connection wrapper remains the second separately reviewed stage; MOD031A is not yet fully complete.
+
 - **Priority / size / risk:** P2 / M / Medium.
 - **Features:** F-013, F-020, F-023.
 - **Problem / evidence:** FE M02: draft combines socket lifecycle, clock and rendering.
@@ -622,6 +632,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 - **Contract impact:** Behavior/API/schema: no intended.
 
 ### MOD-031B — Extract Manage draft-order editor
+
+- **Completed — 2026-11-07 (presentational extraction):** Stateless components/League/DraftOrderEditor renders existing rows/actions via typed data/callback props. Parent retains member/order/drag state, randomize/reorder/removal/dialogs, save/API sequence, errors and commissioner/Pre-Draft gates. Source comparison confirms parent unchanged outside import/subtree and child markup unchanged apart from prop names; CSS unchanged. Parent characterization5 before extraction, child3 RED→GREEN, frontend86/build/import graph PASS; independent review no findings. [Design](../superpowers/specs/2026-11-07-mod-031b-draft-order-editor-design.md), [evidence](evidence/mod-031b-draft-order-editor-2026-11-07.json). Existing Save and Start Draft stub is separate behavior work; keyboard reordering remains MOD027G. No backend/runtime/deployment change.
 
 - **Priority / size / risk:** P2 / S–M / Low–Medium.
 - **Features:** F-018, F-019.
@@ -634,6 +646,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-032 — Separate schedule ingestion from read/calendar responsibilities
 
+- **Reconciled complete — 2026-11-09:** This decomposition was already delivered by the earlier MOD038/MOD040 schedule slices: canonical read/calendar/ingestion services and supplied-connection repositories, injected ingestion client, and HTTP/job/scoring/season wiring. Current source/caller audit and fresh full isolated backend741 PASS; no duplicate extraction needed. [Reconciliation evidence](evidence/mod-032-reconciliation-2026-11-09.json), [boundaries](../../api/endpoints/schedule/README.md). Previous native schedule/season/calendar evidence remains historical; no fresh native/provider/hosted run claimed.
+
 - **Priority / size / risk:** P2 / M / Medium.
 - **Features:** F-007, F-009, F-011, F-012, F-025, F-027, F-028, F-031, F-035, F-036.
 - **Problem / evidence:** BE M02: ScheduleModel owns calendar/read/provider/bootstrap work.
@@ -643,7 +657,16 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 - **Acceptance / verification:** Same games/upsert classification/checkpoint outputs and read payloads with fixture provider; import graph remains acyclic; no network during tests.
 - **Contract impact:** Behavior/API/schema: no intended.
 
+### MOD-033A — Resolve conference-cap policy before ownership extraction
+
+- **Completed application/isolated scope — 2026-11-09:** User chose zero=no teams, positive=inclusive maximum, negative/missing/noninteger=configuration error. Shared pure validator now covers live/manual draft, auto buckets, required roster mappings, free-agent submission/application, trade validation and roster-cap reports. Removed draft unlimited bypass and missing trade-limit999 fallback. Reporting retains invalid/missing effective mappings before validation/filtering. Zero drop-only reductions and positive-cap/history contracts preserved; no eviction, schema/data change or ownership-read extraction. Scoped23/23 and full backend764/764 PASS; fresh review Critical0/Important0/Minor0 and independent reruns PASS. Native PostgreSQL not rerun because local Docker daemon stopped; administrative config-edit concurrency remains unchanged. [Design](../superpowers/specs/2026-11-09-mod-033a-conference-cap-policy-design.md), [evidence](evidence/mod-033a-conference-cap-policy-2026-11-09.json).
+- **Priority / size / risk:** Priority7 prerequisite / M / Medium.
+- **Dependencies:** MOD-009/010/015/025; completed before MOD-033 read extraction by user choice.
+- **Acceptance:** Consistent cap matrix across acquisition/reporting, fail-closed invalid config, zero-cap reduction allowed, caller connection/rollback/history preserved. Application correction only; configured DB contents/deployment unverified.
+
 ### MOD-033 — Consolidate ownership and conference-cap logic after correctness work
+
+- **Completed bounded pilot — 2026-11-09:** Following MOD-033A, six draft/free-agency repository methods delegate to shared supplied-connection reads. Scalar DISTINCT/grouped row counts, zero/empty/orphan/NULL-member semantics, effective membership, raw results and one-statement calls preserve baseline behavior. Services/cap/mutex/trade repository and67 untouched methods byte-identical. Characterization10 before/after, scoped17/cap23/full backend781 PASS. Fresh final review has no findings. After user enabled Docker, PostgreSQL17.6 characterization10 and existing native draft/transaction/MOD015 checks PASS; disposable DB/container removed. [Design](../superpowers/specs/2026-11-09-mod-033-ownership-reads-design.md), [evidence](evidence/mod-033-ownership-reads-2026-11-09.json), [native evidence](evidence/mod-033-ownership-reads-postgres-2026-11-09.json). Auto/trade-specific read migration, alternate helper retirement and performance work remain explicit follow-ups, not unfinished pilot requirements. No schema/configured-data/deployment changes.
 
 - **Priority / size / risk:** P2 / M / High.
 - **Features:** F-013, F-015, F-016, F-024, F-025, F-030, F-033, F-035.
@@ -721,6 +744,10 @@ These cards reflect the user's explicit new scope. They cross-cut existing featu
 
 ### MOD-039 — Inventory and extract demonstrated common functions
 
+- **Second bounded pilot — 2026-11-07:** Manage League now imports the existing pure settings normalizer; its identical nested parser is removed. The local mapper/current-week null behavior and form/fetch/default semantics remain separate. [Inventory/design](../superpowers/specs/2026-11-07-mod-039-settings-normalization-design.md), [evidence](evidence/mod-039-settings-normalization-2026-11-07.json). Broader inventory found differing diagnostics, mapper/current-week semantics, JSON/error contracts and unused placeholder provider parsers; those are deliberate non-extractions, not automatic remaining work.
+
+- **First pilot — 2026-11-07:** Backend integer-parser inventory and bounded extraction implemented: existing requestValidation scalar is public and shared by real draft pick/control handlers and existing field/list wrappers. Required/default/error/actor/order semantics remain unchanged. [Inventory/design](../superpowers/specs/2026-11-07-mod-039-integer-parser-design.md), [evidence](evidence/mod-039-integer-parser-2026-11-07.json). Similar actor parsing with different messages, distinct authorization policies, frontend context freshness and MOD-033 domain rules are deliberate non-extractions. This completes the first backend pilot, not a global helper rewrite; subsequent batches need their own demonstrated duplication/scope.
+
 - **Priority / size / risk:** P1 / S–M per pilot / Medium.
 - **Features:** Cross-cutting backend/frontend boundary helpers.
 - **Problem / evidence:** Repeated parsing, error translation, principal/ownership predicates and serialization; existing requestValidation/authorization/apiFetch should be reused before introducing alternatives.
@@ -731,6 +758,10 @@ These cards reflect the user's explicit new scope. They cross-cut existing featu
 - **Contract impact:** Behavior/API/schema: no intended; real defects receive separate behavior-change scope.
 
 ### MOD-040 — Pilot file-content and folder refactoring without changing behavior
+
+- **Frontend content pilot — 2026-11-07:** MOD031B draft-order presentation extracted with all state/handlers/gates/API ownership retained in Manage League. This follows the separate MOD030 import-only move; prior MOD039/MOD030 work is preserved. [Evidence](evidence/mod-031b-draft-order-editor-2026-11-07.json). MOD031A clock/connection, context policy and domain-rule consolidation remain separately scoped.
+
+- **Frontend ownership pilot — 2026-11-07:** Completed MOD030's mechanical shared BonusesEditor move, retaining byte-identical content and both screen styles. Before/after literal-relative TS/TSX graph:65 files/178 edges,0 unresolved/0 cycles; Create and Manage now resolve the canonical component. Full frontend78/type/build checks PASS. [Design/import map](../superpowers/specs/2026-11-07-mod-040-bonuses-editor-move-design.md), [evidence](evidence/mod-040-bonuses-editor-move-2026-11-07.json). Prior MOD039 work preserved. Other frontend content extraction (MOD031A/B) remains separately scoped; no mass reorganization or backend re-extraction.
 
 - **Continuation — 2026-10-30: transaction remainder resolved; planned eight-domain backend extraction complete.** Workflow service/repository own31 original queries/actions/free-agency/dispatch/reads; actor HTTP and explicit trusted cron composition complete, exact legacy facade constructor/helpers/constants/exception identity retained. Backend564/564, independent review no findings, [native33 workflow operations plus original pilots](evidence/mod-038-transaction-complete-postgres-2026-10-30.json) and affected full schedule/scoring reruns pass. [Final model/source audit](evidence/mod-038-backend-extraction-audit-2026-10-30.json) confirms all8 model files now SQL-free; prior transaction partial inventory resolved. Unregistered lock helper's proven undefined connection fixed without a new route; applyHTTP410/policies remain. No pending planned backend domain content slices. Broader MOD-040 stays partial for frontend/optional organization and separate correctness/startup work. [Ledger](../superpowers/plans/2026-10-30-mod-038-transaction-complete-implementation.md).
 - **Continuation — 2026-10-30: schedule domain complete; backend count corrected.** SQL-free compatibility facade, canonical calendar/read/ingestion layers and HTTP/league/scoring/cron/season/rebuild wiring complete. Backend557/557, independent review no findings, [all30 native schedule query checks](evidence/mod-038-schedule-complete-postgres-2026-10-30.json) and affected full league/scoring reruns pass. Original provider/transaction/checkpoint/error policy retained. No schedule slices remain. **Earlier only-sport/schedule count was wrong:** [source audit](evidence/mod-038-backend-extraction-audit-2026-10-30.json) shows transaction pilot remains partial (22 SQL-bearing trade/free-agency/dispatch/read methods). Backend rollout and broader MOD-040 stay partial; frontend/folder/correctness/startup work also separate. [Ledger](../superpowers/plans/2026-10-30-mod-038-schedule-complete-implementation.md).

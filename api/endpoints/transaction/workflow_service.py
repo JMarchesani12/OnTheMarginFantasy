@@ -1,4 +1,5 @@
 from utils.conference_membership import require_member_roster_mappings
+from utils.conference_caps import require_conference_cap
 """Trade/free-agent workflows, actor policy and supplied ownership transactions.
 
 The initial TransactionService read/apply pilot remains an independent capability.
@@ -237,7 +238,7 @@ class TransactionWorkflowService:
                     if conference:
                         cid = conference['sportConferenceId']
                         counts[cid] = counts.get(cid, 0) + 1
-                        if counts[cid] > conference['maxTeamsPerOwner']:
+                        if counts[cid] > require_conference_cap(conference.get('maxTeamsPerOwner'), cid):
                             raise ValueError('Queued add exceeds maxTeamsPerOwner')
                 rows = [
                     {
@@ -579,7 +580,7 @@ class TransactionWorkflowService:
             tid = int(r["sportTeamId"])
             info[tid] = {
                 "sportConferenceId": int(r["sportConferenceId"]),
-                "maxTeamsPerOwner": int(r["maxTeamsPerOwner"]),
+                "maxTeamsPerOwner": require_conference_cap(r.get("maxTeamsPerOwner"), r["sportConferenceId"]),
             }
 
         # Safety: if any requested team is missing conference membership data
@@ -719,9 +720,9 @@ class TransactionWorkflowService:
 
                 info = team_conf_info[add_team_id]
                 cid = info["sportConferenceId"]
-                max_per = conf_limits.get(cid)
+                max_per = require_conference_cap(conf_limits.get(cid), cid)
                 new_count = counts_after.get(cid, 0) + 1
-                if max_per is not None and new_count > max_per:
+                if new_count > max_per:
                     raise ValueError(
                         f"Member {member_id} would exceed maxTeamsPerOwner "
                         f"({new_count}/{max_per}) in conference {cid}"
@@ -818,12 +819,15 @@ class TransactionWorkflowService:
 
         violations = []
         for r in rows:
+            cap = require_conference_cap(r.get("maxTeamsPerOwner"), r.get("sportConferenceId"))
+            if int(r["count"]) <= cap:
+                continue
             violations.append(
                 {
                     "memberId": int(r["memberId"]),
                     "sportConferenceId": int(r["sportConferenceId"]),
                     "count": int(r["count"]),
-                    "maxTeamsPerOwner": int(r["maxTeamsPerOwner"]),
+                    "maxTeamsPerOwner": cap,
                 }
             )
 

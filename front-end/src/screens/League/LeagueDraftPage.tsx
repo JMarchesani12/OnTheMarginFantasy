@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { io } from "socket.io-client";
-import { createDraftRealtime, type DraftRealtime } from "../../lib/draftRealtime";
+import { useDraftClock } from "../../hooks/useDraftClock";
+import { useDraftConnection } from "../../hooks/useDraftConnection";
 import type { League } from "../../types/league";
 import type { OwnedTeam } from "../../types/schedule";
 import type {
@@ -95,8 +95,11 @@ const LeagueDraftPage = () => {
   const loading = draftSummaryLoading;
   const [showDraftComplete, setShowDraftComplete] = useState(false);
   const [, setHasJoinedDraft] = useState(false);
-  const [nowMs, setNowMs] = useState(() => Date.now());
-  const [clockOffsetMs, setClockOffsetMs] = useState(0);
+  const turnEndsAtRaw =
+    typeof draftState?.expiresAt === "string"
+      ? (draftState.expiresAt as string)
+      : null;
+  const { timeLeftLabel, updateServerNow } = useDraftClock(draftState?.status === "live", turnEndsAtRaw);
   const [onDeckSlot, setOnDeckSlot] = useState<DraftTurnSlot | null>(null);
   const [inTheHoleSlot, setInTheHoleSlot] = useState<DraftTurnSlot | null>(null);
   const [conferenceLimits, setConferenceLimits] = useState<Map<string, number>>(
@@ -104,7 +107,6 @@ const LeagueDraftPage = () => {
   );
   const teamMetaRef = useRef<Map<number, OwnedTeam>>(new Map());
   const draftWeekNumber = 1;
-  const realtimeRef = useRef<DraftRealtime | null>(null);
   const previousDraftStatusRef = useRef<string | null>(null);
 
   const resolveConferenceName = useCallback(
@@ -265,18 +267,11 @@ const LeagueDraftPage = () => {
       setOnDeckSlot(onDeck ?? null);
       setInTheHoleSlot(inTheHole ?? null);
 
-      if (serverNow) {
-        const serverMs = Date.parse(serverNow);
-        if (!Number.isNaN(serverMs)) {
-          setClockOffsetMs(serverMs - Date.now());
-        }
-      }
+      updateServerNow(serverNow);
     },
-    [league?.memberId, persistSelections]
+    [league?.memberId, persistSelections, updateServerNow]
   );
 
-  const snapshotCallbackRef = useRef(applyDraftSnapshot);
-  snapshotCallbackRef.current = applyDraftSnapshot;
   const clearDraftView = useCallback(() => {
     setDraftState(null);
     setDraftMembers([]);
@@ -291,28 +286,16 @@ const LeagueDraftPage = () => {
     setPickError(null);
     setDraftActionLoading(false);
   }, []);
-  useEffect(() => {
-    clearDraftView();
-    if (!leagueId || !session?.access_token) return;
-    const socket = io(socketUrl, {auth: {token: session.access_token}, autoConnect: false});
-    const controller = createDraftRealtime({
-      socket, leagueId,
-      read: async (signal) => {
-        const snapshot = await getDraftState(leagueId, signal);
-        const availableTeams = await getAvailableTeams(draftWeekNumber, leagueId, signal);
-        return {...snapshot, availableTeams};
-      },
-      apply: snapshot => snapshotCallbackRef.current(snapshot),
-      clear: clearDraftView, ready: setHasJoinedDraft, error: setError, loading: setDraftSummaryLoading,
-    });
-    realtimeRef.current = controller;
-    return () => {
-      controller.dispose();
-      if (realtimeRef.current === controller) realtimeRef.current = null;
-    };
-  }, [leagueId, session?.access_token, socketUrl, clearDraftView, scopeKey]);
-  // Member metadata may arrive after the initial read; refresh without recreating the socket.
-  useEffect(() => { realtimeRef.current?.refresh(); }, [league?.memberId]);
+  const readDraftSnapshot = useCallback(async (requestedLeagueId: number, signal: AbortSignal) => {
+    const snapshot = await getDraftState(requestedLeagueId, signal);
+    const availableTeams = await getAvailableTeams(draftWeekNumber, requestedLeagueId, signal);
+    return { ...snapshot, availableTeams };
+  }, [draftWeekNumber]);
+  const realtimeRef = useDraftConnection({
+    leagueId, token: session?.access_token, socketUrl, scopeKey, memberId: league?.memberId,
+    readSnapshot: readDraftSnapshot, applySnapshot: applyDraftSnapshot, clearDraftView,
+    onReady: setHasJoinedDraft, onError: setError, onLoading: setDraftSummaryLoading,
+  });
 
   const groupTeams = (teams: OwnedTeam[]): GroupedTeams => {
     const map = new Map<string, OwnedTeam[]>();
@@ -449,31 +432,6 @@ const LeagueDraftPage = () => {
   const isDraftComplete = draftStatus === "complete";
   const joinable = !draftStatus && !isDraftComplete;
   const joinedCountLabel = null;
-  const turnEndsAtRaw =
-    typeof draftState?.expiresAt === "string"
-      ? (draftState.expiresAt as string)
-      : null;
-  const remainingSeconds = useMemo(() => {
-    if (!turnEndsAtRaw) {
-      return null;
-    }
-
-    const target = Date.parse(turnEndsAtRaw);
-    if (Number.isNaN(target)) {
-      return null;
-    }
-
-    const nowWithOffset = nowMs + clockOffsetMs;
-    return Math.max(0, Math.floor((target - nowWithOffset) / 1000));
-  }, [clockOffsetMs, nowMs, turnEndsAtRaw]);
-  const timeLeftLabel = useMemo(() => {
-    if (remainingSeconds == null) {
-      return null;
-    }
-    const minutes = Math.floor(remainingSeconds / 60);
-    const seconds = remainingSeconds % 60;
-    return `${minutes}:${String(seconds).padStart(2, "0")}`;
-  }, [remainingSeconds]);
   const showJoinButton = false;
   const showCommissionerActions = isCommissioner && !isDraftComplete;
   const submitDisabled =
@@ -493,18 +451,6 @@ const LeagueDraftPage = () => {
     if (draftStatus === "complete" && previousDraftStatusRef.current !== "complete") setShowDraftComplete(true);
     previousDraftStatusRef.current = draftStatus;
   }, [draftStatus]);
-
-  useEffect(() => {
-    if (!isDraftLive) {
-      return;
-    }
-
-    const interval = window.setInterval(() => {
-      setNowMs(Date.now());
-    }, 1000);
-
-    return () => window.clearInterval(interval);
-  }, [isDraftLive]);
 
   const groupedSummary = useMemo(() => {
     const map = new Map<

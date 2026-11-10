@@ -94,3 +94,20 @@ or supervision verification. Actual hosted commands/schedules/roles/restart poli
 MOD-015 composite-constraint rollout and separate historical snapshot/remapping
 work retain their documented boundaries. The intentionally suspended service is
 unchanged. Priority7 is next in the planning queue; no Priority7 work starts here.
+
+
+## Priority 7 status — 2026-11-09
+
+The accepted implementation scopes are complete: MOD-039 backend integer/settings
+helper pilots; MOD-040 shared editor ownership move (also MOD-030); MOD-029 fresh
+Detail/Roster context; MOD-031A clock/connection hooks; MOD-031B draft-order UI;
+reconciled MOD-032 schedule boundaries; and MOD-033 shared ownership reads after
+MOD-033A's separately approved cap correction.
+
+MOD-033 passes backend781/781, clean independent scope review, native PostgreSQL
+ownership characterization and existing draft/transaction/season-membership checks.
+See [closeout evidence](evidence/mod-033-ownership-reads-2026-11-09.json) and
+[verification](verification.md#2026-11-09--mod-033-shared-ownership-read-pilot--priority-7-closeout).
+These are bounded pilots, not a claim that every possible shared helper/query or
+screen has been migrated. Recorded follow-ups/minors and deployment/runtime limits
+remain; changes are uncommitted and undeployed. Priority8 is the next planning row.

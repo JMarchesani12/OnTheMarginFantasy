@@ -6,7 +6,7 @@ import { createLeague } from "../../api/leagues";
 import {
   BonusesEditor,
   type BonusWithLocalId,
-} from "./BonusesEditor";
+} from "../../components/League/BonusesEditor";
 import { getSports } from "../../api/sport";
 import type { Sport } from "../../types/sport";
 import { useCurrentUser } from "../../context/currentUserContext";

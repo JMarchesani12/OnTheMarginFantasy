@@ -3,9 +3,10 @@ import type { ApproveRequestResponse, CreateLeaguePayload, GetConferences, GetRe
 import type { LeagueMember, LeagueMemberPreview, UpdateLeagueMember } from "../types/leagueMember";
 import { apiFetch, API_BASE_URL } from "./client";
 
-export async function getLeague(leagueId: number): Promise<SingleLeague> {
+export async function getLeague(leagueId: number, signal?: AbortSignal): Promise<SingleLeague> {
   const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}?view=full`, {
-    method: "GET"
+    method: "GET",
+    signal,
   });
 
   if (!res.ok) {
@@ -49,7 +50,7 @@ export async function updateLeague(
 }
 
 export async function getLeaguesForUser(
-  userId: number | null, type: string
+  userId: number | null, type: string, signal?: AbortSignal
 ): Promise<League[]> {
     const body = {
         "userId": userId,
@@ -57,6 +58,7 @@ export async function getLeaguesForUser(
     }
   const res = await apiFetch(`${API_BASE_URL}/api/league/byUser`, {
     method: "POST",
+    signal,
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
@@ -69,9 +71,11 @@ export async function getLeaguesForUser(
 }
 
 export async function getMembersOfLeague(
-  leagueId: number
+  leagueId: number,
+  signal?: AbortSignal
 ): Promise<LeagueMember[]> {
   const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/members?view=full`, {
+    signal,
     method: "GET",
   });
 

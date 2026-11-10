@@ -5,6 +5,8 @@ current fallback, exposing missing configuration rather than hiding dirty data.
 The existing per-team/sport partial unique indexes establish single cardinality.
 """
 
+from .conference_caps import require_conference_cap
+
 def conference_sql(statement, year_expression):
     relation = f'''(
         SELECT selected_membership.*
@@ -44,6 +46,8 @@ def require_conference_mappings(conn, league_id, team_ids):
     result = {int(row._mapping['sportTeamId']): dict(row._mapping) for row in rows}
     if set(result) != requested:
         raise ValueError('Conference configuration unavailable for team(s)')
+    for mapping in result.values():
+        mapping['maxTeamsPerOwner'] = require_conference_cap(mapping.get('maxTeamsPerOwner'), mapping['sportConferenceId'])
     return result
 
 

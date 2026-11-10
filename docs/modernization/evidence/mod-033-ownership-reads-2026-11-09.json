@@ -1,0 +1,105 @@
+{
+  "date": "2026-11-09",
+  "result": "PASS",
+  "scope": "MOD033 bounded shared draft/free-agency ownership-read extraction; closes accepted Priority7 implementation scopes",
+  "checks": {
+    "preExtractionCharacterization": "9/9 PASS plus explicit NULL-member case PASS on original queries",
+    "scopedAfterExtraction": "17/17 PASS",
+    "MOD033ACapPolicy": "23/23 PASS",
+    "fullBackend": "781/781 PASS",
+    "delegation": "3 tests RED missing module -> GREEN",
+    "connectionResultAndStatementContracts": "same supplied connection, raw result unconsumed, exceptions propagate, one execute per replaced method",
+    "pythonImportSyntaxAndWhitespace": "PASS",
+    "protectedFiles": "8 files byte-identical to pre-extraction baseline",
+    "untouchedRepositoryMethods": "67 methods byte-identical",
+    "priorMOD029SourceTestHashes": "unchanged"
+  },
+  "adapters": {
+    "draft": [
+      "live_team_ownership",
+      "manual_team_ownership",
+      "member_conference_count"
+    ],
+    "freeAgency": [
+      "team_owned",
+      "member_team_owned",
+      "member_conference_counts"
+    ]
+  },
+  "semantics": {
+    "ownershipInterval": "acquiredWeek<=week AND (droppedWeek IS NULL OR droppedWeek>week)",
+    "draftScalar": "DISTINCT teams, int cnt row including zero, league must exist",
+    "freeAgencyGrouped": "active rows, empty groups omitted, raw orphan-league behavior retained",
+    "membership": "existing season-first/current-fallback SQL unchanged; invalid season suppresses fallback",
+    "authorizationAndCapPolicy": "remain in unchanged services/required-mapping guards; raw reads confer no access",
+    "memberFilter": "omission is league-wide; explicit None remains constrained SQL NULL",
+    "timing": "same service calls, queued counts after actual drop on supplied connection"
+  },
+  "nativePostgres": {
+    "result": "PASS",
+    "evidence": "docs/modernization/evidence/mod-033-ownership-reads-postgres-2026-11-09.json",
+    "version": "17.6",
+    "characterization": "10/10 exact assertions on native production SQL; only fixture identifiers quoted",
+    "existingReruns": [
+      "draft allocation/timeout/repository coverage and observed concurrency",
+      "transaction workflow/repository coverage and observed concurrency",
+      "MOD015 effective season membership, cap, configuration/history and reference checks"
+    ],
+    "cleanup": "UUID database dropped/count0 verified and task container removed",
+    "notClaimed": [
+      "hosted/configured DB deployment",
+      "production RLS/role behavior",
+      "query plan/performance improvement"
+    ]
+  },
+  "independentReview": {
+    "model": "gpt-6-astra high, fresh context",
+    "critical": 0,
+    "important": 0,
+    "minor": 0,
+    "independentlyRun": [
+      "ownership17/17",
+      "cap23/23",
+      "protected source/method comparisons"
+    ],
+    "notIndependentlyRun": [
+      "full781 suite (author run)",
+      "later native PostgreSQL extension (author run after user enabled Docker)"
+    ],
+    "fixes": "none required"
+  },
+  "decisions": [
+    {
+      "decision": "Omitted-member sentinel replaces planned None default",
+      "reason": "Preserve existing member-scoped explicit NULL behavior without broadening to global ownership",
+      "costIfWrong": "Direct helper callers must omit member_id for league-wide read; adapters and NULL regression test pin this contract"
+    },
+    {
+      "decision": "Native availability gap superseded after user started Docker; pinned disposable marked loopback fixture downloaded/run/removed",
+      "reason": "User explicitly enabled native testing; no production sources changed after clean review",
+      "costIfWrong": "Native tests do not establish hosted roles/RLS or query-plan performance; image remains normal Docker cache"
+    },
+    {
+      "decision": "Keep prior MOD033A reporting unchanged, auto/trade-specific migration and alternate helper retirement as follow-ups, and no performance claim",
+      "reason": "Approved six-method extraction scope; low-level _apply_trade and checked apply_trade are distinct, external callers unknown",
+      "costIfWrong": "Broader query consolidation/retirement and performance measurement remain separate work"
+    }
+  ],
+  "protectedSha256": {
+    "api/endpoints/draft/pick_service.py": "80e6644f4feb4a2ae0057b3fc6c282601a685e052747de9d4e5ec43a80eb5d94",
+    "api/endpoints/transaction/service.py": "db7a6029864a1379528ca5073cde252f5dda6a251c2c910b0f402b6f6f0fd964",
+    "api/endpoints/transaction/workflow_service.py": "00738c9846d78b60e4e16ce34e26132bc4b966d0bd9d2047002c415fcb40243e",
+    "api/endpoints/transaction/repository.py": "819e16d05fe56a68d4e56909f004910104242890e1712f7b9dfd450bcecbfd80",
+    "api/utils/conference_caps.py": "4752c55fd233e7f2d7fe974b237728b4c378ca1e992e940aa52cd7bc29aec213",
+    "api/utils/conference_membership.py": "d82e7ee6ac076214f110d02b7f3f1f0bf2444a32428f663cff360e86990ea63f",
+    "api/utils/ownership.py": "79016d10aeccb4efdd2b66dc61ea6f38a295eb2218929f15fb1da6edf06adce5",
+    "api/tests/test_conference_cap_policy.py": "e2e9f3ea397662524cad175734922507a2b79c4ce1fda02b9f908eab5b003b71"
+  },
+  "sha256": {
+    "api/utils/ownership_reads.py": "e5672a931d90b6ce42958e3787b72da0431954f6a9f5464c388105be0ce28ac8",
+    "api/endpoints/draft/pick_repository.py": "87ad089f7bda6103f471ba7337af2ed6a11940cbab2b3c8e3f2bd7652072fc11",
+    "api/endpoints/transaction/workflow_repository.py": "dfc54e53c063eadb0823aa5c510b562ccd0b621d12a7465cb1c9c43d973c0769",
+    "api/tests/test_ownership_reads.py": "e1c6beb8268fb7a814a8be94d2fcdcbc901a3ac1e02477e79e006a68182f4cc9",
+    "scripts/modernization/verify_mod033.py": "eab79b8da967ae368ac802891a0553f2f5ef2590f076172665a7ecc9aa3bb1ab"
+  }
+}

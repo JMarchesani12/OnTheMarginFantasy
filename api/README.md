@@ -220,6 +220,21 @@ Other environments follow the full baseline/additive migration sequence. The
 mutex and apply-time validation require normal deployment of all backend/job
 writers; this SQL rollout did not deploy application code or execute jobs.
 
+## Conference-cap policy (MOD-033A)
+
+`SportConference.maxTeamsPerOwner` has one application meaning: zero permits no
+teams, positive integers set the limit, and negative/missing/noninteger values
+are configuration errors. There is no implicit unlimited value or missing-limit
+default. Live/manual draft, auto-pick buckets, free-agent submission/application,
+trade validation/application and roster-cap reporting use this policy.
+
+Zero/full auto-pick buckets are skipped; encountered invalid caps fail the owned
+transaction. Existing rosters are not rewritten when caps change. Valid drop-only
+moves can reduce an over-cap roster without first making it compliant; incoming
+teams still require a legal final count. Invalid effective conference mappings or
+caps on active roster groups fail reporting rather than disappearing from its
+joins/filter. No schema/data migration accompanies this application change.
+
 ## Atomic league initialization (MOD-012)
 
 League creation inserts the league, creator membership and calendar in one

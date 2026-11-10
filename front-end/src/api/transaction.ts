@@ -130,13 +130,15 @@ export async function responseToTradeRequest(
 
 export async function getOpenTradeRequests(
     leagueId: number,
-    memberId: number
+    memberId: number,
+  signal?: AbortSignal
 ): Promise<OpenTradesResponse> {
   const payload = {
     "memberId": memberId,
   };
 
   const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/transactions/trades/open`, {
+    signal,
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -174,9 +176,10 @@ export async function vetoTrade(
 }
 
 export async function getPendingTradesAndAddDrop(
-    leagueId: number
+    leagueId: number,
+  signal?: AbortSignal
 ): Promise<PendingTransactionsResponse> {
-  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/transaction/pending`)
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/transaction/pending`, { signal });
 
   if (!res.ok) {
     throw new Error(`Failed to get pending transactions: ${res.status}`);

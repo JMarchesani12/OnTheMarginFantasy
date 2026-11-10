@@ -4,7 +4,8 @@ import { apiFetch, API_BASE_URL } from "./client";
 
 export async function getScoresForWeek(
   weekNumbers: number[],
-  leagueId: number
+  leagueId: number,
+  signal?: AbortSignal
 ): Promise<WeekStandings> {
 
 const payload = {
@@ -12,6 +13,7 @@ const payload = {
 };
 
   const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/pointsAwarded`, {
+    signal,
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)

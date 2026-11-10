@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRequestScope } from "../../hooks/useRequestScope";
 import type { LeagueMember } from "../../types/leagueMember";
 import type { PendingTransaction, PendingTransactionsResponse } from "../../types/roster";
 import { getPendingTradesAndAddDrop } from "../../api/transaction";
@@ -6,6 +7,7 @@ import "./TradeRequestsPanel.css";
 
 type PendingTransactionsPanelProps = {
   leagueId: number;
+  isCurrent: () => boolean;
   members: LeagueMember[];
   teamNameLookup: Record<number, string>;
 };
@@ -20,9 +22,11 @@ const formatTypeLabel = (type: string | null | undefined) => {
 
 const PendingTransactionsPanel = ({
   leagueId,
+  isCurrent,
   members,
   teamNameLookup,
 }: PendingTransactionsPanelProps) => {
+  const scope = useRequestScope(isCurrent);
   const [pending, setPending] = useState<PendingTransactionsResponse>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,17 +54,19 @@ const PendingTransactionsPanel = ({
     teamNameLookup[teamId] ?? `Team #${teamId}`;
 
   const loadPending = useCallback(async () => {
+    if (!scope.isCurrent()) return;
+    const current = scope.capture("pending");
     try {
       setLoading(true);
       setError(null);
-      const data = await getPendingTradesAndAddDrop(leagueId);
-      setPending(data ?? []);
+      const data = await getPendingTradesAndAddDrop(leagueId, current.signal);
+      if (current()) setPending(data ?? []);
     } catch (err: any) {
-      setError(err?.message ?? "Failed to load pending transactions");
+      if (current()) setError(err?.message ?? "Failed to load pending transactions");
     } finally {
-      setLoading(false);
+      if (current()) setLoading(false);
     }
-  }, [leagueId]);
+  }, [leagueId, scope]);
 
   useEffect(() => {
     loadPending();

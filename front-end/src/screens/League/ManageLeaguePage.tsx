@@ -20,12 +20,14 @@ import {
   deleteLeague,
   updateLeague,
 } from "../../api/leagues";
+import DraftOrderEditor from "../../components/League/DraftOrderEditor";
 import { setDraftOrder as setDraftOrderApi } from "../../api/draft";
 import {
   BonusesEditor,
   BONUS_TEMPLATES,
   type BonusWithLocalId,
-} from "../CreateLeague/BonusesEditor";
+} from "../../components/League/BonusesEditor";
+import { normalizeLeagueSettings } from "../../utils/leagueMapping";
 import { useCurrentUser } from "../../context/currentUserContext";
 import "../CreateLeague/CreateLeague.css";
 import "./ManageLeaguePage.css";
@@ -179,18 +181,6 @@ const ManageLeaguePage = () => {
     setLeagueState(initialLeague);
     setForm(makeInitialForm(initialLeague));
   }, [initialLeague]);
-
-  const normalizeLeagueSettings = (value: unknown) => {
-    if (!value) return undefined;
-    if (typeof value === "string") {
-      try {
-        return JSON.parse(value) as League["settings"];
-      } catch {
-        return undefined;
-      }
-    }
-    return value as League["settings"];
-  };
 
   const mapLeagueFromResponse = (
     payload: SingleLeague | League | { league?: SingleLeague | League }
@@ -834,77 +824,20 @@ const ManageLeaguePage = () => {
             </div>
 
             {isCommissioner && (
-              <div className="ml-draft-order">
-                <div className="ml-draft-order-header">
-                  <h3>Draft Order</h3>
-                  <button
-                    className="cl-btn-secondary"
-                    type="button"
-                    onClick={handleRandomizeDraftOrder}
-                    disabled={members.length === 0}
-                  >
-                    Randomize Draft Order
-                  </button>
-                </div>
-
-                {membersLoading && (
-                  <p className="ml-muted">Loading league members…</p>
-                )}
-                {membersError && <p className="ml-error">{membersError}</p>}
-                {memberActionError && (
-                  <p className="ml-error">{memberActionError}</p>
-                )}
-
-                {members.length > 0 && (
-                  <div className="ml-draft-order-list">
-                    {orderedMembers.map((member, index) => (
-                      <div
-                        key={member.id}
-                        className={`ml-draft-order-row ${draggingMemberId === member.id ? "is-dragging" : ""}`}
-                        draggable
-                        onDragStart={() => handleDragStart(member.id)}
-                        onDragOver={(event) => {
-                          event.preventDefault();
-                          handleDragOver(member.id);
-                        }}
-                        onDragEnd={handleDragEnd}
-                      >
-                        <div className="ml-draft-order-main">
-                          <span className="ml-draft-rank">
-                            {index + 1}
-                          </span>
-                          <div>
-                            <p className="ml-draft-member">
-                              {member.teamName ?? `Member ${member.id}`}
-                            </p>
-                            <span className="ml-draft-sub">
-                              {member.displayName}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="ml-draft-actions">
-                          <button
-                            className="ml-remove-btn"
-                            type="button"
-                            onClick={() => handleRemoveMember(member)}
-                            disabled={member.userId === currentUserId}
-                            title={
-                              member.userId === currentUserId
-                                ? "You cannot remove yourself."
-                                : "Remove member"
-                            }
-                          >
-                            Remove
-                          </button>
-                          <span className="ml-drag-hint" aria-hidden="true">
-                            ⇅
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <DraftOrderEditor
+                orderedMembers={orderedMembers}
+                memberCount={members.length}
+                membersLoading={membersLoading}
+                membersError={membersError}
+                memberActionError={memberActionError}
+                draggingMemberId={draggingMemberId}
+                currentUserId={currentUserId}
+                onRandomize={handleRandomizeDraftOrder}
+                onRemoveMember={handleRemoveMember}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDragEnd={handleDragEnd}
+              />
             )}
 
             {saveError && <p className="ml-error">{saveError}</p>}

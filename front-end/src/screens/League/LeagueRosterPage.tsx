@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import type { League } from "../../types/league";
 import type { OwnedTeam } from "../../types/schedule";
 import type { LeagueMember } from "../../types/leagueMember";
-import { getLeague, getLeaguesForUser, getMembersOfLeague } from "../../api/leagues";
+import { getMembersOfLeague } from "../../api/leagues";
 import { getAvailableTeams, getMemberTeams } from "../../api/roster";
 import { submitFreeAgencyRequest, tradeRequestProposal } from "../../api/transaction";
 import PendingTransactionsPanel from "../../components/League/PendingTransactionsPanel";
@@ -11,39 +11,43 @@ import TradeRequestsPanel from "../../components/League/TradeRequestsPanel";
 import { formatLeagueDate } from "../../utils/date";
 import { normalizeOwnedTeams, type RawOwnedTeam } from "../../utils/teams";
 import { getEffectiveWeekNumber } from "../../utils/weekCutoff";
-import {
-  mapLeagueFromResponse,
-  normalizeLeaguesResponse,
-} from "../../utils/leagueMapping";
 import { safeLocalStorage } from "../../utils/safeStorage";
-import { useCurrentUser } from "../../context/currentUserContext";
+import { useLeagueContext } from "../../hooks/useLeagueContext";
+import { useRequestScope } from "../../hooks/useRequestScope";
 import "./LeagueRosterPage.css";
 
-type LocationState = {
-  league?: League;
-};
+const EMPTY_TEAMS: OwnedTeam[] = [];
 
 type GroupedTeams = [string, OwnedTeam[]][];
+type RosterContextProps = { league: League; isCurrent: () => boolean };
 
 const LeagueRosterPage = () => {
-  const navigate = useNavigate();
   const { league_id } = useParams();
-  const location = useLocation();
-  const state = location.state as LocationState | null;
-  const [league, setLeague] = useState<League | null>(state?.league ?? null);
-  const [leagueLoading, setLeagueLoading] = useState(false);
-  const [leagueError, setLeagueError] = useState<string | null>(null);
-  const { userId: currentUserId } = useCurrentUser();
+  const context = useLeagueContext(league_id);
+  const navigate = useNavigate();
+  if (!context.league || !context.isMember) return (
+    <div className="roster-page">
+      <button className="roster-page__back" type="button" onClick={() => navigate(-1)}>← Back</button>
+      <button className="roster-page__back" type="button" onClick={() => navigate("/leagues")}>Go to My Leagues</button>
+      <p className="roster-page__empty">{context.loading ? "Loading league details…" : context.error ?? (context.league ? "League membership is required to manage a roster." : "League context missing. Please open this page from your league detail view.")}</p>
+      {context.canRetry && <button type="button" onClick={context.retry}>Retry</button>}
+    </div>
+  );
+  return <LeagueRosterView key={context.scopeKey} league={context.league} isCurrent={context.isCurrent} />;
+};
 
-  const leagueId = league?.leagueId ?? (league_id ? Number(league_id) : null);
-  const memberId = league?.memberId ?? null;
+const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
+  const navigate = useNavigate();
+  const scope = useRequestScope(isCurrent);
+  const leagueId = league.leagueId;
+  const memberId = league.memberId;
 
   const isBrowser = typeof window !== "undefined";
 
-  const [ownedTeams, setOwnedTeams] = useState<OwnedTeam[]>([]);
-  const [availableTeams, setAvailableTeams] = useState<OwnedTeam[]>([]);
-  const [selectedAdd, setSelectedAdd] = useState<OwnedTeam | null>(null);
-  const [selectedDrop, setSelectedDrop] = useState<OwnedTeam | null>(null);
+  const [ownedTeamsValue, setOwnedTeams] = useState<OwnedTeam[]>([]);
+  const [availableTeamsValue, setAvailableTeams] = useState<OwnedTeam[]>([]);
+  const [selectedAddValue, setSelectedAdd] = useState<OwnedTeam | null>(null);
+  const [selectedDropValue, setSelectedDrop] = useState<OwnedTeam | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -61,18 +65,45 @@ const LeagueRosterPage = () => {
   const [membersLoading, setMembersLoading] = useState(false);
   const [membersError, setMembersError] = useState<string | null>(null);
   const [tradeMemberId, setTradeMemberId] = useState<number | null>(null);
-  const [tradeMemberTeams, setTradeMemberTeams] = useState<OwnedTeam[]>([]);
+  const [tradeMemberTeamsValue, setTradeMemberTeams] = useState<OwnedTeam[]>([]);
   const [tradeTeamsLoading, setTradeTeamsLoading] = useState(false);
   const [tradeTeamsError, setTradeTeamsError] = useState<string | null>(null);
-  const [selectedTradeGive, setSelectedTradeGive] = useState<OwnedTeam | null>(null);
-  const [selectedTradeReceive, setSelectedTradeReceive] = useState<OwnedTeam | null>(null);
-  const rosterWeekNumber =
+  const [selectedTradeGiveValue, setSelectedTradeGive] = useState<OwnedTeam | null>(null);
+  const [selectedTradeReceiveValue, setSelectedTradeReceive] = useState<OwnedTeam | null>(null);
+  const getRosterWeek = useCallback(() =>
     getEffectiveWeekNumber({
-      currentWeekNumber: league?.currentWeekNumber ?? null,
-      currentWeekStartDate: league?.currentWeekStartDate ?? null,
-      timeZone: league?.settings?.timezone ?? null,
-    }) ?? 1;
+      currentWeekNumber: league.currentWeekNumber,
+      currentWeekStartDate: league.currentWeekStartDate,
+      timeZone: league.settings?.timezone ?? null,
+    }) ?? 1, [league]);
+  const rosterWeekNumber = getRosterWeek();
+  const [, checkWeek] = useState(0);
+  const rosterScope = useRef({ week: rosterWeekNumber, generation: 0 });
+  if (rosterScope.current.week !== rosterWeekNumber) {
+    rosterScope.current = { week: rosterWeekNumber, generation: rosterScope.current.generation + 1 };
+  }
+  const rosterGeneration = rosterScope.current.generation;
+  const [loadedRosterGeneration, setLoadedRosterGeneration] = useState<number | null>(null);
+  const rosterReady = loadedRosterGeneration === rosterGeneration;
+  const ownedTeams = rosterReady ? ownedTeamsValue : EMPTY_TEAMS;
+  const availableTeams = rosterReady ? availableTeamsValue : EMPTY_TEAMS;
+  const selectedAdd = rosterReady ? selectedAddValue : null;
+  const selectedDrop = rosterReady ? selectedDropValue : null;
+  const selectedTradeGive = rosterReady ? selectedTradeGiveValue : null;
+  const isRosterCurrent = useCallback(() => scope.isCurrent() &&
+    rosterScope.current.generation === rosterGeneration && getRosterWeek() === rosterWeekNumber,
+    [scope, rosterGeneration, getRosterWeek, rosterWeekNumber]);
   const rosterWeekId = league?.currentWeekId ?? rosterWeekNumber;
+  const partnerScope = useRef({ memberId: tradeMemberId, week: rosterWeekNumber, generation: 0 });
+  if (partnerScope.current.memberId !== tradeMemberId || partnerScope.current.week !== rosterWeekNumber) {
+    partnerScope.current = { memberId: tradeMemberId, week: rosterWeekNumber, generation: partnerScope.current.generation + 1 };
+  }
+  const partnerGeneration = partnerScope.current.generation;
+  const [loadedPartnerGeneration, setLoadedPartnerGeneration] = useState<number | null>(null);
+  const partnerReady = loadedPartnerGeneration === partnerGeneration;
+  const tradeMemberTeams = partnerReady ? tradeMemberTeamsValue : EMPTY_TEAMS;
+  const selectedTradeReceive = partnerReady ? selectedTradeReceiveValue : null;
+
 
   useEffect(() => {
     if (!tabStorageKey || !isBrowser) {
@@ -82,23 +113,27 @@ const LeagueRosterPage = () => {
   }, [tabStorageKey, activeTab, isBrowser]);
 
   const loadRosterData = useCallback(async () => {
-    if (!leagueId || !memberId) {
+    if (!isRosterCurrent() || !leagueId || !memberId) {
       return;
     }
 
+    const request = scope.capture("roster");
+    const current = () => request() && isRosterCurrent();
     try {
       setLoading(true);
       setError(null);
 
       const [memberTeams, available] = await Promise.all([
-        getMemberTeams(memberId, rosterWeekNumber, leagueId),
-        getAvailableTeams(rosterWeekNumber, leagueId),
+        getMemberTeams(memberId, rosterWeekNumber, leagueId, request.signal),
+        getAvailableTeams(rosterWeekNumber, leagueId, request.signal),
       ]);
 
+      if (!current()) return;
       const normalizedOwned = normalizeOwnedTeams(memberTeams as RawOwnedTeam[]);
       const normalizedAvailable = normalizeOwnedTeams(available as RawOwnedTeam[]);
       setOwnedTeams(normalizedOwned);
       setAvailableTeams(normalizedAvailable);
+      setLoadedRosterGeneration(rosterGeneration);
       setSelectedDrop((current) => {
         if (!current) return null;
         return normalizedOwned.find((team) => team.teamId === current.teamId) ?? null;
@@ -110,64 +145,20 @@ const LeagueRosterPage = () => {
         );
       });
     } catch (err: any) {
-      setError(err?.message ?? "Failed to load roster data");
+      if (current()) setError(err?.message ?? "Failed to load roster data");
     } finally {
-      setLoading(false);
+      if (current()) setLoading(false);
+      else if (scope.isCurrent() && getRosterWeek() !== rosterWeekNumber) checkWeek(value => value + 1);
     }
-  }, [leagueId, memberId, rosterWeekNumber]);
+  }, [leagueId, memberId, rosterWeekNumber, rosterGeneration, scope, isRosterCurrent]);
 
   useEffect(() => {
+    setSelectedAdd(null);
+    setSelectedDrop(null);
+    setSelectedTradeGive(null);
     loadRosterData();
-  }, [loadRosterData]);
-
-  useEffect(() => {
-    if (state?.league) {
-      setLeague(mapLeagueFromResponse(state.league));
-    }
-  }, [state?.league]);
-
-  useEffect(() => {
-    if (league || !league_id || !currentUserId) {
-      return;
-    }
-
-    let isMounted = true;
-
-    const loadLeague = async () => {
-      try {
-        setLeagueLoading(true);
-        setLeagueError(null);
-        const response = await getLeaguesForUser(currentUserId, "all");
-        if (!isMounted) return;
-        const matches = normalizeLeaguesResponse(response);
-        const found = matches.find(
-          (item) => item.leagueId === Number(league_id)
-        );
-        if (found) {
-          setLeague(mapLeagueFromResponse(found));
-          return;
-        }
-        const fallback = await getLeague(Number(league_id));
-        if (isMounted) {
-          setLeague(mapLeagueFromResponse(fallback));
-        }
-      } catch (err: any) {
-        if (isMounted) {
-          setLeagueError(err?.message ?? "Failed to load league details.");
-        }
-      } finally {
-        if (isMounted) {
-          setLeagueLoading(false);
-        }
-      }
-    };
-
-    loadLeague();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [league, league_id, currentUserId]);
+    return () => scope.cancel("roster");
+  }, [loadRosterData, scope]);
 
   useEffect(() => {
     if (!leagueId) {
@@ -175,25 +166,26 @@ const LeagueRosterPage = () => {
     }
 
     let isCancelled = false;
+    const current = scope.capture("members");
 
     const loadMembers = async () => {
       try {
         setMembersLoading(true);
         setMembersError(null);
 
-        const data = await getMembersOfLeague(leagueId);
+        const data = await getMembersOfLeague(leagueId, current.signal);
 
-        if (!isCancelled) {
+        if (!isCancelled && current()) {
           setMembers(data);
           const defaultPartner = data.find((m) => m.id !== memberId) ?? null;
           setTradeMemberId(defaultPartner?.id ?? null);
         }
       } catch (err: any) {
-        if (!isCancelled) {
+        if (!isCancelled && current()) {
           setMembersError(err?.message ?? "Failed to load league members");
         }
       } finally {
-        if (!isCancelled) {
+        if (!isCancelled && current()) {
           setMembersLoading(false);
         }
       }
@@ -203,8 +195,9 @@ const LeagueRosterPage = () => {
 
     return () => {
       isCancelled = true;
+      current.cancel();
     };
-  }, [leagueId, memberId]);
+  }, [leagueId, memberId, scope]);
 
   useEffect(() => {
     if (!tradeMemberId || !leagueId) {
@@ -214,30 +207,33 @@ const LeagueRosterPage = () => {
     }
 
     setSelectedTradeReceive(null);
+    setTradeMemberTeams([]);
 
     let isCancelled = false;
+    const current = scope.capture("partner");
 
     const loadTradeTeams = async () => {
       try {
         setTradeTeamsLoading(true);
         setTradeTeamsError(null);
 
-        const teams = await getMemberTeams(tradeMemberId, rosterWeekNumber, leagueId);
+        const teams = await getMemberTeams(tradeMemberId, rosterWeekNumber, leagueId, current.signal);
 
-        if (!isCancelled) {
+        if (!isCancelled && current()) {
           const normalized = normalizeOwnedTeams(teams as RawOwnedTeam[]);
           setTradeMemberTeams(normalized);
+          setLoadedPartnerGeneration(partnerGeneration);
           setSelectedTradeReceive((current) => {
             if (!current) return null;
             return normalized.find((team) => team.teamId === current.teamId) ?? null;
           });
         }
       } catch (err: any) {
-        if (!isCancelled) {
+        if (!isCancelled && current()) {
           setTradeTeamsError(err?.message ?? "Failed to load member roster");
         }
       } finally {
-        if (!isCancelled) {
+        if (!isCancelled && current()) {
           setTradeTeamsLoading(false);
         }
       }
@@ -247,8 +243,9 @@ const LeagueRosterPage = () => {
 
     return () => {
       isCancelled = true;
+      current.cancel();
     };
-  }, [tradeMemberId, leagueId, rosterWeekNumber]);
+  }, [tradeMemberId, leagueId, rosterWeekNumber, partnerGeneration, scope]);
 
   useEffect(() => {
     setSelectedTradeGive((current) => {
@@ -338,7 +335,7 @@ const LeagueRosterPage = () => {
   };
 
   const handleSubmitAddDrop = async () => {
-    if (!league || !memberId || !leagueId) {
+    if (!scope.isCurrent() || !league || !memberId || !leagueId) {
       return;
     }
 
@@ -346,6 +343,12 @@ const LeagueRosterPage = () => {
       return;
     }
 
+    if (!rosterReady || !isRosterCurrent()) {
+      if (scope.isCurrent()) checkWeek(value => value + 1);
+      return;
+    }
+    const operation = scope.capture();
+    const current = () => operation() && isRosterCurrent();
     try {
       setLoading(true);
       setError(null);
@@ -359,6 +362,7 @@ const LeagueRosterPage = () => {
         selectedDrop ? selectedDrop.teamId : null
       );
 
+      if (!current()) return;
       if (selectedAdd) {
         setSelectedAdd(null);
       }
@@ -368,17 +372,28 @@ const LeagueRosterPage = () => {
 
       await loadRosterData();
     } catch (err: any) {
+      if (!current()) return;
       setError(err?.message ?? "Failed to submit add/drop request");
     } finally {
+      if (!current()) {
+        if (scope.isCurrent() && getRosterWeek() !== rosterWeekNumber) checkWeek(value => value + 1);
+        return;
+      }
       setLoading(false);
     }
   };
 
   const handleSubmitTrade = async () => {
-    if (!tradeMemberId || !selectedTradeGive || !selectedTradeReceive || !league) {
+    if (!scope.isCurrent() || !tradeMemberId || !selectedTradeGive || !selectedTradeReceive || !league) {
       return;
     }
 
+    if (!rosterReady || !isRosterCurrent()) {
+      if (scope.isCurrent()) checkWeek(value => value + 1);
+      return;
+    }
+    const operation = scope.capture();
+    const current = () => operation() && isRosterCurrent();
     try {
       setLoading(true);
       setError(null);
@@ -393,12 +408,18 @@ const LeagueRosterPage = () => {
         [selectedTradeGive.teamId]
       );
 
+      if (!current()) return;
       setSelectedTradeGive(null);
       setSelectedTradeReceive(null);
       await loadRosterData();
     } catch (err: any) {
+      if (!current()) return;
       setError(err?.message ?? "Failed to submit trade request");
     } finally {
+      if (!current()) {
+        if (scope.isCurrent() && getRosterWeek() !== rosterWeekNumber) checkWeek(value => value + 1);
+        return;
+      }
       setLoading(false);
     }
   };
@@ -473,41 +494,14 @@ const LeagueRosterPage = () => {
     ));
   };
 
-  if (!league || !memberId || !leagueId) {
-    return (
-      <div className="roster-page">
-        <button
-          className="roster-page__back"
-          type="button"
-          onClick={() => navigate(-1)}
-        >
-          ← Back
-        </button>
-        <button
-          className="roster-page__back"
-          type="button"
-          onClick={() => navigate("/leagues")}
-        >
-          Go to My Leagues
-        </button>
-        {leagueLoading ? (
-          <p className="roster-page__empty">Loading league details…</p>
-        ) : (
-          <p className="roster-page__empty">
-            {leagueError ??
-              "League context missing. Please open this page from your league detail view."}
-          </p>
-        )}
-      </div>
-    );
-  }
-
   const addDropSubmitDisabled =
+    !rosterReady ||
     freeAgentDeadlinePassed ||
     loading ||
     (!selectedAdd && !selectedDrop);
 
   const tradeSubmitDisabled =
+    !rosterReady ||
     tradeDeadlinePassed ||
     loading ||
     tradeTeamsLoading ||
@@ -857,6 +851,7 @@ const LeagueRosterPage = () => {
           <TradeRequestsPanel
             leagueId={league.leagueId}
             memberId={league.memberId}
+            isCurrent={isCurrent}
             tradeDeadlinePassed={tradeDeadlinePassed}
           />
         </>
@@ -865,6 +860,7 @@ const LeagueRosterPage = () => {
         leagueId={league.leagueId}
         members={members}
         teamNameLookup={teamNameLookup}
+        isCurrent={isCurrent}
       />
     </div>
   );

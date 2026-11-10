@@ -1,0 +1,1 @@
+export const leagueFixture=(id=10,memberId=11)=>({leagueId:id,memberId,leagueName:'League '+id,teamName:'Team',sport:'1',commissionerId:1,status:'In-Season',currentWeekNumber:1,currentWeekId:101,currentWeekStartDate:null,settings:{bonuses:{},timezone:'UTC',transactions:{tradeVeto:{enabled:true,requiredVetoCount:2}},draft:{numberOfRounds:4}}});

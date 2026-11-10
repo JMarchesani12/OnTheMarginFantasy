@@ -9,6 +9,7 @@ from .snapshot_service import DraftSnapshotService
 from .control_service import DraftControlService, DraftStartConflict
 from actors import UserActor
 from utils.jsonSafe import jsonSafe
+from utils.requestValidation import integer_value
 from authenticatedPrincipal import PrincipalResolutionError, resolve_authenticated_principal
 
 class DraftEndpoints:
@@ -30,18 +31,10 @@ class DraftEndpoints:
             if missing:
                 return jsonify({'message': f"Missing fields: {', '.join(missing)}"}), 400
 
-            def integer(value, field):
-                if isinstance(value, bool) or not isinstance(value, (int, str)):
-                    raise ValueError(f'{field} must be an integer')
-                try:
-                    return int(value)
-                except ValueError:
-                    raise ValueError(f'{field} must be an integer') from None
-
-            league_id = integer(data['leagueId'], 'leagueId')
-            member_id = integer(data['memberId'], 'memberId')
-            sport_team_id = integer(data['sportTeamId'], 'sportTeamId')
-            week_number = integer(data.get('weekNumber', 0), 'weekNumber')
+            league_id = integer_value(data['leagueId'], 'leagueId')
+            member_id = integer_value(data['memberId'], 'memberId')
+            sport_team_id = integer_value(data['sportTeamId'], 'sportTeamId')
+            week_number = integer_value(data.get('weekNumber', 0), 'weekNumber')
             draft_pick = self.pick_service.pick_live(
                 actor=UserActor(principal.user_id, principal.subject),
                 league_id=league_id,
@@ -108,21 +101,13 @@ class DraftEndpoints:
             if action == 'finalize' and ('leagueId' not in body or 'actingUserId' not in body):
                 return jsonify({'message': 'Missing field: leagueId or actingUserId'}), 400
 
-            def integer(value, field):
-                if isinstance(value, bool) or not isinstance(value, (int, str)):
-                    raise ValueError(f'{field} must be an integer')
-                try:
-                    return int(value)
-                except ValueError:
-                    raise ValueError(f'{field} must be an integer') from None
-
             if action != 'order':
                 if 'leagueId' not in body:
                     return jsonify({'message': 'Missing field: leagueId'}), 400
-                league_id = integer(body['leagueId'], 'leagueId')
+                league_id = integer_value(body['leagueId'], 'leagueId')
             # An actor field can assert compatibility, never establish identity.
             if 'actingUserId' in body:
-                if integer(body['actingUserId'], 'actingUserId') != principal.user_id:
+                if integer_value(body['actingUserId'], 'actingUserId') != principal.user_id:
                     return jsonify({'message': 'actingUserId does not match authenticated user'}), 403
 
             if action == 'order':
@@ -131,7 +116,7 @@ class DraftEndpoints:
                     return jsonify({'message': 'memberIdsInOrder must be a non-empty array'}), 400
                 result = self.control_service.set_order(
                     UserActor(principal.user_id, principal.subject), league_id,
-                    [integer(value, 'memberId') for value in ids],
+                    [integer_value(value, 'memberId') for value in ids],
                 )
             elif action == 'finalize':
                 result = self.control_service.finalize(UserActor(principal.user_id, principal.subject), league_id)

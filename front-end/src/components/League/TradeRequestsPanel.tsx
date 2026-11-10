@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRequestScope } from "../../hooks/useRequestScope";
 import type {
   OpenTradesResponse,
   TradeStatus,
@@ -14,6 +15,7 @@ import "./TradeRequestsPanel.css";
 
 type TradeRequestsPanelProps = {
   leagueId: number;
+  isCurrent: () => boolean;
   memberId: number;
   tradeDeadlinePassed: boolean;
 };
@@ -28,9 +30,11 @@ const actionLabels: Record<TradeTab, string> = {
 
 const TradeRequestsPanel = ({
   leagueId,
+  isCurrent,
   memberId,
   tradeDeadlinePassed,
 }: TradeRequestsPanelProps) => {
+  const scope = useRequestScope(isCurrent);
   const [activeTab, setActiveTab] = useState<TradeTab>("incoming");
   const [trades, setTrades] = useState<OpenTradesResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -38,17 +42,19 @@ const TradeRequestsPanel = ({
   const [error, setError] = useState<string | null>(null);
 
   const loadTrades = useCallback(async () => {
+    if (!scope.isCurrent()) return;
+    const current = scope.capture("trades");
     try {
       setLoading(true);
       setError(null);
-      const data = await getOpenTradeRequests(leagueId, memberId);
-      setTrades(data);
+      const data = await getOpenTradeRequests(leagueId, memberId, current.signal);
+      if (current()) setTrades(data);
     } catch (err: any) {
-      setError(err?.message ?? "Failed to load trade requests");
+      if (current()) setError(err?.message ?? "Failed to load trade requests");
     } finally {
-      setLoading(false);
+      if (current()) setLoading(false);
     }
-  }, [leagueId, memberId]);
+  }, [leagueId, memberId, scope]);
 
   useEffect(() => {
     loadTrades();
@@ -78,41 +84,47 @@ const TradeRequestsPanel = ({
     transactionId: number,
     action: TradeResponseAction
   ) => {
+    if (!scope.isCurrent()) return;
+    const current = scope.capture();
     try {
       setActionLoadingId(transactionId);
       setError(null);
       await responseToTradeRequest(leagueId, transactionId, action, memberId);
-      await loadTrades();
+      if (current()) await loadTrades();
     } catch (err: any) {
-      setError(err?.message ?? "Failed to update trade request");
+      if (current()) setError(err?.message ?? "Failed to update trade request");
     } finally {
-      setActionLoadingId(null);
+      if (current()) setActionLoadingId(null);
     }
   };
 
   const handleCancel = async (transactionId: number) => {
+    if (!scope.isCurrent()) return;
+    const current = scope.capture();
     try {
       setActionLoadingId(transactionId);
       setError(null);
       await cancelTradeRequest(leagueId, transactionId, memberId);
-      await loadTrades();
+      if (current()) await loadTrades();
     } catch (err: any) {
-      setError(err?.message ?? "Failed to cancel trade request");
+      if (current()) setError(err?.message ?? "Failed to cancel trade request");
     } finally {
-      setActionLoadingId(null);
+      if (current()) setActionLoadingId(null);
     }
   };
 
   const handleVeto = async (transactionId: number) => {
+    if (!scope.isCurrent()) return;
+    const current = scope.capture();
     try {
       setActionLoadingId(transactionId);
       setError(null);
       await vetoTrade(leagueId, transactionId, memberId);
-      await loadTrades();
+      if (current()) await loadTrades();
     } catch (err: any) {
-      setError(err?.message ?? "Failed to update veto");
+      if (current()) setError(err?.message ?? "Failed to update veto");
     } finally {
-      setActionLoadingId(null);
+      if (current()) setActionLoadingId(null);
     }
   };
 

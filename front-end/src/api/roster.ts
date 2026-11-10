@@ -5,7 +5,8 @@ import { apiFetch, API_BASE_URL } from "./client";
 export async function getMemberTeams(
   memberId: number,
   weekNumber: number,
-  leagueId: number
+  leagueId: number,
+  signal?: AbortSignal
 ): Promise<OwnedTeam[]> {
   const payload = {
     "leagueId": leagueId,
@@ -14,6 +15,7 @@ export async function getMemberTeams(
   };
 
   const res = await apiFetch(`${API_BASE_URL}/api/roster/memberTeams`, {
+    signal,
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),

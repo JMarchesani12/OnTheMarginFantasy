@@ -1,4 +1,5 @@
 from utils.conference_membership import require_member_roster_mappings
+from utils.conference_caps import require_conference_cap
 """Draft allocation and timeout policy, owning each write transaction.
 
 Interactive callers use pick_live(UserActor, ...); worker/trusted callers use
@@ -437,12 +438,8 @@ class DraftPickService:
         if conf is None:
             raise ValueError('Conference configuration unavailable for team')
 
-        max_allowed = int(conf["maxTeamsPerOwner"])
-        if max_allowed <= 0:
-            # 0 or negative = treat as "no cap"
-            return
-
         sport_conference_id = int(conf["sportConferenceId"])
+        max_allowed = require_conference_cap(conf.get("maxTeamsPerOwner"), sport_conference_id)
         current_count = self._count_member_teams_in_sport_conference(
             conn=conn,
             league_id=league_id,
@@ -600,9 +597,7 @@ class DraftPickService:
 
     def _get_conference_cap(self, conn, sport_conference_id: int) -> int:
         row = self.pick_repository.conference_cap(conn, {"sportConferenceId": sport_conference_id}).fetchone()
-        if not row:
-            raise ValueError(f"SportConference {sport_conference_id} not found")
-        return int(row._mapping["maxTeamsPerOwner"])
+        return require_conference_cap(row._mapping.get("maxTeamsPerOwner") if row else None, sport_conference_id)
 
 
     def _pick_random_available_team_in_conference(

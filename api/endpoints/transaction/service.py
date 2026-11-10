@@ -1,4 +1,5 @@
 from utils.conference_membership import require_member_roster_mappings
+from utils.conference_caps import require_conference_cap
 """Transaction use cases and connection ownership, independent of transport."""
 from contextlib import nullcontext
 from actors import UserActor
@@ -54,10 +55,10 @@ class TransactionService:
         to_incoming = self.repository.incoming_confs(conn, from_team_ids, league_id)
         limits = self.repository.conference_limits(conn)
         for conf_id, add in from_incoming.items():
-            if from_counts.get(conf_id, 0) + add > limits.get(conf_id, 999):
+            if from_counts.get(conf_id, 0) + add > require_conference_cap(limits.get(conf_id), conf_id):
                 raise TradeRejected('Conference limit exceeded for proposing member')
         for conf_id, add in to_incoming.items():
-            if to_counts.get(conf_id, 0) + add > limits.get(conf_id, 999):
+            if to_counts.get(conf_id, 0) + add > require_conference_cap(limits.get(conf_id), conf_id):
                 raise TradeRejected('Conference limit exceeded for receiving member')
 
     def apply_trade_for_job(self, transaction_id: int, conn=None) -> None:

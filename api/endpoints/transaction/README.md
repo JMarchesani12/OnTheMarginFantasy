@@ -28,3 +28,21 @@ with explicit league context. Affected/retained unmapped or cross-sport teams re
 before ownership/command mutation, including queued apply. No uncapped Independent
 fallback. Existing cap-value interpretations, deadlines, vetoes, ownership locks and
 transaction boundaries remain. [Inventory](../../../docs/modernization/mod-015-conference-membership.md).
+
+
+## Shared ownership reads — MOD-033, 2026-11-09
+
+Draft live/manual existence and scalar conference counts plus free-agent
+league/member existence and grouped counts delegate through their existing
+repository methods to `utils/ownership_reads.py`. Helpers use only the supplied
+connection and return the raw result; services retain authorization, cap policy,
+locks, writes and timing. Draft DISTINCT-team counts and free-agent active-row
+counts intentionally differ. Explicit NULL member filtering stays constrained;
+only omitting that helper argument requests a league-wide existence read.
+
+Auto-pick/trade-specific query migration and alternate trade-helper retirement
+remain follow-ups. Existing `_apply_trade` transfer and checked `apply_trade`
+application are distinct contracts. No caching or query reduction is claimed.
+Current [local evidence](../../../docs/modernization/evidence/mod-033-ownership-reads-2026-11-09.json)
+and [native PostgreSQL evidence](../../../docs/modernization/evidence/mod-033-ownership-reads-postgres-2026-11-09.json)
+cover this extraction; earlier stage reports remain historical.

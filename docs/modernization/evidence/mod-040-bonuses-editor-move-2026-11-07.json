@@ -1,0 +1,89 @@
+{
+  "date": "2026-11-07",
+  "result": "PASS",
+  "scope": "MOD040 frontend ownership pilot completing MOD030; byte-identical editor move and two imports",
+  "move": {
+    "from": "front-end/src/screens/CreateLeague/BonusesEditor.tsx",
+    "to": "front-end/src/components/League/BonusesEditor.tsx",
+    "beforeSha256": "f10118a31a7c08366568bd76e3c9b9e940573e48e44b3bab066d27e387f0280a",
+    "byteIdentical": true
+  },
+  "consumerChanges": [
+    {
+      "file": "front-end/src/screens/CreateLeague/CreateLeague.tsx",
+      "beforeSha256": "8cc6616d8503fd9606810ec3321c82ca274745d07755ad88fced79ab3ca9563f",
+      "onlyExpectedImportReplacement": true
+    },
+    {
+      "file": "front-end/src/screens/League/ManageLeaguePage.tsx",
+      "beforeSha256": "ef4d91df763c91f2a91b821eb32f0a34e54ae538af8b2de92efcfebc8c9a239b",
+      "onlyExpectedImportReplacement": true
+    }
+  ],
+  "importGraphBefore": {
+    "result": "PASS",
+    "files": 65,
+    "literalRelativeEdges": 178,
+    "unresolved": [],
+    "cycles": [],
+    "canonicalEditorConsumers": [],
+    "exclusions": [
+      "package/alias imports",
+      "computed imports",
+      "CSS/assets",
+      "package internals"
+    ]
+  },
+  "importGraphAfter": {
+    "result": "PASS",
+    "files": 65,
+    "literalRelativeEdges": 178,
+    "unresolved": [],
+    "cycles": [],
+    "canonicalEditorConsumers": [
+      "front-end/src/screens/CreateLeague/CreateLeague.tsx",
+      "front-end/src/screens/League/ManageLeaguePage.tsx"
+    ],
+    "exclusions": [
+      "package/alias imports",
+      "computed imports",
+      "CSS/assets",
+      "package internals"
+    ]
+  },
+  "checks": {
+    "fullFrontend": "78/78 PASS",
+    "productionBuild": "PASS",
+    "styles": "unchanged",
+    "priorBackendPilotHashes": "unchanged",
+    "priorManageSettingsPilot": "preserved; only expected bonus import rewritten",
+    "whitespace": "PASS"
+  },
+  "commands": [
+    "node scripts/modernization/verify_frontend_imports.cjs",
+    "node --test --experimental-strip-types tests/*.test.ts",
+    "npm run build",
+    "git diff --check"
+  ],
+  "notRun": [
+    "browser visual/DOM/end-to-end",
+    "backend/native/configured runtime/provider"
+  ],
+  "sha256": {
+    "front-end/src/components/League/BonusesEditor.tsx": "f10118a31a7c08366568bd76e3c9b9e940573e48e44b3bab066d27e387f0280a",
+    "front-end/src/screens/CreateLeague/CreateLeague.tsx": "0bafac13936586970c962a59fe8bd8bced6c684d8f441be7956afbe95ed059d7",
+    "front-end/src/screens/League/ManageLeaguePage.tsx": "626340b68dcfb9ddc429d36c24054d24d4bef07f366a3cd1f5aa8574b4ffcec4",
+    "front-end/src/screens/CreateLeague/CreateLeague.css": "2f4950ce36c16b3833fb5221ddb0ae82fe5385919af7ab2b4099e7ad9f789c34",
+    "front-end/src/screens/League/ManageLeaguePage.css": "3126c3c509d71d4eee8a9297b38daacd1a54e141aaceecf9b4d8aa3e76d6f94b",
+    "scripts/modernization/verify_frontend_imports.cjs": "3386bdd1331e914c2cad38445c26f61feba99f85c4004e0e4aefa5353907be8f"
+  },
+  "independent_review": {
+    "result": "PASS scoped move",
+    "blockingFindings": 0,
+    "deferredMinor": "Verifier skips inline TypeScript ImportTypeNode expressions; current source contains zero."
+  },
+  "limitations": [
+    "Graph covers static/type-only import declarations and exports plus literal dynamic imports; inline import(\"...\").Type expressions excluded.",
+    "No browser/backend/native/deployment verification in this move."
+  ]
+}
