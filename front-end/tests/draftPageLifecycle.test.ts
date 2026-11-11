@@ -1,3 +1,4 @@
+import {fixture} from "./helpers/leagueContextHarness.ts";
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -44,7 +45,7 @@ test('available-team HTTP reader preserves final status and abort signal',async(
     const exports:any={};const controller=new AbortController();let seen:any;
     const source=readFileSync(new URL('../src/api/roster.ts',import.meta.url),'utf8');
     const compiled=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
-    runInNewContext(compiled,{exports,require:()=>({API_BASE_URL:'https://api.example.test',apiFetch:async(_url:any,init:any)=>{seen=init;return new Response('{}',{status});}})});
+    runInNewContext(compiled,{exports,require:(id:string)=>id==='./safeError'?fixture().load('src/api/safeError.ts'):({API_BASE_URL:'https://api.example.test',apiFetch:async(_url:any,init:any)=>{seen=init;return new Response('{}',{status});}})});
     await assert.rejects(exports.getAvailableTeams(1,10,controller.signal),(error:any)=>error.status===status);
     assert.equal(seen.signal,controller.signal);
   }

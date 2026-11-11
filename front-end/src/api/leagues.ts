@@ -1,4 +1,5 @@
-import { parseApiError, CREATE_LEAGUE_UNCERTAIN, JOIN_LEAGUE_UNCERTAIN } from "./safeError";
+import { safeResponse, safeJson, READ_ERROR, CREATE_LEAGUE_UNCERTAIN, WRITE_UNCERTAIN, JOIN_LEAGUE_UNCERTAIN } from "./safeError";
+
 import type { LeagueRules } from "../types/leagueRules";
 import type { ApproveRequestResponse, CreateLeaguePayload, GetConferences, GetRequestResponse, League, LeagueSearchResult, RequestResponse, SingleLeague, UpdateLeague } from "../types/league";
 import type { LeagueMember, LeagueMemberPreview, UpdateLeagueMember } from "../types/leagueMember";
@@ -7,55 +8,43 @@ import { apiFetch, API_BASE_URL } from "./client";
 export type LeaguePreview = Pick<LeagueSearchResult, "id" | "name" | "sport" | "commissionerDisplayName">;
 
 export async function getLeaguePreview(leagueId: number, signal?: AbortSignal): Promise<LeaguePreview> {
-  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}?view=preview`, { method: "GET", signal });
-  if (!res.ok) throw Object.assign(new Error("Could not load league preview"), { status: res.status });
-  return res.json();
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/league/${leagueId}?view=preview`, { method: "GET", signal }), READ_ERROR);
+
+  return safeJson(res, READ_ERROR);
 }
 
 export async function getLeague(leagueId: number, signal?: AbortSignal): Promise<SingleLeague> {
-  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}?view=full`, {
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/league/${leagueId}?view=full`, {
     method: "GET",
     signal,
-  });
+  }), READ_ERROR);
 
-  if (!res.ok) {
-    throw new Error(`Failed to get league: ${res.status}`);
-  }
-
-  return res.json();
+  return safeJson(res, READ_ERROR);
 }
 
 export async function createLeague(
   payload: CreateLeaguePayload
 ): Promise<unknown> {
-  const res = await apiFetch(`${API_BASE_URL}/api/league/create`, {
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/league/create`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
-  });
+  }), CREATE_LEAGUE_UNCERTAIN);
 
-  if (!res.ok) {
-    throw await parseApiError(res, CREATE_LEAGUE_UNCERTAIN);
-  }
-
-  return res.json();
+  return safeJson(res, CREATE_LEAGUE_UNCERTAIN);
 }
 
 export async function updateLeague(
   payload: UpdateLeague,
   leagueId: number
 ): Promise<UpdateLeague> {
-  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}`, {
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/league/${leagueId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
-  });
+  }), WRITE_UNCERTAIN);
 
-  if (!res.ok) {
-    throw new Error(`Failed to update league: ${res.status}`);
-  }
-
-  return res.json() as UpdateLeague;
+  return safeJson(res, WRITE_UNCERTAIN) as UpdateLeague;
 }
 
 export async function getLeaguesForUser(
@@ -65,59 +54,45 @@ export async function getLeaguesForUser(
         "userId": userId,
         "stage": type
     }
-  const res = await apiFetch(`${API_BASE_URL}/api/league/byUser`, {
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/league/byUser`, {
     method: "POST",
     signal,
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
-  });
+  }), READ_ERROR);
 
-  if (!res.ok) {
-    throw new Error(`Failed to get leagues: ${res.status}`);
-  }
-
-  return res.json();
+  return safeJson(res, READ_ERROR);
 }
 
 export async function getMembersOfLeague(
   leagueId: number,
   signal?: AbortSignal
 ): Promise<LeagueMember[]> {
-  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/members?view=full`, {
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/league/${leagueId}/members?view=full`, {
     signal,
     method: "GET",
-  });
+  }), READ_ERROR);
 
-  if (!res.ok) {
-    throw new Error(`Failed to get league members: ${res.status}`);
-  }
-
-  return res.json();
+  return safeJson(res, READ_ERROR);
 }
 
 export async function getMemberPreviewsOfLeague(
   leagueId: number,
   signal?: AbortSignal
 ): Promise<LeagueMemberPreview[]> {
-  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/members?view=preview`, { signal });
-  if (!res.ok) {
-    throw new Error(`Failed to get league members: ${res.status}`);
-  }
-  return res.json();
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/league/${leagueId}/members?view=preview`, { signal }), READ_ERROR);
+
+  return safeJson(res, READ_ERROR);
 }
 
 export async function getConferences(
   leagueId: number
 ): Promise<GetConferences> {
-  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/conferences`, {
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/league/${leagueId}/conferences`, {
     method: "GET",
-  });
+  }), READ_ERROR);
 
-  if (!res.ok) {
-    throw new Error(`Failed to get conferences: ${res.status}`);
-  }
-
-  return res.json();
+  return safeJson(res, READ_ERROR);
 }
 
 export async function requestToJoinLeague(
@@ -131,17 +106,13 @@ export async function requestToJoinLeague(
         "message": message,
         "teamName": teamName
     }
-  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/joinRequest`, {
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/league/${leagueId}/joinRequest`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
-  });
+  }), JOIN_LEAGUE_UNCERTAIN);
 
-  if (!res.ok) {
-    throw await parseApiError(res, JOIN_LEAGUE_UNCERTAIN);
-  }
-
-  return res.json();
+  return safeJson(res, JOIN_LEAGUE_UNCERTAIN);
 }
 
 export async function approveRequestToJoinLeague(
@@ -152,17 +123,13 @@ export async function approveRequestToJoinLeague(
   const body = {
         "actingUserId": userId
     }
-  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/joinRequests/${requestId}/approve`, {
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/league/${leagueId}/joinRequests/${requestId}/approve`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
-  });
+  }), WRITE_UNCERTAIN);
 
-  if (!res.ok) {
-    throw new Error(`Failed to approve request: ${res.status}`);
-  }
-
-  return res.json();
+  return safeJson(res, WRITE_UNCERTAIN);
 }
 
 export async function denyRequestToJoinLeague(
@@ -173,17 +140,13 @@ export async function denyRequestToJoinLeague(
   const body = {
         "actingUserId": userId
     }
-  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/joinRequests/${requestId}/deny`, {
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/league/${leagueId}/joinRequests/${requestId}/deny`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
-  });
+  }), WRITE_UNCERTAIN);
 
-  if (!res.ok) {
-    throw new Error(`Failed to deny request: ${res.status}`);
-  }
-
-  return res.json();
+  return safeJson(res, WRITE_UNCERTAIN);
 }
 
 export async function cancelRequestToJoinLeague(
@@ -194,17 +157,13 @@ export async function cancelRequestToJoinLeague(
   const body = {
         "userId": userId
     }
-  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/joinRequests/${requestId}/cancel`, {
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/league/${leagueId}/joinRequests/${requestId}/cancel`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
-  });
+  }), WRITE_UNCERTAIN);
 
-  if (!res.ok) {
-    throw new Error(`Failed to cancel request: ${res.status}`);
-  }
-
-  return res.json();
+  return safeJson(res, WRITE_UNCERTAIN);
 }
 
 export async function getRequestsToJoinLeague(
@@ -216,17 +175,13 @@ export async function getRequestsToJoinLeague(
         "actingUserId": userId,
         "status": status
     }
-  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/joinRequests`, {
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/league/${leagueId}/joinRequests`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
-  });
+  }), READ_ERROR);
 
-  if (!res.ok) {
-    throw new Error(`Failed to get requests: ${res.status}`);
-  }
-
-  return res.json();
+  return safeJson(res, READ_ERROR);
 }
 
 export async function removeLeagueMember(
@@ -234,18 +189,13 @@ export async function removeLeagueMember(
   memberId: number,
   actingUserId: number
 ) {
-  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/members/${memberId}`, {
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/league/${leagueId}/members/${memberId}`, {
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ actingUserId, shiftDraftOrder: true }),
-  });
+  }), WRITE_UNCERTAIN);
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => null);
-    throw new Error(err?.message ?? `Failed to remove member: ${res.status}`);
-  }
-
-  return res.json();
+  return safeJson(res, WRITE_UNCERTAIN);
 }
 
 export async function searchLeagues(params: {
@@ -265,31 +215,22 @@ export async function searchLeagues(params: {
     url.searchParams.set("sportId", String(sportId));
   }
 
-  const res = await apiFetch(url.toString());
+  const res = await safeResponse(apiFetch(url.toString()), READ_ERROR);
 
-  if (!res.ok) {
-    throw new Error(`Failed to get leagues: ${res.status}`);
-  }
-
-  return res.json();
+  return safeJson(res, READ_ERROR);
 }
 
 export async function deleteLeague(
   leagueId: number,
   actingUserId: number
 ) {
-  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}`, {
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/league/${leagueId}`, {
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ actingUserId }),
-  });
+  }), WRITE_UNCERTAIN);
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => null);
-    throw new Error(err?.message ?? `Failed to delete league`);
-  }
-
-  return res.json();
+  return safeJson(res, WRITE_UNCERTAIN);
 }
 
 export async function updateLeagueMember(
@@ -300,25 +241,17 @@ export async function updateLeagueMember(
   const payload: UpdateLeagueMember = {
     teamName: teamName
   }
-  const res = await apiFetch(`${API_BASE_URL}/api/league/leagueMember/${memberId}`, {
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/league/leagueMember/${memberId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
-  });
+  }), WRITE_UNCERTAIN);
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => null);
-    throw new Error(err?.message ?? `Failed to update league member`);
-  }
-
-  return res.json();
+  return safeJson(res, WRITE_UNCERTAIN);
 }
 
 export async function getLeagueRules(leagueId: number): Promise<LeagueRules> {
-  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/rules`);
-  if (!res.ok) {
-    const body = await res.json().catch(() => null);
-    throw new Error(body?.message ?? `Unable to load league rules (${res.status})`);
-  }
-  return res.json();
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/league/${leagueId}/rules`), READ_ERROR);
+
+  return safeJson(res, READ_ERROR);
 }

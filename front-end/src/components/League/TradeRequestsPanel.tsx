@@ -1,3 +1,4 @@
+import { safeErrorMessage, TRANSACTION_UNCERTAIN, READ_ERROR } from "../../api/safeError";
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useRequestScope } from "../../hooks/useRequestScope";
 import type {
@@ -65,7 +66,7 @@ const TradeRequestsPanel = ({
         setReadyRevision(refreshRevision);
       }
     } catch (err: any) {
-      if (current()) setError(err?.message ?? "Failed to load trade requests");
+      if (current()) setError(safeErrorMessage(err, READ_ERROR));
     } finally {
       if (current()) setLoading(false);
     }
@@ -113,7 +114,7 @@ const TradeRequestsPanel = ({
         else await loadTrades();
       }
     } catch (err: any) {
-      if (current()) setError(err?.message ?? "Failed to update trade request");
+      if (current()) setError(safeErrorMessage(err, TRANSACTION_UNCERTAIN));
     } finally {
       actionInFlight.current = false;
       if (request()) setActionLoadingId(null);
@@ -134,7 +135,7 @@ const TradeRequestsPanel = ({
         else await loadTrades();
       }
     } catch (err: any) {
-      if (current()) setError(err?.message ?? "Failed to cancel trade request");
+      if (current()) setError(safeErrorMessage(err, TRANSACTION_UNCERTAIN));
     } finally {
       actionInFlight.current = false;
       if (request()) setActionLoadingId(null);
@@ -155,7 +156,7 @@ const TradeRequestsPanel = ({
         else await loadTrades();
       }
     } catch (err: any) {
-      if (current()) setError(err?.message ?? "Failed to update veto");
+      if (current()) setError(safeErrorMessage(err, TRANSACTION_UNCERTAIN));
     } finally {
       actionInFlight.current = false;
       if (request()) setActionLoadingId(null);

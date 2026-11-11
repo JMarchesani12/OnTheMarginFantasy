@@ -63,7 +63,7 @@ test('failed write retains selected teams and does not refresh siblings',async()
 });
 
 test('confirmed write followed by failed read remains submitted and retry only reads',async()=>{
- const h=setup();await h.ready();h.click('Available');const p=h.click('Submit Add / Drop Request');h.resolve(h.waiting('addDrop')[0],{});await h.flush();h.reject(h.waiting('teams').find(r=>r.args[0]===11));await h.flush();assert.match(h.text(),/submitted/i);assert.match(h.text(),/Read unavailable/);assert.equal(h.button('Submit Add / Drop Request').props.disabled,true);
+ const h=setup();await h.ready();h.click('Available');const p=h.click('Submit Add / Drop Request');h.resolve(h.waiting('addDrop')[0],{});await h.flush();h.reject(h.waiting('teams').find(r=>r.args[0]===11));await h.flush();assert.match(h.text(),/submitted/i);assert.match(h.text(),/Could not load/);assert.doesNotMatch(h.text(),/Read unavailable/);assert.equal(h.button('Submit Add / Drop Request').props.disabled,true);
  h.click('Retry roster data');await h.flush();await h.settleReads({teams:[team(3,'Applied owned')],pending});assert.equal(h.requests.filter(r=>r.kind==='addDrop').length,1);assert.match(h.text(),/PENDING_APPLY/);assert.ok(h.button('Applied owned'));h.dispose();
 });
 

@@ -1,3 +1,4 @@
+import { safeResponse, safeJson, READ_ERROR } from "./safeError";
 // src/api/schedule.ts
 import type { OwnedTeam } from "../types/schedule";
 import { apiFetch, API_BASE_URL } from "./client";
@@ -14,18 +15,14 @@ export async function getMemberTeams(
     "memberId": memberId,
   };
 
-  const res = await apiFetch(`${API_BASE_URL}/api/roster/memberTeams`, {
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/roster/memberTeams`, {
     signal,
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
-  });
+  }), READ_ERROR);
 
-  if (!res.ok) {
-    throw new Error(`Failed to get member teams: ${res.status}`);
-  }
-
-  const data = (await res.json()) as OwnedTeam[];
+  const data = (await safeJson(res, READ_ERROR)) as OwnedTeam[];
   return data;
 }
 
@@ -39,17 +36,13 @@ export async function getAvailableTeams(
     "weekNumber": weekNumber,
   };
 
-  const res = await apiFetch(`${API_BASE_URL}/api/roster/availableTeams`, {
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/roster/availableTeams`, {
     signal,
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
-  });
+  }), READ_ERROR);
 
-  if (!res.ok) {
-    throw Object.assign(new Error(`Failed to get available teams: ${res.status}`), {status: res.status});
-  }
-
-  const data = (await res.json()) as OwnedTeam[];
+  const data = (await safeJson(res, READ_ERROR)) as OwnedTeam[];
   return data;
 }

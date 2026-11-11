@@ -1,3 +1,4 @@
+import { safeResponse, safeJson, READ_ERROR } from "./safeError";
 // src/api/schedule.ts
 import type {
   ConferenceSchedule,
@@ -18,17 +19,13 @@ export async function getScheduleForMemberForWeek(
     "memberId": memberId,
   };
 
-  const res = await apiFetch(`${API_BASE_URL}/api/schedule/all`, {
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/schedule/all`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
-  });
+  }), READ_ERROR);
 
-  if (!res.ok) {
-    throw new Error(`Failed to get schedule for member: ${res.status}`);
-  }
-
-  const data = (await res.json()) as MemberWeekSchedule;
+  const data = (await safeJson(res, READ_ERROR)) as MemberWeekSchedule;
   return data;
 }
 
@@ -45,17 +42,13 @@ export async function getScheduleForConferenceForWeek(
     "sportConferenceId": sportConferenceId
   };
 
-  const res = await apiFetch(`${API_BASE_URL}/api/schedule/conferenceGamesByWeek`, {
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/schedule/conferenceGamesByWeek`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
-  });
+  }), READ_ERROR);
 
-  if (!res.ok) {
-    throw new Error(`Failed to get schedules for conference: ${res.status}`);
-  }
-
-  const data = (await res.json()) as ConferenceSchedule;
+  const data = (await safeJson(res, READ_ERROR)) as ConferenceSchedule;
   return data;
 }
 
@@ -70,17 +63,13 @@ export async function getScheduleForTeam(
     ...(leagueId ? { leagueId } : {}),
   };
 
-  const res = await apiFetch(`${API_BASE_URL}/api/schedule/teamGamesBySeason`, {
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/schedule/teamGamesBySeason`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
-  });
+  }), READ_ERROR);
 
-  if (!res.ok) {
-    throw new Error(`Failed to get schedule for teams: ${res.status}`);
-  }
-
-  const data = (await res.json()) as TeamSeasonSchedule;
+  const data = (await safeJson(res, READ_ERROR)) as TeamSeasonSchedule;
   return data;
 }
 
@@ -89,16 +78,12 @@ export async function searchTeamsForLeague(
   query: string,
   limit = 20
 ): Promise<TeamSearchResponse> {
-  const res = await apiFetch(`${API_BASE_URL}/api/schedule/teamSearch`, {
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/schedule/teamSearch`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ leagueId, query, limit }),
-  });
+  }), READ_ERROR);
 
-  if (!res.ok) {
-    throw new Error(`Failed to search teams: ${res.status}`);
-  }
-
-  const data = (await res.json()) as TeamSearchResponse;
+  const data = (await safeJson(res, READ_ERROR)) as TeamSearchResponse;
   return data;
 }

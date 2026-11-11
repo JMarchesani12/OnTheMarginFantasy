@@ -1,3 +1,4 @@
+import { safeErrorMessage, READ_ERROR, WRITE_UNCERTAIN } from "../../api/safeError";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDraftSummaryDialog } from "../../hooks/useDraftSummaryDialog";
@@ -68,7 +69,7 @@ const LeagueDraftPage = () => {
       } catch (err: any) {
         if (isMounted) {
           setLeagueContext(null);
-          setLeagueError(err?.message ?? "Failed to load league details.");
+          setLeagueError(safeErrorMessage(err, READ_ERROR));
         }
       } finally {
         if (isMounted) setLeagueLoading(false);
@@ -404,7 +405,7 @@ const LeagueDraftPage = () => {
       controller?.refresh();
     } catch (err: any) {
       if (realtimeRef.current !== controller) return;
-      setPickError(err?.message ?? "Failed to submit draft pick");
+      setPickError(safeErrorMessage(err, WRITE_UNCERTAIN));
     }
   };
 
@@ -615,15 +616,7 @@ const LeagueDraftPage = () => {
       controller?.refresh();
     } catch (err: any) {
       if (realtimeRef.current !== controller) return;
-      const message =
-        err?.message ??
-        (action === "start"
-          ? "Failed to start draft"
-          : action === "pause"
-          ? "Failed to pause draft"
-          : action === "resume"
-          ? "Failed to resume draft"
-          : "Failed to finalize draft");
+      const message = safeErrorMessage(err, WRITE_UNCERTAIN);
       setError(message);
     } finally {
       if (realtimeRef.current === controller) setDraftActionLoading(false);

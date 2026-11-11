@@ -1,3 +1,4 @@
+import {fixture} from "./leagueContextHarness.ts";
 import assert from 'node:assert/strict';
 import {readFileSync,existsSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
@@ -37,6 +38,8 @@ export function manageHarness(options:{status?:string;userId?:number;members?:an
       draft:{draftType:'SNAKE',selectionTime:60,numberOfRounds:4,timeoutAction:'AUTO-SKIP',graceSeconds:3}},
     draftDate:null,tradeDeadline:null,freeAgentDeadline:null};
   let members=options.members??membersFixture(),confirm=true,saveFailure:string|null=null,removeFailure:string|null=null;
+  let refreshFailure=false,orderFailure=0;
+  const safe=fixture().load("src/api/safeError.ts");
   const calls:{name:string;args:any[]}[]=[],slots:any[]=[];let cursor=0,effects:(()=>void)[]=[],tree:any;
   const react={
     useState(initial:any){const i=cursor++;if(!(i in slots))slots[i]=typeof initial==='function'?initial():initial;return [slots[i],(value:any)=>{slots[i]=typeof value==='function'?value(slots[i]):value;}];},
@@ -45,16 +48,16 @@ export function manageHarness(options:{status?:string;userId?:number;members?:an
   };
   const record=(name:string,args:any[])=>calls.push({name,args});
   const api={
-    getLeague:async(...args:any[])=>{record('getLeague',args);return league;},
+    getLeague:async(...args:any[])=>{record('getLeague',args);if(refreshFailure)throw await safe.parseApiError(new Response('PRIVATE',{status:503}),safe.READ_ERROR);return league;},
     getMembersOfLeague:async(...args:any[])=>{record('members',args);if(options.pendingMembers)return new Promise(()=>{});if(options.memberError)throw new Error(options.memberError);return members;},
     getRequestsToJoinLeague:async()=>[],
     updateLeague:async(...args:any[])=>{record('update',args);if(saveFailure)throw new Error(saveFailure);},
     removeLeagueMember:async(...args:any[])=>{record('remove',args);if(removeFailure)throw new Error(removeFailure);members=members.filter(m=>m.id!==args[1]);},
   };
-  const deps:Record<string,any>={react,'react/jsx-runtime':jsx,
+  const deps:Record<string,any>={react,'react/jsx-runtime':jsx,'../../api/safeError':safe,
     'react-router-dom':{useNavigate:()=>()=>{},useParams:()=>({league_id:'10'}),useLocation:()=>({state:{league}})},
     '../../context/currentUserContext':{useCurrentUser:()=>({userId:options.userId??1,error:null})},
-    '../../api/leagues':api,'../../api/draft':{setDraftOrder:async(...args:any[])=>{record('order',args);}},
+    '../../api/leagues':api,'../../api/draft':{setDraftOrder:async(...args:any[])=>{record('order',args);if(orderFailure)throw await safe.parseApiError(new Response('PRIVATE',{status:orderFailure}),safe.WRITE_UNCERTAIN);}},
     '../../components/League/BonusesEditor':{BonusesEditor:()=>null,BONUS_TEMPLATES:[]},
     '../../utils/leagueMapping':mapping,'../CreateLeague/CreateLeague.css':{},'./ManageLeaguePage.css':{},
   };
@@ -71,6 +74,7 @@ export function manageHarness(options:{status?:string;userId?:number;members?:an
     rows:()=>all().filter(n=>typeof n.props?.className==='string'&&n.props.className.startsWith('ml-draft-order-row')),
     button:(label:string)=>all().find(n=>n.type==='button'&&text(n)===label),
     text:()=>text(tree),all,
+    failRefresh(){refreshFailure=true;},failOrder(status:number){orderFailure=status;},
     confirm(value:boolean){confirm=value;},failSave(message:string){saveFailure=message;},failRemove(message:string){removeFailure=message;},
   };
 }

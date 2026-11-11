@@ -1,4 +1,4 @@
-import { safeErrorMessage, CREATE_LEAGUE_UNCERTAIN } from "../../api/safeError";
+import { safeErrorMessage, CREATE_LEAGUE_UNCERTAIN, READ_ERROR } from "../../api/safeError";
 import React, { useEffect, useState } from "react";
 import "./CreateLeague.css";
 import { useNavigate } from "react-router-dom";
@@ -106,7 +106,7 @@ const CreateLeague: React.FC = () => {
         }
       } catch (err: any) {
         if (isMounted) {
-          setSportsError(err?.message ?? "Failed to load sports");
+          setSportsError(safeErrorMessage(err, READ_ERROR));
         }
       } finally {
         if (isMounted) {

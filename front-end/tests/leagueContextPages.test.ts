@@ -26,7 +26,7 @@ for(const screen of ['Detail','Roster']) {
  });
  test(`${screen} fallback stays read-only despite member-like payload; list error never falls back`,async()=>{
   const h=setup(screen);h.render();h.requests[0].resolve([]);await settle();assert.equal(h.requests[1].kind,'single');h.requests[1].resolve(leagueFixture(10,999));await h.flush();assert.equal(h.button('Edit team name'),undefined);assert.equal(h.requests.filter(r=>['teams','available','trades','pending'].includes(r.kind)).length,0);h.dispose();
-  const failed=setup(screen);failed.render();failed.requests[0].reject(new Error('Forbidden'));await failed.flush();assert.match(failed.text(),/Forbidden/);assert.equal(failed.requests.length,1);failed.dispose();
+  const failed=setup(screen);failed.render();failed.requests[0].reject(new Error('Forbidden'));await failed.flush();assert.match(failed.text(),/Could not load/);assert.doesNotMatch(failed.text(),/Forbidden/);assert.equal(failed.requests.length,1);failed.dispose();
  });
 }
 test('Detail rename/leave capture member context and obsolete mutation cannot navigate/update replacement',async()=>{
@@ -52,7 +52,7 @@ test('Detail and Roster ignore delayed resource responses after route replacemen
  for(const r of old)r.reject(new Error('Old private resource failure'));await h.flush();assert.match(h.text(),/League 20/);assert.doesNotMatch(h.text(),/Old private/);h.dispose();}
 });
 test('paired page retry clears error and revalidates without trusting navigation seeds',async()=>{
- for(const screen of ['Detail','Roster']){const h=setup(screen);h.render();h.requests[0].reject(new Error('Temporary failure'));await h.flush();assert.match(h.text(),/Temporary failure/);h.button('Retry').props.onClick();h.render();assert.match(h.text(),/Loading league details/);assert.equal(h.requests.length,2);h.requests[1].resolve([leagueFixture()]);await h.flush();assert.match(h.text(),/League 10/);h.dispose();}
+ for(const screen of ['Detail','Roster']){const h=setup(screen);h.render();h.requests[0].reject(new Error('Temporary failure'));await h.flush();assert.match(h.text(),/Could not load/);assert.doesNotMatch(h.text(),/Temporary failure/);h.button('Retry').props.onClick();h.render();assert.match(h.text(),/Loading league details/);assert.equal(h.requests.length,2);h.requests[1].resolve([leagueFixture()]);await h.flush();assert.match(h.text(),/League 10/);h.dispose();}
 });
 test('paired seeded/cold request counts stay bounded without duplicate resolution',async()=>{
  for(const screen of ['Detail','Roster'])for(const seed of [true,false]){const h=setup(screen,seed);await h.ready();h.render();h.render();const counts=h.requests.reduce((out:any,r:any)=>({...out,[r.kind]:(out[r.kind]??0)+1}),{});assert.deepEqual(counts,screen==='Detail'?{list:1,members:1,scores:1}:{list:1,teams:1,available:1,members:1,pending:1});h.dispose();}

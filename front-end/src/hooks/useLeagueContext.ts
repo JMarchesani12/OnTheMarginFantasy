@@ -1,3 +1,4 @@
+import { safeErrorMessage, READ_ERROR } from "../api/safeError";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useCurrentUser } from "../context/currentUserContext";
 import { resolveLeagueContext } from "../utils/leagueContext";
@@ -28,7 +29,7 @@ export function useLeagueContext(routeId: string | undefined) {
       void resolveLeagueContext(leagueId!, userId!, controller.signal).then(value => {
         if (!controller.signal.aborted && isCurrent()) setResult({ generation, value });
       }).catch((err: unknown) => {
-        if (!controller.signal.aborted && isCurrent()) setResult({ generation, error: err instanceof Error ? err.message : "Failed to load league details." });
+        if (!controller.signal.aborted && isCurrent()) setResult({ generation, error: safeErrorMessage(err, READ_ERROR) });
       });
     }
     return () => {

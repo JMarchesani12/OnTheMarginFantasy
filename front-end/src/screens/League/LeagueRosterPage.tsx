@@ -1,3 +1,4 @@
+import { safeErrorMessage, TRANSACTION_UNCERTAIN, READ_ERROR } from "../../api/safeError";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import type { League } from "../../types/league";
@@ -166,7 +167,7 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
         );
       });
     } catch (err: any) {
-      if (current()) setError(err?.message ?? "Failed to load roster data");
+      if (current()) setError(safeErrorMessage(err, READ_ERROR));
     } finally {
       if (current()) setLoading(false);
       else if (scope.isCurrent() && getRosterWeek() !== rosterWeekNumber) checkWeek(value => value + 1);
@@ -208,7 +209,7 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
         }
       } catch (err: any) {
         if (!isCancelled && current()) {
-          setMembersError(err?.message ?? "Failed to load league members");
+          setMembersError(safeErrorMessage(err, READ_ERROR));
         }
       } finally {
         if (!isCancelled && current()) {
@@ -261,7 +262,7 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
         }
       } catch (err: any) {
         if (!isCancelled && current()) {
-          setTradeTeamsError(err?.message ?? "Failed to load member roster");
+          setTradeTeamsError(safeErrorMessage(err, READ_ERROR));
         }
       } finally {
         if (!isCancelled && current()) {
@@ -406,7 +407,7 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
       refreshRelatedData();
     } catch (err: any) {
       if (!current()) return;
-      setError(err?.message ?? "Failed to submit add/drop request");
+      setError(safeErrorMessage(err, TRANSACTION_UNCERTAIN));
     } finally {
       if (!current()) {
         if (scope.isCurrent() && getRosterWeek() !== rosterWeekNumber) checkWeek(value => value + 1);
@@ -451,7 +452,7 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
       refreshRelatedData();
     } catch (err: any) {
       if (!current()) return;
-      setError(err?.message ?? "Failed to submit trade request");
+      setError(safeErrorMessage(err, TRANSACTION_UNCERTAIN));
     } finally {
       if (!current()) {
         if (scope.isCurrent() && getRosterWeek() !== rosterWeekNumber) checkWeek(value => value + 1);

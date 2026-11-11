@@ -1,3 +1,4 @@
+import { safeResponse, safeJson, WRITE_UNCERTAIN, READ_ERROR } from "./safeError";
 import type { DraftPickResponse } from "../types/roster";
 import type { DraftSnapshot } from "../types/draft";
 import { apiFetch, API_BASE_URL } from "./client";
@@ -19,33 +20,20 @@ export async function createDraftPick(
     sportTeamId,
   };
 
-  const res = await apiFetch(`${API_BASE_URL}/api/draft/pick`, {
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/draft/pick`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
-  });
+  }), WRITE_UNCERTAIN);
 
-  if (!res.ok) {
-    const error = await res.json().catch(() => null);
-    throw new Error(
-      typeof error?.message === "string" && error.message.trim()
-        ? error.message
-        : `Failed to submit draft pick: ${res.status}`,
-    );
-  }
-
-  const data = (await res.json()) as DraftPickResponse;
+  const data = (await safeJson(res, WRITE_UNCERTAIN)) as DraftPickResponse;
   return data;
 }
 
 export async function getSportRounds(sportId: number) {
-  const res = await apiFetch(`${API_BASE_URL}/api/draft/rounds/${sportId}`)
-  if (!res.ok) {
-    const error = await res.json().catch(() => null);
-    throw new Error(error?.message ?? `Failed to get draft rounds: ${res.status}`);
-  }
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/draft/rounds/${sportId}`), READ_ERROR)
 
-  const data = (await res.json());
+  const data = (await safeJson(res, READ_ERROR));
   return data['rounds'];
 }
 
@@ -53,16 +41,13 @@ export async function setDraftOrder(leagueId: number, memberIdsInOrder: number[]
   const payload = {
     "memberIdsInOrder": memberIdsInOrder
   }
-  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/draft/order`, {
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/league/${leagueId}/draft/order`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
-  })
-  if (!res.ok) {
-    throw new Error(`Failed to set draft order: ${res.status}`);
-  }
+  }), WRITE_UNCERTAIN)
 
-  const data = (await res.json());
+  const data = (await safeJson(res, WRITE_UNCERTAIN));
   return data;
 }
 
@@ -70,16 +55,13 @@ export async function startDraft(leagueId: number): Promise<DraftSnapshot> {
   const payload = {
     "leagueId": leagueId
   }
-  const res = await apiFetch(`${API_BASE_URL}/api/draft/start`, {
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/draft/start`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
-  })
-  if (!res.ok) {
-    throw new Error(`Failed to start draft: ${res.status}`);
-  }
+  }), WRITE_UNCERTAIN)
 
-  const data = (await res.json()) as DraftSnapshot;
+  const data = (await safeJson(res, WRITE_UNCERTAIN)) as DraftSnapshot;
   return data;
 }
 
@@ -87,16 +69,13 @@ export async function pauseDraft(leagueId: number): Promise<DraftSnapshot> {
   const payload = {
     "leagueId": leagueId
   }
-  const res = await apiFetch(`${API_BASE_URL}/api/draft/pause`, {
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/draft/pause`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
-  })
-  if (!res.ok) {
-    throw new Error(`Failed to start draft: ${res.status}`);
-  }
+  }), WRITE_UNCERTAIN)
 
-  const data = (await res.json()) as DraftSnapshot;
+  const data = (await safeJson(res, WRITE_UNCERTAIN)) as DraftSnapshot;
   return data;
 }
 
@@ -104,16 +83,13 @@ export async function resumeDraft(leagueId: number): Promise<DraftSnapshot> {
   const payload = {
     "leagueId": leagueId
   }
-  const res = await apiFetch(`${API_BASE_URL}/api/draft/resume`, {
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/draft/resume`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
-  })
-  if (!res.ok) {
-    throw new Error(`Failed to start draft: ${res.status}`);
-  }
+  }), WRITE_UNCERTAIN)
 
-  const data = (await res.json()) as DraftSnapshot;
+  const data = (await safeJson(res, WRITE_UNCERTAIN)) as DraftSnapshot;
   return data;
 }
 
@@ -125,25 +101,18 @@ export async function finalizeDraft(
     leagueId,
     actingUserId,
   };
-  const res = await apiFetch(`${API_BASE_URL}/api/draft/finalize`, {
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/draft/finalize`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
-  });
-  if (!res.ok) {
-    const error = await res.json().catch(() => null);
-    throw new Error(error?.message ?? `Failed to finalize draft: ${res.status}`);
-  }
+  }), WRITE_UNCERTAIN);
 
-  return await res.json();
+  return await safeJson(res, WRITE_UNCERTAIN);
 }
 
 export async function getDraftState(leagueId: number, signal?: AbortSignal): Promise<DraftSnapshot> {
-  const res = await apiFetch(`${API_BASE_URL}/api/draft/state/${leagueId}`, { signal })
-  if (!res.ok) {
-    throw Object.assign(new Error(`Failed to read draft: ${res.status}`), {status: res.status});
-  }
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/draft/state/${leagueId}`, { signal }), READ_ERROR)
 
-  const data = (await res.json()) as DraftSnapshot;
+  const data = (await safeJson(res, READ_ERROR)) as DraftSnapshot;
   return data;
 }

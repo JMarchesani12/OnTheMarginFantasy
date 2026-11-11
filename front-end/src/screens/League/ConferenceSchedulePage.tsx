@@ -1,3 +1,4 @@
+import { safeErrorMessage, READ_ERROR } from "../../api/safeError";
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import type { League, LeagueConference } from "../../types/league";
@@ -138,7 +139,7 @@ const ConferenceSchedulePage = () => {
         }
       } catch (err: any) {
         if (isMounted) {
-          setLeagueError(err?.message ?? "Failed to load league details.");
+          setLeagueError(safeErrorMessage(err, READ_ERROR));
         }
       } finally {
         if (isMounted) {
@@ -192,7 +193,7 @@ const ConferenceSchedulePage = () => {
         }
       } catch (err: any) {
         if (!isCancelled) {
-          setConferencesError(err?.message ?? "Failed to load conferences");
+          setConferencesError(safeErrorMessage(err, READ_ERROR));
         }
       } finally {
         if (!isCancelled) {
@@ -221,7 +222,7 @@ const ConferenceSchedulePage = () => {
           setWeekInfo(data.week);
         }
       } catch (err) {
-        console.error(err);
+        console.error("Could not load conference metadata");
         if (!isCancelled) {
           setWeekInfo(null);
         }
@@ -260,7 +261,7 @@ const ConferenceSchedulePage = () => {
       } catch (err: any) {
         if (!isCancelled) {
           setSchedule(null);
-          setError(err?.message ?? "Failed to load conference schedule");
+          setError(safeErrorMessage(err, READ_ERROR));
         }
       } finally {
         if (!isCancelled) {

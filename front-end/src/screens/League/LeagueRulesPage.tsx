@@ -1,3 +1,4 @@
+import { safeErrorMessage, READ_ERROR } from "../../api/safeError";
 import { getTierLabel } from "../../utils/teamTierGroups";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -37,7 +38,7 @@ function LeagueRulesContent({ leagueId }: { leagueId: number }) {
   useEffect(() => {
     let active = true;
     getLeagueRules(leagueId).then(data => { if (active) setRules(data); })
-      .catch(err => { if (active) setError(err instanceof Error ? err.message : "Unable to load rules."); })
+      .catch(err => { if (active) setError(safeErrorMessage(err, READ_ERROR)); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [leagueId, retry]);

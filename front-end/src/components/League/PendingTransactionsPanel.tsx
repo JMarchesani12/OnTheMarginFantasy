@@ -1,3 +1,4 @@
+import { safeErrorMessage, READ_ERROR } from "../../api/safeError";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRequestScope } from "../../hooks/useRequestScope";
 import type { LeagueMember } from "../../types/leagueMember";
@@ -65,7 +66,7 @@ const PendingTransactionsPanel = ({
       const data = await getPendingTradesAndAddDrop(leagueId, request.signal);
       if (current()) setPending(data ?? []);
     } catch (err: any) {
-      if (current()) setError(err?.message ?? "Failed to load pending transactions");
+      if (current()) setError(safeErrorMessage(err, READ_ERROR));
     } finally {
       if (current()) setLoading(false);
     }

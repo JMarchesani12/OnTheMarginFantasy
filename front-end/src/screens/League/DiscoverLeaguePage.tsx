@@ -1,4 +1,4 @@
-import { safeErrorMessage, JOIN_LEAGUE_UNCERTAIN } from "../../api/safeError";
+import { safeErrorMessage, JOIN_LEAGUE_UNCERTAIN, READ_ERROR } from "../../api/safeError";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useRequestScope } from "../../hooks/useRequestScope";
@@ -90,7 +90,7 @@ const DiscoverLeagueView = ({ league, isCurrent }: { league: LeaguePreview; isCu
         }
       } catch (error: any) {
         if (!isCancelled && current()) {
-          setMembersError(error?.message ?? "Failed to load league members");
+          setMembersError(safeErrorMessage(error, READ_ERROR));
         }
       } finally {
         if (!isCancelled && current()) {
@@ -122,7 +122,7 @@ const DiscoverLeagueView = ({ league, isCurrent }: { league: LeaguePreview; isCu
         setSports(data);
       } catch (error: any) {
         if (isMounted) {
-          setSportsError(error?.message ?? "Failed to load sports");
+          setSportsError(safeErrorMessage(error, READ_ERROR));
         }
       } finally {
         if (isMounted) {

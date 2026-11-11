@@ -597,7 +597,10 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-028B — Consolidate frontend safe error parsing
 
-- **Pilot status — 2026-11-11:** Shared safe parser/formatter and approved create/join batch implemented; known messages/status fallbacks, uncertain outcomes, input retention and no replay verified. Frontend213/213/build/import PASS. [Evidence](evidence/mod-028b-safe-create-join-2026-11-11.json). Remaining consumer batches open; no auth/backend/schema/deployment changes.
+- **Completion — 2026-11-11:** All45 application HTTP helpers across8 modules and remaining application HTTP UI catches migrated. Shared response/JSON safety covers HTTP/network/decode failures, preserves profile404/create409/draft denial/cancellation and successful transport/shape contracts, with phase-aware partial-save feedback. Frontend235/235/build/import PASS. [Completion evidence](evidence/mod-028b-completion-2026-11-11.json). MOD028A andB application scopes complete; SDK-authF002, browser/live verification and recorded minors remain outside this completion claim. No deployment.
+
+- **Transaction mutation batch — 2026-11-11:** Five mutation APIs and roster/trade mutation catches migrated; exact safe business mappings, uncertain outcomes and retained selections/controls verified. Frontend221/221/build/import PASS. [Evidence](evidence/mod-028b-transaction-errors-2026-11-11.json). Transaction reads and draft/admin/profile consumers were open at this batch; now covered by the completion entry above.
+- **Pilot status — 2026-11-11:** Shared safe parser/formatter and approved create/join batch implemented; known messages/status fallbacks, uncertain outcomes, input retention and no replay verified. Frontend213/213/build/import PASS. [Evidence](evidence/mod-028b-safe-create-join-2026-11-11.json). Remaining consumers were open at this pilot; now covered by the completion entry above. No auth/backend/schema/deployment changes.
 
 - **Priority / size / risk:** P2 / S–M / Low.
 - **Features:** F-004, F-006–008, F-017–019, F-021.

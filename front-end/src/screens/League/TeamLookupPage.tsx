@@ -1,3 +1,4 @@
+import { safeErrorMessage, READ_ERROR } from "../../api/safeError";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { getLeague, getLeaguesForUser } from "../../api/leagues";
@@ -69,7 +70,7 @@ const TeamLookupPage = () => {
         }
       } catch (err: any) {
         if (isMounted) {
-          setLeagueError(err?.message ?? "Failed to load league details.");
+          setLeagueError(safeErrorMessage(err, READ_ERROR));
         }
       } finally {
         if (isMounted) {
@@ -106,7 +107,7 @@ const TeamLookupPage = () => {
       } catch (err: any) {
         if (!isCancelled) {
           setResults([]);
-          setError(err?.message ?? "Failed to search teams.");
+          setError(safeErrorMessage(err, READ_ERROR));
         }
       } finally {
         if (!isCancelled) {

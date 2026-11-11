@@ -1,0 +1,313 @@
+{
+  "date": "2026-11-11",
+  "baseCommit": "30a1675 plus preserved preceding transaction batch",
+  "scope": "MOD028B complete application HTTP error migration; MOD028A preserved",
+  "result": "PASS_APPLICATION_SCOPE",
+  "inventory": {
+    "leagues": [
+      {
+        "name": "getLeaguePreview",
+        "kind": "read"
+      },
+      {
+        "name": "getLeague",
+        "kind": "read"
+      },
+      {
+        "name": "createLeague",
+        "kind": "write"
+      },
+      {
+        "name": "updateLeague",
+        "kind": "write"
+      },
+      {
+        "name": "getLeaguesForUser",
+        "kind": "read"
+      },
+      {
+        "name": "getMembersOfLeague",
+        "kind": "read"
+      },
+      {
+        "name": "getMemberPreviewsOfLeague",
+        "kind": "read"
+      },
+      {
+        "name": "getConferences",
+        "kind": "read"
+      },
+      {
+        "name": "requestToJoinLeague",
+        "kind": "write"
+      },
+      {
+        "name": "approveRequestToJoinLeague",
+        "kind": "write"
+      },
+      {
+        "name": "denyRequestToJoinLeague",
+        "kind": "write"
+      },
+      {
+        "name": "cancelRequestToJoinLeague",
+        "kind": "write"
+      },
+      {
+        "name": "getRequestsToJoinLeague",
+        "kind": "read"
+      },
+      {
+        "name": "removeLeagueMember",
+        "kind": "write"
+      },
+      {
+        "name": "searchLeagues",
+        "kind": "read"
+      },
+      {
+        "name": "deleteLeague",
+        "kind": "write"
+      },
+      {
+        "name": "updateLeagueMember",
+        "kind": "write"
+      },
+      {
+        "name": "getLeagueRules",
+        "kind": "read"
+      }
+    ],
+    "draft": [
+      {
+        "name": "createDraftPick",
+        "kind": "write"
+      },
+      {
+        "name": "getSportRounds",
+        "kind": "read"
+      },
+      {
+        "name": "setDraftOrder",
+        "kind": "write"
+      },
+      {
+        "name": "startDraft",
+        "kind": "write"
+      },
+      {
+        "name": "pauseDraft",
+        "kind": "write"
+      },
+      {
+        "name": "resumeDraft",
+        "kind": "write"
+      },
+      {
+        "name": "finalizeDraft",
+        "kind": "write"
+      },
+      {
+        "name": "getDraftState",
+        "kind": "read"
+      }
+    ],
+    "roster": [
+      {
+        "name": "getMemberTeams",
+        "kind": "read"
+      },
+      {
+        "name": "getAvailableTeams",
+        "kind": "read"
+      }
+    ],
+    "transaction": [
+      {
+        "name": "submitFreeAgencyRequest",
+        "kind": "write"
+      },
+      {
+        "name": "tradeRequestProposal",
+        "kind": "write"
+      },
+      {
+        "name": "cancelTradeRequest",
+        "kind": "write"
+      },
+      {
+        "name": "responseToTradeRequest",
+        "kind": "write"
+      },
+      {
+        "name": "getOpenTradeRequests",
+        "kind": "read"
+      },
+      {
+        "name": "vetoTrade",
+        "kind": "write"
+      },
+      {
+        "name": "getPendingTradesAndAddDrop",
+        "kind": "read"
+      }
+    ],
+    "user": [
+      {
+        "name": "getUser",
+        "kind": "read"
+      },
+      {
+        "name": "getUserByUuid",
+        "kind": "read"
+      },
+      {
+        "name": "createUser",
+        "kind": "write"
+      },
+      {
+        "name": "updateUser",
+        "kind": "write"
+      }
+    ],
+    "sport": [
+      {
+        "name": "getSports",
+        "kind": "read"
+      }
+    ],
+    "scoring": [
+      {
+        "name": "getScoresForWeek",
+        "kind": "read"
+      }
+    ],
+    "schedule": [
+      {
+        "name": "getScheduleForMemberForWeek",
+        "kind": "read"
+      },
+      {
+        "name": "getScheduleForConferenceForWeek",
+        "kind": "read"
+      },
+      {
+        "name": "getScheduleForTeam",
+        "kind": "read"
+      },
+      {
+        "name": "searchTeamsForLeague",
+        "kind": "read"
+      }
+    ]
+  },
+  "totalHelpers": 45,
+  "checks": {
+    "red": "API safety4 fail/1 existing pass, UI4 fail, review partialsave4 fail before fixes",
+    "frontend": "235/235 PASS",
+    "build": "PASS",
+    "imports": "75files219edges zero unresolved/cycles",
+    "diff": "PASS",
+    "successTransportEquivalence": "45/45 against committed30a1675; URL/method/body/headers/signal/returned shapes unchanged"
+  },
+  "specialContracts": [
+    "profile404null and create409 reread semantics",
+    "draft read401/403/404 denial status",
+    "fixed safe AbortError identity",
+    "read retry versus write uncertainty/no retry",
+    "phase-aware partialsave guidance",
+    "Settings saved-but-refresh-failed distinction"
+  ],
+  "review": {
+    "model": "gpt-6-astra/high",
+    "critical": 0,
+    "important": 1,
+    "importantFixed": "phase-aware ManageLeague save guidance after earlier committed mutation, genuine parsed400/503 regressions RED\u2192GREEN, full235 PASS",
+    "minor": 1,
+    "deferredMinor": "Draft page local membership denial uses generic read/retry message now; source safe but less specific",
+    "independentChecks": "22 targeted and diff on pre-fix code",
+    "postFix": "author235/build/import/diff only; no independent rereview claimed"
+  },
+  "rulings": [
+    {
+      "decision": "Complete application HTTP data modules/consumers, excluding SDK-authF002",
+      "reason": "MOD028B feature scope covers REST application features, MOD028A and auth flows remain protected",
+      "costIfWrong": "SDK error-message policy is not consolidated by this change"
+    },
+    {
+      "decision": "Shared response gate/JSON decoder rather than wrapping auth fetch or each whole function",
+      "reason": "One call/body read without auth/retry changes; retain caller data validation and special404",
+      "costIfWrong": "Local pretransport validation/processing errors need trusted UI fallback; not a universal exception framework"
+    },
+    {
+      "decision": "Port raw synthetic error display assertions to safe feedback/private-text exclusion",
+      "reason": "Intentional privacy behavior; keep guards/order/retry/input assertions",
+      "costIfWrong": "Controlled fixtures do not establish live/browser behavior"
+    },
+    {
+      "decision": "Correct URL/undefined-init and refresh-baseline fixtures; load actual new helper in legacy VM loaders",
+      "reason": "Test infrastructure assumptions, not production failures",
+      "costIfWrong": "Transport-equivalence is controlled data, not backend verification"
+    },
+    {
+      "decision": "Leave native browser/live/SDK and earlier minors outside completion claim",
+      "reason": "No available browser automation/live services required, approved application scope",
+      "costIfWrong": "Runtime and recorded followups remain open"
+    },
+    {
+      "decision": "Preserve previous transaction batch and leave work uncommitted/undeployed",
+      "reason": "Established user workflow",
+      "costIfWrong": "User owns committing/retaining artifacts until history records work"
+    }
+  ],
+  "limits": [
+    "Controlled hooks/transport/nativeResponse, no native browser/AT/live provider/backend/database proof",
+    "No auth/backend/schema/dependency/transport retry change",
+    "Prior per-card/batch minors remain recorded; SDK-authF002 error messages outside REST parser"
+  ],
+  "sourceSha256": {
+    "front-end/src/api/draft.ts": "890a76d56ca60c59ce46966cdc55653289757f1637cc335ea8142821672ed69d",
+    "front-end/src/api/leagues.ts": "48630495df0b5018648e3c724fc531734566b2bd550fb6912bcf035847147784",
+    "front-end/src/api/roster.ts": "e8ce213260214a7c9f5c16c1e51410cbd944dd4ebdc57482f84f0f61363430ff",
+    "front-end/src/api/safeError.ts": "72a521665c2a7394a711b67bace7c9f7bd7b7ff537a1397475cb8665856195cc",
+    "front-end/src/api/schedule.ts": "8dce3e67c421a7daa2f0598ee8da1a0f75eeaafc0d7d441e5635528c4b09f6e7",
+    "front-end/src/api/scoring.ts": "dd418c76ab4909340ade1b400cd502c9da011104f6b0c3e9047b5951b7801190",
+    "front-end/src/api/sport.ts": "9d059631315006d236a60a330bcc508ba0a100c546caafa3ea2341f3fdf2e166",
+    "front-end/src/api/transaction.ts": "47ec526aa459b8b3d0c053ad792089316e197c012e2bf41f95717526c03814e5",
+    "front-end/src/api/user.ts": "e5f872bdde78ccda7a9556544a5fd33a402b648de118901919460cfb5910f91f",
+    "front-end/src/components/League/LeagueScheduleTabs.tsx": "39eacbeeb254a4e24ee1a16d8765ac3a95dfee5922427886673d314c286714df",
+    "front-end/src/components/League/PendingTransactionsPanel.tsx": "f2f10366be2f2f7101da5bf9662f19c6889a93c17c577db7c63ef95a6d0007e1",
+    "front-end/src/components/League/TradeRequestsPanel.tsx": "48a12c8662e2887d06e8f44fba357c4cf0409ca0ee71c008018b8726a88ce120",
+    "front-end/src/hooks/useLeagueContext.ts": "33a969acdbc58657f29b40163107145f23751d2d90e39f67d1d965d380b7aa32",
+    "front-end/src/screens/CreateLeague/CreateLeague.tsx": "fbdbbf01b595911fc2bf1cedb6e56fc0e721664c65dd386f2d1ff24bf06ee248",
+    "front-end/src/screens/Home/Home.tsx": "f16cb189883ed7ad719b1be157e6d0522f86fb7d949473d59e8048ded8f810dc",
+    "front-end/src/screens/League/ConferenceSchedulePage.tsx": "dd8576b7f7436773e3e18703c4b39507f019bb014b62eff0dbd8a1942e5b8c94",
+    "front-end/src/screens/League/DiscoverLeaguePage.tsx": "60154cc11fb7be41698c9559dd9501033f38c4876eae6a1e084fbfdc9a004362",
+    "front-end/src/screens/League/LeagueDetailPage.tsx": "6817556647bc01002030696b2457b536a4aee6eb776faf9680374b7308e2f153",
+    "front-end/src/screens/League/LeagueDraftPage.tsx": "91875c2eead97ffdefe2c6fcbc1c33aa6195dca621fe902f98d0e91c9f458f38",
+    "front-end/src/screens/League/LeagueRosterPage.tsx": "6a8434c3f4c1f7c8e2c1f86ec52116cb3e487fb763b667677ad512aa94cbb428",
+    "front-end/src/screens/League/LeagueRulesPage.tsx": "798f816c94e8f585bf9741e109a7afbaa20c4bad518d980377bb630353d9087f",
+    "front-end/src/screens/League/ManageLeaguePage.tsx": "0542855a257e17ab2e1224a781e6956d68d459e64880eaada5bbd7f70071d0ca",
+    "front-end/src/screens/League/TeamLookupPage.tsx": "67017af4365c9e5a7293275123f394a5e6438b463b1aeac626e4b349279ab07b",
+    "front-end/src/screens/League/TeamSchedulePage.tsx": "31e67825c71f6e803e72c65d78cebc095b6295a9996ebc42e4089e4c99a9e869",
+    "front-end/src/screens/Settings/SettingsPage.tsx": "ca170224a46db2e80b6ab84b84f0741f80dfa64482a037ac21202f676260025b",
+    "front-end/tests/allApiErrors.test.ts": "8f3f5e6a6f2cc70464ec59218a02bbb56aeb7f1dda2419d9035467dee3371cd1",
+    "front-end/tests/createLabels.test.ts": "bad42f4990cf2116b6b3975a522bbc5b0d929bec172422c2f8ddcacd82047f98",
+    "front-end/tests/draftPageLifecycle.test.ts": "c07dde4700e94463067288234b47a8d8be108c77758ad591bdb119007be80265",
+    "front-end/tests/helpers/draftPageHarness.ts": "020c104ba8733fe25ddc83daa2ffaf496b0cf6de22e7694f50f360044b75c26b",
+    "front-end/tests/helpers/manageLeagueHarness.ts": "04e9bd2d085b58501e2e48cdc27fca67fa3caf9e6337d146b4710075a3f07418",
+    "front-end/tests/leagueContext.test.ts": "185aeae784cf8f18059219aebb660a79a341229a49b54102960bbb31ebc4f7f9",
+    "front-end/tests/leagueContextPages.test.ts": "772194cb7c95f218cf384f39630b4a878b91f3f65c0a0255c223266eada850aa",
+    "front-end/tests/manageDraftOrder.test.ts": "5a79a6a6c7c844a46ff193a8c39ed539ce0f45e62bf2ff49dac4c338a6178cd1",
+    "front-end/tests/remainingErrorConsumers.test.ts": "44880a6293a42d78b2535699e4559e049b0096d33fac65318cda0275c924144d",
+    "front-end/tests/rosterRefresh.test.ts": "c7b3bcbdb5d75a1742f0c3e596d9807c78b79258e46845f6243c093d03bcf448"
+  },
+  "protectedMatchBase": {
+    "front-end/src/api/client.ts": true,
+    "front-end/src/api/authenticatedFetch.ts": true,
+    "front-end/src/context/AuthContext.tsx": true,
+    "front-end/src/context/currentUserContext.tsx": true,
+    "front-end/src/lib/profileBootstrap.ts": true,
+    "front-end/src/lib/draftRealtime.ts": true
+  }
+}

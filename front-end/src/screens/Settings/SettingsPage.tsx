@@ -1,3 +1,4 @@
+import { safeErrorMessage, WRITE_UNCERTAIN } from "../../api/safeError";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCurrentUser } from "../../context/currentUserContext";
@@ -54,7 +55,7 @@ const SettingsForm = ({ profile }: { profile: ReturnType<typeof useCurrentUser> 
     } catch (err: any) {
       if (current()) setError(saved
         ? "Display name saved, but your profile could not be refreshed. Retry loading your profile."
-        : err?.message ?? "Failed to update display name.");
+        : safeErrorMessage(err, WRITE_UNCERTAIN));
     } finally {
       if (current()) setSaving(false);
     }

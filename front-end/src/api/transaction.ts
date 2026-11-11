@@ -1,3 +1,5 @@
+import { safeResponse, safeJson, TRANSACTION_UNCERTAIN, READ_ERROR } from "./safeError";
+
 import type { FreeAgencyResponse, OpenTradesResponse, PendingTransactionsResponse, TradeResponse, TradeResponseAction, VetoResponse } from "../types/roster";
 import { apiFetch, API_BASE_URL } from "./client";
 
@@ -34,17 +36,13 @@ export async function submitFreeAgencyRequest(
     dropTeamId,
   };
 
-  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/freeAgency/addDrop`, {
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/league/${leagueId}/freeAgency/addDrop`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
-  });
+  }), TRANSACTION_UNCERTAIN);
 
-  if (!res.ok) {
-    throw new Error(`Failed to submit add/drop request: ${res.status}`);
-  }
-
-  const data = (await res.json()) as FreeAgencyResponse;
+  const data = (await safeJson(res, TRANSACTION_UNCERTAIN)) as FreeAgencyResponse;
   return data;
 }
 
@@ -66,17 +64,13 @@ export async function tradeRequestProposal(
     fromTeamIds
   };
 
-  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/week/${weekId}/trade/propose`, {
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/league/${leagueId}/week/${weekId}/trade/propose`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
-  });
+  }), TRANSACTION_UNCERTAIN);
 
-  if (!res.ok) {
-    throw new Error(`Failed to submit add/drop request: ${res.status}`);
-  }
-
-  const data = (await res.json()) as TradeResponse;
+  const data = (await safeJson(res, TRANSACTION_UNCERTAIN)) as TradeResponse;
   return data;
 }
 
@@ -89,17 +83,13 @@ export async function cancelTradeRequest(
     "requesterMemberId": requesterMemberId
   };
 
-  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/transaction/${transactionId}/trade/cancel`, {
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/league/${leagueId}/transaction/${transactionId}/trade/cancel`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
-  });
+  }), TRANSACTION_UNCERTAIN);
 
-  if (!res.ok) {
-    throw new Error(`Failed to submit add/drop request: ${res.status}`);
-  }
-
-  const data = (await res.json()) as TradeResponse;
+  const data = (await safeJson(res, TRANSACTION_UNCERTAIN)) as TradeResponse;
   return data;
 }
 
@@ -114,17 +104,13 @@ export async function responseToTradeRequest(
     "responderMemberId": responderMemberId
   };
 
-  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/transaction/${transactionId}/trade/respond`, {
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/league/${leagueId}/transaction/${transactionId}/trade/respond`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
-  });
+  }), TRANSACTION_UNCERTAIN);
 
-  if (!res.ok) {
-    throw new Error(`Failed to submit add/drop request: ${res.status}`);
-  }
-
-  const data = (await res.json()) as TradeResponse;
+  const data = (await safeJson(res, TRANSACTION_UNCERTAIN)) as TradeResponse;
   return data;
 }
 
@@ -137,18 +123,14 @@ export async function getOpenTradeRequests(
     "memberId": memberId,
   };
 
-  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/transactions/trades/open`, {
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/league/${leagueId}/transactions/trades/open`, {
     signal,
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
-  });
+  }), READ_ERROR);
 
-  if (!res.ok) {
-    throw new Error(`Failed to submit add/drop request: ${res.status}`);
-  }
-
-  const data = (await res.json()) as OpenTradesResponse;
+  const data = (await safeJson(res, READ_ERROR)) as OpenTradesResponse;
   return data;
 }
 
@@ -161,17 +143,13 @@ export async function vetoTrade(
     "memberId": memberId,
   };
 
-  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/transaction/${transactionId}/trade/veto`, {
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/league/${leagueId}/transaction/${transactionId}/trade/veto`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
-  });
+  }), TRANSACTION_UNCERTAIN);
 
-  if (!res.ok) {
-    throw new Error(`Failed to submit add/drop request: ${res.status}`);
-  }
-
-  const data = (await res.json()) as VetoResponse;
+  const data = (await safeJson(res, TRANSACTION_UNCERTAIN)) as VetoResponse;
   return data;
 }
 
@@ -179,12 +157,8 @@ export async function getPendingTradesAndAddDrop(
     leagueId: number,
   signal?: AbortSignal
 ): Promise<PendingTransactionsResponse> {
-  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/transaction/pending`, { signal });
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/league/${leagueId}/transaction/pending`, { signal }), READ_ERROR);
 
-  if (!res.ok) {
-    throw new Error(`Failed to get pending transactions: ${res.status}`);
-  }
-
-  const data = (await res.json()) as PendingTransactionsResponse;
+  const data = (await safeJson(res, READ_ERROR)) as PendingTransactionsResponse;
   return data;
 }

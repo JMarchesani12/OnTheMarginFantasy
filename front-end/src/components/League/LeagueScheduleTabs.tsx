@@ -1,3 +1,4 @@
+import { safeErrorMessage, READ_ERROR } from "../../api/safeError";
 // src/components/League/LeagueScheduleTabs.tsx
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import type { LeagueMember } from "../../types/leagueMember";
@@ -96,7 +97,7 @@ export const LeagueScheduleTabs = ({
 
         if (!cancelled) setSchedule(data);
       } catch (err: unknown) {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load schedule");
+        if (!cancelled) setError(safeErrorMessage(err, READ_ERROR));
       } finally {
         if (!cancelled) setLoading(false);
       }

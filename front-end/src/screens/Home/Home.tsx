@@ -1,3 +1,4 @@
+import { safeErrorMessage, READ_ERROR } from "../../api/safeError";
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import ProfileStatus from "../../components/Profile/ProfileStatus";
@@ -53,7 +54,7 @@ const normalizeLeaguesResponse = (response: unknown): League[] => {
     return (response as { leagues: League[] }).leagues;
   }
 
-  console.warn("Unexpected leagues payload", response);
+  console.warn("Unexpected leagues payload");
   return [];
 };
 
@@ -140,7 +141,7 @@ const Home = () => {
         setMemberLeagues({ identityKey, items: normalizeLeaguesResponse(response) });
       } catch (error) {
         if (isMounted && isCurrentIdentity()) {
-          console.error("Failed to load member leagues", error);
+          console.error("Failed to load member leagues");
           setMemberLeagues({ identityKey, items: [] });
         }
       }
@@ -169,7 +170,7 @@ const Home = () => {
         setSports(data);
       } catch (error: unknown) {
         if (isMounted) {
-          setSportsError(error instanceof Error ? error.message : "Failed to load sports");
+          setSportsError(safeErrorMessage(error, READ_ERROR));
         }
       } finally {
         if (isMounted) {
@@ -224,7 +225,7 @@ const Home = () => {
         }
       } catch (error: unknown) {
         if (!isCancelled) {
-          setSearchError(error instanceof Error ? error.message : "Failed to search leagues");
+          setSearchError(safeErrorMessage(error, READ_ERROR));
         }
       } finally {
         if (!isCancelled) {

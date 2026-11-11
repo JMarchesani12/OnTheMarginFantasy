@@ -1,3 +1,4 @@
+import { safeErrorMessage, READ_ERROR, WRITE_UNCERTAIN } from "../../api/safeError";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import type {
@@ -258,7 +259,7 @@ const ManageLeaguePage = () => {
         setForm(makeInitialForm(nextLeague));
       } catch (err: any) {
         if (isMounted) {
-          setLeagueError(err?.message ?? "Failed to load league.");
+          setLeagueError(safeErrorMessage(err, READ_ERROR));
         }
       } finally {
         if (isMounted) {
@@ -289,7 +290,7 @@ const ManageLeaguePage = () => {
       if (options?.isCancelled?.()) {
         return;
       }
-      setMembersError(err?.message ?? "Failed to load league members");
+      setMembersError(safeErrorMessage(err, READ_ERROR));
     } finally {
       if (options?.isCancelled?.()) {
         return;
@@ -367,6 +368,7 @@ const ManageLeaguePage = () => {
     setSaveError(null);
     setSaveMessage(null);
 
+    let settingsSaved = false;
     try {
       setSaving(true);
       const bonuses = buildBonusesPayload(form.bonuses);
@@ -394,13 +396,16 @@ const ManageLeaguePage = () => {
       };
 
       await updateLeague(payload, leagueId);
+      settingsSaved = true;
       const refreshed = await getLeague(leagueId);
       const nextLeague = mapLeagueFromResponse(refreshed);
       setLeagueState(nextLeague);
       setForm(makeInitialForm(nextLeague));
       setSaveMessage("League settings saved.");
     } catch (err: any) {
-      setSaveError(err?.message ?? "Failed to save league settings.");
+      setSaveError(settingsSaved
+        ? "League settings were saved, but details could not be refreshed. Refresh to check the current state."
+        : safeErrorMessage(err, WRITE_UNCERTAIN));
     } finally {
       setSaving(false);
     }
@@ -411,6 +416,8 @@ const ManageLeaguePage = () => {
     setSaveError(null);
     setSaveMessage(null);
 
+    let settingsSaved = false;
+    let orderSaved = false;
     try {
       setSaving(true);
       const payload: UpdateLeague = {
@@ -432,9 +439,11 @@ const ManageLeaguePage = () => {
       };
 
       await updateLeague(payload, leagueId);
+      settingsSaved = true;
       if (orderedMemberIds.length > 0) {
         await setDraftOrderApi(leagueId, orderedMemberIds);
       }
+      orderSaved = true;
 
       const refreshed = await getLeague(leagueId);
       const nextLeague = mapLeagueFromResponse(refreshed);
@@ -446,7 +455,11 @@ const ManageLeaguePage = () => {
           : "Draft settings saved."
       );
     } catch (err: any) {
-      setSaveError(err?.message ?? "Failed to save draft settings.");
+      setSaveError(settingsSaved
+        ? orderSaved
+          ? "Draft settings were saved, but details could not be refreshed. Refresh to check the current state."
+          : "League settings were saved, but draft order could not be confirmed. Check current settings and draft order before saving again."
+        : safeErrorMessage(err, WRITE_UNCERTAIN));
     } finally {
       setSaving(false);
     }
@@ -491,7 +504,7 @@ const ManageLeaguePage = () => {
       );
       setRequests(data);
     } catch (err: any) {
-      setRequestsError(err?.message ?? "Failed to load join requests.");
+      setRequestsError(safeErrorMessage(err, READ_ERROR));
     } finally {
       setRequestsLoading(false);
     }
@@ -510,7 +523,7 @@ const ManageLeaguePage = () => {
       await approveRequestToJoinLeague(leagueId, requestId, currentUserId);
       await Promise.all([loadRequests(), loadMembers()]);
     } catch (err: any) {
-      setRequestsError(err?.message ?? "Failed to approve request.");
+      setRequestsError(safeErrorMessage(err, WRITE_UNCERTAIN));
     }
   };
 
@@ -520,7 +533,7 @@ const ManageLeaguePage = () => {
       await denyRequestToJoinLeague(leagueId, requestId, currentUserId);
       await loadRequests();
     } catch (err: any) {
-      setRequestsError(err?.message ?? "Failed to decline request.");
+      setRequestsError(safeErrorMessage(err, WRITE_UNCERTAIN));
     }
   };
 
@@ -548,7 +561,7 @@ const ManageLeaguePage = () => {
       );
       await loadMembers();
     } catch (err: any) {
-      setMemberActionError(err?.message ?? "Failed to remove member.");
+      setMemberActionError(safeErrorMessage(err, WRITE_UNCERTAIN));
     }
   };
 
@@ -568,7 +581,7 @@ const ManageLeaguePage = () => {
       await removeLeagueMember(leagueId, selfMember.id, currentUserId);
       navigate("/leagues");
     } catch (err: any) {
-      setMemberActionError(err?.message ?? "Failed to leave league.");
+      setMemberActionError(safeErrorMessage(err, WRITE_UNCERTAIN));
     }
   };
 
@@ -615,7 +628,7 @@ const ManageLeaguePage = () => {
       await deleteLeague(leagueId, currentUserId);
       navigate("/leagues");
     } catch (err: any) {
-      setDeleteError(err?.message ?? "Failed to delete league.");
+      setDeleteError(safeErrorMessage(err, WRITE_UNCERTAIN));
     }
   };
 

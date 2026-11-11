@@ -1,3 +1,4 @@
+import { safeErrorMessage, READ_ERROR, WRITE_UNCERTAIN } from "../../api/safeError";
 import { useNavigate, useParams, type To, type NavigateOptions } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import type { League } from "../../types/league";
@@ -92,7 +93,7 @@ const LeagueDetailView = ({ initialLeague, currentUserId, isMember, isCurrent }:
         const memberData = await getMembersOfLeague(league.leagueId, current.signal);
         if (current()) setMembers(memberData);
       } catch (error: any) {
-        if (current()) setMembersError(error?.message ?? "Failed to load league members");
+        if (current()) setMembersError(safeErrorMessage(error, READ_ERROR));
       } finally {
         if (current()) setLoadingMembers(false);
       }
@@ -155,7 +156,7 @@ const LeagueDetailView = ({ initialLeague, currentUserId, isMember, isCurrent }:
         }
       } catch (error: any) {
         if (!isCancelled && current()) {
-          setScoreboardError(error?.message ?? "Failed to load scoreboard");
+          setScoreboardError(safeErrorMessage(error, READ_ERROR));
         }
       } finally {
         if (!isCancelled && current()) {
@@ -229,7 +230,7 @@ const LeagueDetailView = ({ initialLeague, currentUserId, isMember, isCurrent }:
       setTeamNameSuccess("Team name updated.");
     } catch (err: any) {
       if (!current()) return;
-      setTeamNameError(err?.message ?? "Failed to update team name.");
+      setTeamNameError(safeErrorMessage(err, WRITE_UNCERTAIN));
     } finally {
       if (!current()) return;
       setTeamNameSaving(false);
@@ -251,7 +252,7 @@ const LeagueDetailView = ({ initialLeague, currentUserId, isMember, isCurrent }:
       navigate("/leagues");
     } catch (err: any) {
       if (!current()) return;
-      setLeaveError(err?.message ?? "Failed to leave league.");
+      setLeaveError(safeErrorMessage(err, WRITE_UNCERTAIN));
     } finally {
       if (!current()) return;
       setLeaveLoading(false);
