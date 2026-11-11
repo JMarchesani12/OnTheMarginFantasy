@@ -597,6 +597,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-028B — Consolidate frontend safe error parsing
 
+- **Pilot status — 2026-11-11:** Shared safe parser/formatter and approved create/join batch implemented; known messages/status fallbacks, uncertain outcomes, input retention and no replay verified. Frontend213/213/build/import PASS. [Evidence](evidence/mod-028b-safe-create-join-2026-11-11.json). Remaining consumer batches open; no auth/backend/schema/deployment changes.
+
 - **Priority / size / risk:** P2 / S–M / Low.
 - **Features:** F-004, F-006–008, F-017–019, F-021.
 - **Problem / evidence:** FE M04: repeated status-only versus message/error parsing.

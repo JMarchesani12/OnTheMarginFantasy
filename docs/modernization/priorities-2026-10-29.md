@@ -135,6 +135,7 @@ MOD-027F native draft-dialog focus is implemented in its recorded controlled sco
 MOD-027G keyboard draft ordering is implemented (frontend205/205/build/import PASS).
 MOD-027A–G application changes are complete in their recorded scopes; browser/AT
 acceptance and recorded coverage minors remain open. MOD-028B safe frontend error
-parsing is next;
+parser/create-join pilot is implemented (frontend213/213/build/import PASS); remaining
+consumer batches stay open before broader consolidation is complete;
 MOD-028B, performance measurement and cleanup retain their separate scope/approvals.
 No live provider/browser/hosted rollout is implied. Work remains uncommitted.

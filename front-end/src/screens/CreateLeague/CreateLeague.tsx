@@ -1,3 +1,4 @@
+import { safeErrorMessage, CREATE_LEAGUE_UNCERTAIN } from "../../api/safeError";
 import React, { useEffect, useState } from "react";
 import "./CreateLeague.css";
 import { useNavigate } from "react-router-dom";
@@ -217,8 +218,7 @@ const CreateLeague: React.FC = () => {
       setForm(makeInitialState());
       navigate("/leagues");
     } catch (err) {
-      console.error(err);
-      setError("Failed to create league. Check console/backend logs.");
+      setError(safeErrorMessage(err, CREATE_LEAGUE_UNCERTAIN));
     } finally {
       setSubmitting(false);
     }

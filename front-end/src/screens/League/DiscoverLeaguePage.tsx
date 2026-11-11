@@ -1,3 +1,4 @@
+import { safeErrorMessage, JOIN_LEAGUE_UNCERTAIN } from "../../api/safeError";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useRequestScope } from "../../hooks/useRequestScope";
@@ -171,7 +172,7 @@ const DiscoverLeagueView = ({ league, isCurrent }: { league: LeaguePreview; isCu
     } catch (error: any) {
       if (!current()) return;
       setRequestStatus("error");
-      setRequestError(error?.message ?? "Failed to submit join request.");
+      setRequestError(safeErrorMessage(error, JOIN_LEAGUE_UNCERTAIN));
     }
   };
 

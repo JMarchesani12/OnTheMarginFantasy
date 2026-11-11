@@ -1,3 +1,4 @@
+import { parseApiError, CREATE_LEAGUE_UNCERTAIN, JOIN_LEAGUE_UNCERTAIN } from "./safeError";
 import type { LeagueRules } from "../types/leagueRules";
 import type { ApproveRequestResponse, CreateLeaguePayload, GetConferences, GetRequestResponse, League, LeagueSearchResult, RequestResponse, SingleLeague, UpdateLeague } from "../types/league";
 import type { LeagueMember, LeagueMemberPreview, UpdateLeagueMember } from "../types/leagueMember";
@@ -34,7 +35,7 @@ export async function createLeague(
   });
 
   if (!res.ok) {
-    throw new Error(`Failed to create league: ${res.status}`);
+    throw await parseApiError(res, CREATE_LEAGUE_UNCERTAIN);
   }
 
   return res.json();
@@ -137,7 +138,7 @@ export async function requestToJoinLeague(
   });
 
   if (!res.ok) {
-    throw new Error(`Failed to submit request: ${res.status}`);
+    throw await parseApiError(res, JOIN_LEAGUE_UNCERTAIN);
   }
 
   return res.json();

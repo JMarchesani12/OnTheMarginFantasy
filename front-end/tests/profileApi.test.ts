@@ -18,6 +18,7 @@ function loadModule(path: string, dependencies: Record<string, unknown>, globals
     exports, Headers, Response, ...globals,
     require: (id: string) => {
       if (id === './authenticatedFetch') return { createAuthenticatedFetch };
+      if (id === './safeError') return loadModule('../src/api/safeError.ts', {}, globals);
       assert.ok(id in dependencies, `Unexpected dependency: ${id}`);
       return dependencies[id];
     },

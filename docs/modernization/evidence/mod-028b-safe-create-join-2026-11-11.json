@@ -1,0 +1,72 @@
+{
+  "date": "2026-11-11",
+  "baseCommit": "51b365c",
+  "scope": "MOD028B shared safe parser and approved create/join pilot only",
+  "result": "PASS_PILOT",
+  "checks": {
+    "red": "8/8 preimplementation failures",
+    "frontend": "213/213 PASS",
+    "build": "PASS",
+    "imports": "75files198edges zero unresolved/cycles",
+    "diff": "PASS"
+  },
+  "behavior": [
+    "status-owned client messages and recognized status-consistent code metadata",
+    "exact safe400 business allowlist, structured/legacy parsing, no arbitrary/raw text",
+    "one body read, safe shape/read failure fallback",
+    "5xx/network uncertain outcome never definitive rejection/replay",
+    "create/join retained input, submissionreenabled; no raw mutationconsolelog",
+    "only two API failure paths and two screen catches migrated"
+  ],
+  "rulings": [
+    {
+      "decision": "400 safe business text may be used while unknown/inconsistent machinecode is dropped",
+      "reason": "Status and field message agree; no rawcode exposed",
+      "costIfWrong": "Less conservative than discarding all safe text solely for unrecognized code"
+    },
+    {
+      "decision": "Existing VM loader loads actual safeError dependency",
+      "reason": "New API module import caused3 fixture-resolution failures, not product failures",
+      "costIfWrong": "Harness remains a substitute for bundler/browser integration; assertions retained"
+    },
+    {
+      "decision": "Remaining API consumers are separate batches",
+      "reason": "User approved bounded create/join pilot",
+      "costIfWrong": "Other legacy error behaviors remain until migrated"
+    },
+    {
+      "decision": "Keep work uncommitted/undeployed and ledger retained",
+      "reason": "Established user workflow",
+      "costIfWrong": "User must commit reviewed files and retain artifacts until history records work"
+    }
+  ],
+  "limits": [
+    "Actual modules under controlled hooks/transport/nativeResponse, not real browser/live-provider proof",
+    "No authrefresh/retry/backend/schema/dependency/live-service changes",
+    "Other MOD028B consumer migrations and priorbrowser/accessibility followups remain open"
+  ],
+  "sourceSha256": {
+    "front-end/src/api/safeError.ts": "f741227b7a0202b46f5a4e2a549b2eae84e6e38db8a373f35200213cb670997a",
+    "front-end/src/api/leagues.ts": "62fc0685007d6e6a882e6b873929aa6b6e24d8d1246d3ca18e2756ecd132e8e1",
+    "front-end/src/screens/CreateLeague/CreateLeague.tsx": "122d5a1cacbacebfd6922d911eae6b1857d9ca21d1357d7371a36de680a9cafb",
+    "front-end/src/screens/League/DiscoverLeaguePage.tsx": "44f7b315b3990fe9c71cb9301d44c4182c8db0289b8ef85f752081c05dd2b02d",
+    "front-end/tests/safeApiError.test.ts": "9cef7d7222a3522986a122f00635bed5d474295cca5682b4140844b3baf904b0",
+    "front-end/tests/createJoinErrors.test.ts": "3afdf00484a75380e978c1e81fe4897ab506336756e3fe5d141de08960bd2f1c",
+    "front-end/tests/profileApi.test.ts": "1657635be38066c79a3150e280b6583381b68fda8a413b90b028adffdb299ddf"
+  },
+  "protectedMatchBase": {
+    "front-end/src/api/client.ts": true,
+    "front-end/src/api/authenticatedFetch.ts": true,
+    "front-end/src/api/user.ts": true,
+    "api/httpBoundary.py": true
+  },
+  "review": {
+    "model": "gpt-6-astra/high",
+    "critical": 0,
+    "important": 0,
+    "minor": 1,
+    "independentChecks": "helper/form/profile API targeted23/23 and diff PASS",
+    "deferredMinor": "No explicit405/other4xx fallback or positive internal_error retention assertions; source inspected without defect",
+    "declined": "Browser/live provider, broader consumer migration, independent full-suite/build/import"
+  }
+}
