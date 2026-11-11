@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import type { LeagueSearchResult } from "../../types/league";
+import { useParams, useNavigate } from "react-router-dom";
+import { useRequestScope } from "../../hooks/useRequestScope";
 import type { LeagueMemberPreview } from "../../types/leagueMember";
 import {
+  getLeaguePreview,
+  type LeaguePreview,
   getMemberPreviewsOfLeague,
   requestToJoinLeague,
 } from "../../api/leagues";
@@ -11,17 +13,51 @@ import type { Sport } from "../../types/sport";
 import { useCurrentUser } from "../../context/currentUserContext";
 import "./DiscoverLeaguePage.css";
 
-type LocationState = {
-  league?: LeagueSearchResult;
+const ownerPreviewError = (error: unknown) => {
+  const status = (error as { status?: number })?.status;
+  return status === 404 ? "League is unavailable or no longer discoverable." : status === 401 || status === 403 ? "You do not have access to this league preview." : "Could not load league details. Please retry.";
 };
 
 const DiscoverLeaguePage = () => {
+  const { league_id } = useParams();
+  const profile = useCurrentUser();
   const navigate = useNavigate();
-  const location = useLocation();
-  const state = location.state as LocationState | null;
-  const league = state?.league;
-  const { userId } = useCurrentUser();
+  const id = league_id && /^[1-9]\d*$/.test(league_id) ? Number(league_id) : NaN;
+  const valid = Number.isSafeInteger(id) && id > 0;
+  if (!valid || !profile.userId) return <main className="discover-league">
+    <button type="button" onClick={() => navigate("/leagues")}>← Back to Leagues</button>
+    <p role="status">{!valid ? "Invalid league URL." : "Sign in and load your profile to view this league."}</p>
+  </main>;
+  return <DiscoverResolver key={`${league_id}:${profile.identityKey}`} leagueId={id} isCurrent={profile.isCurrentIdentity} />;
+};
 
+const DiscoverResolver = ({ leagueId, isCurrent }: { leagueId: number; isCurrent: () => boolean }) => {
+  const navigate = useNavigate();
+  const scope = useRequestScope(isCurrent);
+  const [league, setLeague] = useState<LeaguePreview | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
+  useEffect(() => {
+    const current = scope.capture("preview");
+    getLeaguePreview(leagueId, current.signal).then(data => {
+      if (!current()) return;
+      if (!data || data.id !== leagueId || typeof data.name !== "string" || !Number.isSafeInteger(data.sport) || data.sport <= 0 || !(data.commissionerDisplayName == null || typeof data.commissionerDisplayName === "string")) throw new Error("Invalid preview");
+      setLeague(data);
+    }).catch(error => { if (current()) setError(ownerPreviewError(error)); });
+    return current.cancel;
+  }, [leagueId, attempt, scope]);
+  if (league) return <DiscoverLeagueView league={league} isCurrent={isCurrent} />;
+  return <main className="discover-league">
+    <button type="button" onClick={() => navigate("/leagues")}>← Back to Leagues</button>
+    <p role={error ? "alert" : "status"}>{error ?? "Loading league details…"}</p>
+    {error && <button type="button" onClick={() => { if (scope.isCurrent()) { setError(null); setAttempt(value => value + 1); } }}>Retry</button>}
+  </main>;
+};
+
+const DiscoverLeagueView = ({ league, isCurrent }: { league: LeaguePreview; isCurrent: () => boolean }) => {
+  const navigate = useNavigate();
+  const { userId } = useCurrentUser();
+  const scope = useRequestScope(isCurrent);
   const [sports, setSports] = useState<Sport[]>([]);
   const [sportsLoading, setSportsLoading] = useState(false);
   const [sportsError, setSportsError] = useState<string | null>(null);
@@ -40,22 +76,23 @@ const DiscoverLeaguePage = () => {
     }
 
     let isCancelled = false;
+    const current = scope.capture("members");
 
     const loadMembers = async () => {
       setMembersLoading(true);
       setMembersError(null);
 
       try {
-        const data = await getMemberPreviewsOfLeague(league.id);
-        if (!isCancelled) {
+        const data = await getMemberPreviewsOfLeague(league.id, current.signal);
+        if (!isCancelled && current()) {
           setMembers(data);
         }
       } catch (error: any) {
-        if (!isCancelled) {
+        if (!isCancelled && current()) {
           setMembersError(error?.message ?? "Failed to load league members");
         }
       } finally {
-        if (!isCancelled) {
+        if (!isCancelled && current()) {
           setMembersLoading(false);
         }
       }
@@ -65,8 +102,9 @@ const DiscoverLeaguePage = () => {
 
     return () => {
       isCancelled = true;
+      current.cancel();
     };
-  }, [league]);
+  }, [league, scope]);
 
   useEffect(() => {
     let isMounted = true;
@@ -105,26 +143,13 @@ const DiscoverLeaguePage = () => {
     return map;
   }, [sports]);
 
-  if (!league) {
-    return (
-      <main className="discover-league">
-        <button
-          className="discover-league__back"
-          type="button"
-          onClick={() => navigate(-1)}
-        >
-          ← Back
-        </button>
-        <p>League data is not available. Please open this page from search.</p>
-      </main>
-    );
-  }
-
   const commissionerName = league.commissionerDisplayName ?? "Unknown";
   const sportLabel = sportLabelById.get(league.sport) ??
     (sportsLoading ? "Loading sport…" : "Unknown sport");
 
   const handleRequestJoin = async () => {
+    if (!scope.isCurrent() || requestStatus === "submitting" || requestStatus === "success") return;
+    const current = scope.capture();
     if (!userId) {
       setRequestStatus("error");
       setRequestError("You must be signed in to request a spot.");
@@ -142,8 +167,9 @@ const DiscoverLeaguePage = () => {
 
     try {
       await requestToJoinLeague(league.id, userId, undefined, teamName.trim());
-      setRequestStatus("success");
+      if (current()) setRequestStatus("success");
     } catch (error: any) {
+      if (!current()) return;
       setRequestStatus("error");
       setRequestError(error?.message ?? "Failed to submit join request.");
     }
@@ -154,9 +180,9 @@ const DiscoverLeaguePage = () => {
       <button
         className="discover-league__back"
         type="button"
-        onClick={() => navigate(-1)}
+        onClick={() => navigate("/leagues")}
       >
-        ← Back
+        ← Back to Leagues
       </button>
 
       <section className="discover-league__hero">

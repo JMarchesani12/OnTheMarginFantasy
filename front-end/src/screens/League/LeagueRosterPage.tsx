@@ -50,6 +50,12 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
   const [selectedDropValue, setSelectedDrop] = useState<OwnedTeam | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submissionStatus, setSubmissionStatus] = useState<string | null>(null);
+  const [refreshRevision, setRefreshRevision] = useState(0);
+  const revisionRef = useRef(0);
+  // Only user edits advance these versions; read reconciliation can replace team objects.
+  const selectionEdits = useRef({ add: 0, drop: 0, give: 0, receive: 0 });
   const [searchTerm, setSearchTerm] = useState("");
   const [conferenceFilter, setConferenceFilter] = useState("all");
   const tabStorageKey =
@@ -84,7 +90,8 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
   }
   const rosterGeneration = rosterScope.current.generation;
   const [loadedRosterGeneration, setLoadedRosterGeneration] = useState<number | null>(null);
-  const rosterReady = loadedRosterGeneration === rosterGeneration;
+  const [loadedRosterRevision, setLoadedRosterRevision] = useState<number | null>(null);
+  const rosterReady = loadedRosterGeneration === rosterGeneration && loadedRosterRevision === refreshRevision;
   const ownedTeams = rosterReady ? ownedTeamsValue : EMPTY_TEAMS;
   const availableTeams = rosterReady ? availableTeamsValue : EMPTY_TEAMS;
   const selectedAdd = rosterReady ? selectedAddValue : null;
@@ -100,10 +107,22 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
   }
   const partnerGeneration = partnerScope.current.generation;
   const [loadedPartnerGeneration, setLoadedPartnerGeneration] = useState<number | null>(null);
-  const partnerReady = loadedPartnerGeneration === partnerGeneration;
+  const [loadedPartnerRevision, setLoadedPartnerRevision] = useState<number | null>(null);
+  const partnerReady = loadedPartnerGeneration === partnerGeneration && loadedPartnerRevision === refreshRevision;
   const tradeMemberTeams = partnerReady ? tradeMemberTeamsValue : EMPTY_TEAMS;
   const selectedTradeReceive = partnerReady ? selectedTradeReceiveValue : null;
 
+
+  const refreshRelatedData = useCallback(() => {
+    if (!isRosterCurrent()) return;
+    revisionRef.current += 1;
+    setRefreshRevision(revisionRef.current);
+  }, [isRosterCurrent]);
+  const onTradeMutationSuccess = useCallback(() => {
+    if (!isRosterCurrent()) return;
+    setSubmissionStatus("Trade updated.");
+    refreshRelatedData();
+  }, [isRosterCurrent, refreshRelatedData]);
 
   useEffect(() => {
     if (!tabStorageKey || !isBrowser) {
@@ -118,10 +137,11 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
     }
 
     const request = scope.capture("roster");
-    const current = () => request() && isRosterCurrent();
+    const current = () => request() && isRosterCurrent() && revisionRef.current === refreshRevision;
     try {
       setLoading(true);
       setError(null);
+      setLoadedRosterRevision(null);
 
       const [memberTeams, available] = await Promise.all([
         getMemberTeams(memberId, rosterWeekNumber, leagueId, request.signal),
@@ -134,6 +154,7 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
       setOwnedTeams(normalizedOwned);
       setAvailableTeams(normalizedAvailable);
       setLoadedRosterGeneration(rosterGeneration);
+      setLoadedRosterRevision(refreshRevision);
       setSelectedDrop((current) => {
         if (!current) return null;
         return normalizedOwned.find((team) => team.teamId === current.teamId) ?? null;
@@ -150,12 +171,17 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
       if (current()) setLoading(false);
       else if (scope.isCurrent() && getRosterWeek() !== rosterWeekNumber) checkWeek(value => value + 1);
     }
-  }, [leagueId, memberId, rosterWeekNumber, rosterGeneration, scope, isRosterCurrent]);
+  }, [leagueId, memberId, rosterWeekNumber, rosterGeneration, scope, isRosterCurrent, refreshRevision]);
 
   useEffect(() => {
     setSelectedAdd(null);
     setSelectedDrop(null);
     setSelectedTradeGive(null);
+    setSubmitting(false);
+    setSubmissionStatus(null);
+  }, [rosterGeneration]);
+
+  useEffect(() => {
     loadRosterData();
     return () => scope.cancel("roster");
   }, [loadRosterData, scope]);
@@ -206,23 +232,28 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
       return;
     }
 
-    setSelectedTradeReceive(null);
-    setTradeMemberTeams([]);
+    if (loadedPartnerGeneration !== partnerGeneration) {
+      setSelectedTradeReceive(null);
+      setTradeMemberTeams([]);
+    }
+    setLoadedPartnerRevision(null);
 
     let isCancelled = false;
-    const current = scope.capture("partner");
+    const request = scope.capture("partner");
+    const current = () => request() && isRosterCurrent() && partnerScope.current.generation === partnerGeneration && revisionRef.current === refreshRevision;
 
     const loadTradeTeams = async () => {
       try {
         setTradeTeamsLoading(true);
         setTradeTeamsError(null);
 
-        const teams = await getMemberTeams(tradeMemberId, rosterWeekNumber, leagueId, current.signal);
+        const teams = await getMemberTeams(tradeMemberId, rosterWeekNumber, leagueId, request.signal);
 
         if (!isCancelled && current()) {
           const normalized = normalizeOwnedTeams(teams as RawOwnedTeam[]);
           setTradeMemberTeams(normalized);
           setLoadedPartnerGeneration(partnerGeneration);
+          setLoadedPartnerRevision(refreshRevision);
           setSelectedTradeReceive((current) => {
             if (!current) return null;
             return normalized.find((team) => team.teamId === current.teamId) ?? null;
@@ -243,16 +274,17 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
 
     return () => {
       isCancelled = true;
-      current.cancel();
+      request.cancel();
     };
-  }, [tradeMemberId, leagueId, rosterWeekNumber, partnerGeneration, scope]);
+  }, [tradeMemberId, leagueId, rosterWeekNumber, partnerGeneration, scope, refreshRevision, isRosterCurrent]);
 
   useEffect(() => {
+    if (!rosterReady) return;
     setSelectedTradeGive((current) => {
       if (!current) return null;
       return ownedTeams.find((team) => team.teamId === current.teamId) ?? null;
     });
-  }, [ownedTeams]);
+  }, [ownedTeams, rosterReady]);
 
   const groupTeams = (teams: OwnedTeam[]): GroupedTeams => {
     const map = new Map<string, OwnedTeam[]>();
@@ -311,24 +343,28 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
   }, [ownedTeams, availableTeams, tradeMemberTeams]);
 
   const toggleAddTeam = (team: OwnedTeam) => {
+    selectionEdits.current.add += 1;
     setSelectedAdd((current) =>
       current?.teamId === team.teamId ? null : team
     );
   };
 
   const toggleDropTeam = (team: OwnedTeam) => {
+    selectionEdits.current.drop += 1;
     setSelectedDrop((current) =>
       current?.teamId === team.teamId ? null : team
     );
   };
 
   const toggleTradeGiveTeam = (team: OwnedTeam) => {
+    selectionEdits.current.give += 1;
     setSelectedTradeGive((current) =>
       current?.teamId === team.teamId ? null : team
     );
   };
 
   const toggleTradeReceiveTeam = (team: OwnedTeam) => {
+    selectionEdits.current.receive += 1;
     setSelectedTradeReceive((current) =>
       current?.teamId === team.teamId ? null : team
     );
@@ -343,14 +379,15 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
       return;
     }
 
-    if (!rosterReady || !isRosterCurrent()) {
+    if (submitting || !rosterReady || loadedRosterRevision !== revisionRef.current || !isRosterCurrent()) {
       if (scope.isCurrent()) checkWeek(value => value + 1);
       return;
     }
+    const submittedEdits = { ...selectionEdits.current };
     const operation = scope.capture();
     const current = () => operation() && isRosterCurrent();
     try {
-      setLoading(true);
+      setSubmitting(true);
       setError(null);
 
       await submitFreeAgencyRequest(
@@ -363,14 +400,10 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
       );
 
       if (!current()) return;
-      if (selectedAdd) {
-        setSelectedAdd(null);
-      }
-      if (selectedDrop) {
-        setSelectedDrop(null);
-      }
-
-      await loadRosterData();
+      setSelectedAdd(value => selectionEdits.current.add === submittedEdits.add && value?.teamId === selectedAddValue?.teamId ? null : value);
+      setSelectedDrop(value => selectionEdits.current.drop === submittedEdits.drop && value?.teamId === selectedDropValue?.teamId ? null : value);
+      setSubmissionStatus("Request submitted.");
+      refreshRelatedData();
     } catch (err: any) {
       if (!current()) return;
       setError(err?.message ?? "Failed to submit add/drop request");
@@ -379,7 +412,7 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
         if (scope.isCurrent() && getRosterWeek() !== rosterWeekNumber) checkWeek(value => value + 1);
         return;
       }
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -388,14 +421,15 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
       return;
     }
 
-    if (!rosterReady || !isRosterCurrent()) {
+    if (submitting || !rosterReady || loadedRosterRevision !== revisionRef.current || !isRosterCurrent()) {
       if (scope.isCurrent()) checkWeek(value => value + 1);
       return;
     }
+    const submittedEdits = { ...selectionEdits.current };
     const operation = scope.capture();
     const current = () => operation() && isRosterCurrent();
     try {
-      setLoading(true);
+      setSubmitting(true);
       setError(null);
 
       await tradeRequestProposal(
@@ -409,9 +443,12 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
       );
 
       if (!current()) return;
-      setSelectedTradeGive(null);
-      setSelectedTradeReceive(null);
-      await loadRosterData();
+      setSelectedTradeGive(value => selectionEdits.current.give === submittedEdits.give && value?.teamId === selectedTradeGiveValue?.teamId ? null : value);
+      if (partnerScope.current.generation === partnerGeneration) {
+        setSelectedTradeReceive(value => selectionEdits.current.receive === submittedEdits.receive && value?.teamId === selectedTradeReceiveValue?.teamId ? null : value);
+      }
+      setSubmissionStatus("Request submitted.");
+      refreshRelatedData();
     } catch (err: any) {
       if (!current()) return;
       setError(err?.message ?? "Failed to submit trade request");
@@ -420,7 +457,7 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
         if (scope.isCurrent() && getRosterWeek() !== rosterWeekNumber) checkWeek(value => value + 1);
         return;
       }
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -498,15 +535,18 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
     !rosterReady ||
     freeAgentDeadlinePassed ||
     loading ||
+    submitting ||
     (!selectedAdd && !selectedDrop);
 
   const tradeSubmitDisabled =
     !rosterReady ||
     tradeDeadlinePassed ||
     loading ||
+    submitting ||
     tradeTeamsLoading ||
     !selectedTradeGive ||
     !selectedTradeReceive ||
+    !partnerReady ||
     !tradeMemberId;
 
   const tradePartners = members.filter((member) => member.id !== memberId);
@@ -587,7 +627,10 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
       </nav>
 
       {error && <p className="roster-page__error">{error}</p>}
-      {loading && <p className="roster-page__loading">Loading teams…</p>}
+      {submissionStatus && <p role="status">{submissionStatus}</p>}
+      {(loading || submitting) && <p className="roster-page__loading">Loading teams…</p>}
+      {error && <button type="button" onClick={refreshRelatedData}>Retry roster data</button>}
+      {tradeTeamsError && <button type="button" onClick={refreshRelatedData}>Retry partner roster</button>}
 
       <section className="roster-page__controls" aria-label="Roster filters">
         <div className="roster-page__control">
@@ -662,7 +705,7 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
                   <button
                     type="button"
                     className="roster-page__queue-remove"
-                    onClick={() => setSelectedAdd(null)}
+                    onClick={() => { selectionEdits.current.add += 1; setSelectedAdd(null); }}
                     aria-label="Remove add selection"
                   >
                     ×
@@ -680,7 +723,7 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
                   <button
                     type="button"
                     className="roster-page__queue-remove"
-                    onClick={() => setSelectedDrop(null)}
+                    onClick={() => { selectionEdits.current.drop += 1; setSelectedDrop(null); }}
                     aria-label="Remove drop selection"
                   >
                     ×
@@ -800,7 +843,7 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
                         <button
                           type="button"
                           className="roster-page__queue-remove"
-                          onClick={() => setSelectedTradeGive(null)}
+                          onClick={() => { selectionEdits.current.give += 1; setSelectedTradeGive(null); }}
                           aria-label="Remove offered team"
                         >
                           ×
@@ -818,7 +861,7 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
                         <button
                           type="button"
                           className="roster-page__queue-remove"
-                          onClick={() => setSelectedTradeReceive(null)}
+                          onClick={() => { selectionEdits.current.receive += 1; setSelectedTradeReceive(null); }}
                           aria-label="Remove requested team"
                         >
                           ×
@@ -851,7 +894,9 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
           <TradeRequestsPanel
             leagueId={league.leagueId}
             memberId={league.memberId}
-            isCurrent={isCurrent}
+            isCurrent={isRosterCurrent}
+            refreshRevision={refreshRevision}
+            onMutationSuccess={onTradeMutationSuccess}
             tradeDeadlinePassed={tradeDeadlinePassed}
           />
         </>
@@ -860,7 +905,8 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
         leagueId={league.leagueId}
         members={members}
         teamNameLookup={teamNameLookup}
-        isCurrent={isCurrent}
+        isCurrent={isRosterCurrent}
+        refreshRevision={refreshRevision}
       />
     </div>
   );

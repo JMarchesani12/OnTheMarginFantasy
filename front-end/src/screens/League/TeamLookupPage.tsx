@@ -87,6 +87,7 @@ const TeamLookupPage = () => {
 
   useEffect(() => {
     if (!leagueId || trimmedQuery.length < 2) {
+      setLoading(false);
       setResults([]);
       setError(null);
       return;

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import ProfileStatus from "../../components/Profile/ProfileStatus";
 import LeagueCard from "../../components/LeagueCard/LeagueCard";
@@ -23,6 +23,10 @@ type HomeTab = "leagues" | "search";
 const SEARCH_LIMIT = 6;
 const EMPTY_LEAGUES: League[] = [];
 type PrivateLeagues = { identityKey: string; items: League[] };
+type LeagueListState = {
+  selection: object;
+  attempt: number;
+} & ({ status: "loading" } | { status: "ready"; items: League[] } | { status: "error" });
 
 const applyStageFilter = (items: League[], stage: StageValue) => {
   if (stage === "completed") {
@@ -57,7 +61,8 @@ const Home = () => {
   const navigate = useNavigate();
   const [tab, setTab] = useState<HomeTab>("leagues");
   const [stage, setStage] = useState<StageValue>("active");
-  const [leagueState, setLeagues] = useState<PrivateLeagues | null>(null);
+  const [leagueState, setLeagues] = useState<LeagueListState | null>(null);
+  const [retryAttempt, setRetryAttempt] = useState(0);
   const [memberLeagueState, setMemberLeagues] = useState<PrivateLeagues | null>(null);
   const [sports, setSports] = useState<Sport[]>([]);
   const [sportsLoading, setSportsLoading] = useState(false);
@@ -73,7 +78,15 @@ const Home = () => {
   const [overviewOpen, setOverviewOpen] = useState(false);
 
   const { userId, displayName, email, identityKey, isCurrentIdentity } = useCurrentUser();
-  const leagues = userId && leagueState?.identityKey === identityKey ? leagueState.items : EMPTY_LEAGUES;
+  // A new selection invalidates displayed data before its effect starts, including round trips.
+  const selectionRef = useRef({ identityKey, userId, stage });
+  if (selectionRef.current.identityKey !== identityKey || selectionRef.current.userId !== userId || selectionRef.current.stage !== stage) {
+    selectionRef.current = { identityKey, userId, stage };
+  }
+  const selection = selectionRef.current;
+  const currentList = userId && leagueState?.selection === selection && leagueState.attempt === retryAttempt ? leagueState : null;
+  const leagues = currentList?.status === "ready" ? currentList.items : EMPTY_LEAGUES;
+  const leaguesLoading = Boolean(userId) && (!currentList || currentList.status === "loading");
   const memberLeagues = userId && memberLeagueState?.identityKey === identityKey ? memberLeagueState.items : EMPTY_LEAGUES;
 
   const { signOut } = useAuth();
@@ -86,17 +99,19 @@ const Home = () => {
     let isMounted = true;
     const controller = new AbortController();
 
+    setLeagues({ selection, attempt: retryAttempt, status: "loading" });
+    const isCurrent = () => isMounted && !controller.signal.aborted && isCurrentIdentity() && selectionRef.current === selection;
     async function loadLeagues() {
       try {
         const response = await getLeaguesForUser(userId, stage, controller.signal);
 
-        if (!isMounted || !isCurrentIdentity()) {
-          return;
+        if (!isCurrent()) return;
+        if (!Array.isArray(response) && !(response && typeof response === "object" && Array.isArray((response as { leagues?: unknown }).leagues))) {
+          throw new Error("Invalid leagues response");
         }
-
-        setLeagues({ identityKey, items: applyStageFilter(normalizeLeaguesResponse(response), stage) });
-      } catch (error) {
-        if (isMounted && isCurrentIdentity()) console.error("Failed to load leagues", error);
+        setLeagues({ selection, attempt: retryAttempt, status: "ready", items: applyStageFilter(normalizeLeaguesResponse(response), stage) });
+      } catch {
+        if (isCurrent()) setLeagues({ selection, attempt: retryAttempt, status: "error" });
       }
     }
 
@@ -106,7 +121,7 @@ const Home = () => {
       isMounted = false;
       controller.abort();
     };
-  }, [userId, stage, identityKey, isCurrentIdentity]);
+  }, [userId, stage, selection, retryAttempt, isCurrentIdentity]);
 
   useEffect(() => {
     if (!userId) {
@@ -384,6 +399,18 @@ const Home = () => {
 
       {tab === "leagues" ? (
         <section className="home__leagues" aria-label="Your leagues">
+          {leaguesLoading && <p role="status">Loading your leagues…</p>}
+          {currentList?.status === "error" && (
+            <div role="alert">
+              <p>Could not load your leagues. Please retry.</p>
+              <button type="button" onClick={() => {
+                if (isCurrentIdentity() && selectionRef.current === selection) setRetryAttempt((attempt) => attempt + 1);
+              }}>Retry leagues</button>
+            </div>
+          )}
+          {currentList?.status === "ready" && leagues.length === 0 && (
+            <p role="status">{stage === "active" ? "You have no active leagues." : stage === "completed" ? "You have no completed leagues." : "You have no leagues yet."}</p>
+          )}
           {leagues.map((league) => (
             <LeagueCard key={league.leagueId} league={league} />
           ))}

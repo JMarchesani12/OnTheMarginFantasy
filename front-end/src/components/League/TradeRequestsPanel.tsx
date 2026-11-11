@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useRequestScope } from "../../hooks/useRequestScope";
 import type {
   OpenTradesResponse,
@@ -15,6 +15,8 @@ import "./TradeRequestsPanel.css";
 
 type TradeRequestsPanelProps = {
   leagueId: number;
+  refreshRevision?: number;
+  onMutationSuccess?: () => void;
   isCurrent: () => boolean;
   memberId: number;
   tradeDeadlinePassed: boolean;
@@ -30,6 +32,8 @@ const actionLabels: Record<TradeTab, string> = {
 
 const TradeRequestsPanel = ({
   leagueId,
+  refreshRevision = 0,
+  onMutationSuccess,
   isCurrent,
   memberId,
   tradeDeadlinePassed,
@@ -40,28 +44,40 @@ const TradeRequestsPanel = ({
   const [loading, setLoading] = useState(false);
   const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [readyRevision, setReadyRevision] = useState<number | null>(null);
+  const readiness = useRef({ revision: refreshRevision, context: isCurrent, ready: false });
+  if (readiness.current.revision !== refreshRevision || readiness.current.context !== isCurrent) readiness.current = { revision: refreshRevision, context: isCurrent, ready: false };
+  const actionInFlight = useRef(false);
 
   const loadTrades = useCallback(async () => {
     if (!scope.isCurrent()) return;
-    const current = scope.capture("trades");
+    const request = scope.capture("trades");
+    const current = () => request() && isCurrent() && readiness.current.revision === refreshRevision;
     try {
+      readiness.current.ready = false;
+      setReadyRevision(null);
       setLoading(true);
       setError(null);
-      const data = await getOpenTradeRequests(leagueId, memberId, current.signal);
-      if (current()) setTrades(data);
+      const data = await getOpenTradeRequests(leagueId, memberId, request.signal);
+      if (current()) {
+        setTrades(data);
+        readiness.current.ready = true;
+        setReadyRevision(refreshRevision);
+      }
     } catch (err: any) {
       if (current()) setError(err?.message ?? "Failed to load trade requests");
     } finally {
       if (current()) setLoading(false);
     }
-  }, [leagueId, memberId, scope]);
+  }, [leagueId, memberId, scope, isCurrent, refreshRevision]);
 
   useEffect(() => {
     loadTrades();
-  }, [loadTrades]);
+    return () => scope.cancel("trades");
+  }, [loadTrades, refreshRevision, scope]);
 
   const tabTrades: TradeStatus[] = useMemo(() => {
-    if (!trades) {
+    if (!trades || readyRevision !== refreshRevision || !readiness.current.ready) {
       return [];
     }
 
@@ -78,59 +94,77 @@ const TradeRequestsPanel = ({
 
     // league tab: show other members' activity, including their pending trades
     return trades.others;
-  }, [trades, activeTab]);
+  }, [trades, activeTab, readyRevision, refreshRevision, isCurrent]);
 
   const handleRespond = async (
     transactionId: number,
     action: TradeResponseAction
   ) => {
-    if (!scope.isCurrent()) return;
-    const current = scope.capture();
+    if (!scope.isCurrent() || !isCurrent() || !readiness.current.ready || actionInFlight.current) return;
+    const request = scope.capture();
+    const current = () => request() && isCurrent();
+    actionInFlight.current = true;
     try {
       setActionLoadingId(transactionId);
       setError(null);
       await responseToTradeRequest(leagueId, transactionId, action, memberId);
-      if (current()) await loadTrades();
+      if (current()) {
+        if (onMutationSuccess) onMutationSuccess();
+        else await loadTrades();
+      }
     } catch (err: any) {
       if (current()) setError(err?.message ?? "Failed to update trade request");
     } finally {
-      if (current()) setActionLoadingId(null);
+      actionInFlight.current = false;
+      if (request()) setActionLoadingId(null);
     }
   };
 
   const handleCancel = async (transactionId: number) => {
-    if (!scope.isCurrent()) return;
-    const current = scope.capture();
+    if (!scope.isCurrent() || !isCurrent() || !readiness.current.ready || actionInFlight.current) return;
+    const request = scope.capture();
+    const current = () => request() && isCurrent();
+    actionInFlight.current = true;
     try {
       setActionLoadingId(transactionId);
       setError(null);
       await cancelTradeRequest(leagueId, transactionId, memberId);
-      if (current()) await loadTrades();
+      if (current()) {
+        if (onMutationSuccess) onMutationSuccess();
+        else await loadTrades();
+      }
     } catch (err: any) {
       if (current()) setError(err?.message ?? "Failed to cancel trade request");
     } finally {
-      if (current()) setActionLoadingId(null);
+      actionInFlight.current = false;
+      if (request()) setActionLoadingId(null);
     }
   };
 
   const handleVeto = async (transactionId: number) => {
-    if (!scope.isCurrent()) return;
-    const current = scope.capture();
+    if (!scope.isCurrent() || !isCurrent() || !readiness.current.ready || actionInFlight.current) return;
+    const request = scope.capture();
+    const current = () => request() && isCurrent();
+    actionInFlight.current = true;
     try {
       setActionLoadingId(transactionId);
       setError(null);
       await vetoTrade(leagueId, transactionId, memberId);
-      if (current()) await loadTrades();
+      if (current()) {
+        if (onMutationSuccess) onMutationSuccess();
+        else await loadTrades();
+      }
     } catch (err: any) {
       if (current()) setError(err?.message ?? "Failed to update veto");
     } finally {
-      if (current()) setActionLoadingId(null);
+      actionInFlight.current = false;
+      if (request()) setActionLoadingId(null);
     }
   };
 
   const renderActions = (trade: TradeStatus) => {
     const disabled =
-      actionLoadingId === trade.transactionId || tradeDeadlinePassed;
+      actionLoadingId !== null || loading || readyRevision !== refreshRevision || tradeDeadlinePassed;
 
     if (activeTab === "incoming") {
       return (
@@ -218,12 +252,12 @@ const TradeRequestsPanel = ({
           Trade deadline passed — trade actions are disabled.
         </p>
       )}
-      {error && <p className="trade-requests__error">{error}</p>}
+      {error && <p role="alert" className="trade-requests__error">{error}</p>}
       {(loading || actionLoadingId !== null) && (
         <p className="trade-requests__loading">Syncing trades…</p>
       )}
 
-      {!loading && tabTrades.length === 0 && (
+      {!loading && !error && readyRevision === refreshRevision && tabTrades.length === 0 && (
         <p className="trade-requests__empty">
           No {actionLabels[activeTab].toLowerCase()} trades.
         </p>

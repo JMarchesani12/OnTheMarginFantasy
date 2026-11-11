@@ -75,6 +75,11 @@ const CreateLeague: React.FC = () => {
   const [sportsError, setSportsError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorField, setErrorField] = useState<string | null>(null);
+  const fieldAccessibility = (id: string) => ({
+    "aria-invalid": errorField === id ? true as const : undefined,
+    "aria-describedby": [errorField === id ? "cl-form-error" : null, id === "league-sport" && sportsError ? "cl-sports-error" : null].filter(Boolean).join(" ") || undefined,
+  });
   const navigate = useNavigate();
 
   const update = (patch: Partial<CreateLeagueFormState>) =>
@@ -125,16 +130,20 @@ const CreateLeague: React.FC = () => {
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
     setError(null);
+    setErrorField(null);
 
     if (!form.leagueName.trim()) {
+      setErrorField("league-name");
       setError("League name is required.");
       return;
     }
     if (!form.teamName.trim()) {
+      setErrorField("creator-team-name");
       setError("Team name is required.");
       return;
     }
     if (!form.sportId) {
+      setErrorField("league-sport");
       setError("Sport is required.");
       return;
     }
@@ -150,6 +159,7 @@ const CreateLeague: React.FC = () => {
       selectedSport?.maxDraftRounds == null ||
       selectedSport.maxPlayersToHaveMaxRounds == null
     ) {
+      setErrorField("league-sport");
       setError(
         `${selectedSport?.name ?? "Selected sport"} is missing its draft configuration.`,
       );
@@ -224,13 +234,13 @@ const CreateLeague: React.FC = () => {
           </p>
         </header>
 
-        <form className="cl-form" onSubmit={handleSubmit}>
+        <form className="cl-form" onSubmit={handleSubmit} aria-describedby={error ? "cl-form-error" : undefined}>
           {/* Basics */}
           <div className="cl-field-group">
-            <label className="cl-field-label">
+            <label className="cl-field-label" htmlFor="league-name">
               League Name <span className="cl-required">*</span>
             </label>
-            <input
+            <input id="league-name" {...fieldAccessibility("league-name")}
               type="text"
               value={form.leagueName}
               onChange={(e) => update({ leagueName: e.target.value })}
@@ -239,16 +249,16 @@ const CreateLeague: React.FC = () => {
 
           <div className="cl-field-group">
             <label className="cl-field-label" htmlFor="creator-team-name">Your Team Name <span className="cl-required">*</span></label>
-            <input id="creator-team-name" type="text" required placeholder="My Team"
+            <input {...fieldAccessibility("creator-team-name")} id="creator-team-name" type="text" required placeholder="My Team"
               value={form.teamName} onChange={(e) => update({ teamName: e.target.value })} />
           </div>
 
           <div className="cl-form-grid">
             <div className="cl-field-group">
-              <label className="cl-field-label">
+              <label className="cl-field-label" htmlFor="league-sport">
                 Sport <span className="cl-required">*</span>
               </label>
-              <select
+              <select id="league-sport" {...fieldAccessibility("league-sport")}
                 value={form.sportId}
                 onChange={(e) => update({ sportId: e.target.value })}
                 disabled={sportsLoading}
@@ -263,7 +273,7 @@ const CreateLeague: React.FC = () => {
                 ))}
               </select>
               {sportsError && (
-                <p className="cl-form-error">{sportsError}</p>
+                <p id="cl-sports-error" className="cl-form-error">{sportsError}</p>
               )}
             </div>
 
@@ -272,10 +282,10 @@ const CreateLeague: React.FC = () => {
           {/* Dates */}
           <div className="cl-form-grid">
             <div className="cl-field-group">
-              <label className="cl-field-label">
+              <label className="cl-field-label" htmlFor="draft-date">
                 Draft Date
               </label>
-              <input
+              <input id="draft-date"
                 type="date"
                 value={form.draftDate}
                 onChange={(e) => update({ draftDate: e.target.value })}
@@ -283,10 +293,10 @@ const CreateLeague: React.FC = () => {
             </div>
 
             <div className="cl-field-group">
-              <label className="cl-field-label">
+              <label className="cl-field-label" htmlFor="free-agent-deadline">
                 Free Agent Deadline
               </label>
-              <input
+              <input id="free-agent-deadline"
                 type="date"
                 value={form.freeAgentDeadline}
                 onChange={(e) =>
@@ -296,10 +306,10 @@ const CreateLeague: React.FC = () => {
             </div>
 
             <div className="cl-field-group">
-              <label className="cl-field-label">
+              <label className="cl-field-label" htmlFor="trade-deadline">
                 Trade Deadline
               </label>
-              <input
+              <input id="trade-deadline"
                 type="date"
                 value={form.tradeDeadline}
                 onChange={(e) => update({ tradeDeadline: e.target.value })}
@@ -309,8 +319,8 @@ const CreateLeague: React.FC = () => {
 
           <div className="cl-form-grid">
             <div className="cl-field-group">
-              <label className="cl-field-label">Draft Timeout Action</label>
-              <select
+              <label className="cl-field-label" htmlFor="draft-timeout-action">Draft Timeout Action</label>
+              <select id="draft-timeout-action"
                 value={form.timeoutAction}
                 onChange={(e) =>
                   update({ timeoutAction: e.target.value as TimeoutAction })
@@ -321,8 +331,8 @@ const CreateLeague: React.FC = () => {
               </select>
             </div>
             <div className="cl-field-group">
-              <label className="cl-field-label">Grace Period (seconds)</label>
-              <input
+              <label className="cl-field-label" htmlFor="draft-grace-seconds">Grace Period (seconds)</label>
+              <input id="draft-grace-seconds"
                 type="number"
                 min={0}
                 value={form.graceSeconds}
@@ -333,9 +343,10 @@ const CreateLeague: React.FC = () => {
 
           {/* Transactions */}
           <div className="cl-field-group cl-field-inline">
-            <label className="cl-field-label">Trade Veto</label>
-            <label className="cl-inline-checkbox">
+            <label className="cl-field-label" htmlFor="trade-veto-enabled">Trade Veto</label>
+            <label className="cl-inline-checkbox" htmlFor="trade-veto-enabled">
               <input
+                id="trade-veto-enabled"
                 type="checkbox"
                 checked={form.tradeVetoEnabled}
                 onChange={(e) =>
@@ -346,10 +357,11 @@ const CreateLeague: React.FC = () => {
             </label>
             {form.tradeVetoEnabled && (
               <div className="cl-inline-number">
-                <span>Required veto count: <span className="cl-required">*</span></span>
+                <label htmlFor="trade-veto-count">Required veto count: <span className="cl-required">*</span></label>
                 <input
                   type="number"
                   min={1}
+                  id="trade-veto-count"
                   value={form.tradeVetoRequiredCount}
                   onChange={(e) =>
                     update({ tradeVetoRequiredCount: e.target.value })
@@ -365,7 +377,7 @@ const CreateLeague: React.FC = () => {
             onChange={(bonuses) => update({ bonuses })}
           />
 
-          {error && <p className="cl-form-error">{error}</p>}
+          {error && <p id="cl-form-error" role="alert" className="cl-form-error">{error}</p>}
 
           <div className="cl-form-actions">
             <button

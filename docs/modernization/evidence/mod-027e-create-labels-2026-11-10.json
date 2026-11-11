@@ -1,0 +1,43 @@
+{
+  "date": "2026-11-10",
+  "scope": "MOD027E label/control and existing validation description associations",
+  "result": "PASS",
+  "checks": {
+    "red": "3/3 baseline failures",
+    "frontend": "193/193 PASS",
+    "build": "PASS",
+    "imports": "73 files/194 edges,zero unresolved/cycles",
+    "diff": "PASS"
+  },
+  "behavior": [
+    "explicit IDs/labels for create controls and veto checkbox/count",
+    "dynamic bonus add/placement label associations; no dangling add label when exhausted",
+    "field-specific error aria-invalid/describedby, sports error select association and form summary description",
+    "existing submission payload/validation/native form handler retained"
+  ],
+  "decisions": [
+    "Small enough for user-authorized combined design/implementation",
+    "Shared editor optional ID prefix; current Create and Manage each have one instance",
+    "No browser framework/dependency added; do not claim native focus/keyboard runtime proof",
+    "Preserve prior uncommitted work and keep all changes uncommitted/undeployed"
+  ],
+  "limits": [
+    "Controlled actual-module/form tests, not browser/accessibility-tree/screen-reader runtime proof",
+    "Native label click and keyboard activation not directly exercised",
+    "No backend/live service verification or validation redesign"
+  ],
+  "sourceSha256": {
+    "front-end/src/screens/CreateLeague/CreateLeague.tsx": "751acd348c7b05bd20d581f0a6bda00e7e3bfa6f2b3513f435693c05cd49313e",
+    "front-end/src/components/League/BonusesEditor.tsx": "c2d6bb0b6dd6a656fc3016f00b43c8a298b6655e622adcfa8cf9e61b5ab390b2",
+    "front-end/tests/createLabels.test.ts": "f3275cedbf51c233e002a0f407db298d3909f232fe34a82fb90ab75e758e2bbd"
+  },
+  "review": {
+    "model": "gpt-6-astra/high",
+    "critical": 0,
+    "important": 0,
+    "minor": 1,
+    "independentChecks": "targeted3/3, scoped diff PASS",
+    "deferredMinor": "Tests verify label targets but do not directly assert bonus aria-labelledby references/context; source inspected without defect",
+    "declined": "Native focus/keyboard runtime, prior027A\u2013D/broader validation, independent full-suite/build"
+  }
+}

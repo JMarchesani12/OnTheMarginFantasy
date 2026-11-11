@@ -7,6 +7,7 @@ import "./TradeRequestsPanel.css";
 
 type PendingTransactionsPanelProps = {
   leagueId: number;
+  refreshRevision?: number;
   isCurrent: () => boolean;
   members: LeagueMember[];
   teamNameLookup: Record<number, string>;
@@ -22,6 +23,7 @@ const formatTypeLabel = (type: string | null | undefined) => {
 
 const PendingTransactionsPanel = ({
   leagueId,
+  refreshRevision = 0,
   isCurrent,
   members,
   teamNameLookup,
@@ -55,22 +57,24 @@ const PendingTransactionsPanel = ({
 
   const loadPending = useCallback(async () => {
     if (!scope.isCurrent()) return;
-    const current = scope.capture("pending");
+    const request = scope.capture("pending");
+    const current = () => request() && isCurrent();
     try {
       setLoading(true);
       setError(null);
-      const data = await getPendingTradesAndAddDrop(leagueId, current.signal);
+      const data = await getPendingTradesAndAddDrop(leagueId, request.signal);
       if (current()) setPending(data ?? []);
     } catch (err: any) {
       if (current()) setError(err?.message ?? "Failed to load pending transactions");
     } finally {
       if (current()) setLoading(false);
     }
-  }, [leagueId, scope]);
+  }, [leagueId, scope, isCurrent]);
 
   useEffect(() => {
     loadPending();
-  }, [loadPending]);
+    return () => scope.cancel("pending");
+  }, [loadPending, refreshRevision, scope]);
 
   const sortedPending = useMemo(() => {
     return [...pending].sort((a, b) => {

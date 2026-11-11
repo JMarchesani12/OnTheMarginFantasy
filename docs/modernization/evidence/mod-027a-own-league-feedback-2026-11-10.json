@@ -1,0 +1,100 @@
+{
+  "date": "2026-11-10",
+  "scope": "MOD-027A Home primary own-league feedback only",
+  "baseCommit": "f3175c5",
+  "result": "PASS",
+  "checks": {
+    "red": "7/7 new tests failed on baseline for missing feedback/stale results",
+    "targeted": "12/12 PASS including existing profile consumers",
+    "frontend": "157/157 PASS",
+    "productionBuild": "PASS",
+    "importGraph": {
+      "files": 73,
+      "literalRelativeEdges": 194,
+      "unresolved": [],
+      "cycles": []
+    },
+    "diffCheck": "PASS",
+    "backend": "unchanged; not rerun"
+  },
+  "commands": {
+    "redAndTargeted": "from front-end: node --experimental-strip-types --test tests/homeLeagueFeedback.test.ts [tests/profileConsumers.test.ts]",
+    "full": "from front-end: node --experimental-strip-types --test tests/*.test.ts",
+    "build": "npm run build --prefix front-end",
+    "imports": "node scripts/modernization/verify_frontend_imports.cjs",
+    "diff": "git diff --check"
+  },
+  "behavior": [
+    "render-time identity/user/stage selection masking, including round trips",
+    "loading/ready-empty/ready-cards/error with safe current-selection Retry",
+    "current source identity, disposal, AbortSignal and selection guards",
+    "retry attempt display masking; no automatic retry loop",
+    "array and wrapped-array response containers accepted; malformed primary containers fail",
+    "profile-not-ready delegates to ProfileStatus; discovery membership normalization unchanged"
+  ],
+  "rulings": [
+    {
+      "decision": "Run frontend tests from front-end cwd rather than root",
+      "reason": "Existing controlled module harness resolves src paths relative to cwd",
+      "costIfWrong": "Root execution fails fixture lookup rather than product assertions"
+    },
+    {
+      "decision": "Preserve audit checkout and leave changes uncommitted; retain ignored ledger",
+      "reason": "Established user workflow; no permission to commit/integrate",
+      "costIfWrong": "User must commit reviewed changes and retain uncommitted artifacts until then"
+    },
+    {
+      "decision": "Keep comprehensive league-row validation and discovery membership failure policy separate",
+      "reason": "Approved scope checks primary containers and preserves discovery behavior",
+      "costIfWrong": "Malformed rows or existing discovery failure semantics still require their separate fixes"
+    },
+    {
+      "decision": "Do not claim browser, accessibility-runtime or live API/database/deployment proof",
+      "reason": "Controlled harness and local build only; no live operation required",
+      "costIfWrong": "Runtime-specific behavior remains unverified"
+    },
+    {
+      "decision": "Author verifies audit docs and production build; reviewer checks product/tests and independently runs suite/import/diff only",
+      "reason": "Review was read-only and dispatched before docs were finalized",
+      "costIfWrong": "Documentation/build assertions lack independent reproduction"
+    }
+  ],
+  "limits": [
+    "Controlled hook/request harness executes actual Home but does not prove real browser/React concurrent schedules",
+    "No full league-row schema validation introduced",
+    "No live provider, configured database, Docker or hosted changes or checks",
+    "Other MOD-027 cards, shared error parser and broader Priority8 work remain separate"
+  ],
+  "sourceSha256": {
+    "front-end/src/screens/Home/Home.tsx": "8716c8bea9d9be8081e05a86f75614987e21f78c2b030e6c460aa1b0b8d79fbf",
+    "front-end/tests/homeLeagueFeedback.test.ts": "7d9ae47d497af21a7471240263fe139c663e2bf50714d9b4a3e1386e8347d404"
+  },
+  "protectedSha256": {
+    "front-end/src/api/leagues.ts": "facd6d3ad63216e647a32968197fe6c83f35653c854cd46e5a65debbee4a5697",
+    "front-end/src/context/AuthContext.tsx": "c99a36fe6dbd2e98e75e740ecc4ddcf1a5b724bbf700f8e28eebd9554cfae104",
+    "front-end/src/context/currentUserContext.tsx": "fb2c8c59885853668feee5dd0b84d274f5bff43ce389494f693f199cf810ece3",
+    "front-end/tests/helpers/leagueContextHarness.ts": "bdc41fefb19b618aeac6a0d6f29dd1babc03d6385a3a1c8bf60eb8f0609b9b1f"
+  },
+  "protectedMatchBase": {
+    "front-end/src/api/leagues.ts": true,
+    "front-end/src/context/AuthContext.tsx": true,
+    "front-end/src/context/currentUserContext.tsx": true,
+    "front-end/tests/helpers/leagueContextHarness.ts": true
+  },
+  "review": {
+    "agent": "mod027a_final_review",
+    "model": "gpt-6-astra/high",
+    "critical": 0,
+    "important": 0,
+    "minor": 1,
+    "independentChecks": [
+      "frontend157/157",
+      "imports73files194edges",
+      "git diff --check"
+    ],
+    "productionBuild": "author-run only",
+    "deferredMinor": "No direct test of pending completion after unmount, retry immediately followed by stage navigation, or saved obsolete retry handler invocation. Source guards inspected; no demonstrated defect."
+  },
+  "uncommitted": true,
+  "deployed": false
+}

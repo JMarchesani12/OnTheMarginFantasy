@@ -3,6 +3,14 @@ import type { ApproveRequestResponse, CreateLeaguePayload, GetConferences, GetRe
 import type { LeagueMember, LeagueMemberPreview, UpdateLeagueMember } from "../types/leagueMember";
 import { apiFetch, API_BASE_URL } from "./client";
 
+export type LeaguePreview = Pick<LeagueSearchResult, "id" | "name" | "sport" | "commissionerDisplayName">;
+
+export async function getLeaguePreview(leagueId: number, signal?: AbortSignal): Promise<LeaguePreview> {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}?view=preview`, { method: "GET", signal });
+  if (!res.ok) throw Object.assign(new Error("Could not load league preview"), { status: res.status });
+  return res.json();
+}
+
 export async function getLeague(leagueId: number, signal?: AbortSignal): Promise<SingleLeague> {
   const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}?view=full`, {
     method: "GET",
@@ -87,9 +95,10 @@ export async function getMembersOfLeague(
 }
 
 export async function getMemberPreviewsOfLeague(
-  leagueId: number
+  leagueId: number,
+  signal?: AbortSignal
 ): Promise<LeagueMemberPreview[]> {
-  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/members?view=preview`);
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/members?view=preview`, { signal });
   if (!res.ok) {
     throw new Error(`Failed to get league members: ${res.status}`);
   }

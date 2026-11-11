@@ -121,6 +121,15 @@ hints, and narrow Home/Settings identity safeguards. Frontend150/150, build and
 import checks pass; the review's source-to-render gap was reproduced and fixed.
 See [evidence](evidence/mod-026-profile-ownership-2026-11-10.json).
 
-MOD-027A own-league feedback is next after this dependency; remaining MOD-027B–G,
+MOD-027A now adds own-league loading, stage-specific empty results and safe failure/Retry,
+with account/stage request isolation. Frontend157/157, build and import checks pass;
+see [evidence](evidence/mod-027a-own-league-feedback-2026-11-10.json).
+MOD-027B now coordinates transaction/pending/roster refreshes after successful mutations,
+preserving authoritative ownership reads and independent read retries. See
+[evidence](evidence/mod-027b-roster-refresh-2026-11-10.json). MOD-027C team-search
+loading reset is complete (frontend183/183/build/import PASS). MOD-027D cold-link
+discovery is complete (frontend190/190/build/import PASS). MOD-027E form labels
+and validation associations are complete (frontend193/193/build/import PASS).
+MOD-027F draft-modal focus is next; remaining MOD-027G,
 MOD-028B, performance measurement and cleanup retain their separate scope/approvals.
 No live provider/browser/hosted rollout is implied. Work remains uncommitted.

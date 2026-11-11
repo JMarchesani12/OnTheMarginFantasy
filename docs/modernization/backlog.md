@@ -494,6 +494,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-027A — Show own-league loading, empty and failure states
 
+- **Status — 2026-11-10:** Implemented in the approved Home-only scope: current account/stage loading, stage-specific successful emptiness, safe failure/Retry, synchronous obsolete-selection masking and guarded/abortable requests. Final verification/review is recorded in [evidence](evidence/mod-027a-own-league-feedback-2026-11-10.json). API/schema and discovery membership reads unchanged; browser/runtime limits remain explicit.
+
 - **Priority / size / risk:** P1 / S / Low.
 - **Features:** F-005.
 - **Problem / evidence:** FE D01: Home only logs primary-list errors.
@@ -504,6 +506,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 - **Contract impact:** Behavior: yes; API/schema: no.
 
 ### MOD-027B — Refresh sibling trade/pending panels after successful mutations
+
+- **Status — 2026-11-10:** Implemented in the approved page-owned refresh scope; all successful add/drop/proposal/respond/cancel/veto paths refresh related reads, preserving pending ownership and panel state. See [evidence](evidence/mod-027b-roster-refresh-2026-11-10.json) for final verification/review and limits. No backend/schema changes or deployment.
 
 - **Priority / size / risk:** P1 / S–M / Medium.
 - **Features:** F-015, F-016.
@@ -516,6 +520,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-027C — Clear team-search loading when query becomes ineligible
 
+- **Status — 2026-11-10:** Completed bounded loading reset; six stale success/failure schedules RED→GREEN, debounce cancellation retained. Frontend183/183/build/import PASS. [Evidence](evidence/mod-027c-team-search-2026-11-10.json); broader context/ranking unchanged, uncommitted/undeployed.
+
 - **Priority / size / risk:** P1 / S / Low.
 - **Features:** F-012.
 - **Problem / evidence:** FE D03: cancelled finally cannot clear loading after shortened query.
@@ -527,6 +533,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-027D — Resolve Discover from URL without navigation state
 
+- **Status — 2026-11-10:** Implemented URL-authoritative restricted-preview resolution, scoped member/join work and deterministic back navigation. Frontend190/190/build/import PASS. [Evidence](evidence/mod-027d-discover-url-2026-11-10.json); no backend/public-policy changes or deployment.
+
 - **Priority / size / risk:** P1 / S–M / Low–Medium.
 - **Features:** F-006.
 - **Problem / evidence:** FE D04 / B3/Q8: screen uses only location.state league.
@@ -537,6 +545,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 - **Contract impact:** Behavior: yes; API/schema: no.
 
 ### MOD-027E — Associate create-form labels with controls
+
+- **Status — 2026-11-10:** Implemented stable label/control associations including dynamic bonuses and conditional veto count; existing validation messages describe matching fields/form. Frontend193/193/build/import PASS. [Evidence](evidence/mod-027e-create-labels-2026-11-10.json); native browser focus/keyboard remains unverified, no validation redesign or deployment.
 
 - **Priority / size / risk:** P1 / S / Low.
 - **Features:** F-007.

@@ -1,0 +1,121 @@
+{
+  "date": "2026-11-10",
+  "scope": "MOD-027B page-owned related resource refresh after roster/transaction mutations",
+  "baseCommit": "f3175c5 plus preserved earlier MOD027A uncommitted files",
+  "result": "PASS",
+  "checks": {
+    "baselineFrontend": "157 tests before this task",
+    "finalFrontend": "176/176 PASS,19 new actual-page/panel tests",
+    "productionBuild": "PASS",
+    "importGraph": {
+      "files": 73,
+      "literalRelativeEdges": 194,
+      "unresolved": [],
+      "cycles": []
+    },
+    "diffCheck": "PASS",
+    "backend": "unchanged; not rerun"
+  },
+  "commands": {
+    "tests": "from front-end: node --experimental-strip-types --test tests/*.test.ts",
+    "build": "npm run build --prefix front-end",
+    "imports": "node scripts/modernization/verify_frontend_imports.cjs",
+    "diff": "git diff --check"
+  },
+  "regressions": [
+    "initial8 direct missing-sibling-refresh/read-feedback failures,2 existing safety paths green",
+    "stale open actions after manual refresh failure RED\u2192GREEN",
+    "old trade action rendering after week replacement RED\u2192GREEN",
+    "obsolete submission cannot leave next week submitting RED\u2192GREEN",
+    "pending statuses never project mutation response IDs into ownership",
+    "failed write retains selection; post-write read retry never repeats write",
+    "partner switch/new selection survives old proposal completion",
+    "overlapping reads fail obsolete generations without hiding current loading",
+    "account replacement/unmount/source-to-render cutoff suppress obsolete work",
+    "pending read settling at source cutoff before render starts a replacement read and recovers loading",
+    "concurrent acceptance refresh reconciling team objects cannot retain unchanged submitted proposal selections",
+    "same-ID genuinely edited draft survives old write success"
+  ],
+  "rulings": [
+    {
+      "decision": "Use stable validity callback in standalone panel fixture",
+      "reason": "Context-dependent loader must rerun for new validity context; production parent callback stable within context",
+      "costIfWrong": "Fixture could miss behavior of a consumer supplying an unstable callback"
+    },
+    {
+      "decision": "Optional coordinator props retain standalone self-refresh fallback",
+      "reason": "Production page uses coordinator while preserving current standalone panel behavior/tests",
+      "costIfWrong": "Standalone behavior is not cross-resource coordination"
+    },
+    {
+      "decision": "Correct initial test awaiting schedule and distinct partner fixtures",
+      "reason": "Unresolved old reload caused test cancellation; duplicate fixture IDs confused own versus partner selector",
+      "costIfWrong": "Invalid fixture failures must not be counted as product regression evidence"
+    },
+    {
+      "decision": "Retain existing deadline memoization policy and backend command/timing/authorization contracts",
+      "reason": "Predates this scope; effective week cutoff and frontend refresh are guarded, server remains authoritative",
+      "costIfWrong": "Wall-clock deadline UI or backend-specific behavior still needs its separate verification"
+    },
+    {
+      "decision": "Prior MOD027A, broader accessibility/visual/performance and audit documentation are outside independent product review",
+      "reason": "Review scoped to MOD027B source/tests; author owns final audit evidence and all checks",
+      "costIfWrong": "No independent audit-doc/browser/accessibility-runtime proof"
+    },
+    {
+      "decision": "Leave audit branch and ignored ledger intact with uncommitted work",
+      "reason": "Established user preference; no commit/integration authorization",
+      "costIfWrong": "User must commit and retain artifacts until history records the change"
+    }
+  ],
+  "limits": [
+    "Controlled module/hooks/transport integration, not real React/browser/concurrent or assistive-technology runtime proof",
+    "No live provider/database/hosted checks, backend changes, dependency or schema changes",
+    "Mutation timing/authorization remains backend-owned; no optimism or write replay",
+    "Existing MOD027A files preserved, no commit/push/merge/deploy"
+  ],
+  "sourceSha256": {
+    "front-end/src/screens/League/LeagueRosterPage.tsx": "aefba1a529bd2743ecd23f8266b5aa9893aea1de5599ecdab1adeacb4df6a881",
+    "front-end/src/components/League/TradeRequestsPanel.tsx": "411bdaffce87b20f971d0b6d9eab96d1c978232df8952c8c3db24d754a227a90",
+    "front-end/src/components/League/PendingTransactionsPanel.tsx": "4f6bb29830342b99820d3a36e97818af5bc7927b895520cbb56c489bfacd9fc4",
+    "front-end/tests/rosterRefresh.test.ts": "5fe6f3bc3df9b7ab8e73cc2196d8521a48aac0aa741c77f5613c45493e9dab2e",
+    "front-end/tests/transactionPanelScope.test.ts": "35a6743bdebde0f537b55ae898a8bdf5262ddce00d62bfa48c32d4285e37d66b"
+  },
+  "protectedSha256": {
+    "front-end/src/api/transaction.ts": "a415890f656d92c11f9bbf916660896d126249f768cfeb0204a7ff6bfcc711bb",
+    "front-end/src/api/roster.ts": "3670cea7b1a968b2f1659892eb24eced7db57d6bfd6b1a203c40f0797669f7f7",
+    "front-end/src/hooks/useRequestScope.ts": "9a4c837901a28ec636ff0c2e5cbe2bdce6378e7051989560324e6f8c38765d8f",
+    "front-end/src/hooks/useLeagueContext.ts": "8b3668adaa96a73513741010cd0184d9c37af63906e588a1ee789d0b40b983db",
+    "front-end/tests/leagueContextPages.test.ts": "5fbf8d5859ca521cfb924218533df27353049f0825b9dbca52f25b6805a31d09"
+  },
+  "protectedMatchBase": {
+    "front-end/src/api/transaction.ts": true,
+    "front-end/src/api/roster.ts": true,
+    "front-end/src/hooks/useRequestScope.ts": true,
+    "front-end/src/hooks/useLeagueContext.ts": true,
+    "front-end/tests/leagueContextPages.test.ts": true
+  },
+  "review": {
+    "model": "gpt-6-astra/high",
+    "critical": 0,
+    "important": 2,
+    "minor": 0,
+    "independentChecks": "19 targeted tests on pre-fix implementation; review repros used inline harness scripts",
+    "findings": [
+      {
+        "issue": "Pending cutoff read suppresses finally without a replacement loader",
+        "fix": "Capture current context in pending loader, include isCurrent in callback/effect dependencies, abort superseded reads",
+        "verification": "pending refresh crossing cutoff RED\u2192GREEN"
+      },
+      {
+        "issue": "Concurrent refreshed objects prevent successful submission clearing",
+        "fix": "Track user edit versions independently of reconciliation, compare submitted team IDs plus edit versions; preserve newer partner and same-ID drafts",
+        "verification": "overlapping acceptance/proposal and same-ID reselection RED\u2192GREEN"
+      }
+    ],
+    "postFix": "Author full176/176/build/import/diff PASS; no independent re-review or post-fix rerun claimed",
+    "deferredMinors": []
+  },
+  "uncommitted": true,
+  "deployed": false
+}
