@@ -452,6 +452,21 @@ const ManageLeaguePage = () => {
     }
   };
 
+  const handleMoveDraftMember = (memberId: number, direction: -1 | 1) => {
+    if (!isCommissioner || !isPreDraft || (direction !== -1 && direction !== 1) || !members.some(member => member.id === memberId)) return;
+    setOrderedMemberIds(current => {
+      const from = current.indexOf(memberId);
+      const to = from + direction;
+      if (from < 0 || to < 0 || to >= current.length) return current;
+      const next = [...current];
+      [next[from], next[to]] = [next[to], next[from]];
+      const ranks: Record<number, string> = {};
+      next.forEach((id, index) => { ranks[id] = String(index + 1); });
+      setDraftOrderState(ranks);
+      return next;
+    });
+  };
+
   const handleRandomizeDraftOrder = () => {
     const shuffled = shuffleMembers(members);
     const nextIds = shuffled.map((member) => member.id);
@@ -832,6 +847,7 @@ const ManageLeaguePage = () => {
                 memberActionError={memberActionError}
                 draggingMemberId={draggingMemberId}
                 currentUserId={currentUserId}
+                onMoveMember={handleMoveDraftMember}
                 onRandomize={handleRandomizeDraftOrder}
                 onRemoveMember={handleRemoveMember}
                 onDragStart={handleDragStart}

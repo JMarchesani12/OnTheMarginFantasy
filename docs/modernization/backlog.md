@@ -559,6 +559,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-027F — Implement draft modal focus behavior
 
+- **Status — 2026-11-11:** Native dialog, title focus, in-place Close/Escape, guarded restoration/fallback and scope-bound visibility implemented in the approved application scope. Frontend201/201/build/import PASS. Native browser/assistive-technology verification remains open; [evidence](evidence/mod-027f-draft-dialog-2026-11-11.json). No draft-controller/API changes or deployment.
+
 - **Priority / size / risk:** P1 / S–M / Low–Medium.
 - **Features:** F-013, F-020.
 - **Problem / evidence:** FE D06: aria-modal without focus containment/restoration.
@@ -569,6 +571,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 - **Contract impact:** Behavior: accessibility yes; API/schema: no.
 
 ### MOD-027G — Add keyboard draft-order controls
+
+- **Status — 2026-11-11:** Native named up/down buttons with boundary disabling, moved-member focus and polite position announcement implemented. Parent owns existing order/ranks/save; drag/randomize/removal preserved. Frontend205/205/build/import PASS. [Evidence](evidence/mod-027g-keyboard-order-2026-11-11.json); native browser/AT checks remain open. No API/schema changes or deployment.
 
 - **Priority / size / risk:** P1 / S / Low.
 - **Features:** F-018.

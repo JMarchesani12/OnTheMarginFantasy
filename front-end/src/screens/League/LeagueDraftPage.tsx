@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useDraftSummaryDialog } from "../../hooks/useDraftSummaryDialog";
 import { useDraftClock } from "../../hooks/useDraftClock";
 import { useDraftConnection } from "../../hooks/useDraftConnection";
 import type { League } from "../../types/league";
@@ -93,7 +94,10 @@ const LeagueDraftPage = () => {
   const [draftSummaryPicks, setDraftSummaryPicks] = useState<DraftSummaryPick[]>([]);
   const [draftSummaryLoading, setDraftSummaryLoading] = useState(false);
   const loading = draftSummaryLoading;
-  const [showDraftComplete, setShowDraftComplete] = useState(false);
+  const [completeScope, setCompleteScope] = useState<string | null>(null);
+  const showDraftComplete = completeScope === scopeKey && Boolean(league) && draftState?.status === "complete";
+  const pageHeadingRef = useRef<HTMLHeadingElement | null>(null);
+  const summaryDialog = useDraftSummaryDialog(showDraftComplete, scopeKey, pageHeadingRef, () => setCompleteScope(null));
   const [, setHasJoinedDraft] = useState(false);
   const turnEndsAtRaw =
     typeof draftState?.expiresAt === "string"
@@ -107,7 +111,7 @@ const LeagueDraftPage = () => {
   );
   const teamMetaRef = useRef<Map<number, OwnedTeam>>(new Map());
   const draftWeekNumber = 1;
-  const previousDraftStatusRef = useRef<string | null>(null);
+  const previousDraftStatusRef = useRef<{ scope: string; status: string | null } | null>(null);
 
   const resolveConferenceName = useCallback(
     (conferenceName: string | null) => {
@@ -281,7 +285,7 @@ const LeagueDraftPage = () => {
     setSelectedTeam(null);
     setOnDeckSlot(null);
     setInTheHoleSlot(null);
-    setShowDraftComplete(false);
+    setCompleteScope(null);
     setHasJoinedDraft(false);
     setPickError(null);
     setDraftActionLoading(false);
@@ -448,9 +452,9 @@ const LeagueDraftPage = () => {
     isCommissioner && draftStatus !== "complete" && draftStatus !== null;
 
   useEffect(() => {
-    if (draftStatus === "complete" && previousDraftStatusRef.current !== "complete") setShowDraftComplete(true);
-    previousDraftStatusRef.current = draftStatus;
-  }, [draftStatus]);
+    if (draftStatus === "complete" && (previousDraftStatusRef.current?.scope !== scopeKey || previousDraftStatusRef.current.status !== "complete")) setCompleteScope(scopeKey);
+    previousDraftStatusRef.current = { scope: scopeKey, status: draftStatus };
+  }, [draftStatus, scopeKey]);
 
   const groupedSummary = useMemo(() => {
     const map = new Map<
@@ -556,14 +560,6 @@ const LeagueDraftPage = () => {
     return Math.max(1, max);
   }, [conferenceLimits, groupedPickedTeams]);
 
-  const handleCloseDraftSummary = () => {
-    if (!leagueId) {
-      return;
-    }
-
-    navigate(`/leagues/${leagueId}`);
-  };
-
   if (!league || !leagueId) {
     return (
       <div className="draft-page">
@@ -650,7 +646,7 @@ const LeagueDraftPage = () => {
         <div className="draft-page__header-content">
           <div className="draft-page__header-main">
           <p className="draft-page__eyebrow">Draft Center</p>
-          <h1>{league.leagueName}</h1>
+          <h1 ref={pageHeadingRef} tabIndex={-1}>{league.leagueName}</h1>
           <p className="draft-page__subhead">
             Browse all available teams for week {draftWeekNumber} and lock in your pick.
           </p>
@@ -952,23 +948,20 @@ const LeagueDraftPage = () => {
       </section>
 
       {showDraftComplete && (
-        <div className="draft-page__modal" role="presentation">
+        <dialog className="draft-page__modal" ref={summaryDialog.dialogRef} aria-labelledby="draft-complete-title" onCancel={summaryDialog.onCancel} onClose={summaryDialog.onClose}>
           <div
             className="draft-page__modal-card"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="draft-complete-title"
           >
             <button
               type="button"
               className="draft-page__modal-x"
-              onClick={handleCloseDraftSummary}
+              onClick={summaryDialog.dismiss}
               aria-label="Close draft summary"
             >
               ×
             </button>
             <p className="draft-page__modal-eyebrow">Draft Complete</p>
-            <h2 id="draft-complete-title">Draft Summary</h2>
+            <h2 id="draft-complete-title" ref={summaryDialog.titleRef} tabIndex={-1}>Draft Summary</h2>
             <p className="draft-page__modal-subhead">
               All picks are locked in. Review your league results below.
             </p>
@@ -1001,7 +994,7 @@ const LeagueDraftPage = () => {
               )}
             </div>
           </div>
-        </div>
+        </dialog>
       )}
     </div>
   );

@@ -10,7 +10,7 @@ test('parent keeps commissioner Pre-Draft visibility across lifecycle states',as
 });
 test('parent renders order/rank/name/self removal and loading/error/empty states',async()=>{
   const h=manageHarness();h.render();await h.flush();
-  assert.deepEqual(h.rows().map(row=>text(row).replace(/\s/g,'')),['1Member12BobRemove⇅','2CommissionerteamAliceRemove⇅','3ThirdteamCarolRemove⇅']);
+  assert.deepEqual(h.rows().map(row=>text(row).replace(/\s/g,'')),['1Member12BobRemoveMoveupMovedown⇅','2CommissionerteamAliceRemoveMoveupMovedown⇅','3ThirdteamCarolRemoveMoveupMovedown⇅']);
   const remove=nodes(h.rows()[1]).find(n=>n.type==='button');assert.equal(remove.props.disabled,true);assert.equal(remove.props.title,'You cannot remove yourself.');
   for(const options of [{members:[]},{pendingMembers:true},{memberError:'member read failed'}]) {
     const x=manageHarness(options);x.render();await x.flush();

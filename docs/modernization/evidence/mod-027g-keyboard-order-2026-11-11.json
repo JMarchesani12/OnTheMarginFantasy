@@ -1,0 +1,49 @@
+{
+  "date": "2026-11-11",
+  "baseCommit": "fb06280 plus preserved prior027F uncommitted changes",
+  "scope": "MOD027G keyboard adjacency/focus presentation, completing recorded MOD027 application scopes",
+  "result": "PASS_APPLICATION_SCOPE",
+  "checks": {
+    "red": "2 behavior regressions before implementation",
+    "frontend": "205/205 PASS (4 new tests)",
+    "build": "PASS",
+    "imports": "74files195edges zero unresolved/cycles",
+    "diff": "PASS"
+  },
+  "behavior": [
+    "native typebutton moves, membernames, boundary disabled",
+    "parent adjacent valid swaps update existing IDs/ranks under gates",
+    "focus requestedbutton or opposite enabled boundarybutton; no removedtargetfocus",
+    "polite position announcement",
+    "existing drag/randomize/removal/save payload preserved"
+  ],
+  "decisions": [
+    "Implement remaining precisely scoped MOD027G as requested finish-MOD027 work",
+    "Editor adds only focus/status presentation; parent state ownership retained",
+    "Existing static harness uses no-op editor hooks; actual hook/effect exercised separately with post-ref controlled timing",
+    "Preserve earlier027F and all work uncommitted/undeployed"
+  ],
+  "limits": [
+    "No native browser/keyboard/AT runtime proof; controlled actual-component hooks/refs",
+    "Synthetic reloaded order initialization, not database persistence verification",
+    "EarlierMOD027 evidence coverage minors and native dialog acceptance remain open",
+    "No backend/API/schema/live service/deployment changes"
+  ],
+  "sourceSha256": {
+    "front-end/src/components/League/DraftOrderEditor.tsx": "c5ab6793f0bd5d858b90972ac92b9d77a8d44c7957726600858c9e9352ac5063",
+    "front-end/src/screens/League/ManageLeaguePage.tsx": "c792f9c5ede00cb2741f57f73de4eb2ec25063326d8da48acea217a05a7c6e12",
+    "front-end/tests/keyboardDraftOrder.test.ts": "356817712bffc8d9cc5aa6fdfc1740b523660d16213be3177398b1e81c9b943d",
+    "front-end/tests/manageDraftOrder.test.ts": "50d3d8b0e42099a659e7fbe611c0177f7be6609d004c3f44a024f88543ed5a7e",
+    "front-end/tests/draftOrderEditor.test.ts": "99da3dba5e89b07eafae7916f69936516cbde7757f1513f0f35247a49be754ff",
+    "front-end/tests/helpers/manageLeagueHarness.ts": "5ee1a4f9e36d28be6bd649f204e8ec2137648470cfb9fe1e3b967be4a0098f0e"
+  },
+  "review": {
+    "model": "gpt-6-astra/high",
+    "critical": 0,
+    "important": 0,
+    "minor": 1,
+    "independentChecks": "targetedkeyboard/editor/manage12/12 PASS",
+    "deferredMinor": "Focus test covers upward boundary fallback but not downward fallback, non-boundary retention, unrelated-reorder no-focus or pending unmount permutations",
+    "declined": "Native keyboard/actual React DOM/AT, prior027F acceptance, independent full-suite/build/import"
+  }
+}

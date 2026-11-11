@@ -5,7 +5,7 @@ function fixture() {
   const calls:any[]=[];const members=membersFixture();
   return {calls,members,props:{orderedMembers:members,memberCount:members.length,membersLoading:false,membersError:null,memberActionError:null,
     draggingMemberId:12,currentUserId:1,
-    onRandomize:()=>calls.push(['random']),onRemoveMember:(member:any)=>calls.push(['remove',member]),
+    onMoveMember:()=>{},onRandomize:()=>calls.push(['random']),onRemoveMember:(member:any)=>calls.push(['remove',member]),
     onDragStart:(id:number)=>calls.push(['start',id]),onDragOver:(id:number)=>calls.push(['over',id]),onDragEnd:()=>calls.push(['end'])}};
 }
 test('editor forwards original member/IDs and prevents default before drag-over',()=>{

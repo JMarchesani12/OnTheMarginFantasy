@@ -28,7 +28,7 @@ export function loadEditor() {
   assert.ok(existsSync(url),'DraftOrderEditor component missing');
   const exports:any={};
   runInNewContext(ts.transpileModule(readFileSync(url,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText,
-    {exports,require:(id:string)=>{assert.equal(id,'react/jsx-runtime');return jsx;}});
+    {exports,require:(id:string)=>{if(id==='react')return {useRef:(value:any)=>({current:value}),useState:(value:any)=>[value,()=>{}],useEffect:()=>{}};assert.equal(id,'react/jsx-runtime');return jsx;}});
   return exports.default;
 }
 export function manageHarness(options:{status?:string;userId?:number;members?:any[];pendingMembers?:boolean;memberError?:string}={}) {

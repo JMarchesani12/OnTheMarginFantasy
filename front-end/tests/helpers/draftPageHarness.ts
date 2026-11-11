@@ -19,6 +19,7 @@ export function harness() {
   let locationState: any={league:fixtureLeague()};
   const slots:any[]=[];let index=0;let effects:(()=>void)[]=[];
   const readCalls:any[]=[];
+  const navigations:any[]=[];
   const controllers:any[]=[];const metadata:number[]=[];
   const commands:{reject:(e:any)=>void}[]=[];
   let rosterFailure:any=null;
@@ -32,7 +33,7 @@ export function harness() {
   const apiFetch=async()=>new Response('{}');
   const deps:Record<string,any>={
     react, 'react/jsx-runtime':{jsx:(type:any,props:any)=>({type,props}),jsxs:(type:any,props:any)=>({type,props})},
-    'react-router-dom':{useNavigate:()=>()=>{},useParams:()=>({league_id:route}),useLocation:()=>({state:locationState})},
+    'react-router-dom':{useNavigate:()=>(...args:any[])=>navigations.push(args),useParams:()=>({league_id:route}),useLocation:()=>({state:locationState})},
     'socket.io-client':{io:()=>({})},
     '../../lib/draftRealtime':{createDraftRealtime:(options:any)=>{
       const controller={options,disposed:false,refreshes:0,refresh(){this.refreshes++;},join(){},dispose(){this.disposed=true;}};
@@ -67,16 +68,30 @@ export function harness() {
       }});
     return result;
   }
+  function loadDialog() {
+    const result:any={};
+    const source=readFileSync(new URL('../../src/hooks/useDraftSummaryDialog.ts',import.meta.url),'utf8');
+    runInNewContext(ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,
+      {exports:result,require:(id:string)=>{assert.equal(id,'react');return react;}});
+    return result;
+  }
   const exports:any={};
   const source=readFileSync(new URL('../../src/screens/League/LeagueDraftPage.tsx',import.meta.url),'utf8').replaceAll('import.meta.env.','testEnv.');
   const compiled=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText;
-  runInNewContext(compiled,{exports,require:(id:string)=>{if(id==='../../hooks/useDraftClock')return loadClock();if(id==='../../hooks/useDraftConnection')return loadConnection();assert.ok(id in deps,id);return deps[id];},testEnv:{},console,
+  runInNewContext(compiled,{exports,require:(id:string)=>{if(id==='../../hooks/useDraftSummaryDialog')return loadDialog();if(id==='../../hooks/useDraftClock')return loadClock();if(id==='../../hooks/useDraftConnection')return loadConnection();assert.ok(id in deps,id);return deps[id];},testEnv:{},console,
     window:clockWindow,Date:ClockDate,Map,Set});
   let tree:any;
-  function render() {index=0;tree=exports.default();const pending=effects;effects=[];pending.forEach(fn=>fn());return tree;}
+  function render() {index=0;tree=exports.default();
+    for (const node of nodes(tree)) {
+      const ref=node.props?.ref;
+      if(ref && !ref.current) ref.current=node.type==='dialog'
+        ? {open:false,ownerDocument:{activeElement:null},showModal(){this.open=true;},close(){this.open=false;}}
+        : {focus(){},isConnected:false};
+    }
+    const pending=effects;effects=[];pending.forEach(fn=>fn());return tree;}
   function nodes(value:any):any[] {if(!value||typeof value!=='object')return [];if(Array.isArray(value))return value.flatMap(nodes);return [value,...nodes(value.props?.children)];}
   function button(label:string){return nodes(tree).find(n=>n.type==='button'&&n.props.children===label);}
-  return {render,controllers,metadata,commands,button,readCalls,
+  return {render,controllers,metadata,commands,button,readCalls,navigations,all:()=>nodes(tree),
     setNow(value:number){now=value;},
     tick(){for(const callback of [...timers.values()])callback();render();},
     timerStatus(){return {active:timers.size,starts:timerStarts,stops:timerStops};},

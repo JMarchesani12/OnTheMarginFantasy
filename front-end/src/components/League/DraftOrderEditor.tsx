@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import type { LeagueMember } from "../../types/leagueMember";
 
 type DraftOrderEditorProps = {
@@ -8,6 +9,7 @@ type DraftOrderEditorProps = {
   memberActionError: string | null;
   draggingMemberId: number | null;
   currentUserId: number | null;
+  onMoveMember: (memberId: number, direction: -1 | 1) => void;
   onRandomize: () => void;
   onRemoveMember: (member: LeagueMember) => void | Promise<void>;
   onDragStart: (memberId: number) => void;
@@ -18,8 +20,24 @@ type DraftOrderEditorProps = {
 export default function DraftOrderEditor({
   orderedMembers, memberCount, membersLoading, membersError, memberActionError,
   draggingMemberId, currentUserId, onRandomize, onRemoveMember,
-  onDragStart, onDragOver, onDragEnd,
+  onDragStart, onDragOver, onDragEnd, onMoveMember,
 }: DraftOrderEditorProps) {
+  const moveButtons = useRef(new Map<string, HTMLButtonElement>());
+  const pendingFocus = useRef<{ id: number; direction: -1 | 1 } | null>(null);
+  const [announcement, setAnnouncement] = useState("");
+  useEffect(() => {
+    const pending = pendingFocus.current;
+    pendingFocus.current = null;
+    if (!pending) return;
+    const index = orderedMembers.findIndex(member => member.id === pending.id);
+    if (index < 0) return;
+    const requested = moveButtons.current.get(`${pending.id}:${pending.direction}`);
+    const opposite = moveButtons.current.get(`${pending.id}:${-pending.direction}`);
+    const target = requested && !requested.disabled ? requested : opposite;
+    if (target?.isConnected && !target.disabled) target.focus();
+    const member = orderedMembers[index];
+    setAnnouncement(`${member.teamName ?? `Member ${member.id}`} moved to position ${index + 1} of ${orderedMembers.length}.`);
+  }, [orderedMembers]);
   return (
     <div className="ml-draft-order">
       <div className="ml-draft-order-header">
@@ -34,6 +52,7 @@ export default function DraftOrderEditor({
         </button>
       </div>
 
+      <p role="status" aria-live="polite" className="ml-muted">{announcement}</p>
       {membersLoading && (
         <p className="ml-muted">Loading league members…</p>
       )}
@@ -83,6 +102,25 @@ export default function DraftOrderEditor({
                 >
                   Remove
                 </button>
+                {([-1, 1] as const).map(direction => (
+                  <button
+                    key={direction}
+                    type="button"
+                    className="cl-btn-secondary"
+                    aria-label={`Move ${member.teamName ?? `Member ${member.id}`} ${direction === -1 ? "up" : "down"}`}
+                    disabled={direction === -1 ? index === 0 : index === orderedMembers.length - 1}
+                    ref={node => {
+                      const key = `${member.id}:${direction}`;
+                      if (node) moveButtons.current.set(key, node);
+                      else moveButtons.current.delete(key);
+                    }}
+                    onClick={() => {
+                      if (direction === -1 ? index === 0 : index === orderedMembers.length - 1) return;
+                      pendingFocus.current = { id: member.id, direction };
+                      onMoveMember(member.id, direction);
+                    }}
+                  >{direction === -1 ? "Move up" : "Move down"}</button>
+                ))}
                 <span className="ml-drag-hint" aria-hidden="true">
                   ⇅
                 </span>

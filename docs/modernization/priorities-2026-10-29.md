@@ -130,6 +130,11 @@ preserving authoritative ownership reads and independent read retries. See
 loading reset is complete (frontend183/183/build/import PASS). MOD-027D cold-link
 discovery is complete (frontend190/190/build/import PASS). MOD-027E form labels
 and validation associations are complete (frontend193/193/build/import PASS).
-MOD-027F draft-modal focus is next; remaining MOD-027G,
+MOD-027F native draft-dialog focus is implemented in its recorded controlled scope
+(frontend201/201/build/import PASS; browser/assistive-technology verification open).
+MOD-027G keyboard draft ordering is implemented (frontend205/205/build/import PASS).
+MOD-027A–G application changes are complete in their recorded scopes; browser/AT
+acceptance and recorded coverage minors remain open. MOD-028B safe frontend error
+parsing is next;
 MOD-028B, performance measurement and cleanup retain their separate scope/approvals.
 No live provider/browser/hosted rollout is implied. Work remains uncommitted.
