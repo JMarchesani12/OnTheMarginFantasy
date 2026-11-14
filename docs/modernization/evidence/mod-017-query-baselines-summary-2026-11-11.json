@@ -1,0 +1,78 @@
+{
+  "date": "2026-11-11",
+  "result": "PASS_BOUNDED_BASELINE",
+  "scope": "Own-league and point-ownership syntheticPostgreSQL baseline; otherMOD017 families remain",
+  "rawEvidence": "docs/modernization/evidence/mod-017-query-baselines-2026-11-11.json",
+  "rawSha256": "f77cccce62a43c4fcfd43501e9234e2bc8bf7bf5866379701eb8496d69c36ca4",
+  "checks": {
+    "runnerTests": "5/5 PASS",
+    "nativeTiers": "100/1000/5000 leagues PASS",
+    "caseConfigurations": "102/102 expectedcounts,5samples,baselinefingerprints match",
+    "productionCodeDiff": "none in api/front-end/db",
+    "diffAndNewFileWhitespace": "PASS"
+  },
+  "recommendations": [
+    "Separate deployment-informed evaluation of one covering ownership index supported by synthetic plans; no rollout here",
+    "No reverse-member index-only recommendation; global score aggregate remains substantial",
+    "DraftPick same-key overlap requires deploymentusage/dependency checks, no drop"
+  ],
+  "rulings": [
+    {
+      "decision": "Correct score cardinalities to one aggregate per member/week, representing4teams in points",
+      "reason": "Actual MOD008 uniqueness/schema is authoritative",
+      "costIfWrong": "Workload differs from initial fourfold score-row design; reported actual9600/96000/480000"
+    },
+    {
+      "decision": "Use versioned001 schema +exactMOD006/008/010 with synthetic auth; omit002RLS/unrelated later migrations",
+      "reason": "Reproducible bounded query fixture, not deploymentclone",
+      "costIfWrong": "Role/RLS/later-schema workload differences remain unmeasured"
+    },
+    {
+      "decision": "No production query/index/migration rollout",
+      "reason": "User-approved measurement-only scope and absent productiontraffic/writecost evidence",
+      "costIfWrong": "Observedsynthetic benefit is not an implemented production improvement"
+    },
+    {
+      "decision": "Defer two reusable-runner hardening minors; preserve current verified artifact",
+      "reason": "Current102cases independently validated; processstatus/timestamps remain authoritative on future runs",
+      "costIfWrong": "Future first-tier failure may leave priorPASS artifact; future fixture count error may escape runner equivalence-only check"
+    },
+    {
+      "decision": "Leave code uncommitted and ledger retained; remove only owned container/databases",
+      "reason": "Established userworkflow and synthetic isolation",
+      "costIfWrong": "User must commit/retain reviewartifacts; Dockerapp/cache remain running/available"
+    }
+  ],
+  "review": {
+    "model": "gpt-6-astra/high",
+    "critical": 0,
+    "important": 0,
+    "minor": 2,
+    "independent": "unit5PASS,6provenancehashes,all102SQLparams/counts/fingerprints/5samples/reportarithmetic",
+    "deferredMinors": [
+      "First-tier/connect failure leaves priorartifact unchanged; later failure leavesRUNNING. Add explicit failureartifact/cleanupstatus in future.",
+      "Expected rowcounts checked independently for currentartifact but not asserted inside reusable runner."
+    ],
+    "declined": "Live containerdisposal,production/schema/RLSperformance,ongoingwritecost,coldcache"
+  },
+  "cleanup": {
+    "remaining_mod017_databases": 0,
+    "ownedContainer": "f32be010191260ea001d448888733dcaa08c5efe94ecebba9ad93bfa66b68d81",
+    "labelsVerified": {
+      "otm.synthetic": "true",
+      "otm.task": "mod017"
+    },
+    "persistentMounts": [],
+    "containerRemoved": true,
+    "remainingTaskContainers": 0,
+    "imageDigest": "sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929",
+    "dockerAndImageCacheRetained": true
+  },
+  "sourceSha256": {
+    "scripts/modernization/measure_mod017.py": "1a7fcad698597ad9bfce62532813a27d6486e37fd3580ef24d861c2f034a1868",
+    "scripts/modernization/tests/test_mod017.py": "1b8e91506e684fadc86e755651ae9db8e79e28ec3e3593f0981018c40591ffb0",
+    "docs/modernization/mod-017-query-baselines.md": "28a2d0fa2966b1b6eb8e0cc0ed41dc7dc50c17d858e7584a72ea5c68350a8202"
+  },
+  "uncommitted": true,
+  "deployed": false
+}

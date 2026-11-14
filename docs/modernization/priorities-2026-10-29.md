@@ -141,3 +141,38 @@ guidance. MOD028 application scopes are complete; SDK-authF002 and recorded nati
 browser/minor followups remain outside this claim. Performance measurement is next;
 MOD-028B, performance measurement and cleanup retain their separate scope/approvals.
 No live provider/browser/hosted rollout is implied. Work remains uncommitted.
+
+
+## Priority8 performance baseline — 2026-11-11
+
+MOD017 now has a bounded own-league/ownership baseline: three synthetic PostgreSQL
+tiers, parameterized production SQL, warm timing/buffer/result comparisons and
+temporary candidate indexes. See [report](mod-017-query-baselines.md). Ownership
+covering-index followup is supported within this fixture; own-league global score
+aggregation remains substantial. No production index or query changed. Broader
+MOD017 query families, production workload/role/write-cost evidence and actual
+index rollout remain separate; MOD018/020/021/022 are not completed by this run.
+
+
+## MOD017 transaction-read continuation — 2026-11-13
+
+The next bounded synthetic baseline covers league transaction lists, open trades
+and weekly pending candidates. See [report](mod-017-transaction-baselines.md).
+Temporary full/partial indexes help selected fixture reads; open-trade JIT/plan
+cost remains significant. No production query/index or rollout changed. Games,
+team/conference/scoring families and production/write-cost evidence remain open;
+this does not complete MOD017 or authorize subsequent performance cards.
+
+
+## Audit sequencing decision — 2026-11-13
+
+User requested continuing audit measurements and deferring performance/index/query
+implementation until the audit is complete. Temporary indexes inside owned
+disposable benchmark databases remain measurement-only; no production rollout or
+optimization work is authorized by benchmark results.
+
+MOD017 game/schedule baseline now covers member-week/conference-week/team-season
+reads:14 runner tests,3 native tiers and108 equivalent cases pass. See
+[report](mod-017-game-baselines.md). Repeated ownership joins remain substantial
+after game filtering improves. Other matrix families and MOD018/020/021/022
+measurements retain separate scope; no fullMOD017 closure is implied.

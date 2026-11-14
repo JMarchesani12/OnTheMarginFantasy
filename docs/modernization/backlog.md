@@ -372,6 +372,12 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-017 — Measure query plans and propose only supported indexes
 
+- **Game/schedule baseline — 2026-11-13:** Member-week/conference-week/team-season actual SQL measured at10k/100k/500k synthetic games;108equivalent case/configuration results,14runner testsPASS, reviewed no material issues. Game indexes help selected team-season work but repeated ownership joins remain dominant. [Report](mod-017-game-baselines.md). User defers all performance implementation until audit completion; other query families remain open.
+
+- **Transaction-read baseline — 2026-11-13:** Actual transaction-list/open-trade/weekly-candidate SQL measured in isolated three-tier PostgreSQL fixtures, with strict counts/output equivalence and run-specific failure/cleanup artifacts. Full/partial index tradeoffs and substantial open-trade JIT cost recorded; no production change/rollout. [Report](mod-017-transaction-baselines.md). Prior baseline/runner preserved; games/team/conference/scoring and production workload/write-cost evidence remain open.
+
+- **Two-family baseline — 2026-11-11:** Own-league and point-ownership PostgreSQL baselines implemented/run at100/1000/5000 leagues using synthetic data. All102 case/configuration results preserve expected cardinality/fingerprints. Covering ownership candidate supported for separate deployment-informed evaluation; reverse-member index alone shows little benefit. No migration/rollout/drop. [Report](mod-017-query-baselines.md), [raw plans](evidence/mod-017-query-baselines-2026-11-11.json). Other query families and production traffic/role/write-cost evidence remain open.
+
 - **Priority / size / risk:** P2 / M / Low for investigation; index rollout later Medium.
 - **Features:** F-004–006, F-008, F-009, F-011–016, F-024–028, F-032.
 - **Problem / evidence:** DB index matrix / DB-10; no runtime evidence available.
