@@ -176,3 +176,11 @@ reads:14 runner tests,3 native tiers and108 equivalent cases pass. See
 [report](mod-017-game-baselines.md). Repeated ownership joins remain substantial
 after game filtering improves. Other matrix families and MOD018/020/021/022
 measurements retain separate scope; no fullMOD017 closure is implied.
+
+
+MOD017 team lookup/conference-count continuation measures actual retrieval/ranking
+and season-first count reads at three sizes:18 runner tests,108 SQL and84 service
+records pass. See [report](mod-017-team-lookup-baselines.md). Full-team retrieval
+remains visible even for misses; ownership indexing helps selected reads while
+the conference-leading candidate regresses them. No optimization implemented;
+remaining query families/performance cards stay open.
