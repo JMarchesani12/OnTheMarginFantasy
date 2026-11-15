@@ -114,9 +114,78 @@ class TradeProposalAuthorizationTests(unittest.TestCase):
         self.assertEqual(self.post().status_code,404)
         self.assertEqual(self.state(),before)
 
-    def test_locked_week_deadline_and_conference_rules_preserved(self):
+    def test_locked_week_proposal_queues_without_changing_rosters(self):
+        self.db.connection.execute('UPDATE Week SET isLocked=true WHERE id=100')
+        self.db.connection.commit()
+        before = self.state()['LeagueTeamSlot']
+        response = self.post()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json, {'transactionId': 1, 'status': 'PROPOSED'})
+        self.assertEqual(self.state()['Transaction'][0]['weekId'], 101)
+        self.assertEqual(self.state()['LeagueTeamSlot'], before)
+
+    def test_forwarding_skips_locked_weeks_and_other_leagues(self):
+        self.db.connection.executescript('''
+            UPDATE Week SET isLocked=true WHERE leagueId=10;
+            INSERT INTO Week VALUES (102,10,3,false),(201,20,2,false),(103,10,4,false);
+        ''')
+        response = self.post()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.state()['Transaction'][0]['weekId'], 102)
+
+    def test_locked_week_without_future_week_rejects_without_mutation(self):
+        self.db.connection.execute('UPDATE Week SET isLocked=true WHERE leagueId=10')
+        self.db.connection.commit()
+        before = self.state()
+        response = self.post()
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('No unlocked future week', response.json['error'])
+        self.assertEqual(self.state(), before)
+
+    def test_forwarded_trade_uses_future_ownership(self):
+        self.db.connection.executescript('''
+            UPDATE Week SET isLocked=true WHERE id=100;
+            UPDATE LeagueTeamSlot SET droppedWeek=2 WHERE id=1;
+            INSERT INTO LeagueTeamSlot VALUES (5,10,12,101,2,NULL,'TRADE');
+        ''')
+        before = self.state()
+        response = self.post()
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('does not own team', response.json['error'])
+        self.assertEqual(self.state(), before)
+
+    def test_forwarded_trade_accepts_teams_acquired_for_future_week(self):
+        self.db.connection.executescript('''
+            UPDATE Week SET isLocked=true WHERE id=100;
+            UPDATE LeagueTeamSlot SET acquiredWeek=2 WHERE leagueId=10;
+        ''')
+        before = self.state()['LeagueTeamSlot']
+        response = self.post()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.state()['Transaction'][0]['weekId'], 101)
+        self.assertEqual(self.state()['LeagueTeamSlot'], before)
+
+    def test_forwarding_keeps_deadline_and_conference_checks(self):
+        self.db.connection.execute('UPDATE Week SET isLocked=true WHERE id=100')
+        self.db.connection.commit()
+        for setup, restore, error in (
+                ("UPDATE League SET tradeDeadline='2026-01-01'", 'UPDATE League SET tradeDeadline=NULL',
+                 'Trade deadline has passed'),
+                ('UPDATE SportConference SET maxTeamsPerOwner=0', 'UPDATE SportConference SET maxTeamsPerOwner=3',
+                 'Conference limit exceeded')):
+            with self.subTest(setup=setup):
+                self.db.connection.execute(setup)
+                self.db.connection.commit()
+                before = self.state()
+                response = self.post()
+                self.assertEqual(response.status_code, 400)
+                self.assertIn(error, response.json['error'])
+                self.assertEqual(self.state(), before)
+                self.db.connection.execute(restore)
+                self.db.connection.commit()
+
+    def test_deadline_and_conference_rules_preserved(self):
         for setup,restore in (
-                ('UPDATE Week SET isLocked=true WHERE id=100','UPDATE Week SET isLocked=false'),
                 ("UPDATE League SET tradeDeadline='2026-01-01'",'UPDATE League SET tradeDeadline=NULL'),
                 ('UPDATE SportConference SET maxTeamsPerOwner=0','UPDATE SportConference SET maxTeamsPerOwner=3')):
             with self.subTest(setup=setup):

@@ -73,7 +73,13 @@ export async function tradeRequestProposal(
   });
 
   if (!res.ok) {
-    throw new Error(`Failed to submit add/drop request: ${res.status}`);
+    const body = await res.json().catch(() => null);
+    const reason = body?.error ?? body?.message;
+    throw new Error(
+      typeof reason === "string" && reason.trim()
+        ? reason
+        : `Failed to submit trade request: ${res.status}`
+    );
   }
 
   const data = (await res.json()) as TradeResponse;
