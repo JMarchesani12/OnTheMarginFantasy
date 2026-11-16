@@ -128,3 +128,7 @@ This roadmap creates no application changes, migrations or deployment actions. F
 ## Implementation progress — 2026-11-16
 
 The first three batches are implemented locally: [search ordering](mod-018-search-order-implementation.md), [Home tabs](mod-036-home-tabs-implementation.md), [tier cache](mod-036-tier-cache-implementation.md). MOD020's approved scoped refresh/read boundary is also [implemented locally](mod-020-scoped-lifecycle-implementation.md), preserving current phase policy; scheduler/repeated-write cleanup remain separate. Next is MOD021's immutable per-run scoring-context design before any batching. These follow-ups supersede the initial deferred/ready-to-review execution labels above; they do not establish deployment.
+
+### MOD021 rules-only context — 2026-11-16
+
+Supplied-connection weekly scoring now resolves rules once per call, preserving scores, other SQL reads, locks and no-conn behavior. Backend804/804, audit55/55 and native count/equivalence/rollback/boundary checks pass; review found no material issues. [Implementation/evidence/deferred notes](mod-021-weekly-rules-context-implementation.md). Local, uncommitted/undeployed; H2H/game batching and full input consistency remain separate.

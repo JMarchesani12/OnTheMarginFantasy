@@ -1,4 +1,4 @@
-"""Audit-only real weekly scoring on owned localhost; score writes always roll back."""
+"""Rules-context-v2 weekly scoring on owned localhost; measurement writes roll back."""
 import argparse
 from collections import Counter
 from datetime import datetime,timedelta,timezone
@@ -19,7 +19,16 @@ TBD='api/migrations/20261030_game_kickoff_tbd.sql'
 
 def expected_counts(n,scenario):
     tied=scenario in ['unresolved','head_decides','margin'];fallback=scenario in ['unresolved','margin']
-    return dict(week=1,members=1,settings=n*(2 if fallback else 1),member_games=n*(2 if fallback else 1),head_to_head=n*(n-1)//2 if tied else 0,lock=1,delete=1,insert=n)
+    return dict(week=1,members=1,settings=1,member_games=n*(2 if fallback else 1),head_to_head=n*(n-1)//2 if tied else 0,lock=1,delete=1,insert=n)
+
+
+def validate_rule_sequence(sequence,n,scenario):
+    tied=scenario in ('unresolved','head_decides','margin');fallback=scenario in ('unresolved','margin')
+    wanted=['week','members','settings']+['member_games']*n
+    if tied:wanted+=['head_to_head']*(n*(n-1)//2)
+    if fallback:wanted+=['member_games']*n
+    wanted+=['lock','delete']+['insert']*n
+    if sequence!=wanted:raise AssertionError('Rules-context statement sequence differs')
 
 
 def expected_scores(n,scenario):
@@ -60,10 +69,10 @@ def classify(statement):
 
 class Tracker:
     def __init__(self):self.enabled=False;self.reset()
-    def reset(self):self.counts=Counter();self.cursor_ms=Counter();self.examples={}
+    def reset(self):self.sequence=[];self.counts=Counter();self.cursor_ms=Counter();self.examples={}
     def before(self,conn,cursor,statement,parameters,context,executemany):
         if self.enabled:
-            role=classify(statement);context._mod021=(role,time.perf_counter());self.counts[role]+=1
+            role=classify(statement);context._mod021=(role,time.perf_counter());self.counts[role]+=1;self.sequence.append(role)
             self.examples.setdefault(role,dict(sql=statement,parameters=parameters,executemany=executemany))
     def after(self,conn,cursor,statement,parameters,context,executemany):
         if self.enabled:
@@ -105,12 +114,13 @@ def measure(conn,engine,n,scenario):
                 try:result=scorer.compute_weekly_scores_for_job(101,1,conn=conn)
                 finally:elapsed=(time.perf_counter()-start)*1000;tracker.enabled=False
                 if {k:tracker.counts.get(k,0) for k in wanted}!=wanted or set(tracker.counts)-set(wanted):raise AssertionError('Query role counts differ from independent formula')
+                validate_rule_sequence(tracker.sequence,n,scenario)
                 if result['leagueId']!=101 or result['weekNumber']!=1 or result['weekId']!=2000:raise AssertionError('Scoring scope changed')
                 signature=base.signature(result['scores']);base.assert_equivalent(base.signature(expected),signature)
                 stored=[dict(r) for r in conn.execute(text('SELECT "memberId","pointDifferential",rank,"pointsAwarded" FROM "WeeklyTeamScore" WHERE "leagueId"=101 AND "weekId"=2000 ORDER BY rank')).mappings()]
                 base.assert_equivalent(base.signature([{k:r[k] for k in ['memberId','pointDifferential','rank','pointsAwarded']} for r in expected]),base.signature(stored))
                 examples.update(tracker.examples)
-                if iteration:samples.append(dict(service_ms=elapsed,query_count=sum(tracker.counts.values()),counts=dict(tracker.counts),cursor_execution_ms=dict(tracker.cursor_ms)))
+                if iteration:samples.append(dict(service_ms=elapsed,query_count=sum(tracker.counts.values()),sequence=list(tracker.sequence),counts=dict(tracker.counts),cursor_execution_ms=dict(tracker.cursor_ms)))
             finally:
                 tracker.enabled=False;transaction.rollback()
             remaining=conn.exec_driver_sql('SELECT count(*) FROM "WeeklyTeamScore" WHERE "leagueId"=101').scalar_one();conn.commit()
@@ -139,8 +149,8 @@ def run_tier(admin,n,report):
 
 def run(directory,manifest,tiers,connect=None):
     directory=Path(directory);directory.mkdir(parents=True,exist_ok=True);run_id=uuid4().hex;artifact=directory/f'mod-021-weekly-{run_id}.json'
-    inputs=[base.BASELINE,*base.MIGRATIONS,TBD,'scripts/modernization/measure_mod017.py','scripts/modernization/measure_mod017_transactions.py','scripts/modernization/measure_mod021_weekly.py','api/endpoints/scoring/service.py','api/endpoints/scoring/repository.py','api/endpoints/schedule/read_service.py','api/endpoints/schedule/read_repository.py','api/endpoints/schedule/calendar_service.py','api/endpoints/schedule/calendar_repository.py','api/rules/leagueRules.py','api/rules/tournamentRules.py','api/utils/conference_membership.py']
-    report=dict(date='2026-11-15',run_id=run_id,started_at=datetime.now(timezone.utc).isoformat(),result='RUNNING',scope='Synthetic weekly scorer orchestration measurements only; optimization deferred',tiers=[],databases=[],cleanup='no database created',provenance={},limits=['One targetleague with4/8/16members,100backgroundleagues,synthetic32teams/five scenarios','Actual rolledbackwrites,not commit/concurrency/job/HTTP/provider measurement','SQL hooks add overhead; cursor timings exclude fetch and are not full service time'])
+    inputs=[base.BASELINE,*base.MIGRATIONS,TBD,'scripts/modernization/measure_mod017.py','scripts/modernization/measure_mod017_transactions.py','scripts/modernization/measure_mod021_weekly.py','api/endpoints/scoring/service.py','api/endpoints/scoring/weekly_context.py','api/endpoints/scoring/repository.py','api/endpoints/schedule/read_service.py','api/endpoints/schedule/read_repository.py','api/endpoints/schedule/calendar_service.py','api/endpoints/schedule/calendar_repository.py','api/rules/leagueRules.py','api/rules/tournamentRules.py','api/utils/conference_membership.py']
+    report=dict(date='2026-11-16',run_id=run_id,started_at=datetime.now(timezone.utc).isoformat(),result='RUNNING',scope='Rules-context-v2 supplied-connection weekly scoring; rules only, no full input snapshot or production speedup claim',tiers=[],databases=[],cleanup='no database created',provenance={},limits=['One targetleague with4/8/16members,100backgroundleagues,synthetic32teams/five scenarios','Actual rolledbackwrites,not commit/concurrency/job/HTTP/provider measurement','SQL hooks add overhead; cursor timings exclude fetch and are not full service time'])
     def persist():
         save_json(artifact,report);save_json(Path(manifest),dict(run_id=run_id,result=report['result'],artifact=artifact.name,cleanup=report['cleanup']))
     persist();admin=None
@@ -162,5 +172,5 @@ def run(directory,manifest,tiers,connect=None):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--tier',type=int,choices=SIZES,action='append');args=parser.parse_args()
-    directory=base.ROOT/'docs/modernization/evidence';run(directory,directory/'mod-021-weekly-current-2026-11-15.json',args.tier or SIZES)
+    directory=base.ROOT/'docs/modernization/evidence';run(directory,directory/'mod-021-weekly-current-2026-11-16.json',args.tier or SIZES)
 if __name__=='__main__':main()

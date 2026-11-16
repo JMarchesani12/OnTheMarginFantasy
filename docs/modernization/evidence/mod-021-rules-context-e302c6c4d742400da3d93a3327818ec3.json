@@ -1,0 +1,64 @@
+{
+  "run_id": "e302c6c4d742400da3d93a3327818ec3",
+  "result": "FAILED",
+  "started_at": "2026-11-16T21:22:19.639931+00:00",
+  "provenance": {
+    "db/baselines/20261029/001_schema.sql": "7fe1c17223dd2cf3ebbfdb9d2ca318d4f7ad24f9a6578309c40aad3cfb58a109",
+    "api/migrations/20261104_user_identity_unique.sql": "64631ad06193c79bded2e52849e0264b281468ea098e3dfd72d9def01f3dab88",
+    "api/migrations/20261104_week_score_identity.sql": "b6a040b0d2599e32e4d87d7c59c30aecbbaa22cca7d79c07d988279a36c2e244",
+    "api/migrations/20261104_ownership_integrity.sql": "fb3b6c5dd445a6e8da5dd67784d882032a698917e7ac1d9eebb1167120480116",
+    "api/migrations/20261030_game_kickoff_tbd.sql": "4fa4d40cf16cf0600a37aec2f915e31efe024c294fe5c5a047d32ad599cf33d4",
+    "scripts/modernization/measure_mod017.py": "1a7fcad698597ad9bfce62532813a27d6486e37fd3580ef24d861c2f034a1868",
+    "scripts/modernization/measure_mod017_transactions.py": "21cb1761716f2a39cc3f59b44f875f8c5342503eb38ebfc8f6533595834d91ca",
+    "scripts/modernization/measure_mod021_weekly.py": "496af6f3de4f792c5199b732ba323faaa358597039d86ce479fde2a7afd4945f",
+    "scripts/modernization/verify_mod021_rules_context.py": "31bfdd01ebb7e45a1e5641a4dfdfb91b6c12c89739d8f2850fe3d04f74727685",
+    "api/endpoints/scoring/service.py": "5a32ad6a4e9c2eea5266e3828213368a5eb03acec0b9b10e415636cbeada282b",
+    "api/endpoints/scoring/weekly_context.py": "67537c02de5409aed3f903a3375fefd44835dfb4d1202a360dd0aa2d794e7eaf",
+    "api/endpoints/scoring/repository.py": "fb4592ec1cecb71a00fc2e2712ef0e94b40e0aef303be7c9150310b290bd1bfc",
+    "api/endpoints/schedule/read_service.py": "96867c85b5fb8f7c22ead9c37c76f121a2c1ed511036d034192a7155b1a37cdb",
+    "api/endpoints/schedule/read_repository.py": "129767bbd62009c1cea190f8687b73a5f25460aab7d8ddae13e403c80f63ee23",
+    "api/endpoints/schedule/calendar_service.py": "62856988b03cf014a567b4ffb8ea256a1d540260b2d895bfdd967371126aed6d",
+    "api/endpoints/schedule/calendar_repository.py": "1d7cf9382251ca809e9412844f10916bca00ac156bf9b89921df71f35e3baf39",
+    "api/rules/leagueRules.py": "c805e2ca6f4fb206e5c11efa85ae98b5ed333e211c47a1d2689807222123ce8e",
+    "api/rules/tournamentRules.py": "d2f100bed2f52bbf0a5b14354d717979d89065e46d34e7158775327cb2ffdd85",
+    "api/utils/conference_membership.py": "d82e7ee6ac076214f110d02b7f3f1f0bf2444a32428f663cff360e86990ea63f"
+  },
+  "databases": [
+    {
+      "name": "otm_mod017_876a9beed59140c1a5fdc09ec3e09a10",
+      "cleanup": "removed"
+    }
+  ],
+  "cleanup": "verified",
+  "historical_reference": {
+    "revision": "4efa908be575e2a1ad2c738bf8bb871f2d815abe",
+    "path": "api/endpoints/scoring/service.py",
+    "sha256": "1dac609344fd2172312ca60fab7a711225773b3537b812355b001114345a8499"
+  },
+  "fixture": {
+    "anchor": "2026-11-16T21:22:19.781219+00:00",
+    "counts": {
+      "League": 100,
+      "LeagueMember": 800,
+      "Week": 1300,
+      "WeeklyTeamScore": 9600,
+      "LeagueTeamSlot": 16000
+    },
+    "user_count": 701,
+    "hot_user_memberships": 100,
+    "sparse_user_memberships": 1,
+    "current_week": 13,
+    "scored_weeks": 12,
+    "teams_contributing_to_score_value": 4,
+    "active_leagues": 67,
+    "completed_leagues": 33,
+    "target_league": 101,
+    "week_id": 2000,
+    "members": 4,
+    "owned_teams": 5,
+    "background_leagues": 100
+  },
+  "error": "(psycopg2.errors.NotNullViolation) null value in column \"tier\" of relation \"SportTeam\" violates not-null constraint\nDETAIL:  Failing row contains (32, 2026-11-16 21:22:19.781219+00, 32, 1, Sport team 32, null, null).\n\n[SQL: UPDATE \"SportTeam\" SET tier=NULL WHERE id=32]\n(Background on this error at: https://sqlalche.me/e/20/gkpj)",
+  "error_type": "IntegrityError",
+  "finished_at": "2026-11-16T21:22:20.568377+00:00"
+}

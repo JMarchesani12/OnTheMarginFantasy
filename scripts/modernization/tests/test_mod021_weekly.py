@@ -5,11 +5,16 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 class WeeklyMeasureTests(unittest.TestCase):
  def setUp(self):self.m=importlib.import_module('measure_mod021_weekly')
  def test_counts_grow_with_pairs_and_fallback(self):
-  for n,unique,tie in [(4,16,30),(8,28,72),(16,52,204)]:
+  for n,unique,tie in [(4,13,23),(8,21,57),(16,37,173)]:
    self.assertEqual(sum(self.m.expected_counts(n,'unique').values()),unique)
    self.assertEqual(sum(self.m.expected_counts(n,'unresolved').values()),tie)
    self.assertEqual(self.m.expected_counts(n,'head_decides')['head_to_head'],n*(n-1)//2)
-   self.assertEqual(self.m.expected_counts(n,'margin')['settings'],2*n)
+   self.assertEqual(self.m.expected_counts(n,'margin')['settings'],1)
+ def test_rule_read_precedes_games_once_per_call(self):
+  trace=['week','members','settings']+['member_games']*4+['lock','delete']+['insert']*4
+  self.m.validate_rule_sequence(trace,4,'unique')
+  for bad in [trace[:2]+trace[3:],trace[:3]+['settings']+trace[3:],['settings']+trace[:2]+trace[3:]]:
+   with self.assertRaises(AssertionError):self.m.validate_rule_sequence(bad,4,'unique')
  def test_independent_result_order_totals_points(self):
   m=self.m
   self.assertEqual([r['memberId'] for r in m.expected_scores(4,'head_decides')],[1001,1003,1004,1002])

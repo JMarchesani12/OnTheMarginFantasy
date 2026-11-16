@@ -300,3 +300,7 @@ MOD036's TypeScript invalid-cache recovery finding is implemented locally. Tier 
 ### MOD020 scoped lifecycle implementation — 2026-11-16
 
 Full-detail and own-list reads now explicitly refresh authorized scope atomically; ordinary readers and previews are read-only. Existing lifecycle policy/churn preserved. Backend793/793, audit54/54 and bounded PostgreSQL equivalence/rollback/locking checks pass; final review no material findings. [Report and limits](mod-020-scoped-lifecycle-implementation.md). Uncommitted/undeployed; no scheduler or production performance claim.
+
+### MOD021 rules-only context — 2026-11-16
+
+Supplied-connection weekly scoring now resolves rules once per call, preserving scores, other SQL reads, locks and no-conn behavior. Backend804/804, audit55/55 and native count/equivalence/rollback/boundary checks pass; review found no material issues. [Implementation/evidence/deferred notes](mod-021-weekly-rules-context-implementation.md). Local, uncommitted/undeployed; H2H/game batching and full input consistency remain separate.

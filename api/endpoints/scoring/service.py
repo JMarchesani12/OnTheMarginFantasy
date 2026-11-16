@@ -9,6 +9,7 @@ from .rules import playoff_depth_bonus, conference_champion_bonus, conference_bo
 from actors import UserActor
 from .contracts import ScoringReadDenied
 from .repository import ScoringRepository
+from .weekly_context import _WeeklyRulesContext
 
 
 class ScoringReadService:
@@ -111,14 +112,26 @@ class ScoringService:
             rows = self.repository.owned_teams(read_conn, league_id, member_id)
         return [int(r[0]) for r in rows]
 
-    def compute_member_point_diff_for_week(self, league_id: int, member_id: int, week_number: int, conn=None) -> int:
+    def _create_weekly_rules_context(self, league_id, week_number, conn):
+        rules = self.schedule_model.resolve_member_game_rules_for_scoring(league_id, conn)
+        return _WeeklyRulesContext(league_id, week_number, conn, rules)
+
+    def _get_weekly_member_games(self, league_id, member_id, week_number, conn=None, *, scoring_context=None):
+        kwargs = {'conn': conn} if conn is not None else {}
+        if scoring_context is not None:
+            scoring_context.require_match(league_id, week_number, conn)
+            kwargs['resolved_rules'] = scoring_context.rules
+        return self.schedule_model.get_member_games_for_week(
+            league_id=league_id, member_id=member_id, week_number=week_number, **kwargs)
+
+    def compute_member_point_diff_for_week(self, league_id: int, member_id: int, week_number: int, conn=None, *, scoring_context=None) -> int:
         """
         Sum memberPointDiff across all games for this member in this week.
 
         Uses ScheduleReadService.get_member_games_for_week, which must return rows with:
           - memberPointDiff: int (0 for double-owned, +diff for owned side)
         """
-        games = self.schedule_model.get_member_games_for_week(league_id=league_id, member_id=member_id, week_number=week_number, **({'conn': conn} if conn is not None else {}))
+        games = self._get_weekly_member_games(league_id, member_id, week_number, conn, scoring_context=scoring_context)
         total = 0
         for g in games:
             total += int(g['memberPointDiff'])
@@ -149,13 +162,15 @@ class ScoringService:
         members = self._get_league_members(league_id, **({'conn': conn} if conn is not None else {}))
         if not members:
             raise ScoringRejected(f'No members found for league {league_id}')
+        scoring_context = self._create_weekly_rules_context(league_id, week_number, conn) if conn is not None else None
+        context_kwargs = {'scoring_context': scoring_context} if scoring_context is not None else {}
         member_scores: List[Dict[str, Any]] = []
         for m in members:
             member_id = int(m['id'])
-            pdiff = self.compute_member_point_diff_for_week(league_id=league_id, member_id=member_id, week_number=week_number, **({'conn': conn} if conn is not None else {}))
+            pdiff = self.compute_member_point_diff_for_week(league_id=league_id, member_id=member_id, week_number=week_number, **({'conn': conn} if conn is not None else {}), **context_kwargs)
             member_scores.append({'memberId': member_id, 'teamName': m['teamName'], 'pointDifferential': pdiff})
         member_scores.sort(key=lambda x: (-x['pointDifferential'], int(x['memberId'])))
-        member_scores = self.apply_weekly_tiebreakers(league_id=league_id, week_number=week_number, members=member_scores, **({'conn': conn} if conn is not None else {}))
+        member_scores = self.apply_weekly_tiebreakers(league_id=league_id, week_number=week_number, members=member_scores, **({'conn': conn} if conn is not None else {}), **context_kwargs)
         num_members = len(member_scores)
         for idx, ms in enumerate(member_scores):
             rank = idx + 1
@@ -170,7 +185,7 @@ class ScoringService:
                 self.repository.insert_weekly_score(conn, league_id, week_id, ms['memberId'], ms['pointDifferential'], ms['rank'], ms['pointsAwarded'])
         return {'leagueId': league_id, 'weekNumber': week_number, 'weekId': week_id, 'scores': member_scores}
 
-    def apply_weekly_tiebreakers(self, league_id: int, week_number: int, members: List[Dict[str, Any]], conn=None) -> List[Dict[str, Any]]:
+    def apply_weekly_tiebreakers(self, league_id: int, week_number: int, members: List[Dict[str, Any]], conn=None, *, scoring_context=None) -> List[Dict[str, Any]]:
         """
         For each tie group (same pointDifferential), apply:
 
@@ -185,16 +200,16 @@ class ScoringService:
                 j += 1
             if j - i > 1:
                 tied_group = members[i:j]
-                resolved = self._resolve_weekly_ties(league_id, week_number, tied_group, **({'conn': conn} if conn is not None else {}))
+                resolved = self._resolve_weekly_ties(league_id, week_number, tied_group, **({'conn': conn} if conn is not None else {}), **({'scoring_context': scoring_context} if scoring_context is not None else {}))
                 members[i:j] = resolved
             i = j
         return members
 
-    def _resolve_weekly_ties(self, league_id: int, week_number: int, group: List[Dict[str, Any]], conn=None) -> List[Dict[str, Any]]:
+    def _resolve_weekly_ties(self, league_id: int, week_number: int, group: List[Dict[str, Any]], conn=None, *, scoring_context=None) -> List[Dict[str, Any]]:
         result = self._tb_weekly_head_to_head(league_id, week_number, group, **({'conn': conn} if conn is not None else {}))
         if result is not None:
             return result
-        result = self._tb_weekly_biggest_single_margin(league_id, week_number, group, **({'conn': conn} if conn is not None else {}))
+        result = self._tb_weekly_biggest_single_margin(league_id, week_number, group, **({'conn': conn} if conn is not None else {}), **({'scoring_context': scoring_context} if scoring_context is not None else {}))
         if result is not None:
             return result
         return group
@@ -238,7 +253,7 @@ class ScoringService:
         sorted_group = sorted(group, key=lambda m: (-totals[int(m['memberId'])], int(m['memberId'])))
         return sorted_group
 
-    def _tb_weekly_biggest_single_margin(self, league_id: int, week_number: int, group: List[Dict[str, Any]], conn=None) -> List[Dict[str, Any]] | None:
+    def _tb_weekly_biggest_single_margin(self, league_id: int, week_number: int, group: List[Dict[str, Any]], conn=None, *, scoring_context=None) -> List[Dict[str, Any]] | None:
         """
         For each tied member:
           - Look at all their games that week
@@ -248,7 +263,7 @@ class ScoringService:
         margins: Dict[int, int] = {}
         for m in group:
             member_id = int(m['memberId'])
-            games = self.schedule_model.get_member_games_for_week(league_id=league_id, member_id=member_id, week_number=week_number, **({'conn': conn} if conn is not None else {}))
+            games = self._get_weekly_member_games(league_id, member_id, week_number, conn, scoring_context=scoring_context)
             biggest = 0
             for g in games:
                 diff = int(g['memberPointDiff'])

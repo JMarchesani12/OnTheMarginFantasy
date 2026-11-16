@@ -921,3 +921,7 @@ Task cards with staged scope intentionally require separate reviews: MOD-015 con
 ### MOD020 local implementation follow-up — 2026-11-16
 
 Authorized scoped lifecycle/read boundary implemented and verified; no global writes from ordinary readers. Existing five-phase policy/churn retained, scheduler deferred. [Implementation/evidence/remaining limits](mod-020-scoped-lifecycle-implementation.md).
+
+### MOD021 rules-only context — 2026-11-16
+
+Supplied-connection weekly scoring now resolves rules once per call, preserving scores, other SQL reads, locks and no-conn behavior. Backend804/804, audit55/55 and native count/equivalence/rollback/boundary checks pass; review found no material issues. [Implementation/evidence/deferred notes](mod-021-weekly-rules-context-implementation.md). Local, uncommitted/undeployed; H2H/game batching and full input consistency remain separate.

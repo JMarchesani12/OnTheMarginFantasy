@@ -25,6 +25,13 @@ class ScheduleReadService(ScheduleCalendarService):
             self._read_repository = repository
         return repository
 
+    def resolve_member_game_rules_for_scoring(self, league_id: int, conn) -> dict:
+        """Resolve once on the scoring caller's connection; acquire no locks."""
+        if conn is None:
+            raise ValueError('A supplied scoring connection is required')
+        league = self._get_league(league_id, conn=conn)
+        return resolve_rules(league['sport'], league.get('settings'))
+
     def get_member_games_for_week(
         self,
         league_id: int,
