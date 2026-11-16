@@ -108,6 +108,18 @@ class ScheduleReadService(ScheduleCalendarService):
 
         return [dict(r._mapping) for r in rows]
 
+    def get_head_to_head_games_for_members(self, league_id, member_ids, week_number, conn):
+        """One raw H2H statement view for a tied group; never own a transaction."""
+        if conn is None:
+            raise ValueError('A supplied scoring connection is required')
+        member_ids = sorted({int(member) for member in member_ids})
+        if len(member_ids) < 2:
+            return []
+        rows = self.read_repository.head_to_head_games_for_members(conn, {
+            'leagueId': league_id, 'weekNumber': week_number, 'memberIds': member_ids,
+        }).fetchall()
+        return [dict(row._mapping) for row in rows]
+
     def get_week_for_league(
         self,
         league_id: int,

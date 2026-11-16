@@ -49,6 +49,7 @@ class WeeklyRulesFlowTests(unittest.TestCase):
             return SimpleNamespace(fetchall=lambda:[SimpleNamespace(_mapping=dict(rawMemberPointDiff=d,ownsHome=True,ownsAway=False,homeTeamTier=1,awayTeamTier=2,awayTeamUnranked=False,sportId=1,phaseRules={})) for d in diffs])
         reads.member_games.side_effect=games
         reads.head_to_head_games.return_value.fetchall.return_value=[SimpleNamespace(_mapping=dict(homeScore=9,awayScore=2,homeOwnedByA=True,awayOwnedByA=False,homeOwnedByB=False,awayOwnedByB=True))] if head else []
+        reads.head_to_head_games_for_members.return_value.fetchall.return_value=[SimpleNamespace(_mapping=dict(homeScore=9,awayScore=2,homeMemberIds=[1],awayMemberIds=[2]))] if head else []
         schedule=ScheduleReadService(None,reads,calendar);repo=MagicMock();scorer=ScoringService(None,schedule,repo)
         scorer._get_week_by_number=MagicMock(return_value={'id':10,'weekNumber':1})
         scorer._get_league_members=MagicMock(return_value=[dict(id=1,teamName='A'),dict(id=2,teamName='B')])

@@ -1,0 +1,35 @@
+# MOD021 tied-group H2H batch — 2026-11-16
+
+Supplied-connection weekly H2H now reads raw games and active owner sets once per tied group, then applies the same pair inclusion/score arithmetic in Python. SQL emits each eligible GameResult once, distinct scoped owner arrays, matching sport/season/literal inclusive H2H week window and half-open ownership. It preserves NULL-start exclusion and timeTBD behavior. No-conn and direct pair APIs stay unchanged; rules context remains rules-only. No tier/phase adjustment in H2H, new locks/isolation/index/schema, fallback caching or write batching.
+
+One group statement is an explicit snapshot boundary: every pair in that group uses its fetched rows. Later groups/fallbacks/calls can see subsequent commits under existing isolation. This is not a complete scoring snapshot and does not preserve every possible old interleaving of separate pair statements. Static pair totals/order and replacement behavior are preserved.
+
+## Verification
+
+Capability tests first failed on missing group method; behavioral tests then failed on supplied pair calls. Group9/9, rules-context9/9 and direct pair tie2/2 pass. Full guarded backend813/813 and audit helpers56/56 pass. One owned supplied repository stub gained explicit group rows; unsupported supplied adapters are not hidden by fallback/introspection. Public weekly signature and no-conn dispatch unchanged.
+
+[Count manifest](evidence/mod-021-weekly-h2h-current-2026-11-16.json) points to [H2H-group-v3 native PASS](evidence/mod-021-weekly-6336fcd01771481199ace30d33c2c414.json):5scenarios×4/8/16members,15records/90invocations/75saved timing samples. Exact literal returned/stored scores, independent count/sequence formulas and caller rollback pass. At16members: untied37unchanged; H2H-decides157→38; unresolved/margin173→54.120pair queries become1group query; settings/member-game/lock/delete/insert counts unchanged. No production latency gain claim or CPU-complexity improvement: Python pair enumeration remains.
+
+[Batch manifest](evidence/mod-021-h2h-batch-current-2026-11-16.json) points to [extended PASS](evidence/mod-021-h2h-batch-6fa47327dc7f4670a45ffded55abe504.json):
+
+-15native SQL pair-parity cases compare each batch pair's exact game IDs, raw scores and owner flags to the untouched pair API; batch game IDs are unique and equal the union of pair IDs. Cases include both orientations/no cross pair, inclusive start/end/outside, NULL start, timeTBD, unmapped opponent, foreign season/sport/member, half-open transfer, isolated legacy duplicates/overlap, and eligible/ineligible invalid scores. Legacy-only relations are transaction-local TEMP copies without constraints; public integrity remains intact.
+-2native scoring cases execute the pinned pre-batch scorer plus literal expectations. Combined H2H/fallback groups produce1,2,4,3 with exactly2group reads; partial H2H subties retain member-ID ordering and do not invoke fallback. This closes the previous mixed-group coverage note.
+-8post-group/delete/each insertion/deferred commit/caller failures preserve the exact previous score table and succeed on durable retry with a fresh group fetch on the same scorer. Unrelated rows remain intact.
+-A deterministic second-connection correction after the first group fetch reverses its stored game and adds a later-group game. First group keeps old rows, second group sees the commit, and the next call on the same service/connection sees corrected weekly data. Captured output/diffs pin the per-group boundary; no new lock or timed race is used.
+-All15saved logical score signatures also match frozen pre-batch actual-run artifact8f762d91a58f430da9319020b6919712, with both artifact hashes recorded. This is a comparison of existing run evidence; only the2mixed cases execute the pinned scorer directly in this driver.
+
+[Rules-context rerun](evidence/mod-021-rules-context-4d16ed95f4c0458bbcb612169d6265c0.json) passes8semantic/8recovery/3mutable-input cases against the new batch path, including week0, final zero/split/future guards, transfer/unranked and cross-week/league identity, rules held while tier/phase reads stay live. Its pre-context source is now pinned to4efa908be575e2a1ad2c738bf8bb871f2d815abe/SHA1dac609344fd2172312ca60fab7a711225773b3537b812355b001114345a8499. New batch reference pins49cd228ea9c05ab05894fdddeb42c25174d91f6c/SHA5a32ad6a4e9c2eea5266e3828213368a5eb03acec0b9b10e415636cbeada282b. Reference source lookup/hash verification precedes DB creation and never follows HEAD. This closes the earlier reproducibility note; historical raw artifacts remain unchanged.
+
+Source provenance independently matches current bytes: count18, rules-regression19, batch19hashes. Current rules manifest points to its new run intentionally; raw previous outcomes remain frozen. No failed native run occurred in this batch; preliminary successful batch artifactd7296d7894f043e6a7c4fa81cc947a81 is retained, with current6fa adding explicit frozen-score comparison metadata.
+
+## Cleanup, compatibility and limits
+
+Owned databases dropped and independently inspected count0. Exact task containera4b0ae2cdebcf701e36442262952319c8ff6518fe081effd49c3b679162720ae verified synthetic/mod021-h2h labels,127.0.0.1:55439,no persistent mounts; exact task container removed; remaining task containers0. Other services/cache retained. No configured Supabase/provider/app/browser/user data used.
+
+Supplied schedule adapters now need get_head_to_head_games_for_members when resolving ties; old pair/default/no-conn adapters and rules resolver remain unchanged. Unknown external Python adapters are not validated. Synthetic legacy/null-score TEMP relations characterize old boolean/error behavior without making invalid rows deployable. Rerun rules fixture's synthetic future version remains test-process-only, not published version integration. No production latency/privilege/RLS/full concurrency promise. Member-game batching and full-input consistency remain separate designs. Work uncommitted/undeployed; final review found no critical/important issues and independently passed20focused guarded tests, all18/19/19current source hashes, historical source hashes and saved artifact comparison hashes.
+
+## Deferred review note and rulings
+
+Deferred minor: native mixed-group case verifies its group/member query counts but not the complete literal statement sequence. Original single-group measurement fixtures assert exact sequence; mixed-group full trace remains a follow-up, with no current product defect identified.
+
+Reviewer did not independently run native services/cleanup or judge production performance/RLS, unknown adapters or whole-call consistency. Author observed native execution/cleanup; broader behavior remains unclaimed. Implementation rulings: preserved authorized checkout/uncommitted ledger; anomaly parity uses isolated TEMP relations without changing public integrity;15static results are compared to frozen actual-run signatures/literals, while2mixed cases additionally execute pinned historical code. This avoids redundant historical runs but does not claim live re-execution of every old path.

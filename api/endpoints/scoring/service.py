@@ -221,7 +221,9 @@ class ScoringService:
           - Sum point differential for each member
           - Sort group by total head-to-head PD (desc)
 
-        Requires ScheduleReadService.get_head_to_head_games(
+        Supplied connections use one group statement with owner sets; no-conn
+        callers retain the pair API and its original transaction behavior.
+        Pair semantics are equivalent to ScheduleReadService.get_head_to_head_games(
             league_id, member_a_id, member_b_id, week_number
         ) returning rows with:
           - homeScore, awayScore
@@ -230,9 +232,27 @@ class ScoringService:
         """
         totals: Dict[int, int] = {int(m['memberId']): 0 for m in group}
         member_ids = list(totals.keys())
+        if len(member_ids) < 2:
+            return None
+        batch = None
+        if conn is not None:
+            rows = self.schedule_model.get_head_to_head_games_for_members(
+                league_id=league_id, member_ids=member_ids, week_number=week_number, conn=conn)
+            # A statement view local to this group, never a rules-context cache.
+            batch = [(row, set(row['homeMemberIds']), set(row['awayMemberIds'])) for row in rows]
         for i, a_id in enumerate(member_ids):
             for b_id in member_ids[i + 1:]:
-                games = self.schedule_model.get_head_to_head_games(league_id=league_id, member_a_id=a_id, member_b_id=b_id, week_number=week_number, **({'conn': conn} if conn is not None else {}))
+                if batch is None:
+                    games = self.schedule_model.get_head_to_head_games(
+                        league_id=league_id, member_a_id=a_id, member_b_id=b_id, week_number=week_number)
+                else:
+                    games = (
+                        dict(homeScore=row['homeScore'], awayScore=row['awayScore'],
+                             homeOwnedByA=a_id in home, awayOwnedByA=a_id in away,
+                             homeOwnedByB=b_id in home, awayOwnedByB=b_id in away)
+                        for row, home, away in batch
+                        if (a_id in home and b_id in away) or (a_id in away and b_id in home)
+                    )
                 a_pd = 0
                 b_pd = 0
                 for g in games:

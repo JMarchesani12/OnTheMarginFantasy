@@ -17,6 +17,15 @@ from endpoints.schedule.read_service import ScheduleReadService
 import rules.leagueRules as definitions
 
 
+PRE_CONTEXT_REVISION='4efa908be575e2a1ad2c738bf8bb871f2d815abe'
+PRE_CONTEXT_SHA256='1dac609344fd2172312ca60fab7a711225773b3537b812355b001114345a8499'
+
+def load_reference_source(revision,expected_hash):
+    source=subprocess.check_output(['git','show',revision+':api/endpoints/scoring/service.py'],cwd=base.ROOT)
+    if hashlib.sha256(source).hexdigest()!=expected_hash:raise AssertionError('Historical scorer reference hash differs')
+    return source
+
+
 def snapshot(conn):
     return [dict(r) for r in conn.exec_driver_sql('SELECT * FROM "WeeklyTeamScore" ORDER BY "leagueId","weekId","memberId"').mappings()]
 
@@ -183,8 +192,8 @@ def run():
     def persist():save_json(artifact,report);save_json(manifest,dict(run_id=run_id,result=report['result'],artifact=artifact.name,cleanup=report['cleanup']))
     persist();admin=None
     try:
-        revision=subprocess.check_output(['git','rev-parse','HEAD'],cwd=base.ROOT,text=True).strip()
-        source=subprocess.check_output(['git','show',revision+':api/endpoints/scoring/service.py'],cwd=base.ROOT)
+        revision=PRE_CONTEXT_REVISION
+        source=load_reference_source(revision,PRE_CONTEXT_SHA256)
         assert b'_WeeklyRulesContext' not in source,'Reference must precede context implementation'
         module=types.ModuleType('endpoints.scoring._historical_reference');module.__package__='endpoints.scoring';exec(compile(source,'historical-scoring-service','exec'),module.__dict__)
         report['historical_reference']=dict(revision=revision,path='api/endpoints/scoring/service.py',sha256=hashlib.sha256(source).hexdigest())

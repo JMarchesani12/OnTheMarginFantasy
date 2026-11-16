@@ -304,3 +304,7 @@ Full-detail and own-list reads now explicitly refresh authorized scope atomicall
 ### MOD021 rules-only context — 2026-11-16
 
 Supplied-connection weekly scoring now resolves rules once per call, preserving scores, other SQL reads, locks and no-conn behavior. Backend804/804, audit55/55 and native count/equivalence/rollback/boundary checks pass; review found no material issues. [Implementation/evidence/deferred notes](mod-021-weekly-rules-context-implementation.md). Local, uncommitted/undeployed; H2H/game batching and full input consistency remain separate.
+
+### MOD021 tied-group H2H implementation — 2026-11-16
+
+Supplied weekly H2H uses1raw statement per tied group, preserving static scores/pair arithmetic and no-conn behavior with an explicit per-group snapshot. Backend813/813, audit56/56 and PostgreSQL counts/parity/recovery checks pass; review found no material defects. At16members H2H-decides157→38statements, fallback173→54; no production latency claim. [Report/evidence/deferred trace note](mod-021-head-to-head-batch-implementation.md). Local, uncommitted/undeployed; member-game batching/full-input consistency remain separate.

@@ -155,6 +155,38 @@ class ScheduleReadRepository:
             ORDER BY gr.date, gr."externalGameId";
         """), params)
 
+    def head_to_head_games_for_members(self, conn, params):
+        return conn.execute(text("""
+            WITH target_week AS (
+                SELECT w."startDate", w."endDate", l.sport AS "sportId",
+                       ss.id AS "sportSeasonId"
+                FROM "Week" w JOIN "League" l ON l.id=w."leagueId"
+                JOIN "SportSeason" ss ON ss."sportId"=l.sport AND ss."seasonYear"=l."seasonYear"
+                WHERE w."leagueId"=:leagueId AND w."weekNumber"=:weekNumber
+                LIMIT 1
+            ), active_owners AS (
+                SELECT DISTINCT "memberId", "sportTeamId"
+                FROM "LeagueTeamSlot"
+                WHERE "leagueId"=:leagueId AND "memberId"=ANY(:memberIds)
+                  AND "acquiredWeek"<=:weekNumber
+                  AND ("droppedWeek" IS NULL OR "droppedWeek">:weekNumber)
+            )
+            SELECT gr.id, gr."externalGameId", gr.date,
+                   gr."homeTeamId", gr."awayTeamId", gr."homeScore", gr."awayScore",
+                   ARRAY(SELECT o."memberId" FROM active_owners o
+                         WHERE o."sportTeamId"=gr."homeTeamId" ORDER BY o."memberId") AS "homeMemberIds",
+                   ARRAY(SELECT o."memberId" FROM active_owners o
+                         WHERE o."sportTeamId"=gr."awayTeamId" ORDER BY o."memberId") AS "awayMemberIds"
+            FROM "GameResult" gr CROSS JOIN target_week tw
+            WHERE gr.sport=tw."sportId" AND gr."sportSeasonId"=tw."sportSeasonId"
+              AND gr.date BETWEEN tw."startDate" AND tw."endDate"
+              AND EXISTS (
+                  SELECT 1 FROM active_owners h JOIN active_owners a ON h."memberId"<>a."memberId"
+                  WHERE h."sportTeamId"=gr."homeTeamId" AND a."sportTeamId"=gr."awayTeamId"
+              )
+            ORDER BY gr.date, gr."externalGameId"
+        """), params)
+
     def week(self, conn, params):
         return conn.execute(text("""
             SELECT
