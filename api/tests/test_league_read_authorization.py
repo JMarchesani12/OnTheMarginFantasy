@@ -111,6 +111,12 @@ class LeagueReadAuthorizationTests(unittest.TestCase):
             CREATE TABLE "ConferenceMembership" ("sportConferenceId" INTEGER, "seasonYear" INTEGER, "sportTeamId" INTEGER, "sportId" INTEGER);
             INSERT INTO "ConferenceMembership" VALUES (1, 2026,1,1);
         ''')
+        from endpoints.league.lifecycle.query_service import LeagueLifecycleQueryService
+        def projection_only(query, actor, league_id=None, stage='all'):
+            if league_id is not None:
+                return query.reader.details(actor, league_id)
+            return query.reader.mine(actor, stage)
+        self.enterContext(patch.object(LeagueLifecycleQueryService, '_query', projection_only))
         self.sync = self.enterContext(patch.object(LeagueLifecycleService, 'synchronize_for_job'))
         app = Flask(__name__)
         app.config['TESTING'] = True
@@ -240,3 +246,18 @@ class LeagueReadAuthorizationTests(unittest.TestCase):
                 self.assertEqual(set(response.json), {'id', 'name', 'sport', 'commissionerDisplayName'})
                 self.assertEqual(response.json['id'], league_id)
         self.sync.assert_not_called()
+
+    def test_full_detail_uses_explicit_coordinator(self):
+        from endpoints.league.lifecycle.query_service import LeagueLifecycleQueryService
+        with patch.object(LeagueLifecycleQueryService,'details',return_value={'id':10}) as query:
+            response=self.client.get('/api/league/10',headers=self.headers())
+        self.assertEqual(response.status_code,200);self.assertEqual(response.json,{'id':10})
+        self.assertEqual(query.call_args.args[0].user_id,1);self.sync.assert_not_called()
+
+    def test_refresh_conflict_returns_safe_409(self):
+        from endpoints.league.lifecycle.query_service import LeagueLifecycleQueryService,LifecycleRefreshConflict
+        with patch.object(LeagueLifecycleQueryService,'details',side_effect=LifecycleRefreshConflict('private internal details')):
+            response=self.client.get('/api/league/10',headers=self.headers())
+        self.assertEqual(response.status_code,409)
+        assert_error_response(self,response,{'message':'League state changed. Please retry.'})
+        self.assertNotIn('private internal details',response.get_data(as_text=True))

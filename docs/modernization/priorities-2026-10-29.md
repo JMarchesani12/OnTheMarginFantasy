@@ -296,3 +296,7 @@ MOD036's Home tab keyboard/ARIA finding is implemented locally: manual activatio
 ### Tier-cache follow-up — 2026-11-16
 
 MOD036's TypeScript invalid-cache recovery finding is implemented locally. Tier tests20/20, typecheck and helper tests8/8 pass using canned fetches and disposable directories. [Implementation/evidence](mod-036-tier-cache-implementation.md). No real provider, CLI output, ingestion or deployment changes.
+
+### MOD020 scoped lifecycle implementation — 2026-11-16
+
+Full-detail and own-list reads now explicitly refresh authorized scope atomically; ordinary readers and previews are read-only. Existing lifecycle policy/churn preserved. Backend793/793, audit54/54 and bounded PostgreSQL equivalence/rollback/locking checks pass; final review no material findings. [Report and limits](mod-020-scoped-lifecycle-implementation.md). Uncommitted/undeployed; no scheduler or production performance claim.

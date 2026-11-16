@@ -86,34 +86,36 @@ class LeagueReadService:
         with self.engine.begin() as conn:
             return self.repository.search_discoverable(conn, q, sport_id, limit, offset)
 
-    def details(self, actor, league_id, sync_statuses):
+    def details(self, actor, league_id):
         if not isinstance(actor, UserActor):
             raise TypeError('A verified UserActor is required')
-        return self.details_for_reader_id(league_id, actor.user_id, sync_statuses)
+        return self.details_for_reader_id(league_id, actor.user_id)
 
-    def details_for_reader_id(self, league_id, user_id, sync_statuses):
-        return self._details(league_id, sync_statuses, user_id)
+    def details_for_reader_id(self, league_id, user_id):
+        with self.engine.connect() as conn:
+            return self.details_in_transaction(conn, league_id, user_id)
 
-    def details_for_job(self, league_id, sync_statuses):
-        return self._details(league_id, sync_statuses)
+    def details_for_job(self, league_id):
+        with self.engine.connect() as conn:
+            return self.details_in_transaction(conn, league_id)
 
-    def _details(self, league_id, sync_statuses, reader_user_id=None):
-        sync_statuses()
-        with self.engine.begin() as conn:
-            return self.repository.details(conn, league_id, reader_user_id)
+    def details_in_transaction(self, conn, league_id, reader_user_id=None):
+        return self.repository.details(conn, league_id, reader_user_id)
 
-    def mine(self, actor, sync_statuses, stage='all'):
+    def mine(self, actor, stage='all'):
         if not isinstance(actor, UserActor):
             raise TypeError('A verified UserActor is required')
-        return self.mine_for_user_id(actor.user_id, sync_statuses, stage)
+        return self.mine_for_user_id(actor.user_id, stage)
 
-    def mine_for_user_id(self, user_id, sync_statuses, stage='all'):
+    def mine_for_user_id(self, user_id, stage='all'):
+        with self.engine.connect() as conn:
+            return self.mine_in_transaction(conn, user_id, stage)
+
+    def mine_in_transaction(self, conn, user_id, stage='all', league_ids=None):
         stage = (stage or 'all').lower()
         if stage not in ('all', 'active', 'completed'):
             stage = 'all'
-        sync_statuses()
-        with self.engine.connect() as conn:
-            rows = self.repository.own_leagues(conn, user_id, stage)
+        rows = self.repository.own_leagues(conn, user_id, stage, league_ids)
         logging.debug('get_leagues_for_user(user_id=%s, stage=%s) -> %d rows', user_id, stage, len(rows))
         return rows
 

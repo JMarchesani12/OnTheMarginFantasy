@@ -26,6 +26,18 @@ class LifecycleMeasureTests(unittest.TestCase):
   self.assertEqual(self.m.classify('UPDATE "League" l SET status = \'Drafting\''),'drafting')
   self.assertEqual(self.m.classify('SELECT l.*, w.id AS "currentWeekId" FROM "League" l'),'read')
   with self.assertRaises(AssertionError):self.m.classify('SELECT unexpected')
+ def test_current_sequence_rejects_global_callback_and_unrelated_touch(self):
+  trace=['candidates','state_lock','league_lock','state_check','authorize','pre','drafting','post','in_season','completed','read']
+  self.m.validate_current('detail',trace,[1],[1],'dirty')
+  with self.assertRaises(AssertionError):self.m.validate_current('detail',trace[5:]+trace[:5],[1],[1],'dirty')
+  with self.assertRaises(AssertionError):self.m.validate_current('detail',trace,[1,7],[1],'dirty')
+  self.m.validate_current('denied',['candidates'],[],[],'dirty')
+ def test_native_untouched_guard_rejects_foreign_change(self):
+  from verify_mod020_scoped_lifecycle import assert_untouched
+  before=[dict(id=1,status='Pre-Draft',updatedAt=0),dict(id=2,status='Drafting',updatedAt=0)]
+  after=[dict(id=1,status='Completed',updatedAt=1),before[1]]
+  assert_untouched(before,after,[1])
+  with self.assertRaises(AssertionError):assert_untouched(before,[after[0],dict(id=2,status='Drafting',updatedAt=1)],[1])
  def test_provenance_failure_replaces_pass(self):
   with tempfile.TemporaryDirectory() as d:
    p=Path(d);mf=p/'current.json';mf.write_text('{"result":"PASS"}');connect=MagicMock()

@@ -124,3 +124,7 @@ For each implementation batch: reproduce the defect with a meaningful RED test, 
 Use `python3 api/tests/run_isolated.py` for backend isolated checks, existing frontend Node tests/type/build/import checks, and owned marked-local native harnesses only where relevant. Baseline test counts are historical; record current counts and failures for each batch. Do not rerun unrelated native suites merely to pad verification. Rollout approval, if needed, comes after the exact migration/deployment result is concrete and reviewable.
 
 This roadmap creates no application changes, migrations or deployment actions. First execution recommendation: search ordering, then Home tabs, then tier cache. Larger work gets its own reviewed design rather than being smuggled into these fixes.
+
+## Implementation progress — 2026-11-16
+
+The first three batches are implemented locally: [search ordering](mod-018-search-order-implementation.md), [Home tabs](mod-036-home-tabs-implementation.md), [tier cache](mod-036-tier-cache-implementation.md). MOD020's approved scoped refresh/read boundary is also [implemented locally](mod-020-scoped-lifecycle-implementation.md), preserving current phase policy; scheduler/repeated-write cleanup remain separate. Next is MOD021's immutable per-run scoring-context design before any batching. These follow-ups supersede the initial deferred/ready-to-review execution labels above; they do not establish deployment.

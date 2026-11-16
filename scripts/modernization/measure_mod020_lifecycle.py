@@ -1,4 +1,4 @@
-"""Audit-only real lifecycle writes triggered by scoped league reads on marked localhost."""
+"""Version2 explicit authorized scoped lifecycle reads on marked localhost; frozen v1 raw unchanged."""
 import argparse
 from collections import Counter
 from datetime import datetime,timezone
@@ -11,7 +11,8 @@ from sqlalchemy import create_engine,text,event
 import measure_mod017 as base
 from measure_mod017_transactions import verify_cleanup,save_json
 from endpoints.league.lifecycle.service import LeagueLifecycleService
-from endpoints.league.reads.service import LeagueReadService
+from endpoints.league.lifecycle.query_service import LeagueLifecycleQueryService
+from actors import UserActor
 
 SIZES=base.SIZES
 CALLS=('detail','denied','missing','mine')
@@ -56,17 +57,30 @@ def classify(statement):
         for status,role in PHASES.items():
             if f"SET status = '{status}'" in sql:return role
     if sql.startswith('SELECT l.*,') or ('FROM "LeagueMember" lm' in sql and 'SUM(wts."pointsAwarded")' in sql):return 'read'
+    if sql.startswith('SELECT l.id FROM "League" l'):
+        return 'candidates' if 'ORDER BY l.id' in sql else 'authorize'
+    if sql.startswith('SELECT "leagueId" FROM "DraftState"'):return 'state_lock' if 'FOR UPDATE' in sql else 'state_check'
+    if sql.startswith('SELECT id FROM "League"'):return 'league_lock'
     raise AssertionError('Unclassified lifecycle/read statement')
+
+
+def validate_current(call, sequence, touched, changed, mode):
+    wanted = ['candidates']
+    if call not in ('denied','missing'):
+        wanted += ['state_lock','league_lock','state_check','authorize',*PHASES.values(),'read']
+    if sequence != wanted:raise AssertionError('Current lifecycle statement sequence changed')
+    expected = [1] if mode=='dirty' and call not in ('denied','missing') else []
+    if touched!=expected or changed!=expected:raise AssertionError('Current scoped touched/status IDs changed')
 
 
 class Tracker:
     def __init__(self):self.enabled=False;self.reset()
-    def reset(self):self.counts=Counter();self.phase_rows=Counter();self.examples={}
+    def reset(self):self.counts=Counter();self.phase_rows=Counter();self.examples={};self.sequence=[]
     def before(self,conn,cursor,statement,parameters,context,executemany):
         if self.enabled:
-            role=classify(statement);context._mod020_role=role;self.counts[role]+=1;self.examples.setdefault(role,dict(sql=statement,parameters=parameters))
+            role=classify(statement);context._mod020_role=role;self.counts[role]+=1;self.sequence.append(role);self.examples.setdefault(role,dict(sql=statement,parameters=parameters))
     def after(self,conn,cursor,statement,parameters,context,executemany):
-        if self.enabled and context._mod020_role!='read':self.phase_rows[context._mod020_role]+=cursor.rowcount
+        if self.enabled and context._mod020_role in PHASES.values():self.phase_rows[context._mod020_role]+=cursor.rowcount
 
 
 def seed(conn,n):
@@ -94,32 +108,26 @@ def snapshot(engine):
 
 def measure(engine,n,call,mode):
     tracker=Tracker();event.listen(engine,'before_cursor_execute',tracker.before);event.listen(engine,'after_cursor_execute',tracker.after)
-    lifecycle=LeagueLifecycleService(engine);reader=LeagueReadService(engine);samples=[];examples={};signature=None;status_signature=None
+    query=LeagueLifecycleQueryService(engine);samples=[];examples={};signature=None;status_signature=None
     try:
         for iteration in range(6):
             prepare(engine,mode);before=snapshot(engine)
-            if len(before)!=n or any(r['status']!=(initial_status(r['id']) if mode=='dirty' else final_status(r['id'])) or r['updatedAt']!=EPOCH for r in before):raise AssertionError('Prepared state differs from independent model')
-            tracker.reset();callback_count=0;callback_ms=0
-            def synchronize():
-                nonlocal callback_count,callback_ms
-                callback_count+=1;start=time.perf_counter()
-                try:lifecycle.synchronize_for_job()
-                finally:callback_ms+=(time.perf_counter()-start)*1000
-            tracker.enabled=True;start=time.perf_counter()
+            tracker.reset();tracker.enabled=True;start=time.perf_counter()
             try:
-                if call=='mine':result=reader.mine_for_user_id(2,synchronize,'all')
-                else:result=reader.details_for_reader_id(n+100 if call=='missing' else 1,99999999 if call=='denied' else 2,synchronize)
+                actor=UserActor(99999999 if call=='denied' else 2,'synthetic')
+                result=query.mine(actor,'all') if call=='mine' else query.details(actor,n+100 if call=='missing' else 1)
             finally:elapsed=(time.perf_counter()-start)*1000;tracker.enabled=False
-            expected_counts={role:1 for role in [*PHASES.values(),'read']}
-            if callback_count!=1 or dict(tracker.counts)!=expected_counts or dict(tracker.phase_rows)!=expected_phase_rows(n,mode):raise AssertionError('Lifecycle callback/statement/phase counts changed')
             projected=projection(call,result);signature=read_signature(projected);base.assert_equivalent(read_signature(expected_read(call)),signature)
-            after=snapshot(engine);expected_states=[dict(id=i,status=final_status(i)) for i in range(1,n+1)]
-            status_signature=base.signature([dict(id=r['id'],status=r['status']) for r in after]);base.assert_equivalent(base.signature(expected_states),status_signature)
+            after=snapshot(engine)
             touched=[r['id'] for r in after if r['updatedAt']!=EPOCH];changed=[a['id'] for b,a in zip(before,after) if b['status']!=a['status']]
-            if touched!=expected_touched(n,mode) or changed!=expected_status_changes(n,mode):raise AssertionError('All-league touched/status sets differ')
+            validate_current(call,tracker.sequence,touched,changed,mode)
+            expected_states=[dict(id=i,status=final_status(i) if mode=='steady' or (i==1 and call not in ('denied','missing')) else initial_status(i)) for i in range(1,n+1)]
+            status_signature=base.signature([dict(id=r['id'],status=r['status']) for r in after]);base.assert_equivalent(base.signature(expected_states),status_signature)
+            expected_phases={role:1 if role=='pre' and mode=='dirty' else 0 for role in PHASES.values()} if call not in ('denied','missing') else {}
+            if dict(tracker.phase_rows)!=expected_phases:raise AssertionError('Scoped phase counts changed')
             examples.update(tracker.examples)
-            if iteration:samples.append(dict(total_ms=elapsed,lifecycle_ms=callback_ms,callback_count=callback_count,statements=dict(tracker.counts),phase_rows=dict(tracker.phase_rows),row_updates=sum(tracker.phase_rows.values()),distinct_timestamp_changes=len(touched),final_status_changes=len(changed)))
-        return dict(call=call,mode=mode,leagues=n,result_projection=signature,final_statuses=status_signature,expected_phase_rows=expected_phase_rows(n,mode),touched_ids=expected_touched(n,mode),status_changed_ids=expected_status_changes(n,mode),samples=samples,median_total_ms=base.statistics.median(s['total_ms'] for s in samples),median_lifecycle_ms=base.statistics.median(s['lifecycle_ms'] for s in samples),statement_examples=examples,invocations=6)
+            if iteration:samples.append(dict(total_ms=elapsed,sequence=list(tracker.sequence),statements=dict(tracker.counts),phase_rows=dict(tracker.phase_rows),row_updates=sum(tracker.phase_rows.values()),touched_ids=touched,changed_ids=changed))
+        return dict(contract='authorized-scoped-v2',call=call,mode=mode,leagues=n,result_projection=signature,final_statuses=status_signature,samples=samples,median_total_ms=base.statistics.median(s['total_ms'] for s in samples),statement_examples=examples,invocations=6)
     finally:
         tracker.enabled=False;event.remove(engine,'before_cursor_execute',tracker.before);event.remove(engine,'after_cursor_execute',tracker.after)
 
@@ -142,8 +150,8 @@ def run_tier(admin,n,report):
 
 def run(directory,manifest,tiers,connect=None):
     directory=Path(directory);directory.mkdir(parents=True,exist_ok=True);run_id=uuid4().hex;artifact=directory/f'mod-020-lifecycle-{run_id}.json'
-    inputs=[base.BASELINE,*base.MIGRATIONS,'scripts/modernization/measure_mod017.py','scripts/modernization/measure_mod017_transactions.py','scripts/modernization/measure_mod020_lifecycle.py','api/endpoints/league/lifecycle/service.py','api/endpoints/league/lifecycle/repository.py','api/endpoints/league/reads/service.py','api/endpoints/league/reads/repository.py','api/endpoints/league/leagueEndpoints.py','api/utils/authorization.py','api/utils/conference_membership.py']
-    report=dict(date='2026-11-15',run_id=run_id,started_at=datetime.now(timezone.utc).isoformat(),result='RUNNING',scope='Synthetic read-triggered lifecycle measurements only; optimization deferred',tiers=[],databases=[],cleanup='no database created',provenance={},limits=['Synthetic ten equal status groups/allUTC/relative dates;no production mix/timezoneboundary claim','Actual globalUPDATEcommits inside scoped reader, no HTTP/JWT/lock/concurrency proof','Selected readbusinessprojection only, timestamp identity checked separately; resets/convergence outside timing'])
+    inputs=[base.BASELINE,*base.MIGRATIONS,'scripts/modernization/measure_mod017.py','scripts/modernization/measure_mod017_transactions.py','scripts/modernization/measure_mod020_lifecycle.py','api/endpoints/league/lifecycle/service.py','api/endpoints/league/lifecycle/query_service.py','api/endpoints/league/lifecycle/repository.py','api/endpoints/league/reads/service.py','api/endpoints/league/reads/repository.py','api/endpoints/league/leagueEndpoints.py','api/utils/authorization.py','api/utils/conference_membership.py']
+    report=dict(date='2026-11-16',run_id=run_id,started_at=datetime.now(timezone.utc).isoformat(),result='RUNNING',scope='Synthetic authorized scoped lifecycle/read contract v2; no production latency claim',tiers=[],databases=[],cleanup='no database created',provenance={},limits=['Synthetic ten equal status groups/allUTC/relative dates;no production mix/timezoneboundary claim','Explicit scoped coordinator with atomic transaction, no HTTP/JWT/concurrency proof in this measurement','Selected readbusinessprojection only, timestamp identity checked separately; resets/convergence outside timing'])
     def persist():
         save_json(artifact,report);save_json(Path(manifest),dict(run_id=run_id,result=report['result'],artifact=artifact.name,cleanup=report['cleanup']))
     persist();admin=None
@@ -165,5 +173,5 @@ def run(directory,manifest,tiers,connect=None):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--tier',type=int,choices=SIZES,action='append');args=parser.parse_args()
-    directory=base.ROOT/'docs/modernization/evidence';run(directory,directory/'mod-020-lifecycle-current-2026-11-15.json',args.tier or SIZES)
+    directory=base.ROOT/'docs/modernization/evidence';run(directory,directory/'mod-020-lifecycle-current-2026-11-16.json',args.tier or SIZES)
 if __name__=='__main__':main()

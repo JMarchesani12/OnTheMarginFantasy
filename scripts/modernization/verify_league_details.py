@@ -30,15 +30,14 @@ INSERT INTO "WeeklyTeamScore" VALUES (10,12,100,999),(10,12,101,4),(10,12,102,6)
 
 def tests(engine,database):
     with engine.begin() as conn:conn.exec_driver_sql(FIXTURE)
-    service=LeagueReadService(engine);bob=UserActor(2,'bob');calls=[]
-    def sync():calls.append('sync')
-    detail=service.details(bob,10,sync)
+    service=LeagueReadService(engine);bob=UserActor(2,'bob')
+    detail=service.details(bob,10)
     assert detail['id']==10 and detail['currentWeekId']==103 and detail['currentWeekNumber']==2
     assert detail['currentWeekStartDate'] is not None and detail['settings']=={}
-    assert service.details(UserActor(3,'outsider'),10,sync) is None
-    assert service.details(bob,999,sync) is None
-    assert service.details(UserActor(1,'alice'),30,sync)['currentWeekId'] is None
-    rows=service.mine(bob,sync)
+    assert service.details(UserActor(3,'outsider'),10) is None
+    assert service.details(bob,999) is None
+    assert service.details(UserActor(1,'alice'),30)['currentWeekId'] is None
+    rows=service.mine(bob)
     assert len(rows)==3  # Original overlapping current-week rows remain duplicated.
     active=[r for r in rows if r['leagueId']==10]
     assert {r['currentWeekNumber'] for r in active}=={1,2} and all(r['seasonPoints']==10 for r in active)
@@ -46,38 +45,39 @@ def tests(engine,database):
     assert set(rows[0])=={'leagueId','leagueCreatedAt','leagueName','numPlayers','status','updatedAt','draftDate',
         'tradeDeadline','freeAgentDeadline','seasonYear','settings','commissionerDisplayName','commissionerId','sport',
         'maxPlayersToHaveMaxRounds','memberId','teamName','draftOrder','seasonPoints','currentWeekId','currentWeekNumber','currentWeekStartDate','currentWeekEndDate'}
-    assert len(service.mine(bob,sync,'ACTIVE'))==2
-    assert [r['leagueId'] for r in service.mine(bob,sync,'completed')]==[20]
-    assert service.mine(bob,sync,'unknown')==rows
-    assert {r['leagueId'] for r in service.mine(UserActor(1,'alice'),sync)}=={10}
-    assert service.mine(UserActor(3,'outsider'),sync)==[]
+    assert len(service.mine(bob,'ACTIVE'))==2
+    assert [r['leagueId'] for r in service.mine(bob,'completed')]==[20]
+    assert service.mine(bob,'unknown')==rows
+    assert {r['leagueId'] for r in service.mine(UserActor(1,'alice'))}=={10}
+    assert service.mine(UserActor(3,'outsider'))==[]
     other=engine_for(database,'otm-details-sync')
     try:
         def committed_sync():
             with other.begin() as conn:conn.execute(text('UPDATE "League" SET status=\'Post-Draft\' WHERE id=10'))
-            calls.append('committed sync')
-        assert service.details(bob,10,committed_sync)['status']=='Post-Draft'
+        committed_sync()
+        assert service.details(bob,10)['status']=='Post-Draft'
         def revoke():
             with other.begin() as conn:conn.execute(text('DELETE FROM "LeagueMember" WHERE id=12'))
-        assert service.details(bob,10,revoke) is None
-        assert [r['leagueId'] for r in service.mine(bob,sync)]==[20]
+        revoke()
+        assert service.details(bob,10) is None
+        assert [r['leagueId'] for r in service.mine(bob)]==[20]
         statements=[]
         def record(conn,cursor,statement,params,context,many):statements.append(statement)
         def fail():raise RuntimeError('synthetic sync failure')
         event.listen(engine,'before_cursor_execute',record)
         try:
             try:service.details(UserActor(1,'alice'),10,fail)
-            except RuntimeError:pass
-            else:raise AssertionError('Sync failure swallowed')
+            except TypeError:pass
+            else:raise AssertionError('Obsolete callback silently accepted')
         finally:event.remove(engine,'before_cursor_execute',record)
         assert statements==[]
     finally:other.dispose()
-    model=engine;sync_statuses=sync
-    assert LeagueReadService(model).details_for_job(20, sync_statuses)['id']==20 and LeagueReadService(model).details_for_reader_id(20, 1, sync_statuses) is None
-    assert [r['leagueId'] for r in LeagueReadService(model).mine_for_user_id(2, sync_statuses, 'all')]==[20]
+    model=engine
+    assert LeagueReadService(model).details_for_job(20)['id']==20 and LeagueReadService(model).details_for_reader_id(20, 1) is None
+    assert [r['leagueId'] for r in LeagueReadService(model).mine_for_user_id(2, 'all')]==[20]
     return {'native_details_current_week_intervals_scope':'PASS','own_projection_stage_scores_overlap_compatibility':'PASS',
-            'separate_committed_sync_and_membership_revocation':'PASS','sync_failure_before_read':'PASS','legacy_compatibility':'PASS',
-            'scope_limit':'Existing lifecycle callback boundary verified; lifecycle algorithm unchanged'}
+            'explicit_external_update_and_membership_revocation':'PASS','obsolete_callback_rejected_before_read':'PASS','legacy_compatibility':'PASS',
+            'scope_limit':'Read-only entry points; scoped coordinator is verified separately'}
 
 
 def main():

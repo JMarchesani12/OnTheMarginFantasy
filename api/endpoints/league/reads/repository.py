@@ -1,6 +1,6 @@
 from utils.conference_membership import conference_sql
 """League read SQL; callers supply connections and explicit reader scope."""
-from sqlalchemy import text
+from sqlalchemy import text, bindparam
 from utils.authorization import league_read_scope
 
 
@@ -144,7 +144,9 @@ class LeagueReadRepository:
         ).fetchone()
         return dict(league._mapping) if league else None
 
-    def own_leagues(self, conn, user_id, stage):
+    def own_leagues(self, conn, user_id, stage, league_ids=None):
+        if league_ids is not None and not league_ids:
+            return []
         base_sql = """
             SELECT
             -- League fields
@@ -216,8 +218,14 @@ class LeagueReadRepository:
 
         base_sql += ' ORDER BY l.id, lm."draftOrder"'
 
+        params = {'user_id': user_id}
+        if league_ids is not None:
+            base_sql = base_sql.replace('WHERE lm."userId" = :user_id', 'WHERE lm."userId" = :user_id AND l.id IN :scope_ids')
+            params['scope_ids'] = list(league_ids)
         sql = text(base_sql)
-        result = conn.execute(sql, {'user_id': user_id})
+        if league_ids is not None:
+            sql = sql.bindparams(bindparam('scope_ids', expanding=True))
+        result = conn.execute(sql, params)
         return [dict(row._mapping) for row in result]
 
     def member_rows(self, conn, league_id, reader_user_id=None):

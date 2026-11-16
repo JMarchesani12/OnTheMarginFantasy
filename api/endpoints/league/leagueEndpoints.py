@@ -6,7 +6,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 from flask import request, jsonify
-from .lifecycle.service import LeagueLifecycleService
+from .lifecycle.query_service import LeagueLifecycleQueryService, LifecycleRefreshConflict
 from endpoints.schedule.read_service import ScheduleReadService
 from .admission.service import AdmissionService
 from .members.service import MemberService
@@ -19,7 +19,7 @@ from authenticatedPrincipal import PrincipalResolutionError, resolve_authenticat
 
 class LeagueEndpoints:
     def __init__(self, db_engine):
-        self.league_lifecycle_service = LeagueLifecycleService(db_engine)
+        self.league_lifecycle_queries = LeagueLifecycleQueryService(db_engine)
         self.schedule_service = ScheduleReadService(db_engine)
         self.db_engine = db_engine
         self.admission_service = AdmissionService(db_engine)
@@ -55,9 +55,7 @@ class LeagueEndpoints:
                 return jsonify({'message': 'League membership required'}), 403
             else:
                 if view == 'details':
-                    payload = self.league_read_service.details(
-                        actor, league_id, self.league_lifecycle_service.synchronize_for_job,
-                    )
+                    payload = self.league_lifecycle_queries.details(actor, league_id)
                 elif view == 'rules':
                     payload = self.league_read_service.rules(
                         UserActor(principal.user_id, principal.subject), league_id,
@@ -74,6 +72,8 @@ class LeagueEndpoints:
             if payload is None:
                 return jsonify({'message': 'League not found'}), 404
             return jsonify(payload), 200
+        except LifecycleRefreshConflict:
+            return jsonify({'message': 'League state changed. Please retry.'}), 409
         except PrincipalResolutionError as exc:
             return jsonify({'error': exc.code}), exc.status_code
         except ValueError as exc:
@@ -130,6 +130,8 @@ class LeagueEndpoints:
                 self.schedule_service.ensure_weeks_for_job,
             )
             return jsonify(created), 201
+        except LifecycleRefreshConflict:
+            return jsonify({'message': 'League state changed. Please retry.'}), 409
         except PrincipalResolutionError as exc:
             return jsonify({"error": exc.code}), exc.status_code
         except ValueError as exc:
@@ -155,6 +157,8 @@ class LeagueEndpoints:
                 UserActor(principal.user_id, principal.subject), league_id=league_id, patch=patch,
             )
             return jsonify(updated), 200
+        except LifecycleRefreshConflict:
+            return jsonify({'message': 'League state changed. Please retry.'}), 409
         except PrincipalResolutionError as e:
             return jsonify({"error": e.code}), e.status_code
         except PermissionError as e:
@@ -187,11 +191,12 @@ class LeagueEndpoints:
             stage = data.get('stage', 'all')
             if stage is not None and not isinstance(stage, str):
                 return jsonify({"message": "Invalid stage"}), 400
-            leagues = self.league_read_service.mine(
-                UserActor(principal.user_id, principal.subject),
-                self.league_lifecycle_service.synchronize_for_job, stage=stage,
+            leagues = self.league_lifecycle_queries.mine(
+                UserActor(principal.user_id, principal.subject), stage=stage,
             )
             return jsonify(leagues), 200
+        except LifecycleRefreshConflict:
+            return jsonify({'message': 'League state changed. Please retry.'}), 409
         except PrincipalResolutionError as e:
             return jsonify({"error": e.code}), e.status_code
         except (HTTPException, DataError, IntegrityError):

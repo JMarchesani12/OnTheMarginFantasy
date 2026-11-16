@@ -74,6 +74,12 @@ class OwnLeagueListingTests(unittest.TestCase):
             CREATE TABLE "WeeklyTeamScore" ("leagueId" INTEGER, "memberId" INTEGER,
                 "weekId" INTEGER, "pointsAwarded" INTEGER);
         ''')
+        from endpoints.league.lifecycle.query_service import LeagueLifecycleQueryService
+        def projection_only(query, actor, league_id=None, stage='all'):
+            if league_id is not None:
+                return query.reader.details(actor, league_id)
+            return query.reader.mine(actor, stage)
+        self.enterContext(patch.object(LeagueLifecycleQueryService, '_query', projection_only))
         self.status_sync = self.enterContext(patch.object(LeagueLifecycleService, 'synchronize_for_job'))
         app = Flask(__name__)
         app.config['TESTING'] = True
@@ -170,3 +176,14 @@ class OwnLeagueListingTests(unittest.TestCase):
         response = self.client.post('/api/league/byUser', headers=self.headers(), json={'userId': '1'})
         self.assertEqual(response.status_code, 200)
         self.assertEqual([row['memberId'] for row in response.json], [11])
+
+    def test_self_list_uses_explicit_coordinator_and_commit_failure_is_not_success(self):
+        from endpoints.league.lifecycle.query_service import LeagueLifecycleQueryService,LifecycleRefreshConflict
+        with patch.object(LeagueLifecycleQueryService,'mine',return_value=[]) as query:
+            response=self.client.post('/api/league/byUser',headers=self.headers(),json={'userId':1,'stage':'completed'})
+        self.assertEqual(response.status_code,200);self.assertEqual(query.call_args.args[0].user_id,1)
+        self.assertEqual(query.call_args.kwargs,{'stage':'completed'});self.status_sync.assert_not_called()
+        for error,status in [(RuntimeError('private commit error'),500),(LifecycleRefreshConflict(),409)]:
+            with patch.object(LeagueLifecycleQueryService,'mine',side_effect=error):
+                response=self.client.post('/api/league/byUser',headers=self.headers(),json={'userId':1})
+            self.assertEqual(response.status_code,status);self.assertNotIn('private commit error',response.get_data(as_text=True))
