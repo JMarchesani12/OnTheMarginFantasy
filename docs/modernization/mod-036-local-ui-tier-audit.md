@@ -76,3 +76,7 @@ Reviewer did not rerun Chrome/main audit/broad application checks; full authenti
 ## Home keyboard implementation follow-up — 2026-11-16
 
 The baseline Home keyboard finding is resolved in local application scope. [Implementation and current native evidence](mod-036-home-tabs-implementation.md) cover manual activation, roving focus and labelled hidden panels. Original raw baseline artifacts remain unchanged. Tier-cache recovery is separate pending work.
+
+## Tier-cache implementation follow-up — 2026-11-16
+
+The separate TypeScript loader's poisoned-cache finding is resolved locally: validate before atomic publication, one-fetch invalid legacy recovery, valid empty cache hits and unchanged transport semantics. [Implementation and canned evidence](mod-036-tier-cache-implementation.md). Historical baseline outcomes remain unchanged; whole-CLI output safety and real-provider acceptance remain separate.

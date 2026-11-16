@@ -292,3 +292,7 @@ Home tabs and tier-cache plans remain next, not implemented by this batch.
 ### Home keyboard follow-up — 2026-11-16
 
 MOD036's Home tab keyboard/ARIA finding is implemented locally: manual activation, roving focus, stable labelled panels and hidden inactive shells. Frontend237/237, helper8/8, TypeScript/import checks and native Chrome acceptance pass. [Implementation/evidence](mod-036-home-tabs-implementation.md). Uncommitted; full AT/mobile/production acceptance remains outside this batch.
+
+### Tier-cache follow-up — 2026-11-16
+
+MOD036's TypeScript invalid-cache recovery finding is implemented locally. Tier tests20/20, typecheck and helper tests8/8 pass using canned fetches and disposable directories. [Implementation/evidence](mod-036-tier-cache-implementation.md). No real provider, CLI output, ingestion or deployment changes.

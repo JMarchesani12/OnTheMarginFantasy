@@ -1,5 +1,5 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
+import { mkdir, readFile, open, rename, unlink } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 
 import { formatEspnDateRange } from "./seasons.ts";
@@ -148,8 +148,26 @@ async function loadCachedOrFetch(
   warnings: WarningCollector,
   season: string,
 ): Promise<unknown> {
-  if (existsSync(cachePath)) {
-    return JSON.parse(await readFile(cachePath, "utf8")) as unknown;
+  let cachedBody: string | undefined;
+  try {
+    cachedBody = await readFile(cachePath, "utf8");
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+  }
+  if (cachedBody !== undefined) {
+    let cached: unknown;
+    try {
+      cached = JSON.parse(cachedBody) as unknown;
+    } catch (error) {
+      if (!(error instanceof SyntaxError)) throw error;
+    }
+    if (getEvents(cached)) return cached;
+    // Invalid content alone permits recovery; read/I/O errors must propagate.
+    try {
+      await unlink(cachePath);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    }
   }
 
   const url = new URL(ESPN_SCOREBOARD_URL);
@@ -169,8 +187,27 @@ async function loadCachedOrFetch(
   }
 
   const body = await response.text();
-  await writeFile(cachePath, body, "utf8");
-  return JSON.parse(body) as unknown;
+  const parsed = JSON.parse(body) as unknown;
+  // Invalid schema keeps the caller's existing warning/return contract.
+  if (!getEvents(parsed)) return parsed;
+
+  const tempPath = `${cachePath}.${randomUUID()}.tmp`;
+  const handle = await open(tempPath, "wx");
+  try {
+    try {
+      await handle.writeFile(body, "utf8");
+    } finally {
+      await handle.close();
+    }
+    await rename(tempPath, cachePath);
+  } finally {
+    try {
+      await unlink(tempPath);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    }
+  }
+  return parsed;
 }
 
 function parseEvent(event: RawEspnEvent, season: string, warnings: WarningCollector): ParsedEspnGame | null {
