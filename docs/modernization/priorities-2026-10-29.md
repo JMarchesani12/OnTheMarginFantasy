@@ -247,3 +247,24 @@ keep/no-change decisions, current retirements distinguished from historical
 snapshots. [Inventory](mod-035-legacy-ownership-inventory.md). No uncertain legacy
 code removed, route registered or outside usage/owner guessed. External retirement/
 operator decisions remain separate; MOD018/036 and deferred optimizations remain.
+
+
+## MOD018 league-search baseline — 2026-11-16
+
+Actual league search/service measured at1k/10k/100kleagues:51runner tests,
+72SQL/42service records and4small-fixture walks verified. Equal-name current
+pages returned700rows but695unique matches (five duplicate occurrences/five
+missing); fixture-onlyIDtie probe traversed all700 exactly once across layouts.
+[Report](mod-018-league-search-baseline.md). No app ordering/query/paging change;
+ordering correction deferred to final implementation. MOD036 remains separate.
+
+
+## MOD036 local UI/tier-tool audit — 2026-11-16
+
+Controlled bundle inventory, native Chrome Home/draft-order/scoreboard component
+probes and offline TypeScript tier-loader/cache failures recorded. Frontend235,
+tier9,audit7 tests/bothTSchecks/importgraphPASS;9nativecases/45samples and
+keyboard/AX observations verified. [Report](mod-036-local-ui-tier-audit.md).
+Home tab pattern and invalid tier cache handling are concrete later followups.
+No product fix/optimization; full authenticated screens/AT/mobile/route-error
+recovery/live operator/provider acceptance remains outside this local scope.

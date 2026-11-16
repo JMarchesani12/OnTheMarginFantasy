@@ -393,6 +393,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-018 — Measure retrieval and stabilize/paginate proven large lists
 
+- **Search measurement — 2026-11-16:** Actual discoverable search/service at1k/10k/100kleagues,51runner tests/72SQL/42service records/4small walks verified. Equal-name pagination repeats one ID five extra times and omits five matches; private IDtie probe returns all700 exactly once across layouts. [Report](mod-018-league-search-baseline.md). Measurement complete in bounded scope; actual ordering correction/paging decisions remain deferred until audit completion. No app optimization or large full-traversal claim.
+
 - **Priority / size / risk:** P2 / M / Medium.
 - **Features:** F-005, F-006, F-012–016.
 - **Problem / evidence:** DB-10; BE S01: Python team ranking, deep offset and unbounded collections.
@@ -742,6 +744,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 - **Contract impact:** Behavior/API/schema: no in investigation; retirement requires follow-up.
 
 ### MOD-036 — Measure wider rendering/accessibility and tier-tool reliability
+
+- **Bounded local audit — 2026-11-16:** Controlled bundle/17lazyroute footprints, native actual Home/DraftOrderEditor/LeagueScoreboard synthetic component probes (9cases/45samples), Home keyboard/AX and draft move focus/announcement, real TS tier-loader canned cache/failure probes. Frontend235/tier9/audit7/bothTSchecks/importgraphPASS. [Report](mod-036-local-ui-tier-audit.md). Home tabs pattern/invalid cache handling support narrow future fixes; no blanket memoization/cache/framework or product change. Full authenticated pages/AT/mobile/route recovery/operator/provider acceptance remains separate.
 
 - **Priority / size / risk:** P3 / M / Low.
 - **Features:** F-001, F-005, F-007, F-009, F-011–016, F-018, F-020, F-037.
