@@ -1,5 +1,5 @@
 import { safeResponse, safeJson, READ_ERROR } from "./safeError";
-// src/api/schedule.ts
+// src/api/roster.ts
 import type { OwnedTeam } from "../types/schedule";
 import { apiFetch, API_BASE_URL } from "./client";
 

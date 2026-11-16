@@ -151,7 +151,7 @@ class TransactionEndpoints:
 
         return jsonify(result), 200
 
-    # POST /api/league/<leagueId>/week/<weekId>/lock
+    # Compatibility helper; no Flask week-lock route is registered.
     def lock_week(self, leagueId, weekId):
         # Historical unregistered helper; no new route or HTTP capability added.
         league_id, week_id = int(leagueId), int(weekId)
@@ -220,7 +220,7 @@ class TransactionEndpoints:
         # Approved internal-only operation; trusted callers use the service.
         return jsonify({'error': 'http_trade_application_disabled'}), 410
 
-    # GET /api/league/<league_id>/transactions
+    # GET /api/league/<int:league_id>/transaction/pending
     def get_transactions_for_league(self, league_id: int):
         try:
             principal = resolve_authenticated_principal(self.db_engine)

@@ -729,6 +729,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-035 — Resolve legacy/documentation ownership before retirement
 
+- **Remaining source inventory complete — 2026-11-15:** [Ten-target ownership/caller/keep-decision inventory](mod-035-legacy-ownership-inventory.md) distinguishes current retired Models/forwarders from historical snapshots; retains tested exception shim and uncertain CLI/auth/provider/socket/lock/bootstrap paths. Corrects current interpretation of old lock-helper/bonus descriptions without rewriting history. No deletion/registration/runtime repair or external usage/owner confirmation; eventual retirement/operator policy remains separately scoped.
+
 - **Bounded retirement — 2026-10-30:** User-authorized cleanup removed 10 temporary league root service/repository forwarders after migrating all first-party test/tool imports and source manifests to canonical packages. Canonical16 files unchanged, backend564/564, complete native league rerun PASS. Explicit old exception unpickling shim and 8 Model facades retained for known contracts. [Evidence](evidence/mod-035-league-forwarder-retirement-2026-10-30.json), [ledger](../superpowers/plans/2026-10-30-league-legacy-forwarder-retirement.md). Internal Python forwarder paths intentionally retired; HTTP unchanged. Independent review unavailable after session usage-limit failure; local audit passed. Wider legacy/ownership questions remain open.
 - **Priority / size / risk:** P3 / S–M / Low for investigation.
 - **Features:** F-026, F-028, F-032, F-038–041.
@@ -751,6 +753,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 - **Contract impact:** Behavior/API/schema: no in measurement task.
 
 ### MOD-037 — Correct misleading local names and comments in separate small changes
+
+- **Completed demonstrated text scope — 2026-11-15:** Five local filename/route/bootstrap comment corrections across four files, executable PythonAST (excluding docstrings)/roster emittedJS unchanged and frontend import graph75files/219edges PASS. Existing user/sports and scoring-comment findings already resolved. [Report](mod-037-text-cleanup.md). No executable/message/import/SQL/route/payload changes or broad renaming; uncertain alternative names retained per MOD035.
 
 - **Priority / size / risk:** P3 / S / Low.
 - **Features:** F-004, F-015, F-022, F-025, F-026, F-032.

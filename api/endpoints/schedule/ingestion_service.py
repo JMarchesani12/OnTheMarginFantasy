@@ -133,13 +133,14 @@ class ScheduleIngestionService(ScheduleReadService):
         max_teams: Optional[int] = None,
     ) -> Dict[str, Any]:
         """
-        - Ensures Week rows for this league (regular + postseason)
-        - If SportSeason.scheduleBootstrapped is false OR force=True:
-            * Calls /teams/{id}/schedule for all SportTeams in this sport
-            * Inserts games into global GameResult
-            * Marks SportSeason.scheduleBootstrapped = true
-        Otherwise:
-            * Skips the heavy ESPN work and just returns a summary.
+        Fetch team schedules and upsert their games for the supplied sport season.
+
+        Every call fetches teams with external IDs (up to max_teams). Failed team
+        fetches are logged and skipped; if the loop finishes, the season is marked
+        bootstrapped.
+        This helper does not build weeks or check an existing bootstrapped flag.
+        Date-based checkpoint/resume behavior belongs to
+        bootstrap_sport_season_schedule_by_scoreboard.
         """
         api_keyword, api_group_ids, base_url = self._get_sport_api_config(sport_id)
 

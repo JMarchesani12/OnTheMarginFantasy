@@ -1,4 +1,4 @@
-# socket_auth.py
+# socketAuth.py
 from flask import request
 from supabaseAuth import verify_supabase_token
 

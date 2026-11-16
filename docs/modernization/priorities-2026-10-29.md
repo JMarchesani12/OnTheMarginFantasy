@@ -235,3 +235,15 @@ Converged5,000-league fixture still incurs1,000updates on500ended/live-draft
 leagues percall. [Report](mod-020-lifecycle-read-baseline.md). Internal denied/
 missing probes are not HTTP bypass evidence; endpoint prechecks are separate.
 No lifecycle policy/scoping/job/index change; optimizations remain deferred.
+
+
+## Small cleanup closeout — 2026-11-15
+
+MOD037 demonstrated local filename/route/bootstrap text corrections complete,
+with Python executableAST and TypeScript emittedJS equivalence and frontend
+import graph75files/219edges PASS. [Report](mod-037-text-cleanup.md).
+MOD035 remaining repository-visible ownership inventory complete with explicit
+keep/no-change decisions, current retirements distinguished from historical
+snapshots. [Inventory](mod-035-legacy-ownership-inventory.md). No uncertain legacy
+code removed, route registered or outside usage/owner guessed. External retirement/
+operator decisions remain separate; MOD018/036 and deferred optimizations remain.
