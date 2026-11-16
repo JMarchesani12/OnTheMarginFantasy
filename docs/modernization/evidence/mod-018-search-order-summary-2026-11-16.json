@@ -1,0 +1,61 @@
+{
+  "date": "2026-11-16",
+  "result": "PASS_SEARCH_ORDER_IMPLEMENTATION",
+  "redArtifact": "mod-018-search-order-5cb48272ee60490d942e4715085ef2d2.json",
+  "greenArtifact": "mod-018-search-order-344e5d587b2746d091c2721b672d47ab.json",
+  "redSha256": "0f6761237ef5392e785565496caa97bed2145681d700fa043527514f51c6a150",
+  "greenSha256": "a068efa93cb95b76b2730d97e1aee0d91f4609d14bec0d4b3c9d85c05d9b4c86",
+  "checks": {
+    "publicSearchTests": 5,
+    "backendTests": 782,
+    "measurementTests": 52,
+    "nativeOrderedWalks": 18,
+    "nativeBoundaryChecks": 90,
+    "nativeMixedNameCases": 3,
+    "sourceHashes": 13,
+    "stagedIndexPreserved": true,
+    "applicationChange": "Final ORDER BY l.id ASC only",
+    "frontendUnchanged": true
+  },
+  "review": {
+    "freshReviewer": "post_audit_search_review",
+    "critical": 0,
+    "important": 0,
+    "minorDeferred": [
+      {
+        "file": "scripts/modernization/measure_mod018_search.py:128",
+        "finding": "Future report description retains historical optimization-deferred/fixture-only wording despite accurate no-op flags; update on next measurement-runner work. Historical artifacts remain immutable."
+      }
+    ],
+    "independentChecks": {
+      "focusedTests": 5,
+      "sourceHashes": 13,
+      "orderedWalks": 18,
+      "pagePayloadSignatures": 664,
+      "boundaries": 90,
+      "mixedCases": 3,
+      "stagedIndexPreserved": true
+    },
+    "declinedToJudge": [
+      "Live PostgreSQL execution/cleanup independently",
+      "Production performance/deployment",
+      "Concurrent pagination",
+      "Unrelated roadmap work"
+    ],
+    "authorRuling": "Author observed native execution/cleanup; no production/deployment/concurrent guarantee is claimed; unrelated roadmap remains outside this batch."
+  },
+  "cleanup": {
+    "databaseCountZero": true,
+    "ownedContainer": "b96bdf02d925fc690bcc18cf6fc70a3f977e02053654e282b246826c60888a2f",
+    "labelsVerified": {
+      "otm.synthetic": "true",
+      "otm.task": "search-order"
+    },
+    "persistentMounts": [],
+    "containerRemoved": true,
+    "remainingTaskContainers": 0,
+    "dockerAndImageCacheRetained": true
+  },
+  "uncommitted": true,
+  "deployed": false
+}

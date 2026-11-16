@@ -110,7 +110,7 @@ class LeagueReadRepository:
             WHERE l."isDiscoverable" = true
             AND l.name ILIKE :pattern
             {sport_clause}
-            ORDER BY similarity(l.name, :q) DESC, l.name ASC
+            ORDER BY similarity(l.name, :q) DESC, l.name ASC, l.id ASC
             LIMIT :limit OFFSET :offset
         """)
         rows = conn.execute(sql, params).mappings().all()

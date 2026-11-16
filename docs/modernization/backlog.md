@@ -393,6 +393,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-018 — Measure retrieval and stabilize/paginate proven large lists
 
+- **Stable search ordering implemented — 2026-11-16:** Final league-ID tie key added after similarity/name, no other query/route/payload/filter/bounds change. Real PostgreSQL RED→GREEN at6/20/50rows/all+sports/bothlayouts:18orderedwalks/90boundaries/3mixednamecases pass; backend782/measurement52 PASS. [Implementation](mod-018-search-order-implementation.md). Resolves measured static equal-name repeats/omissions; no concurrent/cursor/production rollout claim.
+
 - **Search measurement — 2026-11-16:** Actual discoverable search/service at1k/10k/100kleagues,51runner tests/72SQL/42service records/4small walks verified. Equal-name pagination repeats one ID five extra times and omits five matches; private IDtie probe returns all700 exactly once across layouts. [Report](mod-018-league-search-baseline.md). Measurement complete in bounded scope; actual ordering correction/paging decisions remain deferred until audit completion. No app optimization or large full-traversal claim.
 
 - **Priority / size / risk:** P2 / M / Medium.

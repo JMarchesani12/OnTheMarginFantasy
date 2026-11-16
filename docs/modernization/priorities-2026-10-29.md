@@ -268,3 +268,23 @@ keyboard/AX observations verified. [Report](mod-036-local-ui-tier-audit.md).
 Home tab pattern and invalid tier cache handling are concrete later followups.
 No product fix/optimization; full authenticated screens/AT/mobile/route-error
 recovery/live operator/provider acceptance remains outside this local scope.
+
+
+## Post-audit implementation queue — 2026-11-16
+
+[Consolidated roadmap](post-audit-implementation-2026-11-16.md) now orders the
+deferred work. First three bounded plans cover search ID ordering, Home tabs and
+tier invalid-cache recovery. Larger lifecycle/scoring/ingestion/query work needs
+its own design; index candidates and operational/schema rollout are separate gates.
+This is documentation only: no application fix, migration or deployment started.
+Historical evidence/known acceptance limits and user-owned uncommitted work remain
+preserved. Fair draft scaling remains a separate feature design.
+
+
+## First post-audit implementation — 2026-11-16
+
+MOD018 search ordering now has the final uniqueID key. Routed RED and native
+RED→GREEN prove static6/20/50-row pages complete across filters/layouts;
+backend782/measurement52 pass. [Implementation](mod-018-search-order-implementation.md).
+No page-size/route/payload/index change or deployment. User staging preserved;
+Home tabs and tier-cache plans remain next, not implemented by this batch.

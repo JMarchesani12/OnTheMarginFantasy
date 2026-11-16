@@ -4,10 +4,13 @@ from unittest.mock import MagicMock,patch
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 class SearchMeasureTests(unittest.TestCase):
  def setUp(self):self.m=importlib.import_module('measure_mod018_search')
- def test_capture_preserves_source_and_isolates_tie_probe(self):
+ def test_capture_preserves_fixed_source_and_noop_probe(self):
   cases=self.m.capture_queries(1000);self.assertEqual(len(cases),6)
   for c in cases:
-   self.assertIn('ORDER BY similarity(l.name, :q) DESC, l.name ASC',c['sql']);self.assertNotIn('l.id ASC',c['sql']);self.assertIn('l.name ASC, l.id ASC',self.m.probe_sql(c['sql']));self.assertLessEqual(c['params']['offset'],10000)
+   self.assertIn('ORDER BY similarity(l.name, :q) DESC, l.name ASC',c['sql']);self.assertIn('l.name ASC, l.id ASC',c['sql']);self.assertEqual(self.m.probe_sql(c['sql']),c['sql']);self.assertLessEqual(c['params']['offset'],10000)
+ def test_probe_is_idempotent_once_production_has_unique_key(self):
+  sql=self.m.ORDER+', l.id ASC LIMIT :limit OFFSET :offset'
+  self.assertEqual(self.m.probe_sql(sql),sql)
  def test_independent_payload_and_scope(self):
   m=self.m;ids=m.eligible_ids(1000,None);self.assertEqual(len(ids),700);self.assertNotIn(10,ids)
   self.assertTrue(all(i%7==0 for i in m.eligible_ids(1000,2)))

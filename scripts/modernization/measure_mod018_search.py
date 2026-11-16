@@ -20,6 +20,7 @@ def expected_row(i):return dict(id=i,name='Audit League',sport=2 if i%7==0 else 
 def expected_ids(n,case):return [] if case['params']['q']=='Absent' else eligible_ids(n,case['sport'])[case['params']['offset']:case['params']['offset']+case['params']['limit']]
 def probe_sql(sql):
     if sql.count(ORDER)!=1:raise AssertionError('Expected production ORDER BY shape changed')
+    if ORDER+', l.id ASC' in sql:return sql
     return sql.replace(ORDER,ORDER+', l.id ASC',1)
 
 
@@ -59,7 +60,7 @@ def measure_sql(conn,n,case,reference):
     for _ in range(5):
         start=time.perf_counter();raw=conn.execute(text(sql),params).mappings().all();elapsed=(time.perf_counter()-start)*1000;rows=[dict(r) for r in raw];validate_rows(n,case,rows,reference)
         samples.append(dict(client_ms=elapsed,result=base.signature(rows),ids=[r['id'] for r in rows]))
-    return dict(name=case['name'],variant='id_probe' if reference else 'current',sql=sql,params=params,expected_rows=case['expected_rows'],samples=samples,median_client_ms=base.statistics.median(s['client_ms'] for s in samples),distinct_ordered_fingerprints=len({s['result']['sha256'] for s in samples}),plan=plan)
+    return dict(name=case['name'],variant='id_probe' if reference else 'current',probe_adds_order_key=reference and sql!=case['sql'],sql=sql,params=params,expected_rows=case['expected_rows'],samples=samples,median_client_ms=base.statistics.median(s['client_ms'] for s in samples),distinct_ordered_fingerprints=len({s['result']['sha256'] for s in samples}),plan=plan)
 
 
 def measure_service(engine,n,cases):
@@ -115,7 +116,7 @@ def run_tier(admin,n,report):
                     if structural_catalog(before_catalog)!=structural_catalog(after_catalog):raise AssertionError('Schema index definitions changed after private layout probe')
                     changes={variant:next(x for x in layouts['original']['sql_measurements'] if x['variant']==variant and x['name']=='all_first')['samples'][0]['ids']!=next(x for x in layouts['descending_heap']['sql_measurements'] if x['variant']==variant and x['name']=='all_first')['samples'][0]['ids'] for variant in ['current','id_probe']}
                     if changes['id_probe']:raise AssertionError('Reference ordering changed across layouts')
-                    return dict(leagues=n,fixture=facts,settings=settings,before_index_catalog=before_catalog,after_index_catalog=after_catalog,first_page_changed=changes,layouts=layouts)
+                    return dict(leagues=n,fixture=facts,settings=settings,id_probe_is_noop=all(probe_sql(c['sql'])==c['sql'] for c in cases),before_index_catalog=before_catalog,after_index_catalog=after_catalog,first_page_changed=changes,layouts=layouts)
             finally:engine.dispose()
     finally:
         if record is not None:verify_cleanup(admin,record)
