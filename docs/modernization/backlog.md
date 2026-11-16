@@ -417,6 +417,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-020 — Remove global lifecycle writes from ordinary league reads after measurement
 
+- **Measurement baseline — 2026-11-15:** Actual scoped reader/lifecyclecallback at100/1000/5000leagues:46runner tests/24records/144calls preserve exact final statuses/timestamp sets/projections/counts. Five global UPDATEs precede one SELECT; converged5,000-league fixture still1,000updates on500ended/live-draft leagues. [Report](mod-020-lifecycle-read-baseline.md). Internal reader probes, not HTTP bypass proof. No policy/scoping/job/optimization change, deferred until audit completion.
+
 - **Priority / size / risk:** P2 / M / Medium–High.
 - **Features:** F-005, F-008, F-013, F-018, F-020, F-025.
 - **Problem / evidence:** BE S01 / DB-10: five global status UPDATEs during league read methods.
@@ -440,6 +442,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 - **Contract impact:** Behavior/API: no intended; schema: no.
 
 ### MOD-022 — Deduplicate ingestion by sport season and bound provider retries
+
+- **Measurement baseline — 2026-11-15:** Real ingestion/parser/nativeSQL with canned fetch and HTTP blocked;40runner tests/12records/72workloads plus2partial-failure/rerun probes pass. At16same-season leagues, existing per-league loop32fetches/64upserts/640SQL versus existing season helper once2/3/29. [Report](mod-022-ingestion-baseline.md). No routing/dedup/retry change; conflicting duplicates/bootstrap/checkpoints/backoff/production evidence remain open and optimization deferred.
 
 - **Priority / size / risk:** P2 / M / Medium–High.
 - **Features:** F-027, F-028, F-035.

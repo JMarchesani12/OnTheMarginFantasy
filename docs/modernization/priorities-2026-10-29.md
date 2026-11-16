@@ -215,3 +215,23 @@ scores/querycounts/rollback. At16members untied52 statements versus unresolved20
 (120H2H pair reads). See [report](mod-021-weekly-scoring-baseline.md). This supports
 later batching/context design; no optimization implemented. Full season scoring/
 finalization/ingestion and remaining cards remain open.
+
+
+## MOD022 ingestion baseline — 2026-11-15
+
+Actual ingestion/service/parser/SQL measured with canned fetch only and external
+HTTP blocked:40runner tests,12records/72workloads plus2failure/rerun probes pass.
+At16same-season leagues, league loop32fetches/64upserts/640SQL versus existing
+season helper once2/3/29. [Report](mod-022-ingestion-baseline.md). No routing/dedup/
+retry optimization implemented; conflicting duplicates/checkpoints/transport
+retry policy/production behavior remain separate. Actual optimizations deferred.
+
+
+## MOD020 read-triggered lifecycle baseline — 2026-11-15
+
+Actual scoped read service + global lifecycle callback measured:46runner tests,
+24records/144calls pass all-league state/timestamp sets/counts at three sizes.
+Converged5,000-league fixture still incurs1,000updates on500ended/live-draft
+leagues percall. [Report](mod-020-lifecycle-read-baseline.md). Internal denied/
+missing probes are not HTTP bypass evidence; endpoint prechecks are separate.
+No lifecycle policy/scoping/job/index change; optimizations remain deferred.
