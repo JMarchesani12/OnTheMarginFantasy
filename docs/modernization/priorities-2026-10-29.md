@@ -184,3 +184,34 @@ records pass. See [report](mod-017-team-lookup-baselines.md). Full-team retrieva
 remains visible even for misses; ownership indexing helps selected reads while
 the conference-leading candidate regresses them. No optimization implemented;
 remaining query families/performance cards stay open.
+
+
+## MOD017 head-to-head continuation — 2026-11-15
+
+User reconfirmed measurements only, optimizations deferred. Actual head-to-head
+SQL and supplied-connection service mapping now have three-tier baselines:
+24 runner tests,132 SQL/132 service results preserve full independently expected
+rows, boundary dates, swapped flags and one half-open ownership transfer. See
+[report](mod-017-head-to-head-baselines.md). Separate/combined game and ownership
+index evidence supports later evaluation; no application change or MOD017 closure.
+Full scoring/ingestion and remaining performance cards remain separate.
+
+
+## MOD017 stored-score read continuation — 2026-11-15
+
+Weekly-points/season-totals/weekly-ranks and actual trusted job reader measured:
+29 runner tests,180SQL/84service independent full expected records pass at three
+league/score sizes. See [report](mod-017-score-read-baselines.md). Scoped reads
+already use existing identity indexes; extra score indexes show no consistent
+benefit. Preserve no-change conclusion. No optimization implemented; full scoring
+query-count/bonus/postseason/ingestion and remaining cards remain separate.
+
+
+## MOD021 weekly orchestration baseline — 2026-11-15
+
+Actual scorer/schedule/rules/native rolled-back writes now measured for4/8/16
+members across five scenarios:35runner tests,15records/90invocations pass exact
+scores/querycounts/rollback. At16members untied52 statements versus unresolved204
+(120H2H pair reads). See [report](mod-021-weekly-scoring-baseline.md). This supports
+later batching/context design; no optimization implemented. Full season scoring/
+finalization/ingestion and remaining cards remain open.

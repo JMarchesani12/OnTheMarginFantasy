@@ -1,0 +1,37 @@
+{
+  "date": "2026-11-15",
+  "run_id": "c1dffb62ca7043fe9a2f6865d137fd35",
+  "started_at": "2026-11-16T02:53:40.797290+00:00",
+  "result": "FAILED",
+  "scope": "Synthetic head-to-head query/service measurements only; optimization deferred",
+  "tiers": [],
+  "databases": [
+    {
+      "name": "otm_mod017_b053d0a8ee13401f94b6eb8d17a0db6e",
+      "cleanup": "removed"
+    }
+  ],
+  "cleanup": "verified",
+  "provenance": {
+    "db/baselines/20261029/001_schema.sql": "7fe1c17223dd2cf3ebbfdb9d2ca318d4f7ad24f9a6578309c40aad3cfb58a109",
+    "api/migrations/20261104_user_identity_unique.sql": "64631ad06193c79bded2e52849e0264b281468ea098e3dfd72d9def01f3dab88",
+    "api/migrations/20261104_week_score_identity.sql": "b6a040b0d2599e32e4d87d7c59c30aecbbaa22cca7d79c07d988279a36c2e244",
+    "api/migrations/20261104_ownership_integrity.sql": "fb3b6c5dd445a6e8da5dd67784d882032a698917e7ac1d9eebb1167120480116",
+    "api/migrations/20261030_game_kickoff_tbd.sql": "4fa4d40cf16cf0600a37aec2f915e31efe024c294fe5c5a047d32ad599cf33d4",
+    "scripts/modernization/measure_mod017.py": "1a7fcad698597ad9bfce62532813a27d6486e37fd3580ef24d861c2f034a1868",
+    "scripts/modernization/measure_mod017_transactions.py": "21cb1761716f2a39cc3f59b44f875f8c5342503eb38ebfc8f6533595834d91ca",
+    "scripts/modernization/measure_mod017_games.py": "e42d4a568b0fd0214fae7a94cf3c277ff2d4e98a0e791ca5b870a2d0d197945d",
+    "scripts/modernization/measure_mod017_h2h.py": "23edd155027c7d39598dea914cb46c6d48616df6b13ee7f62f00dbe1aa9eeecc",
+    "api/endpoints/schedule/read_service.py": "d71c97ceabbd3c607b428390cbd163d7dd19fc17fc0e6d09f4ad53b203190a6a",
+    "api/endpoints/schedule/calendar_service.py": "62856988b03cf014a567b4ffb8ea256a1d540260b2d895bfdd967371126aed6d",
+    "api/endpoints/schedule/read_repository.py": "129767bbd62009c1cea190f8687b73a5f25460aab7d8ddae13e403c80f63ee23",
+    "api/utils/conference_membership.py": "d82e7ee6ac076214f110d02b7f3f1f0bf2444a32428f663cff360e86990ea63f"
+  },
+  "limits": [
+    "One sport,512teams,20/50/100seasons; current-season fraction5%/2%/1%,not production estimates",
+    "Eight-team block pairing,10boundarygames,one [7,10) transfer,not real sports schedule",
+    "Prior schema/RLS/cache/writecost/concurrency/provider limits remain; no rollout or SQL rewrite"
+  ],
+  "error_type": "KeyError",
+  "finished_at": "2026-11-16T02:53:41.446355+00:00"
+}

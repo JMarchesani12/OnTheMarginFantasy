@@ -372,6 +372,10 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-017 — Measure query plans and propose only supported indexes
 
+- **Stored-score read baseline — 2026-11-15:** Weekly points/season totals/ranks and actual trusted job reader measured at9588/95988/479988 scores;29 runner tests,180SQL/84service complete expected records pass. Extra score indexes show no consistent benefit; no added index supported. [Report](mod-017-score-read-baselines.md). Optimization deferred; full scoring/ingestion and other cards remain open.
+
+- **Head-to-head baseline — 2026-11-15:** Actual SQL/service mapping measured at10k/100k/500k games, complete expected fields/boundary dates/[7,10) transfer;24 runner tests and132 SQL/132 service records pass. Separate/combined game-date and ownership indexes measured privately. [Report](mod-017-head-to-head-baselines.md). All optimization implementation remains deferred; full scoring/ingestion and other cards remain open.
+
 - **Game/schedule baseline — 2026-11-13:** Member-week/conference-week/team-season actual SQL measured at10k/100k/500k synthetic games;108equivalent case/configuration results,14runner testsPASS, reviewed no material issues. Game indexes help selected team-season work but repeated ownership joins remain dominant. [Report](mod-017-game-baselines.md). User defers all performance implementation until audit completion; other query families remain open.
 
 - **Transaction-read baseline — 2026-11-13:** Actual transaction-list/open-trade/weekly-candidate SQL measured in isolated three-tier PostgreSQL fixtures, with strict counts/output equivalence and run-specific failure/cleanup artifacts. Full/partial index tradeoffs and substantial open-trade JIT cost recorded; no production change/rollout. [Report](mod-017-transaction-baselines.md). Prior baseline/runner preserved; games/team/conference/scoring and production workload/write-cost evidence remain open.
@@ -423,6 +427,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 - **Contract impact:** Behavior: lifecycle timing may change explicitly; API: no intended shape change; schema: no unless justified later.
 
 ### MOD-021 — Batch member/week scoring reads where measurements justify it
+
+- **Measurement baseline — 2026-11-15:** Real weekly scorer/schedule/rules + native rolled-back score writes at4/8/16members, five tie/tier/phase/dual-ownership cases:35runner tests/15records/90invocations pass. At16members52untied vs204unresolved statements, including120pair H2H reads. [Report](mod-021-weekly-scoring-baseline.md). Batching/context sharing remains deferred until audit completion; no optimization/full-season or ingestion claim.
 
 - **Priority / size / risk:** P2 / M / High.
 - **Features:** F-008, F-009, F-011, F-025, F-026, F-032, F-035.
