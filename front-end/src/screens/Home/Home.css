@@ -494,3 +494,6 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Author layout rules must not override inactive tab panels. */
+.home [role="tabpanel"][hidden] { display: none; }

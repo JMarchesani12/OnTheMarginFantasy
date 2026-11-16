@@ -47,12 +47,12 @@ export async function bundleProbe(){
   return {controlledEnvironment:true,envDirEmpty:true,manifest,assets,entry,initialFiles:[...initial],initialJS:sum(initial),initialCSS:manifest[entry].css??[],routes,limits:'Per-file gzip/Brotli sums,not wire transfers; shared static chunks counted once, no runtime profile or size budget'};
 }
 
-export async function buildFixture(){
-  const esbuild=require('esbuild');const out=path.join(WORK,'fixture');await fs.mkdir(out,{recursive:true});
+export async function buildFixture(work=WORK){
+  const esbuild=require('esbuild');const out=path.join(work,'fixture');await fs.mkdir(out,{recursive:true});
   const profile=`const value={userId:1,displayName:'Synthetic user',email:'audit@example.test',identityKey:'audit:1',isCurrentIdentity:()=>true,authUserId:'audit',loading:false,error:null,refreshUser:async()=>{}};export const useCurrentUser=()=>value;`;
   const leagues=`export async function getLeaguesForUser(){return Array.from({length:globalThis.__auditCount??8},(_,i)=>({leagueId:i+1,leagueName:'Synthetic league '+(i+1),sport:'Basketball',numPlayers:8,status:'In-Season',commissionerId:1,commissionerDisplayName:'Audit',teamName:'Team '+(i+1),seasonPoints:i,currentWeekNumber:13,currentWeekId:13,seasonYear:2026,draftOrder:1,settings:{timezone:'UTC'}}));}export async function searchLeagues(){return [];}`;
   const built=await esbuild.build({absWorkingDir:ROOT,nodePaths:[path.join(ROOT,'front-end/node_modules')],metafile:true,entryPoints:[path.join(ROOT,'scripts/modernization/mod036_fixture.tsx')],outfile:path.join(out,'fixture.js'),bundle:true,format:'esm',jsx:'automatic',minify:true,define:{'process.env.NODE_ENV':'"production"'},loader:{'.svg':'dataurl','.png':'dataurl'},plugins:[{name:'controlled-fixture-only',setup(b){b.onResolve({filter:/context\/(currentUserContext|AuthContext)$|api\/(leagues|sport)$/},args=>({path:args.path.includes('currentUserContext')?'profile':args.path.includes('AuthContext')?'auth':args.path.endsWith('leagues')?'leagues':'sport',namespace:'audit'}));b.onLoad({filter:/.*/,namespace:'audit'},args=>({contents:args.path==='profile'?profile:args.path==='auth'?`const value={signOut:async()=>{}};export const useAuth=()=>value;`:args.path==='leagues'?leagues:`export async function getSports(){return [{id:1,name:'Basketball'}];}`,loader:'js'}));}}],logLevel:'silent'});
-  const inputs=Object.keys(built.metafile.inputs);assert.ok(!inputs.some(p=>p.includes('supabaseClient')||p.endsWith('/api/client.ts')));await fs.writeFile(path.join(WORK,'fixture-inputs.json'),JSON.stringify(inputs,null,2));
+  const inputs=Object.keys(built.metafile.inputs);assert.ok(!inputs.some(p=>p.includes('supabaseClient')||p.endsWith('/api/client.ts')));await fs.writeFile(path.join(work,'fixture-inputs.json'),JSON.stringify(inputs,null,2));
   await fs.writeFile(path.join(out,'index.html'),'<!doctype html><html><head><meta charset="utf-8"><title>MOD036 synthetic fixture</title><link rel="stylesheet" href="/fixture.css"></head><body><div id="root"></div><script type="module" src="/fixture.js"></script></body></html>');return out;
 }
 

@@ -288,3 +288,7 @@ RED→GREEN prove static6/20/50-row pages complete across filters/layouts;
 backend782/measurement52 pass. [Implementation](mod-018-search-order-implementation.md).
 No page-size/route/payload/index change or deployment. User staging preserved;
 Home tabs and tier-cache plans remain next, not implemented by this batch.
+
+### Home keyboard follow-up — 2026-11-16
+
+MOD036's Home tab keyboard/ARIA finding is implemented locally: manual activation, roving focus, stable labelled panels and hidden inactive shells. Frontend237/237, helper8/8, TypeScript/import checks and native Chrome acceptance pass. [Implementation/evidence](mod-036-home-tabs-implementation.md). Uncommitted; full AT/mobile/production acceptance remains outside this batch.

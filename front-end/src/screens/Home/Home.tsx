@@ -61,6 +61,18 @@ const normalizeLeaguesResponse = (response: unknown): League[] => {
 const Home = () => {
   const navigate = useNavigate();
   const [tab, setTab] = useState<HomeTab>("leagues");
+  const [tabStop, setTabStop] = useState<HomeTab>("leagues");
+  const leagueTabRef = useRef<HTMLButtonElement>(null);
+  const searchTabRef = useRef<HTMLButtonElement>(null);
+  const moveTabFocus = (event: React.KeyboardEvent<HTMLButtonElement>, current: HomeTab) => {
+    let next: HomeTab;
+    if (event.key === "Home") next = "leagues";
+    else if (event.key === "End") next = "search";
+    else if (event.key === "ArrowLeft" || event.key === "ArrowRight") next = current === "leagues" ? "search" : "leagues";
+    else return;
+    event.preventDefault();
+    (next === "leagues" ? leagueTabRef : searchTabRef).current?.focus();
+  };
   const [stage, setStage] = useState<StageValue>("active");
   const [leagueState, setLeagues] = useState<LeagueListState | null>(null);
   const [retryAttempt, setRetryAttempt] = useState(0);
@@ -382,8 +394,14 @@ const Home = () => {
           className={`home__tab ${tab === "leagues" ? "home__tab--active" : ""}`}
           type="button"
           role="tab"
+          id="home-leagues-tab"
+          ref={leagueTabRef}
+          aria-controls="home-leagues-panel"
           aria-selected={tab === "leagues"}
-          onClick={() => setTab("leagues")}
+          tabIndex={tabStop === "leagues" ? 0 : -1}
+          onFocus={() => setTabStop("leagues")}
+          onKeyDown={(event) => moveTabFocus(event, "leagues")}
+          onClick={() => { setTabStop("leagues"); setTab("leagues"); }}
         >
           Your Leagues
         </button>
@@ -391,15 +409,21 @@ const Home = () => {
           className={`home__tab ${tab === "search" ? "home__tab--active" : ""}`}
           type="button"
           role="tab"
+          id="home-search-tab"
+          ref={searchTabRef}
+          aria-controls="home-search-panel"
           aria-selected={tab === "search"}
-          onClick={() => setTab("search")}
+          tabIndex={tabStop === "search" ? 0 : -1}
+          onFocus={() => setTabStop("search")}
+          onKeyDown={(event) => moveTabFocus(event, "search")}
+          onClick={() => { setTabStop("search"); setTab("search"); }}
         >
           Search Leagues
         </button>
       </div>
 
-      {tab === "leagues" ? (
-        <section className="home__leagues" aria-label="Your leagues">
+      <section id="home-leagues-panel" role="tabpanel" aria-labelledby="home-leagues-tab" hidden={tab !== "leagues"} className="home__leagues">
+        {tab === "leagues" && (<>
           {leaguesLoading && <p role="status">Loading your leagues…</p>}
           {currentList?.status === "error" && (
             <div role="alert">
@@ -415,9 +439,10 @@ const Home = () => {
           {leagues.map((league) => (
             <LeagueCard key={league.leagueId} league={league} />
           ))}
-        </section>
-      ) : (
-        <section className="home__search" aria-label="Search leagues">
+        </>)}
+      </section>
+      <section id="home-search-panel" role="tabpanel" aria-labelledby="home-search-tab" hidden={tab !== "search"} className="home__search">
+        {tab === "search" && (<>
           <div className="home__search-controls">
             <div className="home__search-field">
               <label htmlFor="league-search">Search by league name</label>
@@ -523,8 +548,8 @@ const Home = () => {
               </button>
             </div>
           )}
-        </section>
-      )}
+        </>)}
+      </section>
     </main>
   );
 };

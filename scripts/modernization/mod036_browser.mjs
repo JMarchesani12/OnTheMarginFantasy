@@ -16,7 +16,7 @@ class CDP{
  async evaluate(expression){const r=await this.send('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true});if(r.exceptionDetails)throw Error(r.exceptionDetails.exception?.description??r.exceptionDetails.text);return r.result.value;}
  async key(key,code,vk){await this.send('Input.dispatchKeyEvent',keyDownPayload(key,code,vk));await this.send('Input.dispatchKeyEvent',{type:'keyUp',key,code,windowsVirtualKeyCode:vk});await this.evaluate('window.audit.frames()');}
 }
-export async function browserProbe(fixture,work,report){
+export async function browserProbe(fixture,work,report,{homeOnly=false}={}){
  const profile=await fs.mkdtemp(path.join(os.tmpdir(),'otm-mod036-chrome-'));let child,cdp,exited=false;const exceptions=[],blocked=[],requests=[];const result={records:[]};report.browser=result;
  const server=http.createServer(async(req,res)=>{try{const file=path.resolve(fixture,'.'+new URL(req.url,'http://127.0.0.1').pathname.replace(/\/$/,'/index.html'));if(!file.startsWith(fixture+path.sep))throw Error('Forbidden');const bytes=await fs.readFile(file);res.setHeader('Content-Type',file.endsWith('.js')?'text/javascript':file.endsWith('.css')?'text/css':'text/html');res.end(bytes);}catch{res.statusCode=404;res.end('Not found');}});
  try{
@@ -28,15 +28,12 @@ export async function browserProbe(fixture,work,report){
   cdp.handlers['Fetch.requestPaused']=p=>{requests.push(p.request.url);const allowed=p.request.url.startsWith(origin+'/');if(!allowed)blocked.push(p.request.url);cdp.send(allowed?'Fetch.continueRequest':'Fetch.failRequest',allowed?{requestId:p.requestId}:{requestId:p.requestId,errorReason:'BlockedByClient'}).catch(e=>exceptions.push(String(e)));};
   await cdp.send('Page.enable');await cdp.send('Runtime.enable');await cdp.send('Performance.enable');await cdp.send('Fetch.enable',{patterns:[{urlPattern:'*'}]});await cdp.send('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});result.browser=await cdp.send('Browser.getVersion');
   await cdp.send('Page.navigate',{url:origin+'/'});let ready=false;for(let i=0;i<200;i++){if(await cdp.evaluate('typeof window.audit === "object"')){ready=true;break;}await pause(50);}if(!ready)throw Error('Synthetic fixture did not load: '+exceptions.join(';'));
+  if(homeOnly){const {homeTabsAcceptance}=await import('./home_tabs_acceptance.mjs');result.homeTabs=await homeTabsAcceptance(cdp);assert.deepEqual(exceptions,[]);result.exceptions=exceptions;result.pageRequestOrigins=[...new Set(requests.map(u=>new URL(u).origin))];result.blockedRequests=blocked;assert.deepEqual(result.pageRequestOrigins,[origin]);return result;}
   for(const kind of ['home','draft','scoreboard'])for(const count of [8,32,128]){
    const samples=[];for(let i=0;i<6;i++){const x=await cdp.evaluate(`window.audit.mount(${JSON.stringify(kind)},${count})`);assert.equal(x.rows,count);const metrics=await cdp.send('Performance.getMetrics');if(i)samples.push({...x,browserMetrics:Object.fromEntries(metrics.metrics.filter(m=>['JSHeapUsedSize','LayoutDuration','ScriptDuration','Nodes'].includes(m.name)).map(m=>[m.name,m.value]))});}
    const ordered=samples.map(x=>x.settleMs).sort((a,b)=>a-b);result.records.push({kind,count,samples,medianSettleMs:ordered[2]});
   }
-  await cdp.evaluate('window.audit.mount("home",8)');await cdp.evaluate('document.querySelectorAll("[role=tab]")[0].focus()');
-  const tabs=()=>cdp.evaluate('({focus:document.activeElement?.textContent,tabs:[...document.querySelectorAll("[role=tab]")].map(x=>({text:x.textContent,selected:x.getAttribute("aria-selected"),tabIndex:x.tabIndex,controls:x.getAttribute("aria-controls")}))})');
-  const before=await tabs();await cdp.key('ArrowRight','ArrowRight',39);const afterArrow=await tabs();await cdp.key('Tab','Tab',9);const afterTab=await tabs();await cdp.key('Enter','Enter',13);const afterEnter=await tabs();
-  result.homeKeySnapshots={before,afterArrow,afterTab,afterEnter};assert.equal(before.focus,'Your Leagues');assert.equal(afterArrow.focus,'Your Leagues');assert.equal(afterTab.focus,'Search Leagues');assert.equal(afterEnter.tabs[1].selected,'true');
-  const ax=await cdp.send('Accessibility.getFullAXTree');result.homeKeyboard={before,afterArrow,afterTab,afterEnter,accessibleTabs:ax.nodes.filter(n=>n.role?.value==='tab').map(n=>({name:n.name?.value,properties:n.properties}))};
+  const {homeTabsAcceptance}=await import('./home_tabs_acceptance.mjs');result.homeTabs=await homeTabsAcceptance(cdp);
   await cdp.evaluate('window.audit.mount("draft",8)');await cdp.evaluate(focusExpression('button[aria-label="Move Team 2 up"]'));await cdp.key(' ','Space',32);
   result.draftKeyboard=await cdp.evaluate('({order:[...document.querySelectorAll(".ml-draft-member")].map(x=>x.textContent),focus:document.activeElement?.getAttribute("aria-label"),announcement:document.querySelector(".ml-draft-order [role=status]")?.textContent})');assert.deepEqual(result.draftKeyboard.order.slice(0,2),['Team 2','Team 1']);assert.equal(result.draftKeyboard.focus,'Move Team 2 down');assert.match(result.draftKeyboard.announcement,/position 1 of 8/);
   assert.deepEqual(exceptions,[]);result.exceptions=exceptions;result.pageRequestOrigins=[...new Set(requests.map(u=>new URL(u).origin))];result.blockedRequests=blocked;assert.deepEqual(result.pageRequestOrigins,[origin]);

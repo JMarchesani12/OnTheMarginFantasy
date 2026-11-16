@@ -72,3 +72,7 @@ Independent final review: Critical0/Important0/Minor1. Reviewer passed7audit tes
 Deferred minor: repeated samples check component kind/row count, which may initially match the prior render. Two RAF callbacks are not an explicit generation/commit marker. Cumulative metrics show remount activity, but54render requests are not proof of54individually verified commits. Treat timings as coarse fixture frame-settle observations; add a per-mount generation marker before future detailed profiling. Keyboard setup switches component kinds and is not dependent on same-kind repeated sample timing. No native rerun or product change required for this documented limitation.
 
 Reviewer did not rerun Chrome/main audit/broad application checks; full authenticated pages/provider/production/AT/mobile/route recovery and prior MOD018 work remain outside its scope.
+
+## Home keyboard implementation follow-up — 2026-11-16
+
+The baseline Home keyboard finding is resolved in local application scope. [Implementation and current native evidence](mod-036-home-tabs-implementation.md) cover manual activation, roving focus and labelled hidden panels. Original raw baseline artifacts remain unchanged. Tier-cache recovery is separate pending work.

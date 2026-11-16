@@ -1,0 +1,27 @@
+{
+  "result": "PASS_LOCAL_HOME_TABS",
+  "artifact": "mod-036-home-tabs-7fe75999b9d241738d18275a3f37460f.json",
+  "sha256": "f05e814f1cc2c2b884d7ce6249d859271a321eb0beb305861368d7a169b9bd57",
+  "checks": {
+    "focused": 9,
+    "frontend": 237,
+    "typescript": "PASS",
+    "importFiles": 75,
+    "importEdges": 219,
+    "measurementAcceptanceTests": 8,
+    "nativeSnapshots": 11,
+    "sourceHashes": 35
+  },
+  "review": {
+    "critical": 0,
+    "important": 0,
+    "deferredMinor": "Native focus entry/re-entry is programmatic; exactly-one activation events not directly counted."
+  },
+  "cleanup": "Owned Chrome exited, loopback server closed, temporary profile removed",
+  "uncommitted": true,
+  "deployed": false,
+  "limitations": [
+    "Full AT/mobile/production not tested",
+    "No render performance claim"
+  ]
+}
