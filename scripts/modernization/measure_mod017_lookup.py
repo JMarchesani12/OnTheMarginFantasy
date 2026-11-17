@@ -31,7 +31,7 @@ def capture_queries(n):
         add('lookup_'+name,'lookup',team_count(n) if sport==1 else 0,lambda c,p=params:repo.search_teams(c,p))
     for name,lid,mid,conf,value in [('current_one',league,member,1,3),('current_two',league,member,2,1),('history_one',history,historic_member,1,4),('unknown_member',league,99999999,1,0),('missing_league',n+100,member,1,0)]:
         add('distinct_'+name,'distinct',1,lambda c,l=lid,m=mid,f=conf:distinct_conference_count_rows(c,l,m,13,f),[{'cnt':value}])
-    for name,lid,mid,values in [('current',league,member,[{'sportConferenceId':1,'cnt':3},{'sportConferenceId':2,'cnt':1}]),('history',history,historic_member,[{'sportConferenceId':1,'cnt':4}]),('null',league,None,[])]:
+    for name,lid,mid,values in [('current',league,member,[{'sportConferenceId':1,'cnt':3},{'sportConferenceId':2,'cnt':1}]),('history',history,historic_member,[{'sportConferenceId':1,'cnt':4}]),('null',league,None,[]),('unknown',league,99999999,[])]:
         add('group_'+name,'group',len(values),lambda c,l=lid,m=mid:grouped_conference_count_rows(c,l,m,13),values)
     return cases
 
@@ -64,6 +64,7 @@ def verify_lookup(rows,params,n):
     if len(by_id)!=team_count(n):raise AssertionError('Duplicate/missing lookup teams')
     one=by_id[1];expected_conf='Conference 2' if params['seasonYear']==2026 else 'Conference 1'
     if one['conferenceName']!=expected_conf or one['ownerMemberId']!=(params['leagueId']-1)*8+1:raise AssertionError('Lookup conference/owner context changed')
+    if one['ownerTeamName']!='Team 1' or one['ownerDisplayName']!='User 1':raise AssertionError('Lookup owner label changed')
     if by_id[team_count(n)]['ownerMemberId'] is not None:raise AssertionError('Unowned lookup team gained an owner')
 
 

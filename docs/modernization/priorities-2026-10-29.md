@@ -316,3 +316,7 @@ Live cron shares season/date/group work across leagues with later-valid-wins, id
 ### MOD017 scoped own-league aggregate — 2026-11-16
 
 Own-league score SUM now filters eligible user/member/league/stage/refreshed IDs before grouping; outer results/fallbacks unchanged. Backend827/827, audit60/60 and native100/1000/5000comparison/plan checks pass; review no findings. Sparse5000-league case aggregates12scores instead of480k; hot scans remain disclosed. [Implementation/evidence/tradeoffs](mod-017-own-score-scope-implementation.md). Local/uncommitted/undeployed; index comparisons/rollout remain separate.
+
+### MOD017 final controlled index selection — 2026-11-16
+
+Local selection complete: one ownership-only proposal, other index families conditional/deferred; no target SQL applied. Backend827/audit71 and native parity/write/recovery/proposal evidence pass; review no findings. [Decisions, evidence and remaining rollout/acceptance gates](mod-017-index-selection.md).

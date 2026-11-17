@@ -1,0 +1,124 @@
+{
+  "result": "FAILED",
+  "started_at": "2026-11-17T03:48:31.194609+00:00",
+  "provenance": {
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/scripts/modernization/verify_mod017_index_proposals.py": "d2317bc930d929612dac4fcb733911e15ccddfb5fa3bf39d6d32d8fcaed013d6",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/scripts/modernization/mod017_index_support.py": "51008ef2bd814c976155a989a5bd05f48fc5d498027626ade117bbf7edb4a828",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/docs/modernization/proposals/mod-017-indexes/verify.sql": "2d618e6a7300f523898df7c6d920dbc6d8c3f0d1d6100b1abf1758231a8ea8d8",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/docs/modernization/proposals/mod-017-indexes/preflight.sql": "bc891a2e81f433f94e7eb5e4447672ed0d94cfabc681846c9d9b9914eb49b1bb",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/docs/modernization/proposals/mod-017-indexes/recovery.sql": "c1a554583efa62a1abd49cf8ecb395c55d957001789b0becdaa263cb4f8ef780",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/docs/modernization/proposals/mod-017-indexes/create.sql": "11c72e7c125232a31788f625a5a5a5a6afbbd21788ecf9e86dab464eb879d1c0",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/db/baselines/20261029/001_schema.sql": "7fe1c17223dd2cf3ebbfdb9d2ca318d4f7ad24f9a6578309c40aad3cfb58a109",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/api/migrations/20261104_user_identity_unique.sql": "64631ad06193c79bded2e52849e0264b281468ea098e3dfd72d9def01f3dab88",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/api/migrations/20261104_week_score_identity.sql": "b6a040b0d2599e32e4d87d7c59c30aecbbaa22cca7d79c07d988279a36c2e244",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/api/migrations/20261104_ownership_integrity.sql": "fb3b6c5dd445a6e8da5dd67784d882032a698917e7ac1d9eebb1167120480116"
+  },
+  "databases": [
+    {
+      "name": "otm_mod017_944b87baee18461d9a7e5099b281e591",
+      "cleanup": "removed"
+    },
+    {
+      "name": "otm_mod017_e91be9cd5c414bd88048e70817ca020e",
+      "cleanup": "removed"
+    },
+    {
+      "name": "otm_mod017_288e2c52260542b48b6493a94c615ff8",
+      "cleanup": "removed"
+    },
+    {
+      "name": "otm_mod017_d0720500262a4fb4b4d4dafef700ecea",
+      "cleanup": "removed"
+    },
+    {
+      "name": "otm_mod017_3d05c31086d14c35aa50e2fa1bfc84c7",
+      "cleanup": "removed"
+    },
+    {
+      "name": "otm_mod017_e7d7b2d04bc847c0846f864e7782053c",
+      "cleanup": "removed"
+    },
+    {
+      "name": "otm_mod017_424c9a5bf1c64928b975be1675f9723d",
+      "cleanup": "removed"
+    },
+    {
+      "name": "otm_mod017_dc7e433554f44903ab3080870d8881d2",
+      "cleanup": "removed"
+    },
+    {
+      "name": "otm_mod017_e52332640628454aadd473744869ccfe",
+      "cleanup": "removed"
+    }
+  ],
+  "cleanup": "no database created",
+  "tiers": [],
+  "cases": [
+    {
+      "name": "missing",
+      "returncode": 3,
+      "stdout": "SET\nSET\n[]\nREFUSE: missing relation/type metadata, invalid index, or same-name drift (member)\n",
+      "stderr": "ERROR:  MOD017 refusal; see preceding diagnostic\nCONTEXT:  PL/pgSQL function inline_code_block line 1 at RAISE\n",
+      "catalog_preserved": true,
+      "drift_preserved_both": false
+    },
+    {
+      "name": "create_verify_recover",
+      "returncode": 0,
+      "stdout": "SET\nSET\n[{\"oid\":\"50917\",\"relname\":\"LeagueTeamSlot_pkey\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":true,\"indisexclusion\":false,\"constraints\":[\"LeagueTeamSlot_pkey\"],\"shape\":false}, {\"oid\":\"51752\",\"relname\":\"LeagueTeamSlot_no_overlap\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":false,\"indisprimary\":false,\"indisexclusion\":true,\"constraints\":[\"LeagueTeamSlot_no_overlap\"],\"shape\":false}]\n[{\"oid\":\"51013\",\"relname\":\"GameResult_pkey\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":true,\"indisexclusion\":false,\"constraints\":[\"GameResult_pkey\"],\"shape\":false}, {\"oid\":\"51015\",\"relname\":\"gamer_esn_unique\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":false,\"indisexclusion\":false,\"constraints\":[\"gamer_esn_unique\"],\"shape\":false}]\nCREATE INDEX\nCreated member; same-session recovery receipt captured. Preserve transcript.\nCREATE INDEX\nCreated game; same-session recovery receipt captured. Preserve transcript.\nSET\nSET\n[{\"oid\":\"50917\",\"relname\":\"LeagueTeamSlot_pkey\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":true,\"indisexclusion\":false,\"constraints\":[\"LeagueTeamSlot_pkey\"],\"shape\":false}, {\"oid\":\"51752\",\"relname\":\"LeagueTeamSlot_no_overlap\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":false,\"indisprimary\":false,\"indisexclusion\":true,\"constraints\":[\"LeagueTeamSlot_no_overlap\"],\"shape\":false}, {\"oid\":\"51754\",\"relname\":\"mod017_owner_member_team\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":false,\"indisprimary\":false,\"indisexclusion\":false,\"constraints\":[],\"shape\":true}]\n[{\"oid\":\"51013\",\"relname\":\"GameResult_pkey\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":true,\"indisexclusion\":false,\"constraints\":[\"GameResult_pkey\"],\"shape\":false}, {\"oid\":\"51015\",\"relname\":\"gamer_esn_unique\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":false,\"indisexclusion\":false,\"constraints\":[\"gamer_esn_unique\"],\"shape\":false}, {\"oid\":\"51755\",\"relname\":\"mod017_game_season_date\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":false,\"indisprimary\":false,\"indisexclusion\":false,\"constraints\":[],\"shape\":true}]\nCatalog verification passed. Operator must separately verify current query outputs/plans under target traffic.\nSET\nDROP INDEX\nDROP INDEX\n",
+      "stderr": "",
+      "catalog_preserved": true,
+      "drift_preserved_both": false
+    },
+    {
+      "name": "equivalent_other_name",
+      "returncode": 0,
+      "stdout": "SET\nSET\n[{\"oid\":\"52158\",\"relname\":\"LeagueTeamSlot_pkey\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":true,\"indisexclusion\":false,\"constraints\":[\"LeagueTeamSlot_pkey\"],\"shape\":false}, {\"oid\":\"52993\",\"relname\":\"LeagueTeamSlot_no_overlap\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":false,\"indisprimary\":false,\"indisexclusion\":true,\"constraints\":[\"LeagueTeamSlot_no_overlap\"],\"shape\":false}, {\"oid\":\"52995\",\"relname\":\"existing_equivalent\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":false,\"indisprimary\":false,\"indisexclusion\":false,\"constraints\":[],\"shape\":true}]\n[{\"oid\":\"52254\",\"relname\":\"GameResult_pkey\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":true,\"indisexclusion\":false,\"constraints\":[\"GameResult_pkey\"],\"shape\":false}, {\"oid\":\"52256\",\"relname\":\"gamer_esn_unique\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":false,\"indisexclusion\":false,\"constraints\":[\"gamer_esn_unique\"],\"shape\":false}]\nSKIP/REVIEW: equivalent member index already exists, possibly under another name or constraint\nCREATE INDEX\nCreated game; same-session recovery receipt captured. Preserve transcript.\nSET\nSET\n[{\"oid\":\"52158\",\"relname\":\"LeagueTeamSlot_pkey\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":true,\"indisexclusion\":false,\"constraints\":[\"LeagueTeamSlot_pkey\"],\"shape\":false}, {\"oid\":\"52993\",\"relname\":\"LeagueTeamSlot_no_overlap\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":false,\"indisprimary\":false,\"indisexclusion\":true,\"constraints\":[\"LeagueTeamSlot_no_overlap\"],\"shape\":false}, {\"oid\":\"52995\",\"relname\":\"existing_equivalent\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":false,\"indisprimary\":false,\"indisexclusion\":false,\"constraints\":[],\"shape\":true}]\n[{\"oid\":\"52254\",\"relname\":\"GameResult_pkey\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":true,\"indisexclusion\":false,\"constraints\":[\"GameResult_pkey\"],\"shape\":false}, {\"oid\":\"52256\",\"relname\":\"gamer_esn_unique\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":false,\"indisexclusion\":false,\"constraints\":[\"gamer_esn_unique\"],\"shape\":false}, {\"oid\":\"52996\",\"relname\":\"mod017_game_season_date\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":false,\"indisprimary\":false,\"indisexclusion\":false,\"constraints\":[],\"shape\":true}]\nCatalog verification passed. Operator must separately verify current query outputs/plans under target traffic.\nSET\nSKIP: no newly-created member receipt in this session\nDROP INDEX\n",
+      "stderr": "",
+      "catalog_preserved": true,
+      "drift_preserved_both": false
+    },
+    {
+      "name": "equivalent_same_name",
+      "returncode": 0,
+      "stdout": "SET\nSET\n[{\"oid\":\"53399\",\"relname\":\"LeagueTeamSlot_pkey\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":true,\"indisexclusion\":false,\"constraints\":[\"LeagueTeamSlot_pkey\"],\"shape\":false}, {\"oid\":\"54234\",\"relname\":\"LeagueTeamSlot_no_overlap\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":false,\"indisprimary\":false,\"indisexclusion\":true,\"constraints\":[\"LeagueTeamSlot_no_overlap\"],\"shape\":false}, {\"oid\":\"54236\",\"relname\":\"mod017_owner_member_team\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":false,\"indisprimary\":false,\"indisexclusion\":false,\"constraints\":[],\"shape\":true}]\n[{\"oid\":\"53495\",\"relname\":\"GameResult_pkey\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":true,\"indisexclusion\":false,\"constraints\":[\"GameResult_pkey\"],\"shape\":false}, {\"oid\":\"53497\",\"relname\":\"gamer_esn_unique\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":false,\"indisexclusion\":false,\"constraints\":[\"gamer_esn_unique\"],\"shape\":false}]\nSKIP/REVIEW: equivalent member index already exists, possibly under another name or constraint\nCREATE INDEX\nCreated game; same-session recovery receipt captured. Preserve transcript.\nSET\nSET\n[{\"oid\":\"53399\",\"relname\":\"LeagueTeamSlot_pkey\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":true,\"indisexclusion\":false,\"constraints\":[\"LeagueTeamSlot_pkey\"],\"shape\":false}, {\"oid\":\"54234\",\"relname\":\"LeagueTeamSlot_no_overlap\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":false,\"indisprimary\":false,\"indisexclusion\":true,\"constraints\":[\"LeagueTeamSlot_no_overlap\"],\"shape\":false}, {\"oid\":\"54236\",\"relname\":\"mod017_owner_member_team\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":false,\"indisprimary\":false,\"indisexclusion\":false,\"constraints\":[],\"shape\":true}]\n[{\"oid\":\"53495\",\"relname\":\"GameResult_pkey\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":true,\"indisexclusion\":false,\"constraints\":[\"GameResult_pkey\"],\"shape\":false}, {\"oid\":\"53497\",\"relname\":\"gamer_esn_unique\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":false,\"indisexclusion\":false,\"constraints\":[\"gamer_esn_unique\"],\"shape\":false}, {\"oid\":\"54237\",\"relname\":\"mod017_game_season_date\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":false,\"indisprimary\":false,\"indisexclusion\":false,\"constraints\":[],\"shape\":true}]\nCatalog verification passed. Operator must separately verify current query outputs/plans under target traffic.\nSET\nSKIP: no newly-created member receipt in this session\nDROP INDEX\n",
+      "stderr": "",
+      "catalog_preserved": true,
+      "drift_preserved_both": false
+    },
+    {
+      "name": "constraint_equivalent",
+      "returncode": 0,
+      "stdout": "SET\nSET\n[{\"oid\":\"54640\",\"relname\":\"LeagueTeamSlot_pkey\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":true,\"indisexclusion\":false,\"constraints\":[\"LeagueTeamSlot_pkey\"],\"shape\":false}, {\"oid\":\"55475\",\"relname\":\"LeagueTeamSlot_no_overlap\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":false,\"indisprimary\":false,\"indisexclusion\":true,\"constraints\":[\"LeagueTeamSlot_no_overlap\"],\"shape\":false}, {\"oid\":\"55477\",\"relname\":\"fixture_constraint\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":false,\"indisexclusion\":false,\"constraints\":[\"fixture_constraint\"],\"shape\":true}]\n[{\"oid\":\"54736\",\"relname\":\"GameResult_pkey\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":true,\"indisexclusion\":false,\"constraints\":[\"GameResult_pkey\"],\"shape\":false}, {\"oid\":\"54738\",\"relname\":\"gamer_esn_unique\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":false,\"indisexclusion\":false,\"constraints\":[\"gamer_esn_unique\"],\"shape\":false}]\nSKIP/REVIEW: equivalent member index already exists, possibly under another name or constraint\nCREATE INDEX\nCreated game; same-session recovery receipt captured. Preserve transcript.\nSET\nSET\n[{\"oid\":\"54640\",\"relname\":\"LeagueTeamSlot_pkey\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":true,\"indisexclusion\":false,\"constraints\":[\"LeagueTeamSlot_pkey\"],\"shape\":false}, {\"oid\":\"55475\",\"relname\":\"LeagueTeamSlot_no_overlap\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":false,\"indisprimary\":false,\"indisexclusion\":true,\"constraints\":[\"LeagueTeamSlot_no_overlap\"],\"shape\":false}, {\"oid\":\"55477\",\"relname\":\"fixture_constraint\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":false,\"indisexclusion\":false,\"constraints\":[\"fixture_constraint\"],\"shape\":true}]\n[{\"oid\":\"54736\",\"relname\":\"GameResult_pkey\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":true,\"indisexclusion\":false,\"constraints\":[\"GameResult_pkey\"],\"shape\":false}, {\"oid\":\"54738\",\"relname\":\"gamer_esn_unique\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":false,\"indisexclusion\":false,\"constraints\":[\"gamer_esn_unique\"],\"shape\":false}, {\"oid\":\"55479\",\"relname\":\"mod017_game_season_date\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":false,\"indisprimary\":false,\"indisexclusion\":false,\"constraints\":[],\"shape\":true}]\nCatalog verification passed. Operator must separately verify current query outputs/plans under target traffic.\nSET\nSKIP: no newly-created member receipt in this session\nDROP INDEX\n",
+      "stderr": "",
+      "catalog_preserved": true,
+      "drift_preserved_both": false
+    },
+    {
+      "name": "constraint_same_name",
+      "returncode": 3,
+      "stdout": "SET\nSET\n[{\"oid\":\"55882\",\"relname\":\"LeagueTeamSlot_pkey\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":true,\"indisexclusion\":false,\"constraints\":[\"LeagueTeamSlot_pkey\"],\"shape\":false}, {\"oid\":\"56717\",\"relname\":\"LeagueTeamSlot_no_overlap\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":false,\"indisprimary\":false,\"indisexclusion\":true,\"constraints\":[\"LeagueTeamSlot_no_overlap\"],\"shape\":false}, {\"oid\":\"56719\",\"relname\":\"mod017_owner_member_team\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":false,\"indisexclusion\":false,\"constraints\":[\"mod017_owner_member_team\"],\"shape\":true}]\nREFUSE: missing relation/type metadata, invalid index, or same-name drift (member)\n",
+      "stderr": "ERROR:  MOD017 refusal; see preceding diagnostic\nCONTEXT:  PL/pgSQL function inline_code_block line 1 at RAISE\n",
+      "catalog_preserved": true,
+      "drift_preserved_both": false
+    },
+    {
+      "name": "same_name_drift",
+      "returncode": 3,
+      "stdout": "SET\nSET\n[{\"oid\":\"57123\",\"relname\":\"LeagueTeamSlot_pkey\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":true,\"indisexclusion\":false,\"constraints\":[\"LeagueTeamSlot_pkey\"],\"shape\":false}, {\"oid\":\"57958\",\"relname\":\"LeagueTeamSlot_no_overlap\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":false,\"indisprimary\":false,\"indisexclusion\":true,\"constraints\":[\"LeagueTeamSlot_no_overlap\"],\"shape\":false}]\n[{\"oid\":\"57219\",\"relname\":\"GameResult_pkey\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":true,\"indisexclusion\":false,\"constraints\":[\"GameResult_pkey\"],\"shape\":false}, {\"oid\":\"57221\",\"relname\":\"gamer_esn_unique\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":false,\"indisexclusion\":false,\"constraints\":[\"gamer_esn_unique\"],\"shape\":false}, {\"oid\":\"57960\",\"relname\":\"mod017_game_season_date\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":false,\"indisprimary\":false,\"indisexclusion\":false,\"constraints\":[],\"shape\":false}]\nREFUSE: missing relation/type metadata, invalid index, or same-name drift (game)\n",
+      "stderr": "ERROR:  MOD017 refusal; see preceding diagnostic\nCONTEXT:  PL/pgSQL function inline_code_block line 1 at RAISE\n",
+      "catalog_preserved": true,
+      "drift_preserved_both": false
+    },
+    {
+      "name": "invalid",
+      "returncode": 3,
+      "stdout": "SET\nSET\n[{\"oid\":\"58363\",\"relname\":\"LeagueTeamSlot_pkey\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":true,\"indisexclusion\":false,\"constraints\":[\"LeagueTeamSlot_pkey\"],\"shape\":false}, {\"oid\":\"59198\",\"relname\":\"LeagueTeamSlot_no_overlap\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":false,\"indisprimary\":false,\"indisexclusion\":true,\"constraints\":[\"LeagueTeamSlot_no_overlap\"],\"shape\":false}]\n[{\"oid\":\"58459\",\"relname\":\"GameResult_pkey\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":true,\"indisexclusion\":false,\"constraints\":[\"GameResult_pkey\"],\"shape\":false}, {\"oid\":\"58461\",\"relname\":\"gamer_esn_unique\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":false,\"indisexclusion\":false,\"constraints\":[\"gamer_esn_unique\"],\"shape\":false}, {\"oid\":\"59200\",\"relname\":\"fixture_invalid\",\"indisvalid\":false,\"indisready\":false,\"indisunique\":false,\"indisprimary\":false,\"indisexclusion\":false,\"constraints\":[],\"shape\":false}]\nREFUSE: missing relation/type metadata, invalid index, or same-name drift (game)\n",
+      "stderr": "ERROR:  MOD017 refusal; see preceding diagnostic\nCONTEXT:  PL/pgSQL function inline_code_block line 1 at RAISE\n",
+      "catalog_preserved": true,
+      "drift_preserved_both": false
+    }
+  ],
+  "error_type": "AssertionError",
+  "error": "Recovery drift partially removed another index"
+}

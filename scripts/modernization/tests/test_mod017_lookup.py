@@ -8,7 +8,7 @@ class LookupTests(unittest.TestCase):
  def setUp(self):self.m=importlib.import_module('measure_mod017_lookup')
  def test_capture_and_exact_values(self):
   c={x['name']:x for x in self.m.capture_queries(100)}
-  self.assertEqual(len(c),11)
+  self.assertEqual(len(c),12)
   self.assertIn('ORDER BY st."displayName"',c['lookup_current']['sql'])
   self.assertEqual(c['lookup_current']['expected_rows'],512)
   self.assertEqual(c['distinct_current_one']['expected_values'],[{'cnt':3}])
