@@ -47,3 +47,7 @@ Unavailable: actual traffic/selectivity/cardinality, deployed index/RLS/grant/ro
 Final review: no Critical/Important findings. Reviewer independently passed5 tests and verified all102 captured SQL/parameter/count/sample/fingerprint comparisons and report arithmetic. Two deferred runner-hardening minors: future failure should save explicit failure/cleanup status rather than retaining a priorPASS/RUNNING artifact; reusable runner should assert expected query counts itself, rather than rely on the independent artifact check used here. Future runs must inspect process status and timestamps.
 
 Final cleanup independently performed by author: database count0, ownership labels/no persistent mounts verified, exact taskcontainer removed, remaining taskcontainers0. Installed Docker and image cache retained. [Closeout evidence/decisions](evidence/mod-017-query-baselines-summary-2026-11-11.json). Work remains uncommitted/undeployed.
+
+## Scoped aggregation follow-up — 2026-11-16
+
+The measured global own-list aggregation finding is addressed by the [scoped query implementation](mod-017-own-score-scope-implementation.md). Original raw reports remain immutable; new native evidence records exact result parity and current aggregation/scan/timing tradeoffs. No new index or deployed benefit is implied.

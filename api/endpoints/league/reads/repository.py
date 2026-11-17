@@ -147,7 +147,14 @@ class LeagueReadRepository:
     def own_leagues(self, conn, user_id, stage, league_ids=None):
         if league_ids is not None and not league_ids:
             return []
-        base_sql = """
+        score_scope = ''
+        if stage == 'active':
+            score_scope += " AND score_league.status <> 'Completed'"
+        elif stage == 'completed':
+            score_scope += " AND score_league.status = 'Completed'"
+        if league_ids is not None:
+            score_scope += ' AND score_league.id IN :scope_ids'
+        base_sql = f"""
             SELECT
             -- League fields
             l.id                AS "leagueId",
@@ -195,6 +202,14 @@ class LeagueReadRepository:
                 JOIN "Week" w
                   ON w.id = wts."weekId"
                  AND w."weekNumber" >= 0
+                WHERE EXISTS (
+                    SELECT 1 FROM "LeagueMember" score_member
+                    JOIN "League" score_league ON score_league.id = score_member."leagueId"
+                    WHERE score_member."userId" = :user_id
+                      AND score_member.id = wts."memberId"
+                      AND score_member."leagueId" = wts."leagueId"
+                      {score_scope}
+                )
                 GROUP BY wts."leagueId", wts."memberId"
             ) sp
             ON sp."leagueId" = lm."leagueId"

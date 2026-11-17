@@ -933,3 +933,7 @@ Supplied weekly H2H uses1raw statement per tied group, preserving static scores/
 ### MOD022 shared live ingestion — 2026-11-16
 
 Live cron shares season/date/group work across leagues with later-valid-wins, identical-skip and shared failure fanout, preserving committed progress and per-league reporting. Backend823/823, audit57/57 and native fields/counters/recovery/real-gate checks pass; review no material issues. At16leagues32→2fetches,64→3upserts,640→76SQL in the fixture. [Report/evidence/limits](mod-022-shared-scoreboard-implementation.md). Local/uncommitted/undeployed; transport retry/bootstrap/checkpoint policy remains separate.
+
+### MOD017 scoped own-league aggregate — 2026-11-16
+
+Own-league score SUM now filters eligible user/member/league/stage/refreshed IDs before grouping; outer results/fallbacks unchanged. Backend827/827, audit60/60 and native100/1000/5000comparison/plan checks pass; review no findings. Sparse5000-league case aggregates12scores instead of480k; hot scans remain disclosed. [Implementation/evidence/tradeoffs](mod-017-own-score-scope-implementation.md). Local/uncommitted/undeployed; index comparisons/rollout remain separate.
