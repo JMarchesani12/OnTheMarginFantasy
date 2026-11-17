@@ -3,6 +3,7 @@ import datetime as dt
 import os
 from operations import job_gate, safe_event, run_id
 from endpoints.schedule.ingestion_service import ScheduleIngestionService
+from endpoints.schedule.shared_ingestion_service import SharedScoreboardIngestionService
 
 
 def get_active_leagues_for_date(engine, target_date: dt.date):
@@ -24,18 +25,18 @@ def main(engine=None):
             dates=[now.date()]
             if now.hour<3:dates.append(now.date()-dt.timedelta(days=1))
             service=ScheduleIngestionService(engine,os.getenv('ESPN_BASE_URL',''))
+            shared=SharedScoreboardIngestionService(service,gate.check)
             for day in dates:
                 gate.check()
                 leagues=service.active_leagues_for_job(day)
-                for league in leagues:
-                    gate.check()
-                    try:
-                        summary=service.ingest_league_for_job(league,day)
+                for outcome in shared.iter_league_outcomes(leagues,day):
+                    league=outcome['leagueId']
+                    if outcome['error'] is None:
                         report['processed'].append({'leagueId':league,'date':day.isoformat()})
-                        safe_event('ingest','unit_completed',identity,leagueId=league,date=day.isoformat(),count=summary.get('eventsSeen'))
-                    except Exception as exc:
+                        safe_event('ingest','unit_completed',identity,leagueId=league,date=day.isoformat(),count=outcome['summary'].get('eventsSeen'))
+                    else:
                         report['failures'].append({'leagueId':league,'date':day.isoformat()})
-                        safe_event('ingest','failed',identity,leagueId=league,date=day.isoformat(),category=exc)
+                        safe_event('ingest','failed',identity,leagueId=league,date=day.isoformat(),category=outcome['error'])
             gate.check()
     except Exception as exc:
         report['failures'].append({'leagueId':None})

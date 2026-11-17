@@ -28,9 +28,9 @@ class OperationalJobTests(unittest.TestCase):
 
     def test_live_ingestion_partial_failure_continues_and_is_safe(self):
         module=self.modules()[2];out=io.StringIO()
-        with patch.object(module,'job_gate',fake_gate),patch.object(module,'ScheduleIngestionService') as service,redirect_stderr(out):
+        with patch.object(module,'job_gate',fake_gate),patch.object(module,'ScheduleIngestionService') as service,patch.object(module,'SharedScoreboardIngestionService') as shared,redirect_stderr(out):
             service.return_value.active_leagues_for_job.return_value=[10,20]
-            service.return_value.ingest_league_for_job.side_effect=[RuntimeError('private token SQL'),{'eventsSeen':2}]*2
+            shared.return_value.iter_league_outcomes.return_value=[dict(leagueId=10,error=RuntimeError('private token SQL'),summary=None),dict(leagueId=20,error=None,summary={'eventsSeen':2})]
             report=module.main(engine=Mock())
         self.assertTrue(report['failures']);self.assertTrue(report['processed'])
         self.assertNotIn('private',out.getvalue())
@@ -95,3 +95,42 @@ class OperationalJobTests(unittest.TestCase):
                 report=module.main(engine=Mock())
             self.assertEqual(json.loads(out.getvalue()),report)
             self.assertEqual(report['outcome'],'already_running')
+
+class SharedLiveIngestionTests(unittest.TestCase):
+    def run_job(self,hour=3,minute=0,fail=False,gate_stop=None):
+        import datetime as dt
+        from cronJobs import cronIngestScoreboard as module
+        from test_shared_scoreboard_ingestion import SharedIngestionTests
+        coordinator,service,fetches,writes,payloads,state=SharedIngestionTests().fixture();state['fail_once']=fail
+        service.active_leagues_for_job=lambda day:[1,20,2]
+        fixed=dt.datetime(2026,11,16,hour,minute,tzinfo=module.ZoneInfo('America/Chicago'))
+        class Clock(dt.datetime):
+            @classmethod
+            def now(cls,tz=None):return fixed.astimezone(tz) if tz else fixed
+        checks=[]
+        def check():
+            checks.append(1)
+            if gate_stop and len(checks)==gate_stop:raise GateLost()
+        @contextmanager
+        def gate(*args):yield type('Gate',(),{'check':staticmethod(check)})()
+        err=io.StringIO()
+        with patch.object(module,'job_gate',gate),patch.object(module,'ScheduleIngestionService',return_value=service),patch.object(module.dt,'datetime',Clock),redirect_stderr(err):
+            report=module.main(engine=object())
+        return report,fetches,writes,err.getvalue()
+
+    def test_live_shared_results_keep_original_report_order_and_date_boundary(self):
+        report,fetches,writes,logs=self.run_job()
+        self.assertEqual(report,{'processed':[{'leagueId':i,'date':'2026-11-16'} for i in [1,20,2]],'failures':[]})
+        self.assertEqual(len(fetches),4);self.assertEqual(len(writes),6)
+        report,fetches,writes,logs=self.run_job(2,59)
+        self.assertEqual([r['date'] for r in report['processed']],['2026-11-16']*3+['2026-11-15']*3)
+        self.assertEqual(len(fetches),8)
+
+    def test_live_shared_failure_fans_out_without_leaking_error(self):
+        report,fetches,writes,logs=self.run_job(fail=True)
+        self.assertEqual([r['leagueId'] for r in report['failures']],[1,2]);self.assertEqual([r['leagueId'] for r in report['processed']],[20])
+        self.assertEqual(len(fetches),4);self.assertNotIn('private failure',logs)
+
+    def test_lost_gate_stops_all_units_and_is_outer_failure(self):
+        report,fetches,writes,logs=self.run_job(gate_stop=7)
+        self.assertEqual(report,{'processed':[],'failures':[{'leagueId':None}]});self.assertEqual(len(writes),2)

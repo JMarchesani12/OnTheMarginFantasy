@@ -929,3 +929,7 @@ Supplied-connection weekly scoring now resolves rules once per call, preserving 
 ### MOD021 tied-group H2H implementation — 2026-11-16
 
 Supplied weekly H2H uses1raw statement per tied group, preserving static scores/pair arithmetic and no-conn behavior with an explicit per-group snapshot. Backend813/813, audit56/56 and PostgreSQL counts/parity/recovery checks pass; review found no material defects. At16members H2H-decides157→38statements, fallback173→54; no production latency claim. [Report/evidence/deferred trace note](mod-021-head-to-head-batch-implementation.md). Local, uncommitted/undeployed; member-game batching/full-input consistency remain separate.
+
+### MOD022 shared live ingestion — 2026-11-16
+
+Live cron shares season/date/group work across leagues with later-valid-wins, identical-skip and shared failure fanout, preserving committed progress and per-league reporting. Backend823/823, audit57/57 and native fields/counters/recovery/real-gate checks pass; review no material issues. At16leagues32→2fetches,64→3upserts,640→76SQL in the fixture. [Report/evidence/limits](mod-022-shared-scoreboard-implementation.md). Local/uncommitted/undeployed; transport retry/bootstrap/checkpoint policy remains separate.

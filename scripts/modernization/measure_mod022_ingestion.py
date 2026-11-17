@@ -12,6 +12,7 @@ from sqlalchemy import create_engine,text,event
 import measure_mod017 as base
 from measure_mod017_transactions import verify_cleanup,save_json
 from endpoints.schedule.ingestion_service import ScheduleIngestionService
+from endpoints.schedule.shared_ingestion_service import SharedScoreboardIngestionService
 from endpoints.schedule.helpers.espn.espnClient import ESPNClient
 
 SIZES=(1,4,16)
@@ -46,13 +47,13 @@ def expected_games(revision):
 
 
 def expected_counts(n,path,revisions):
-    return dict(sql=(40*n if path=='league' else 29)*revisions,fetches=(2*n if path=='league' else 2)*revisions,upserts=(4*n if path=='league' else 3)*revisions)
+    return dict(sql=(40*n if path=='league' else 3*n+28 if path=='shared' else 29)*revisions,fetches=(2*n if path=='league' else 2)*revisions,upserts=(4*n if path=='league' else 3)*revisions)
 
 
 def expected_roles(n,path,revisions):
     upserts=expected_counts(n,path,revisions)['upserts'];units=(n if path=='league' else 1)*revisions
     counts=dict(api=units,team_lookup=2*upserts,phases=upserts,fallback=upserts,season_ref=upserts,phase_ref=upserts,team_ref=2*upserts,upsert=upserts)
-    counts.update(dict(league=units,season_context=units,subdivision=units) if path=='league' else dict(season=units))
+    counts.update(dict(league=n*revisions,season_context=n*revisions,subdivision=n*revisions) if path=='shared' else dict(league=units,season_context=units,subdivision=units) if path=='league' else dict(season=units))
     return counts
 
 
@@ -81,6 +82,13 @@ class Tracker:
             role=classify(statement);self.counts[role]+=1;self.examples.setdefault(role,dict(sql=statement,parameters=parameters))
 
 
+def prepared_fixture_facts(facts,status_counts):
+    facts=dict(facts)
+    facts['pre_override_seed_status_counts']=dict(active=facts.pop('active_leagues'),completed=facts.pop('completed_leagues'))
+    facts.update(active_leagues=sum(count for status,count in status_counts.items() if status is not None and status!='Completed'),completed_leagues=status_counts.get('Completed',0),prepared_status_counts=status_counts)
+    return facts
+
+
 def seed(conn):
     facts=base.seed(conn,100);conn.exec_driver_sql((base.ROOT/TBD).read_text())
     for sql in [
@@ -91,7 +99,8 @@ def seed(conn):
       '''INSERT INTO "SportSeasonSubdivision" (id,"sportSeasonId",code,name,"regularSeasonStart","regularSeasonEnd") VALUES (1,2026,'MAIN','Synthetic','2026-01-01','2026-12-31')''',
       '''INSERT INTO "SeasonPhase" (id,"sportSeasonId",type,name,"startDate","endDate",priority) VALUES (1,2026,'RegularSeason','Synthetic regular','2026-01-01','2027-01-01',1)''',
     ]:conn.exec_driver_sql(sql)
-    conn.commit();conn.exec_driver_sql('ANALYZE');conn.commit();return facts
+    status_counts=dict(conn.exec_driver_sql('SELECT status,COUNT(*) FROM "League" GROUP BY status').all())
+    conn.commit();conn.exec_driver_sql('ANALYZE');conn.commit();return prepared_fixture_facts(facts,status_counts)
 
 
 def read_games(engine):
@@ -109,10 +118,15 @@ def service_for(engine,provider):
 
 
 def sweep(service,n,path):
-    results=[service.ingest_league_for_job(i,DAY) for i in range(1,n+1)] if path=='league' else [service.ingest_season_for_job(2026,DAY)]
+    if path=='shared':
+        outcomes=list(SharedScoreboardIngestionService(service,lambda:None).iter_league_outcomes(range(1,n+1),DAY))
+        for outcome in outcomes:
+            if outcome['error'] is not None:raise outcome['error']
+        results=[row['summary'] for row in outcomes]
+    else:results=[service.ingest_league_for_job(i,DAY) for i in range(1,n+1)] if path=='league' else [service.ingest_season_for_job(2026,DAY)]
     for summary in results:
         if summary['sportId']!=1 or summary['sportSeasonId']!=2026 or summary['date']!=str(DAY):raise AssertionError('Ingestion summary scope changed')
-        if summary['eventsSeen']!=(5 if path=='league' else 3):raise AssertionError('Raw versus deduped event semantics changed')
+        if summary['eventsSeen']!=(5 if path in ('league','shared') else 3):raise AssertionError('Raw versus deduped event semantics changed')
         if path=='season' and summary['gamesUpserted']!=3:raise AssertionError('Season upsert summary changed')
     return results
 
@@ -166,8 +180,8 @@ def run_tier(admin,n,report):
                 with patch('requests.sessions.Session.request',side_effect=AssertionError('HTTP forbidden in ingestion audit')):
                     with engine.connect() as conn:
                         base.schema(conn);facts=seed(conn);settings={k:conn.exec_driver_sql('SHOW '+k).scalar_one() for k in ['server_version','shared_buffers','work_mem','statement_timeout','lock_timeout']}
-                    measurements=[measure(engine,n,path,scenario) for path in ['league','season'] for scenario in ['overlap','correction']]
-                    probes=[failure_probe(engine,path) for path in ['league','season']] if n==16 else []
+                    measurements=[measure(engine,n,path,scenario) for path in ['shared'] for scenario in ['overlap','correction']]
+                    probes=[] # Dedicated shared failure/fanout driver owns these checks.
                     return dict(league_count=n,fixture=facts,settings=settings,measurements=measurements,failure_probes=probes)
             finally:engine.dispose()
     finally:
@@ -176,8 +190,8 @@ def run_tier(admin,n,report):
 
 def run(directory,manifest,tiers,connect=None):
     directory=Path(directory);directory.mkdir(parents=True,exist_ok=True);run_id=uuid4().hex;artifact=directory/f'mod-022-ingestion-{run_id}.json'
-    inputs=[base.BASELINE,*base.MIGRATIONS,TBD,'scripts/modernization/measure_mod017.py','scripts/modernization/measure_mod017_transactions.py','scripts/modernization/measure_mod022_ingestion.py','api/endpoints/schedule/ingestion_service.py','api/endpoints/schedule/ingestion_repository.py','api/endpoints/schedule/calendar_service.py','api/endpoints/schedule/calendar_repository.py','api/endpoints/schedule/helpers/espn/espnClient.py','api/rules/tournamentRules.py','api/utils/conference_membership.py','api/cronJobs/cronIngestScoreboard.py']
-    report=dict(date='2026-11-15',run_id=run_id,started_at=datetime.now(timezone.utc).isoformat(),result='RUNNING',scope='Synthetic ingestion orchestration/canned-provider measurements only; optimization deferred',tiers=[],databases=[],cleanup='no database created',provenance={},limits=['Canned transport only,actual parser/service/SQL; no external HTTP/cron/checkpoints','Same sport/year/date,identical cross-group duplicates; conflicting payload precedence unmeasured','Real committed upserts in owned synthetic DBs,not production/network/provider/retry-policy performance'])
+    inputs=[base.BASELINE,*base.MIGRATIONS,TBD,'scripts/modernization/measure_mod017.py','scripts/modernization/measure_mod017_transactions.py','scripts/modernization/measure_mod022_ingestion.py','api/endpoints/schedule/ingestion_service.py','api/endpoints/schedule/shared_ingestion_service.py','api/endpoints/schedule/ingestion_repository.py','api/endpoints/schedule/calendar_service.py','api/endpoints/schedule/calendar_repository.py','api/endpoints/schedule/helpers/espn/espnClient.py','api/rules/tournamentRules.py','api/utils/conference_membership.py','api/cronJobs/cronIngestScoreboard.py']
+    report=dict(date='2026-11-16',run_id=run_id,started_at=datetime.now(timezone.utc).isoformat(),result='RUNNING',scope='Shared-ingestion-v2 coordinator with actual parser/canned transport; legacy formula helpers remain reference only',tiers=[],databases=[],cleanup='no database created',provenance={},limits=['Canned transport only,actual parser/service/SQL; no external HTTP/cron/checkpoints','Same sport/year/date,identical cross-group duplicates; conflicting payload precedence unmeasured','Real committed upserts in owned synthetic DBs,not production/network/provider/retry-policy performance'])
     def persist():
         save_json(artifact,report);save_json(Path(manifest),dict(run_id=run_id,result=report['result'],artifact=artifact.name,cleanup=report['cleanup']))
     persist();admin=None
@@ -199,5 +213,5 @@ def run(directory,manifest,tiers,connect=None):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--tier',type=int,choices=SIZES,action='append');args=parser.parse_args()
-    directory=base.ROOT/'docs/modernization/evidence';run(directory,directory/'mod-022-ingestion-current-2026-11-15.json',args.tier or SIZES)
+    directory=base.ROOT/'docs/modernization/evidence';run(directory,directory/'mod-022-ingestion-shared-current-2026-11-16.json',args.tier or SIZES)
 if __name__=='__main__':main()

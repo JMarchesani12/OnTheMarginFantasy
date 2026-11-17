@@ -9,6 +9,11 @@ class IngestionMeasureTests(unittest.TestCase):
    self.assertEqual(self.m.expected_counts(n,'league',1)['sql'],40*n)
    self.assertEqual(self.m.expected_counts(n,'league',2)['upserts'],8*n)
    self.assertEqual(self.m.expected_counts(n,'season',1),{'sql':29,'fetches':2,'upserts':3})
+ def test_shared_formula_and_prepared_status_facts(self):
+  self.assertEqual(self.m.expected_counts(16,'shared',1),dict(sql=76,fetches=2,upserts=3))
+  facts=self.m.prepared_fixture_facts(dict(active_leagues=67,completed_leagues=33),{'In-Season':100})
+  self.assertEqual(facts['active_leagues'],100);self.assertEqual(facts['completed_leagues'],0)
+  self.assertEqual(facts['pre_override_seed_status_counts'],dict(active=67,completed=33))
  def test_real_parser_canned_overlap_and_correction(self):
   m=self.m;p=m.Provider();client=m.CannedClient('https://synthetic.invalid','basketball/audit',p)
   raw=client.fetch_scoreboard_for_date('20261115',10);games=[client.extract_game_from_event(e) for e in client.iter_scoreboard_events(raw)]

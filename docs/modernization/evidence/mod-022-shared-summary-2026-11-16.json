@@ -1,0 +1,67 @@
+{
+  "result": "PASS_LOCAL_SHARED_INGESTION",
+  "artifacts": [
+    {
+      "name": "mod-022-ingestion-3f82079015c441fda471ab1f8c6215e1.json",
+      "sha256": "0d091d2ec12b34348a736da29bf232bc35e89b0822925a7f45e44991b1998f60"
+    },
+    {
+      "name": "mod-022-shared-2d89e44392294054a09cebf649437c21.json",
+      "sha256": "c73f214708eb664e980b68da85170fb187a1764ecb9a45e7e2c510361d6884a7"
+    }
+  ],
+  "checks": {
+    "backend": 823,
+    "auditHelpers": 57,
+    "coordinator": 7,
+    "measurementRecords": 6,
+    "measurementInvocations": 36,
+    "policyCases": 9,
+    "failureRerunCases": 3,
+    "nativeActualCronGate": true,
+    "sourceHashes": [
+      17,
+      19
+    ]
+  },
+  "fixtureAt16": {
+    "fetches": {
+      "before": 32,
+      "after": 2
+    },
+    "upserts": {
+      "before": 64,
+      "after": 3
+    },
+    "sql": {
+      "before": 640,
+      "after": 76
+    }
+  },
+  "review": {
+    "critical": 0,
+    "important": 0,
+    "minorDeferred": [
+      "Direct metadata/unit GateLost rethrow regression; callback boundaries covered"
+    ],
+    "independentFocusedTests": 25,
+    "provenanceHashesMatched": true
+  },
+  "cleanup": {
+    "ownedDatabaseCount": 0,
+    "exactContainer": "27af428570e2572b910833bb37d9f16bbcf0ebf0ce66cab685bf61144da54eff",
+    "labelsVerified": true,
+    "loopback": "127.0.0.1:55439",
+    "persistentMounts": [],
+    "containerRemoved": true,
+    "remainingTaskContainers": 0,
+    "dockerAndCacheRetained": true
+  },
+  "uncommitted": true,
+  "deployed": false,
+  "limits": [
+    "Canned transport, bounded actual cron selection",
+    "No production concurrency/RLS/quota/outage claim",
+    "Transport retry/bootstrap/checkpoints unchanged"
+  ]
+}

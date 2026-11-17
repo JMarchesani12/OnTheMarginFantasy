@@ -1,0 +1,827 @@
+{
+  "run_id": "2d89e44392294054a09cebf649437c21",
+  "result": "PASS",
+  "started_at": "2026-11-17T02:56:57.781932+00:00",
+  "provenance": {
+    "db/baselines/20261029/001_schema.sql": "7fe1c17223dd2cf3ebbfdb9d2ca318d4f7ad24f9a6578309c40aad3cfb58a109",
+    "api/migrations/20261104_user_identity_unique.sql": "64631ad06193c79bded2e52849e0264b281468ea098e3dfd72d9def01f3dab88",
+    "api/migrations/20261104_week_score_identity.sql": "b6a040b0d2599e32e4d87d7c59c30aecbbaa22cca7d79c07d988279a36c2e244",
+    "api/migrations/20261104_ownership_integrity.sql": "fb3b6c5dd445a6e8da5dd67784d882032a698917e7ac1d9eebb1167120480116",
+    "api/migrations/20261030_game_kickoff_tbd.sql": "4fa4d40cf16cf0600a37aec2f915e31efe024c294fe5c5a047d32ad599cf33d4",
+    "scripts/modernization/measure_mod017.py": "1a7fcad698597ad9bfce62532813a27d6486e37fd3580ef24d861c2f034a1868",
+    "scripts/modernization/measure_mod017_transactions.py": "21cb1761716f2a39cc3f59b44f875f8c5342503eb38ebfc8f6533595834d91ca",
+    "scripts/modernization/measure_mod022_ingestion.py": "d408f78a17c7104f10cf5022bd49d509a5d88d837297fc7e95ea68d98d8e535d",
+    "scripts/modernization/verify_mod022_shared_ingestion.py": "66cac6fb0692c5938e26e76dde138869ba60f5a3ff50702da09064ac1656f0db",
+    "api/endpoints/schedule/shared_ingestion_service.py": "81bca56982b57eac08b58e0fd164ea47a064614365ff5ed44773021a47132d56",
+    "api/endpoints/schedule/ingestion_service.py": "d00deca34da972a160fe8653d94d63fb026abcd63da70131df890f853eab238d",
+    "api/endpoints/schedule/ingestion_repository.py": "5f1e7da6c32ee1ca50ae0138540b744d0ca5f216a75de3c2de276132b24c5d4f",
+    "api/endpoints/schedule/calendar_service.py": "62856988b03cf014a567b4ffb8ea256a1d540260b2d895bfdd967371126aed6d",
+    "api/endpoints/schedule/calendar_repository.py": "1d7cf9382251ca809e9412844f10916bca00ac156bf9b89921df71f35e3baf39",
+    "api/endpoints/schedule/helpers/espn/espnClient.py": "cda9a3fa6fdd63c101e3ba2cf3ad3dc9d71594076033c0f12522757181dff10a",
+    "api/rules/tournamentRules.py": "d2f100bed2f52bbf0a5b14354d717979d89065e46d34e7158775327cb2ffdd85",
+    "api/utils/conference_membership.py": "d82e7ee6ac076214f110d02b7f3f1f0bf2444a32428f663cff360e86990ea63f",
+    "api/cronJobs/cronIngestScoreboard.py": "33c44ed62793efb4c35c1d932042fe3ee5b6e686b29d61f163df5fbd6ba32976",
+    "api/operations.py": "2f89e48da5e8d45e964699794b7caae909b005733b08c5ea9fc11343b8f61116"
+  },
+  "databases": [
+    {
+      "name": "otm_mod017_6f73694cc6554f198d110d988cd3573f",
+      "cleanup": "removed"
+    }
+  ],
+  "cleanup": "verified",
+  "fixture": {
+    "anchor": "2026-11-17T02:56:57.891746+00:00",
+    "counts": {
+      "League": 100,
+      "LeagueMember": 800,
+      "Week": 1300,
+      "WeeklyTeamScore": 9600,
+      "LeagueTeamSlot": 16000
+    },
+    "user_count": 701,
+    "hot_user_memberships": 100,
+    "sparse_user_memberships": 1,
+    "current_week": 13,
+    "scored_weeks": 12,
+    "teams_contributing_to_score_value": 4,
+    "pre_override_seed_status_counts": {
+      "active": 67,
+      "completed": 33
+    },
+    "active_leagues": 100,
+    "completed_leagues": 0,
+    "prepared_status_counts": {
+      "In-Season": 100
+    }
+  },
+  "conflicts": [
+    {
+      "mode": "overlap",
+      "fetches": 2,
+      "upserts": 3,
+      "outcomes": [
+        {
+          "leagueId": 1,
+          "date": "2026-11-15",
+          "summary": {
+            "sportId": 1,
+            "sportSeasonId": 2026,
+            "date": "2026-11-15",
+            "eventsSeen": 5,
+            "gamesUpserted": 3,
+            "duplicateSkips": 1,
+            "leagueId": 1
+          },
+          "error": null
+        },
+        {
+          "leagueId": 2,
+          "date": "2026-11-15",
+          "summary": {
+            "sportId": 1,
+            "sportSeasonId": 2026,
+            "date": "2026-11-15",
+            "eventsSeen": 5,
+            "gamesUpserted": 3,
+            "duplicateSkips": 1,
+            "leagueId": 2
+          },
+          "error": null
+        },
+        {
+          "leagueId": 3,
+          "date": "2026-11-15",
+          "summary": {
+            "sportId": 1,
+            "sportSeasonId": 2026,
+            "date": "2026-11-15",
+            "eventsSeen": 5,
+            "gamesUpserted": 3,
+            "duplicateSkips": 1,
+            "leagueId": 3
+          },
+          "error": null
+        }
+      ],
+      "stored": {
+        "rows": 3,
+        "canonical_json_bytes": 892,
+        "sha256": "50db2fba4735baba0e3e9f73ea9ba7110218e23d5af9fdf5bb54535a51cc854d"
+      }
+    },
+    {
+      "mode": "later",
+      "fetches": 2,
+      "upserts": 4,
+      "outcomes": [
+        {
+          "leagueId": 1,
+          "date": "2026-11-15",
+          "summary": {
+            "sportId": 1,
+            "sportSeasonId": 2026,
+            "date": "2026-11-15",
+            "eventsSeen": 5,
+            "gamesUpserted": 4,
+            "duplicateSkips": 0,
+            "leagueId": 1
+          },
+          "error": null
+        },
+        {
+          "leagueId": 2,
+          "date": "2026-11-15",
+          "summary": {
+            "sportId": 1,
+            "sportSeasonId": 2026,
+            "date": "2026-11-15",
+            "eventsSeen": 5,
+            "gamesUpserted": 4,
+            "duplicateSkips": 0,
+            "leagueId": 2
+          },
+          "error": null
+        },
+        {
+          "leagueId": 3,
+          "date": "2026-11-15",
+          "summary": {
+            "sportId": 1,
+            "sportSeasonId": 2026,
+            "date": "2026-11-15",
+            "eventsSeen": 5,
+            "gamesUpserted": 4,
+            "duplicateSkips": 0,
+            "leagueId": 3
+          },
+          "error": null
+        }
+      ],
+      "stored": {
+        "rows": 3,
+        "canonical_json_bytes": 897,
+        "sha256": "7ec1808181b3ee3e4213dc5177d055c255eff45782cf9a8a37c284bfd84fa1e0"
+      }
+    },
+    {
+      "mode": "revert",
+      "fetches": 3,
+      "upserts": 5,
+      "outcomes": [
+        {
+          "leagueId": 1,
+          "date": "2026-11-15",
+          "summary": {
+            "sportId": 1,
+            "sportSeasonId": 2026,
+            "date": "2026-11-15",
+            "eventsSeen": 6,
+            "gamesUpserted": 5,
+            "duplicateSkips": 0,
+            "leagueId": 1
+          },
+          "error": null
+        },
+        {
+          "leagueId": 2,
+          "date": "2026-11-15",
+          "summary": {
+            "sportId": 1,
+            "sportSeasonId": 2026,
+            "date": "2026-11-15",
+            "eventsSeen": 6,
+            "gamesUpserted": 5,
+            "duplicateSkips": 0,
+            "leagueId": 2
+          },
+          "error": null
+        },
+        {
+          "leagueId": 3,
+          "date": "2026-11-15",
+          "summary": {
+            "sportId": 1,
+            "sportSeasonId": 2026,
+            "date": "2026-11-15",
+            "eventsSeen": 6,
+            "gamesUpserted": 5,
+            "duplicateSkips": 0,
+            "leagueId": 3
+          },
+          "error": null
+        }
+      ],
+      "stored": {
+        "rows": 3,
+        "canonical_json_bytes": 892,
+        "sha256": "50db2fba4735baba0e3e9f73ea9ba7110218e23d5af9fdf5bb54535a51cc854d"
+      }
+    },
+    {
+      "mode": "duplicates",
+      "fetches": 2,
+      "upserts": 3,
+      "outcomes": [
+        {
+          "leagueId": 1,
+          "date": "2026-11-15",
+          "summary": {
+            "sportId": 1,
+            "sportSeasonId": 2026,
+            "date": "2026-11-15",
+            "eventsSeen": 5,
+            "gamesUpserted": 3,
+            "duplicateSkips": 1,
+            "leagueId": 1
+          },
+          "error": null
+        },
+        {
+          "leagueId": 2,
+          "date": "2026-11-15",
+          "summary": {
+            "sportId": 1,
+            "sportSeasonId": 2026,
+            "date": "2026-11-15",
+            "eventsSeen": 5,
+            "gamesUpserted": 3,
+            "duplicateSkips": 1,
+            "leagueId": 2
+          },
+          "error": null
+        },
+        {
+          "leagueId": 3,
+          "date": "2026-11-15",
+          "summary": {
+            "sportId": 1,
+            "sportSeasonId": 2026,
+            "date": "2026-11-15",
+            "eventsSeen": 5,
+            "gamesUpserted": 3,
+            "duplicateSkips": 1,
+            "leagueId": 3
+          },
+          "error": null
+        }
+      ],
+      "stored": {
+        "rows": 3,
+        "canonical_json_bytes": 892,
+        "sha256": "50db2fba4735baba0e3e9f73ea9ba7110218e23d5af9fdf5bb54535a51cc854d"
+      }
+    },
+    {
+      "mode": "missing",
+      "fetches": 2,
+      "upserts": 3,
+      "outcomes": [
+        {
+          "leagueId": 1,
+          "date": "2026-11-15",
+          "summary": {
+            "sportId": 1,
+            "sportSeasonId": 2026,
+            "date": "2026-11-15",
+            "eventsSeen": 6,
+            "gamesUpserted": 3,
+            "duplicateSkips": 1,
+            "leagueId": 1
+          },
+          "error": null
+        },
+        {
+          "leagueId": 2,
+          "date": "2026-11-15",
+          "summary": {
+            "sportId": 1,
+            "sportSeasonId": 2026,
+            "date": "2026-11-15",
+            "eventsSeen": 6,
+            "gamesUpserted": 3,
+            "duplicateSkips": 1,
+            "leagueId": 2
+          },
+          "error": null
+        },
+        {
+          "leagueId": 3,
+          "date": "2026-11-15",
+          "summary": {
+            "sportId": 1,
+            "sportSeasonId": 2026,
+            "date": "2026-11-15",
+            "eventsSeen": 6,
+            "gamesUpserted": 3,
+            "duplicateSkips": 1,
+            "leagueId": 3
+          },
+          "error": null
+        }
+      ],
+      "stored": {
+        "rows": 3,
+        "canonical_json_bytes": 892,
+        "sha256": "50db2fba4735baba0e3e9f73ea9ba7110218e23d5af9fdf5bb54535a51cc854d"
+      }
+    },
+    {
+      "mode": "unmapped",
+      "fetches": 2,
+      "upserts": 3,
+      "outcomes": [
+        {
+          "leagueId": 1,
+          "date": "2026-11-15",
+          "summary": {
+            "sportId": 1,
+            "sportSeasonId": 2026,
+            "date": "2026-11-15",
+            "eventsSeen": 5,
+            "gamesUpserted": 3,
+            "duplicateSkips": 1,
+            "leagueId": 1
+          },
+          "error": null
+        },
+        {
+          "leagueId": 2,
+          "date": "2026-11-15",
+          "summary": {
+            "sportId": 1,
+            "sportSeasonId": 2026,
+            "date": "2026-11-15",
+            "eventsSeen": 5,
+            "gamesUpserted": 3,
+            "duplicateSkips": 1,
+            "leagueId": 2
+          },
+          "error": null
+        },
+        {
+          "leagueId": 3,
+          "date": "2026-11-15",
+          "summary": {
+            "sportId": 1,
+            "sportSeasonId": 2026,
+            "date": "2026-11-15",
+            "eventsSeen": 5,
+            "gamesUpserted": 3,
+            "duplicateSkips": 1,
+            "leagueId": 3
+          },
+          "error": null
+        }
+      ],
+      "stored": {
+        "rows": 3,
+        "canonical_json_bytes": 897,
+        "sha256": "53d101e000bb7c6ada79b476a2a65c90a3e1cfc42f0ba355b7a59ac0c4461a14"
+      }
+    },
+    {
+      "mode": "phase",
+      "fetches": 2,
+      "upserts": 4,
+      "outcomes": [
+        {
+          "leagueId": 1,
+          "date": "2026-11-15",
+          "summary": {
+            "sportId": 1,
+            "sportSeasonId": 2026,
+            "date": "2026-11-15",
+            "eventsSeen": 5,
+            "gamesUpserted": 4,
+            "duplicateSkips": 0,
+            "leagueId": 1
+          },
+          "error": null
+        },
+        {
+          "leagueId": 2,
+          "date": "2026-11-15",
+          "summary": {
+            "sportId": 1,
+            "sportSeasonId": 2026,
+            "date": "2026-11-15",
+            "eventsSeen": 5,
+            "gamesUpserted": 4,
+            "duplicateSkips": 0,
+            "leagueId": 2
+          },
+          "error": null
+        },
+        {
+          "leagueId": 3,
+          "date": "2026-11-15",
+          "summary": {
+            "sportId": 1,
+            "sportSeasonId": 2026,
+            "date": "2026-11-15",
+            "eventsSeen": 5,
+            "gamesUpserted": 4,
+            "duplicateSkips": 0,
+            "leagueId": 3
+          },
+          "error": null
+        }
+      ],
+      "stored": {
+        "rows": 3,
+        "canonical_json_bytes": 893,
+        "sha256": "8e1a40a2707677b5c0718052148cc2ffdeaf0fff5504077728de1098f0af019b"
+      }
+    },
+    {
+      "mode": "override",
+      "fetches": 2,
+      "upserts": 3,
+      "outcomes": [
+        {
+          "leagueId": 1,
+          "date": "2026-11-15",
+          "summary": {
+            "sportId": 1,
+            "sportSeasonId": 2026,
+            "date": "2026-11-15",
+            "eventsSeen": 5,
+            "gamesUpserted": 3,
+            "duplicateSkips": 1,
+            "leagueId": 1
+          },
+          "error": null
+        },
+        {
+          "leagueId": 2,
+          "date": "2026-11-15",
+          "summary": {
+            "sportId": 1,
+            "sportSeasonId": 2026,
+            "date": "2026-11-15",
+            "eventsSeen": 5,
+            "gamesUpserted": 3,
+            "duplicateSkips": 1,
+            "leagueId": 2
+          },
+          "error": null
+        },
+        {
+          "leagueId": 3,
+          "date": "2026-11-15",
+          "summary": {
+            "sportId": 1,
+            "sportSeasonId": 2026,
+            "date": "2026-11-15",
+            "eventsSeen": 5,
+            "gamesUpserted": 3,
+            "duplicateSkips": 1,
+            "leagueId": 3
+          },
+          "error": null
+        }
+      ],
+      "stored": {
+        "rows": 3,
+        "canonical_json_bytes": 893,
+        "sha256": "8e1a40a2707677b5c0718052148cc2ffdeaf0fff5504077728de1098f0af019b"
+      }
+    },
+    {
+      "mode": "conference",
+      "fetches": 2,
+      "upserts": 3,
+      "outcomes": [
+        {
+          "leagueId": 1,
+          "date": "2026-11-15",
+          "summary": {
+            "sportId": 1,
+            "sportSeasonId": 2026,
+            "date": "2026-11-15",
+            "eventsSeen": 5,
+            "gamesUpserted": 3,
+            "duplicateSkips": 1,
+            "leagueId": 1
+          },
+          "error": null
+        },
+        {
+          "leagueId": 2,
+          "date": "2026-11-15",
+          "summary": {
+            "sportId": 1,
+            "sportSeasonId": 2026,
+            "date": "2026-11-15",
+            "eventsSeen": 5,
+            "gamesUpserted": 3,
+            "duplicateSkips": 1,
+            "leagueId": 2
+          },
+          "error": null
+        },
+        {
+          "leagueId": 3,
+          "date": "2026-11-15",
+          "summary": {
+            "sportId": 1,
+            "sportSeasonId": 2026,
+            "date": "2026-11-15",
+            "eventsSeen": 5,
+            "gamesUpserted": 3,
+            "duplicateSkips": 1,
+            "leagueId": 3
+          },
+          "error": null
+        }
+      ],
+      "stored": {
+        "rows": 3,
+        "canonical_json_bytes": 893,
+        "sha256": "8e1a40a2707677b5c0718052148cc2ffdeaf0fff5504077728de1098f0af019b"
+      }
+    }
+  ],
+  "cron": {
+    "report": {
+      "processed": [
+        {
+          "leagueId": 1,
+          "date": "2026-11-15"
+        },
+        {
+          "leagueId": 2,
+          "date": "2026-11-15"
+        },
+        {
+          "leagueId": 3,
+          "date": "2026-11-15"
+        },
+        {
+          "leagueId": 4,
+          "date": "2026-11-15"
+        },
+        {
+          "leagueId": 5,
+          "date": "2026-11-15"
+        },
+        {
+          "leagueId": 6,
+          "date": "2026-11-15"
+        },
+        {
+          "leagueId": 7,
+          "date": "2026-11-15"
+        },
+        {
+          "leagueId": 8,
+          "date": "2026-11-15"
+        },
+        {
+          "leagueId": 9,
+          "date": "2026-11-15"
+        },
+        {
+          "leagueId": 10,
+          "date": "2026-11-15"
+        },
+        {
+          "leagueId": 11,
+          "date": "2026-11-15"
+        },
+        {
+          "leagueId": 12,
+          "date": "2026-11-15"
+        },
+        {
+          "leagueId": 13,
+          "date": "2026-11-15"
+        },
+        {
+          "leagueId": 14,
+          "date": "2026-11-15"
+        },
+        {
+          "leagueId": 15,
+          "date": "2026-11-15"
+        },
+        {
+          "leagueId": 16,
+          "date": "2026-11-15"
+        }
+      ],
+      "failures": []
+    },
+    "fetches": 2,
+    "active_query_rows": 100,
+    "bounded_selection": 16,
+    "real_advisory_gate": true,
+    "scope": "Actual main/engine/gate, fixed clock, selection bounded to first16 actual eligible IDs, canned transport"
+  },
+  "failure_isolation": {
+    "cases": [
+      {
+        "kind": "fetch",
+        "outcomes": [
+          {
+            "leagueId": 1,
+            "date": "2026-11-15",
+            "summary": null,
+            "error": "OSError"
+          },
+          {
+            "leagueId": 20,
+            "date": "2026-11-15",
+            "summary": {
+              "sportId": 1,
+              "sportSeasonId": 2027,
+              "date": "2026-11-15",
+              "eventsSeen": 5,
+              "gamesUpserted": 3,
+              "duplicateSkips": 1,
+              "leagueId": 20
+            },
+            "error": null
+          },
+          {
+            "leagueId": 2,
+            "date": "2026-11-15",
+            "summary": null,
+            "error": "OSError"
+          },
+          {
+            "leagueId": 30,
+            "date": "2026-11-15",
+            "summary": {
+              "sportId": 2,
+              "sportSeasonId": 3026,
+              "date": "2026-11-15",
+              "eventsSeen": 5,
+              "gamesUpserted": 3,
+              "duplicateSkips": 1,
+              "leagueId": 30
+            },
+            "error": null
+          },
+          {
+            "leagueId": 9999,
+            "date": "2026-11-15",
+            "summary": null,
+            "error": "ValueError"
+          }
+        ],
+        "partial": [
+          {
+            "id": 35,
+            "externalGameId": "A"
+          },
+          {
+            "id": 36,
+            "externalGameId": "B"
+          }
+        ],
+        "final_scopes": {
+          "3026": 3,
+          "2027": 3,
+          "2026": 3
+        },
+        "new_invocation_retry": true,
+        "ids_preserved": true,
+        "fetches_total": 8
+      },
+      {
+        "kind": "reference",
+        "outcomes": [
+          {
+            "leagueId": 1,
+            "date": "2026-11-15",
+            "summary": null,
+            "error": "ValueError"
+          },
+          {
+            "leagueId": 20,
+            "date": "2026-11-15",
+            "summary": {
+              "sportId": 1,
+              "sportSeasonId": 2027,
+              "date": "2026-11-15",
+              "eventsSeen": 5,
+              "gamesUpserted": 3,
+              "duplicateSkips": 1,
+              "leagueId": 20
+            },
+            "error": null
+          },
+          {
+            "leagueId": 2,
+            "date": "2026-11-15",
+            "summary": null,
+            "error": "ValueError"
+          },
+          {
+            "leagueId": 30,
+            "date": "2026-11-15",
+            "summary": {
+              "sportId": 2,
+              "sportSeasonId": 3026,
+              "date": "2026-11-15",
+              "eventsSeen": 5,
+              "gamesUpserted": 3,
+              "duplicateSkips": 1,
+              "leagueId": 30
+            },
+            "error": null
+          },
+          {
+            "leagueId": 9999,
+            "date": "2026-11-15",
+            "summary": null,
+            "error": "ValueError"
+          }
+        ],
+        "partial": [
+          {
+            "id": 46,
+            "externalGameId": "A"
+          }
+        ],
+        "final_scopes": {
+          "3026": 3,
+          "2027": 3,
+          "2026": 3
+        },
+        "new_invocation_retry": true,
+        "ids_preserved": true,
+        "fetches_total": 7
+      },
+      {
+        "kind": "commit",
+        "outcomes": [
+          {
+            "leagueId": 1,
+            "date": "2026-11-15",
+            "summary": null,
+            "error": "InternalError"
+          },
+          {
+            "leagueId": 20,
+            "date": "2026-11-15",
+            "summary": {
+              "sportId": 1,
+              "sportSeasonId": 2027,
+              "date": "2026-11-15",
+              "eventsSeen": 5,
+              "gamesUpserted": 3,
+              "duplicateSkips": 1,
+              "leagueId": 20
+            },
+            "error": null
+          },
+          {
+            "leagueId": 2,
+            "date": "2026-11-15",
+            "summary": null,
+            "error": "InternalError"
+          },
+          {
+            "leagueId": 30,
+            "date": "2026-11-15",
+            "summary": {
+              "sportId": 2,
+              "sportSeasonId": 3026,
+              "date": "2026-11-15",
+              "eventsSeen": 5,
+              "gamesUpserted": 3,
+              "duplicateSkips": 1,
+              "leagueId": 30
+            },
+            "error": null
+          },
+          {
+            "leagueId": 9999,
+            "date": "2026-11-15",
+            "summary": null,
+            "error": "ValueError"
+          }
+        ],
+        "partial": [
+          {
+            "id": 56,
+            "externalGameId": "A"
+          }
+        ],
+        "final_scopes": {
+          "3026": 3,
+          "2027": 3,
+          "2026": 3
+        },
+        "new_invocation_retry": true,
+        "ids_preserved": true,
+        "fetches_total": 7
+      }
+    ],
+    "date_isolation_fetches": 4
+  },
+  "finished_at": "2026-11-17T02:56:59.030096+00:00"
+}
