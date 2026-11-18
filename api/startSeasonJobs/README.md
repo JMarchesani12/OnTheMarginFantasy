@@ -1,6 +1,6 @@
 # Season setup and basketball tournaments
 
-Basketball setup requires `SeasonPhase.rules` JSONB. The previously referenced `api/migrations/20261023_basketball_tournament_rules.sql` is missing from available repository history; do not treat it as a runnable setup step. The configured backend database has the column as of the read-only 2026-10-29 catalog check. Verify other environments and reconcile the migration provenance before defining an upgrade; see [MOD-005](../../docs/modernization/mod-005-schema-provenance.md). It does not rewrite existing seasons or leagues. No new subdivisions or tournament-specific tables are needed.
+Basketball setup requires `SeasonPhase.rules` JSONB. The previously referenced `api/migrations/20261023_basketball_tournament_rules.sql` is missing from available repository history; do not treat it as a runnable setup step. The configured backend database has the column as of the read-only 2026-10-29 catalog check. Verify other environments and reconcile the migration provenance before defining an upgrade; see [database documentation](../../db/README.md). It does not rewrite existing seasons or leagues. No new subdivisions or tournament-specific tables are needed.
 
 ## Configuration
 
@@ -87,7 +87,7 @@ This only tracks dates processed by the updated script. Work from a run started 
 
 Season setup changes global metadata, not existing Week rows. New leagues use the
 shared calendar planner, including the merged basketball final period. Split final
-periods are rejected by the scorer. MOD-016 makes the existing maintenance command
+periods are rejected by the scorer. The existing maintenance command
 **preview-only by default**; run from `api`:
 
 ```sh
@@ -127,6 +127,4 @@ Do not erase history or reset flags to make a league appear unused.
 CLI emits safe JSON and exits nonzero for failures, invalid explicit scope, or a
 blocked apply. A useful preview of blocked historical data exits zero. Multiple
 selected leagues are independent transactions, so inspect the complete report for
-partial success. No configured maintenance, ingestion, migration or history rewrite
-was executed to verify this change. [Design](../../docs/superpowers/specs/2026-11-06-mod-016-design.md),
-[evidence](../../docs/modernization/evidence/mod-016-postgres-2026-11-06.json).
+partial success.

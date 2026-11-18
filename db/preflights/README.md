@@ -1,81 +1,16 @@
-# MOD-006 profile identity rollout
+# Database upgrade preflights
 
-The local implementation preserves nullable legacy/job `User.uuid` and existing
-unique `User.email`. The new `User_uuid_key` allows at most one linked profile per
-non-null auth subject. Multiple unlinked rows remain valid; they do not resolve
-as interactive principals. No accounts are merged, deleted or linked by this work.
+These aggregate SQL checks are for explicitly authorized targets. Inspect schema/state first; a clean preflight is a point-in-time observation, not permission to apply SQL. Existing application rollouts are recorded in [history](../history/README.md) and must not be replayed blindly.
 
-## Review before an operational rollout
+| Read-only check | Upgrade / invariant |
+| --- | --- |
+| 20261104_user_identity.sql | api/migrations/20261104_user_identity_unique.sql; linked profile UUID uniqueness, nullable legacy UUIDs preserved |
+| 20261104_week_score_identity.sql | api/migrations/20261104_week_score_identity.sql; league/week/member score identity and same-league references |
+| 20261104_ownership_integrity.sql | api/migrations/20261104_ownership_integrity.sql; same-league member ownership and nonoverlapping half-open intervals |
+| 20261105_seasonal_consistency.sql | api/migrations/20261117_seasonal_reference_integrity.sql; conference/game sport-season/phase/team consistency and effective mappings |
 
-1. Establish the target and a role permitted to see the complete profile table.
-   Run [the read-only aggregate preflight](20261104_user_identity.sql) only with
-   authorized database access. It reports total/unlinked profiles, duplicate
-   subject groups and affected profile counts, never UUIDs, emails or names.
-   `row_security=off` deliberately errors when RLS would filter the query; it
-   does not bypass RLS or confer access. Statement timeout is 30 seconds.
-2. If duplicate groups are nonzero, stop. A maintainer must review the relevant
-   account ownership and dependent references under appropriate private access,
-   decide the canonical mapping and approve a separate remediation. Do not pick
-   the oldest/smallest row automatically, cascade-delete profiles, overwrite email,
-   merge auth accounts or infer identity from matching email. Keep a reversible
-   mapping/audit record through the approved process; rerun aggregate preflight.
-   Null UUID counts are informational and do not block this nullable policy.
-3. Obtain operational approval and choose a low-contention window. Run
-   [20261104_user_identity_unique.sql](../../api/migrations/20261104_user_identity_unique.sql)
-   as one complete transaction, stopping on error. It takes a write-conflicting
-   table lock, rechecks duplicates, validates the existing named constraint on
-   replay and adds uniqueness only when ready. Lock timeout is 5 seconds and
-   statement timeout 60 seconds. A busy/dirty/drifted database aborts unchanged;
-   investigate and schedule a new attempt rather than removing timeouts or
-   skipping the guard. Ordinary readers can also delay the DDL lock upgrade.
-4. Verify the installed nondeferrable `UNIQUE(uuid)` uses null-distinct semantics
-   and is valid/ready; rerun preflight. Deploy the reviewed backend through its
-   normal process. The backend maps concurrent same-subject creation to the
-   existing 409 response after rollback and one subject lookup; email collisions
-   across subjects remain safe 400 rejections. No session can acquire another
-   profile by email and no profile values are overwritten.
+Before a change: capture a fresh schema/catalog snapshot, confirm PostgreSQL version/actor and current definitions, run the relevant check read-only, then review SQL/timeouts/recovery and obtain target-specific approval. Nonzero inconsistency counts require reviewed remediation; never guess conference assignments, merge identities, erase history or deduplicate rows automatically. Null UUIDs and permitted empty/adjacent ownership intervals have intentional semantics; use the migration's exact guards.
 
-On 2026-11-04 the maintainer authorized the configured-database rollout.
-Aggregate preflight found14 profiles,0 unlinked profiles and0 duplicate groups;
-the guarded migration installed and verified the intended unique constraint,
-with aggregate counts unchanged. [Rollout evidence](../../docs/modernization/evidence/mod-006-rollout-2026-11-04.json)
-identifies the target by a credential-free fingerprint. This records only the
-configured target, not every environment. No account remediation or backend
-application deployment was performed. Other targets still require their own
-preflight and rollout authorization. Existing UUID FK/auth cascade and unique-email policy are
-unchanged. Browser provider consolidation remains MOD-026.
+Apply only the reviewed transaction/script using a stop-on-error client. The migrations refuse dirty data/catalog drift and preserve existing delete behavior; do not bypass those guards. Inspect both statement and commit outcomes. Verify definitions and aggregate counts afterward, capture the resulting snapshot and retain an execution receipt. Other environments may differ from recorded production history.
 
-## Initialization and recovery
-
-Keep the frozen October 29 baseline unchanged. Fresh supported databases apply
-the baseline, then the October 30 kickoff migration, then this November 4 identity
-migration. The frozen baseline runner verifies its historical schema only and
-must not be used to adopt or verify the upgraded schema as if it were unchanged.
-`db/tables.sql` describes the intended upgraded schema, not proof of hosted state.
-
-Migration replay validates the named unique key instead of silently accepting
-an unrelated key, a deferred key, an invalid index or NULLS NOT DISTINCT semantics.
-Duplicates cause transaction rollback before the constraint is added.
-
-If an installed constraint must be removed, review/approve that operational
-rollback separately. The only introduced object is the `User_uuid_key` unique
-constraint (and its backing index). Dropping that constraint preserves rows and
-email/FK rules but reopens duplicate linked-profile creation for all writers.
-Coordinate writes/rollout and recheck aggregate counts before reinstalling. Do
-not drop existing email/FK constraints or modify historical baseline checksums.
-The application change itself is compatible with the previous schema but cannot
-guarantee uniqueness until the new constraint is installed.
-
-## Local evidence
-
-[Guarded native verifier](../../scripts/modernization/verify_mod006.py) uses only
-the existing marked, owned loopback PostgreSQL harness on port 55439. It creates
-and drops a random test database; it accepts no DSN and reads no `.env`.
-[Recorded results](../../docs/modernization/evidence/mod-006-postgres-2026-11-04.json)
-cover baseline upgrade/replay, dirty/shape/RLS refusal, nullable legacy rows,
-email/FK policies, actual unique-lock waits and same-/different-email races.
-
-
-For the subsequent MOD-008 migration, use the separate [week/score identity runbook](MOD-008.md); do not assume profile preflight covers period/score history.
-
-For MOD-010, use the separate [ownership integrity runbook](MOD-010.md), including the platform extension prerequisite and valid empty/half-open interval policy.
+Ownership index creation is separate: [index runbook](../indexes/ownership/README.md) requires concurrent-DDL/autocommit semantics. [Browser privilege SQL](../changes/README.md) is also separately scoped and has an exact-state recovery contract. Do not mix either with baseline initialization or an unrelated migration transaction.

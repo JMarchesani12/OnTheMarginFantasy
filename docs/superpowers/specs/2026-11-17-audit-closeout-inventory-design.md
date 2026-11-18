@@ -1,9 +1,0 @@
-# Audit closeout inventory and dated schema snapshot
-
-User approved the proposed read-only hosted inventory/snapshot and asked to identify remaining decisions, not to apply unreviewed DDL. Preserve user-owned integration and the audit checkout. No application startup, jobs, grants, DDL, service restarts, deployments, data exports or destructive remediation.
-
-Use existing configured credentials privately, TLS required, session-preserving Supabase connection and repeatable-read/read-only transaction. Collect existing normalized baseline catalog groups plus validated constraints/index definitions/validity, extension versions and routine/event-trigger metadata. Export public schema only using cached PostgreSQL17.6 pg_dump with the same exported snapshot, preserving ACLs and recording owners separately. Never print/store DSNs, passwords, tokens or application rows. Save immutable date/run-id snapshot with manifest/checksums/source revision and explicit platform exclusions; don't edit the frozen baseline. Refuse existing output paths and incomplete/failed results as successful snapshots. Review schema/routine text before publication.
-
-Run existing MOD015 aggregate-only preflight and inspect MOD017 candidate equivalence read-only. Re-inventory browser database consumers after MOD026. Render inspection is read-only once its connected tools are actually exposed. Missing service access cannot be marked verified. No browsing/authenticated acceptance is invented.
-
-Approaches: rerun old baseline installation is inappropriate for changed populated schemas; a new dated observed snapshot plus explicit rollout decisions is the approved recommendation. Snapshot is evidence, not a new migration or data backup. Record exact target identity hash and connection endpoint class without publishing connection values. A failed client/tool/connection attempt remains distinguishable from a successful capture.

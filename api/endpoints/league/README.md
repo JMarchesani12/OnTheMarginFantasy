@@ -15,18 +15,4 @@ and lifecycle service callbacks. Services own policy/transaction
 scope; repositories receive connections and own SQL. Shared rules stay in
 `api/rules`; scheduling algorithms remain in the schedule domain.
 
-The 10 temporary root service/repository forwarders were retired after every
-first-party test/tool import and verification manifest moved to these packages.
-Use canonical package paths for imports and patch targets; the retired Python
-module paths intentionally no longer resolve. Canonical implementation/class
-module qualifications are unchanged.
-
-Root contracts.py remains an alias for admission.contracts because the explicit
-old exception pickle path is still supported/tested. All eight domain Model facades
-were retired after first-party runtime/test/tool callers moved to canonical services.
-The old Model Python import paths intentionally no longer resolve.
-
-This organization does not change routes, authorization, lifecycle write timing,
-transactions, schema, scheduling or deployment.
-
-[Retirement ledger](../../../docs/superpowers/plans/2026-10-30-league-legacy-forwarder-retirement.md). Complete native league checks were rerun after retirement; current source capture is in the [2026-11-02 league report](../../../docs/modernization/evidence/mod-040-league-folders-postgres-2026-11-02.json). Older per-slice reports are historical and may reference removed forwarders.
+Use canonical package paths for imports/patch targets. Root contracts.py remains an alias for admission.contracts because serialized legacy exception paths remain supported and tested. Domain services do not import Flask handlers, configured engines or compatibility models.
