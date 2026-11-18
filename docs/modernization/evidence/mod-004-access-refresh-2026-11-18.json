@@ -1,0 +1,3144 @@
+{
+  "observed_at": "2026-11-18T15:00:41.827872+00:00",
+  "scope": "Configured database public ACL catalog only; no application rows or DDL. Not proof of Render environment roles.",
+  "readonly": true,
+  "client_tls": true,
+  "target_fingerprint": "781c5045c99fd3a79f0c95e407f93e1dd1fd180c96553d09fede0b94c40d3e12",
+  "catalog": {
+    "tables": [
+      {
+        "table_name": "Conference",
+        "owner": "postgres",
+        "rls_enabled": true,
+        "rls_forced": false
+      },
+      {
+        "table_name": "ConferenceMembership",
+        "owner": "postgres",
+        "rls_enabled": true,
+        "rls_forced": false
+      },
+      {
+        "table_name": "DraftPick",
+        "owner": "postgres",
+        "rls_enabled": true,
+        "rls_forced": false
+      },
+      {
+        "table_name": "DraftState",
+        "owner": "postgres",
+        "rls_enabled": true,
+        "rls_forced": false
+      },
+      {
+        "table_name": "DraftTurn",
+        "owner": "postgres",
+        "rls_enabled": true,
+        "rls_forced": false
+      },
+      {
+        "table_name": "GameResult",
+        "owner": "postgres",
+        "rls_enabled": true,
+        "rls_forced": false
+      },
+      {
+        "table_name": "League",
+        "owner": "postgres",
+        "rls_enabled": true,
+        "rls_forced": false
+      },
+      {
+        "table_name": "LeagueJoinRequest",
+        "owner": "postgres",
+        "rls_enabled": true,
+        "rls_forced": false
+      },
+      {
+        "table_name": "LeagueMember",
+        "owner": "postgres",
+        "rls_enabled": true,
+        "rls_forced": false
+      },
+      {
+        "table_name": "LeagueTeamSlot",
+        "owner": "postgres",
+        "rls_enabled": true,
+        "rls_forced": false
+      },
+      {
+        "table_name": "School",
+        "owner": "postgres",
+        "rls_enabled": true,
+        "rls_forced": false
+      },
+      {
+        "table_name": "SeasonPhase",
+        "owner": "postgres",
+        "rls_enabled": true,
+        "rls_forced": false
+      },
+      {
+        "table_name": "Sport",
+        "owner": "postgres",
+        "rls_enabled": true,
+        "rls_forced": false
+      },
+      {
+        "table_name": "SportConference",
+        "owner": "postgres",
+        "rls_enabled": true,
+        "rls_forced": false
+      },
+      {
+        "table_name": "SportSeason",
+        "owner": "postgres",
+        "rls_enabled": true,
+        "rls_forced": false
+      },
+      {
+        "table_name": "SportSeasonSubdivision",
+        "owner": "postgres",
+        "rls_enabled": true,
+        "rls_forced": false
+      },
+      {
+        "table_name": "SportTeam",
+        "owner": "postgres",
+        "rls_enabled": true,
+        "rls_forced": false
+      },
+      {
+        "table_name": "TournamentDefinition",
+        "owner": "postgres",
+        "rls_enabled": true,
+        "rls_forced": false
+      },
+      {
+        "table_name": "Transaction",
+        "owner": "postgres",
+        "rls_enabled": true,
+        "rls_forced": false
+      },
+      {
+        "table_name": "TransactionVote",
+        "owner": "postgres",
+        "rls_enabled": true,
+        "rls_forced": false
+      },
+      {
+        "table_name": "User",
+        "owner": "postgres",
+        "rls_enabled": true,
+        "rls_forced": false
+      },
+      {
+        "table_name": "Week",
+        "owner": "postgres",
+        "rls_enabled": true,
+        "rls_forced": false
+      },
+      {
+        "table_name": "WeeklyTeamScore",
+        "owner": "postgres",
+        "rls_enabled": true,
+        "rls_forced": false
+      }
+    ],
+    "policies": [
+      {
+        "schemaname": "public",
+        "tablename": "User",
+        "policyname": "read own user row",
+        "permissive": "PERMISSIVE",
+        "roles": [
+          "public"
+        ],
+        "cmd": "SELECT",
+        "qual": "(uuid = auth.uid())",
+        "with_check": null
+      }
+    ],
+    "sequence_grants": [
+      {
+        "relname": "ConferenceMembership_id_seq",
+        "owner": "postgres",
+        "acl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}"
+      },
+      {
+        "relname": "Conference_id_seq",
+        "owner": "postgres",
+        "acl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}"
+      },
+      {
+        "relname": "DraftPick_id_seq",
+        "owner": "postgres",
+        "acl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}"
+      },
+      {
+        "relname": "GameResult_id_seq",
+        "owner": "postgres",
+        "acl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}"
+      },
+      {
+        "relname": "LeagueJoinRequest_id_seq",
+        "owner": "postgres",
+        "acl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}"
+      },
+      {
+        "relname": "LeagueMember_id_seq",
+        "owner": "postgres",
+        "acl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}"
+      },
+      {
+        "relname": "LeagueTeamSlot_id_seq",
+        "owner": "postgres",
+        "acl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}"
+      },
+      {
+        "relname": "League_id_seq",
+        "owner": "postgres",
+        "acl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}"
+      },
+      {
+        "relname": "School_id_seq",
+        "owner": "postgres",
+        "acl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}"
+      },
+      {
+        "relname": "SeasonPhase_id_seq",
+        "owner": "postgres",
+        "acl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}"
+      },
+      {
+        "relname": "SportConference_id_seq",
+        "owner": "postgres",
+        "acl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}"
+      },
+      {
+        "relname": "SportSeasonSubdivision_id_seq",
+        "owner": "postgres",
+        "acl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}"
+      },
+      {
+        "relname": "SportSeason_id_seq",
+        "owner": "postgres",
+        "acl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}"
+      },
+      {
+        "relname": "SportTeam_id_seq",
+        "owner": "postgres",
+        "acl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}"
+      },
+      {
+        "relname": "Sport_id_seq",
+        "owner": "postgres",
+        "acl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}"
+      },
+      {
+        "relname": "TournamentDefinition_id_seq",
+        "owner": "postgres",
+        "acl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}"
+      },
+      {
+        "relname": "TransactionVote_id_seq",
+        "owner": "postgres",
+        "acl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}"
+      },
+      {
+        "relname": "Transaction_id_seq",
+        "owner": "postgres",
+        "acl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}"
+      },
+      {
+        "relname": "User_id_seq",
+        "owner": "postgres",
+        "acl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}"
+      },
+      {
+        "relname": "Week_id_seq",
+        "owner": "postgres",
+        "acl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}"
+      },
+      {
+        "relname": "WeeklyTeamScore_id_seq",
+        "owner": "postgres",
+        "acl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}"
+      }
+    ],
+    "table_acl": [
+      {
+        "relname": "Conference",
+        "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+      },
+      {
+        "relname": "ConferenceMembership",
+        "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+      },
+      {
+        "relname": "DraftPick",
+        "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+      },
+      {
+        "relname": "DraftState",
+        "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+      },
+      {
+        "relname": "DraftTurn",
+        "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+      },
+      {
+        "relname": "GameResult",
+        "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+      },
+      {
+        "relname": "League",
+        "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+      },
+      {
+        "relname": "LeagueJoinRequest",
+        "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+      },
+      {
+        "relname": "LeagueMember",
+        "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+      },
+      {
+        "relname": "LeagueTeamSlot",
+        "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+      },
+      {
+        "relname": "School",
+        "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+      },
+      {
+        "relname": "SeasonPhase",
+        "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+      },
+      {
+        "relname": "Sport",
+        "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+      },
+      {
+        "relname": "SportConference",
+        "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+      },
+      {
+        "relname": "SportSeason",
+        "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+      },
+      {
+        "relname": "SportSeasonSubdivision",
+        "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+      },
+      {
+        "relname": "SportTeam",
+        "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+      },
+      {
+        "relname": "TournamentDefinition",
+        "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+      },
+      {
+        "relname": "Transaction",
+        "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+      },
+      {
+        "relname": "TransactionVote",
+        "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+      },
+      {
+        "relname": "User",
+        "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+      },
+      {
+        "relname": "Week",
+        "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+      },
+      {
+        "relname": "WeeklyTeamScore",
+        "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+      }
+    ],
+    "default_grants": [
+      {
+        "owner": "postgres",
+        "nspname": "public",
+        "defaclobjtype": "S",
+        "acl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}"
+      },
+      {
+        "owner": "postgres",
+        "nspname": "public",
+        "defaclobjtype": "f",
+        "acl": "{postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}"
+      },
+      {
+        "owner": "postgres",
+        "nspname": "public",
+        "defaclobjtype": "r",
+        "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}"
+      },
+      {
+        "owner": "supabase_admin",
+        "nspname": "public",
+        "defaclobjtype": "S",
+        "acl": "{postgres=rwU/supabase_admin,anon=rwU/supabase_admin,authenticated=rwU/supabase_admin,service_role=rwU/supabase_admin}"
+      },
+      {
+        "owner": "supabase_admin",
+        "nspname": "public",
+        "defaclobjtype": "f",
+        "acl": "{postgres=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+      },
+      {
+        "owner": "supabase_admin",
+        "nspname": "public",
+        "defaclobjtype": "r",
+        "acl": "{postgres=arwdDxtm/supabase_admin,anon=arwdDxtm/supabase_admin,authenticated=arwdDxtm/supabase_admin,service_role=arwdDxtm/supabase_admin}"
+      }
+    ],
+    "schema_acl": [
+      {
+        "nspname": "public",
+        "owner": "pg_database_owner",
+        "acl": "{pg_database_owner=UC/pg_database_owner,=U/pg_database_owner,postgres=U/pg_database_owner,anon=U/pg_database_owner,authenticated=U/pg_database_owner,service_role=U/pg_database_owner}"
+      }
+    ],
+    "role_flags": [
+      {
+        "rolname": "anon",
+        "rolsuper": false,
+        "rolinherit": true,
+        "rolcanlogin": false,
+        "rolbypassrls": false
+      },
+      {
+        "rolname": "authenticated",
+        "rolsuper": false,
+        "rolinherit": true,
+        "rolcanlogin": false,
+        "rolbypassrls": false
+      },
+      {
+        "rolname": "service_role",
+        "rolsuper": false,
+        "rolinherit": true,
+        "rolcanlogin": false,
+        "rolbypassrls": true
+      }
+    ],
+    "role_membership": [],
+    "actor": [
+      {
+        "rolname": "postgres",
+        "rolsuper": false,
+        "rolbypassrls": true,
+        "supabase_admin_member": false
+      }
+    ],
+    "column_grants": [],
+    "browser_schema_create": [
+      {
+        "rolname": "anon",
+        "can_create": false
+      },
+      {
+        "rolname": "authenticated",
+        "can_create": false
+      }
+    ],
+    "effective_table_privileges": [
+      {
+        "rolname": "anon",
+        "relname": "Conference",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Conference",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Conference",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Conference",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Conference",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Conference",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Conference",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "ConferenceMembership",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "ConferenceMembership",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "ConferenceMembership",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "ConferenceMembership",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "ConferenceMembership",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "ConferenceMembership",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "ConferenceMembership",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "DraftPick",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "DraftPick",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "DraftPick",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "DraftPick",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "DraftPick",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "DraftPick",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "DraftPick",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "DraftState",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "DraftState",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "DraftState",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "DraftState",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "DraftState",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "DraftState",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "DraftState",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "DraftTurn",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "DraftTurn",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "DraftTurn",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "DraftTurn",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "DraftTurn",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "DraftTurn",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "DraftTurn",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "GameResult",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "GameResult",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "GameResult",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "GameResult",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "GameResult",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "GameResult",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "GameResult",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "League",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "League",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "League",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "League",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "League",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "League",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "League",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "LeagueJoinRequest",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "LeagueJoinRequest",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "LeagueJoinRequest",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "LeagueJoinRequest",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "LeagueJoinRequest",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "LeagueJoinRequest",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "LeagueJoinRequest",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "LeagueMember",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "LeagueMember",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "LeagueMember",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "LeagueMember",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "LeagueMember",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "LeagueMember",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "LeagueMember",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "LeagueTeamSlot",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "LeagueTeamSlot",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "LeagueTeamSlot",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "LeagueTeamSlot",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "LeagueTeamSlot",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "LeagueTeamSlot",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "LeagueTeamSlot",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "School",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "School",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "School",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "School",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "School",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "School",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "School",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SeasonPhase",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SeasonPhase",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SeasonPhase",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SeasonPhase",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SeasonPhase",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SeasonPhase",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SeasonPhase",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Sport",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Sport",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Sport",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Sport",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Sport",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Sport",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Sport",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportConference",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportConference",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportConference",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportConference",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportConference",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportConference",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportConference",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportSeason",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportSeason",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportSeason",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportSeason",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportSeason",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportSeason",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportSeason",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportSeasonSubdivision",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportSeasonSubdivision",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportSeasonSubdivision",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportSeasonSubdivision",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportSeasonSubdivision",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportSeasonSubdivision",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportSeasonSubdivision",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportTeam",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportTeam",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportTeam",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportTeam",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportTeam",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportTeam",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportTeam",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "TournamentDefinition",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "TournamentDefinition",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "TournamentDefinition",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "TournamentDefinition",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "TournamentDefinition",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "TournamentDefinition",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "TournamentDefinition",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Transaction",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Transaction",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Transaction",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Transaction",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Transaction",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Transaction",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Transaction",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "TransactionVote",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "TransactionVote",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "TransactionVote",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "TransactionVote",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "TransactionVote",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "TransactionVote",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "TransactionVote",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "User",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "User",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "User",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "User",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "User",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "User",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "User",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Week",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Week",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Week",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Week",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Week",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Week",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Week",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "WeeklyTeamScore",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "WeeklyTeamScore",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "WeeklyTeamScore",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "WeeklyTeamScore",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "WeeklyTeamScore",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "WeeklyTeamScore",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "WeeklyTeamScore",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Conference",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Conference",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Conference",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Conference",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Conference",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Conference",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Conference",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "ConferenceMembership",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "ConferenceMembership",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "ConferenceMembership",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "ConferenceMembership",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "ConferenceMembership",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "ConferenceMembership",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "ConferenceMembership",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "DraftPick",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "DraftPick",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "DraftPick",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "DraftPick",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "DraftPick",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "DraftPick",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "DraftPick",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "DraftState",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "DraftState",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "DraftState",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "DraftState",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "DraftState",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "DraftState",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "DraftState",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "DraftTurn",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "DraftTurn",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "DraftTurn",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "DraftTurn",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "DraftTurn",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "DraftTurn",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "DraftTurn",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "GameResult",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "GameResult",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "GameResult",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "GameResult",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "GameResult",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "GameResult",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "GameResult",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "League",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "League",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "League",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "League",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "League",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "League",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "League",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "LeagueJoinRequest",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "LeagueJoinRequest",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "LeagueJoinRequest",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "LeagueJoinRequest",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "LeagueJoinRequest",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "LeagueJoinRequest",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "LeagueJoinRequest",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "LeagueMember",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "LeagueMember",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "LeagueMember",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "LeagueMember",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "LeagueMember",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "LeagueMember",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "LeagueMember",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "LeagueTeamSlot",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "LeagueTeamSlot",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "LeagueTeamSlot",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "LeagueTeamSlot",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "LeagueTeamSlot",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "LeagueTeamSlot",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "LeagueTeamSlot",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "School",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "School",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "School",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "School",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "School",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "School",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "School",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SeasonPhase",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SeasonPhase",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SeasonPhase",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SeasonPhase",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SeasonPhase",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SeasonPhase",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SeasonPhase",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Sport",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Sport",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Sport",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Sport",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Sport",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Sport",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Sport",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportConference",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportConference",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportConference",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportConference",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportConference",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportConference",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportConference",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportSeason",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportSeason",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportSeason",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportSeason",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportSeason",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportSeason",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportSeason",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportSeasonSubdivision",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportSeasonSubdivision",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportSeasonSubdivision",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportSeasonSubdivision",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportSeasonSubdivision",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportSeasonSubdivision",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportSeasonSubdivision",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportTeam",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportTeam",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportTeam",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportTeam",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportTeam",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportTeam",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportTeam",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "TournamentDefinition",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "TournamentDefinition",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "TournamentDefinition",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "TournamentDefinition",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "TournamentDefinition",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "TournamentDefinition",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "TournamentDefinition",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Transaction",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Transaction",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Transaction",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Transaction",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Transaction",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Transaction",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Transaction",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "TransactionVote",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "TransactionVote",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "TransactionVote",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "TransactionVote",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "TransactionVote",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "TransactionVote",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "TransactionVote",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "User",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "User",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "User",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "User",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "User",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "User",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "User",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Week",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Week",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Week",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Week",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Week",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Week",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Week",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "WeeklyTeamScore",
+        "privilege": "DELETE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "WeeklyTeamScore",
+        "privilege": "INSERT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "WeeklyTeamScore",
+        "privilege": "REFERENCES",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "WeeklyTeamScore",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "WeeklyTeamScore",
+        "privilege": "TRIGGER",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "WeeklyTeamScore",
+        "privilege": "TRUNCATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "WeeklyTeamScore",
+        "privilege": "UPDATE",
+        "allowed": true
+      }
+    ],
+    "effective_sequence_privileges": [
+      {
+        "rolname": "anon",
+        "relname": "ConferenceMembership_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "ConferenceMembership_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "ConferenceMembership_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Conference_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Conference_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Conference_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "DraftPick_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "DraftPick_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "DraftPick_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "GameResult_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "GameResult_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "GameResult_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "LeagueJoinRequest_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "LeagueJoinRequest_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "LeagueJoinRequest_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "LeagueMember_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "LeagueMember_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "LeagueMember_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "LeagueTeamSlot_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "LeagueTeamSlot_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "LeagueTeamSlot_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "League_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "League_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "League_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "School_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "School_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "School_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SeasonPhase_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SeasonPhase_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SeasonPhase_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportConference_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportConference_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportConference_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportSeasonSubdivision_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportSeasonSubdivision_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportSeasonSubdivision_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportSeason_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportSeason_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportSeason_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportTeam_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportTeam_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "SportTeam_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Sport_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Sport_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Sport_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "TournamentDefinition_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "TournamentDefinition_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "TournamentDefinition_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "TransactionVote_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "TransactionVote_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "TransactionVote_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Transaction_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Transaction_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Transaction_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "User_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "User_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "User_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Week_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Week_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "Week_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "WeeklyTeamScore_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "WeeklyTeamScore_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "anon",
+        "relname": "WeeklyTeamScore_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "ConferenceMembership_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "ConferenceMembership_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "ConferenceMembership_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Conference_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Conference_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Conference_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "DraftPick_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "DraftPick_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "DraftPick_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "GameResult_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "GameResult_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "GameResult_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "LeagueJoinRequest_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "LeagueJoinRequest_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "LeagueJoinRequest_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "LeagueMember_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "LeagueMember_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "LeagueMember_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "LeagueTeamSlot_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "LeagueTeamSlot_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "LeagueTeamSlot_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "League_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "League_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "League_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "School_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "School_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "School_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SeasonPhase_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SeasonPhase_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SeasonPhase_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportConference_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportConference_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportConference_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportSeasonSubdivision_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportSeasonSubdivision_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportSeasonSubdivision_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportSeason_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportSeason_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportSeason_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportTeam_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportTeam_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "SportTeam_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Sport_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Sport_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Sport_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "TournamentDefinition_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "TournamentDefinition_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "TournamentDefinition_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "TransactionVote_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "TransactionVote_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "TransactionVote_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Transaction_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Transaction_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Transaction_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "User_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "User_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "User_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Week_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Week_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "Week_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "WeeklyTeamScore_id_seq",
+        "privilege": "SELECT",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "WeeklyTeamScore_id_seq",
+        "privilege": "UPDATE",
+        "allowed": true
+      },
+      {
+        "rolname": "authenticated",
+        "relname": "WeeklyTeamScore_id_seq",
+        "privilege": "USAGE",
+        "allowed": true
+      }
+    ]
+  }
+}

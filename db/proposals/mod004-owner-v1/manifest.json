@@ -1,0 +1,16 @@
+{
+  "version": "20261118_mod004_owner_v1",
+  "status": "PREPARED_NOT_APPLIED",
+  "scope": "Current public tables/sequences and postgres public table/sequence defaults only",
+  "deferred": "supabase_admin defaults remain unchanged",
+  "input_evidence": "docs/modernization/evidence/mod-004-access-refresh-2026-11-18.json",
+  "input_sha256": "a37d1b2213c46196a55b2f7282f648ea36811902b287c7f239d664a3395ded60",
+  "files": {
+    "README.md": "853b3604893098b126cb00c742596615579ac8301b166cec205d284f4214787a",
+    "after.json": "817cc78388ce5451df4d74cc0fb9c8f2f1bc6452148647e5d8d3c8c83a31d78b",
+    "apply.sql": "25da872a0bd8dcc1780ec2b5c14739c5add3622fa0f499eb876f32072c39865d",
+    "before.json": "1e38d3a3de338bbf1b2447101f8559bff8903b6d5d5a0cdedeb9962536662c1e",
+    "recovery.sql": "17c56af74462b607b7b57039d1a02f2070942f14ccfc8fa5d2a2f1141897024c",
+    "state-query.sql": "fdc173c45efb01b935afa8f7e08984a3634e96331fe30d9f18eb18b9eae2ea45"
+  }
+}

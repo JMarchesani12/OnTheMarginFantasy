@@ -1,0 +1,38 @@
+{
+  "observed_at": "2026-11-18T15:43:24.740Z",
+  "scope": "Read-only Render service/deployment metadata; no job execution or service mutation",
+  "service": {
+    "id": "crn-dbuseb3m8hqs73b9e8m0",
+    "name": "OnTheMarginFantasy",
+    "type": "cron_job",
+    "suspended": "not_suspended",
+    "branch": "main",
+    "rootDir": "api/",
+    "schedule": "0 9 * * *",
+    "region": "ohio",
+    "plan": "0.5c-512mb",
+    "buildCommand": "pip install -r requirements.txt",
+    "startCommand": "PYTHONPATH=. python3 cronJobs/cronRefreshSchedules.py"
+  },
+  "deployments": [
+    {
+      "id": "dep-dbusebbm8hqs73b9e9eg",
+      "status": "live",
+      "commit": "514f11574e5cbb6bd2c3a580bf0f68b2033de9b9",
+      "finishedAt": "2026-11-18T15:42:01.497917Z",
+      "createdAt": "2026-11-18T15:41:33.284813Z"
+    }
+  ],
+  "assessment": {
+    "configuration_matches_plan": true,
+    "deployed_commit_matches_reviewed_release": true,
+    "first_scheduled_run": "2026-11-19T09:00:00Z (03:00 CST)",
+    "execution_verified": false,
+    "environment_values": "Not readable by connector; intended SUPABASE_DB_URL and ESPN_BASE_URL must be provisioned privately"
+  },
+  "preserved": {
+    "finalization": "unscheduled",
+    "timeout_worker": "suspended",
+    "existing_cron_schedules": "unchanged"
+  }
+}

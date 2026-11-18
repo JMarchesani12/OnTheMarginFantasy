@@ -1,0 +1,67 @@
+{
+  "version": "20261118_mod004_owner_v1",
+  "result": "APPLIED_AND_VERIFIED",
+  "started_at": "2026-11-18T15:22:18.778549+00:00",
+  "authorization": "Maintainer explicitly approved production SQL after confirming leagues load normally",
+  "scope": "Current public tables/sequences and postgres public table/sequence defaults; supabase_admin defaults deferred",
+  "before_snapshot": "db/snapshots/2026-11-18-before-mod004-owner",
+  "phase": "complete",
+  "committed": true,
+  "no_application_row_statements": true,
+  "package_hashes": {
+    "README.md": "853b3604893098b126cb00c742596615579ac8301b166cec205d284f4214787a",
+    "after.json": "817cc78388ce5451df4d74cc0fb9c8f2f1bc6452148647e5d8d3c8c83a31d78b",
+    "apply.sql": "25da872a0bd8dcc1780ec2b5c14739c5add3622fa0f499eb876f32072c39865d",
+    "before.json": "1e38d3a3de338bbf1b2447101f8559bff8903b6d5d5a0cdedeb9962536662c1e",
+    "recovery.sql": "17c56af74462b607b7b57039d1a02f2070942f14ccfc8fa5d2a2f1141897024c",
+    "state-query.sql": "fdc173c45efb01b935afa8f7e08984a3634e96331fe30d9f18eb18b9eae2ea45"
+  },
+  "manifest_sha256": "331867c24ada796e451378dcc21a8c6fd08db3157f102891a47b96d97a2e25d2",
+  "before_snapshot_manifest_sha256": "cb1641af8b3fc5003a8fa5644aa9e36a90b00bedb8f9892a8b7db83e87f815a6",
+  "target_fingerprint": "781c5045c99fd3a79f0c95e407f93e1dd1fd180c96553d09fede0b94c40d3e12",
+  "actor": "postgres",
+  "client_tls": true,
+  "starting_state_matches": true,
+  "commit_acknowledged_at": "2026-11-18T15:22:19.213615+00:00",
+  "completed_at": "2026-11-18T15:22:19.360629+00:00",
+  "verification": {
+    "exact_after_state_matches": true,
+    "browser_effective_table_privileges": 0,
+    "browser_effective_sequence_privileges": 0,
+    "relations": 44,
+    "backend_service_owner_acl_preserved": true,
+    "supabase_admin_defaults_preserved": true,
+    "policies_rls_schema_and_function_defaults_preserved": true
+  },
+  "after_snapshot": "db/snapshots/2026-11-18-after-mod004-owner",
+  "after_snapshot_manifest_sha256": "78dfff5e5ae7ed8680d3a666973554ebd6d010e5124f2500dcc4d90be2f2a974",
+  "snapshot_comparison": {
+    "changed_sections": [
+      "sequence_grants",
+      "table_acl",
+      "default_grants"
+    ],
+    "all_other_catalog_sections_unchanged": true,
+    "tables": 23,
+    "sequences": 21,
+    "indexes": 56,
+    "constraints": 103,
+    "mod015_consistency_counts": {
+      "invalid_membership_sports": 0,
+      "duplicate_membership_scopes": 0,
+      "game_season_sport_mismatches": 0,
+      "game_phase_season_mismatches": 0,
+      "game_team_sport_mismatches": 0,
+      "phase_tournament_sport_mismatches": 0,
+      "tournament_conference_sport_mismatches": 0,
+      "slot_team_sport_mismatches": 0,
+      "season_teams_missing_effective_mapping": 0
+    }
+  },
+  "public_smoke": {
+    "health": 200,
+    "ready": 200,
+    "listener": "connected"
+  },
+  "finalized_at": "2026-11-18T15:23:27.108183+00:00"
+}

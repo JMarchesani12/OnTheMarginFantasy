@@ -1,0 +1,20 @@
+{
+  "observed_at": "2026-11-18T15:19:21.348Z",
+  "service_id": "srv-d5cb42shg0os73e5dgk0",
+  "deployment": {
+    "id": "dep-dbus302jnfac73e5hbv0",
+    "status": "live",
+    "commit": "514f11574e5cbb6bd2c3a580bf0f68b2033de9b9",
+    "createdAt": "2026-11-18T15:17:20.464592Z",
+    "finishedAt": "2026-11-18T15:18:11.586275Z"
+  },
+  "health_status": 200,
+  "ready_status": 200,
+  "listener": {
+    "enabled": true,
+    "state": "connected",
+    "category": null
+  },
+  "configuration_evidence": "Maintainer reports SUPABASE_DB_URL changed per session-pooler guidance and DATABASE_URL absent. API now has a newer live deployment. Secret values/backend role are not independently readable through connector.",
+  "scope": "Read-only metadata and public endpoints; no authenticated draft acceptance, job triggers or privilege migration"
+}

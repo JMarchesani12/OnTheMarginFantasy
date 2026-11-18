@@ -1,0 +1,55 @@
+{
+  "started_at": "2026-11-18T15:07:36.622519+00:00",
+  "result": "PASS",
+  "scope": "Synthetic dedicated PostgreSQL container only; no configured credentials or hosted operations",
+  "image": "sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929",
+  "cases": [
+    {
+      "case": "clean",
+      "result": "PASS"
+    },
+    {
+      "case": "extra_table",
+      "result": "PASS"
+    },
+    {
+      "case": "column_grant",
+      "result": "PASS"
+    },
+    {
+      "case": "global_defaults",
+      "result": "PASS"
+    },
+    {
+      "case": "unexpected_acl",
+      "result": "PASS"
+    },
+    {
+      "case": "unexpected_policy",
+      "result": "PASS"
+    },
+    {
+      "case": "extra_view",
+      "result": "PASS"
+    },
+    {
+      "case": "postcondition_failure",
+      "result": "PASS"
+    },
+    {
+      "case": "recovery_drift",
+      "result": "PASS"
+    }
+  ],
+  "sources": {
+    "scripts/modernization/verify_mod004_owner.py": "cc00a032d224baeb0145b5b8cce607af2dc3ffc01001d50472c5f77ad1146ebd",
+    "db/proposals/mod004-owner-v1/after.json": "817cc78388ce5451df4d74cc0fb9c8f2f1bc6452148647e5d8d3c8c83a31d78b",
+    "db/proposals/mod004-owner-v1/apply.sql": "25da872a0bd8dcc1780ec2b5c14739c5add3622fa0f499eb876f32072c39865d",
+    "db/proposals/mod004-owner-v1/before.json": "1e38d3a3de338bbf1b2447101f8559bff8903b6d5d5a0cdedeb9962536662c1e",
+    "db/proposals/mod004-owner-v1/manifest.json": "693fbad5604eaedd93c5544352496a780901e837de7f85cf3d3383f7d9e68e8b",
+    "db/proposals/mod004-owner-v1/recovery.sql": "17c56af74462b607b7b57039d1a02f2070942f14ccfc8fa5d2a2f1141897024c",
+    "db/proposals/mod004-owner-v1/state-query.sql": "fdc173c45efb01b935afa8f7e08984a3634e96331fe30d9f18eb18b9eae2ea45"
+  },
+  "container_removed": true,
+  "completed_at": "2026-11-18T15:07:38.864670+00:00"
+}

@@ -1,0 +1,10 @@
+{
+  "observed_at": "2026-11-18T15:01:15.305Z",
+  "source": "Authenticated Vercel deployment metadata; selected nonsecret fields only",
+  "hostname": "www.onthemarginfantasy.com",
+  "id": "dpl_6YLC5tYyEwMXVJrpBGwScbRbHxbC",
+  "status": "READY",
+  "target": "production",
+  "commit": "514f11574e5cbb6bd2c3a580bf0f68b2033de9b9",
+  "branch": "main"
+}
