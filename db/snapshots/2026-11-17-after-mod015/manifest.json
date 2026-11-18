@@ -1,0 +1,48 @@
+{
+  "result": "PASS",
+  "started_at": "2026-11-18T04:17:31.272373+00:00",
+  "scope": "Observed public-schema/catalog metadata only",
+  "exclusions": [
+    "No application/Auth rows or sequence current values",
+    "Public schema only; Auth/storage/provider schemas are prerequisites, not exported",
+    "Cluster roles/passwords, full platform configuration and data backups excluded",
+    "Owner statements/comments/security labels omitted from SQL; public object owners retained in catalog",
+    "No claim of browser/runtime deployment acceptance; no grants/DDL/index mutations"
+  ],
+  "phase": "screened/checksummed publication",
+  "context": {
+    "postgres_version": "17.6",
+    "actor": "postgres",
+    "readonly": true,
+    "client_tls": true,
+    "tls_protocol": "TLSv1.3",
+    "connection": "same configured project/actor via session-preserving pooler port",
+    "target_fingerprint": "781c5045c99fd3a79f0c95e407f93e1dd1fd180c96553d09fede0b94c40d3e12",
+    "target_fingerprint_method": "SHA256(project reference,database,actor); no credential or endpoint persisted",
+    "consistency": "Catalog, aggregate preflights and pg_dump share pg_export_snapshot from one open REPEATABLE READ READ ONLY transaction",
+    "export_client": "cached PostgreSQL17.6 image sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929"
+  },
+  "git_revision": "0262dccc7b18fd5a103062adf0fa17bf173b4f98",
+  "sources": {
+    "scripts/modernization/capture_db_snapshot.py": "d686b715787f6d835ab4e093ad5468fff626f101e116ce0d542ff54336847529",
+    "scripts/modernization/baseline.py": "dbc3491491a091c9733a9227f084ec80611152660d17cf6d487cbc16288161c0",
+    "scripts/modernization/mod017_index_support.py": "9fa89f718e6ee25810b28f92da29be8ea0c8c595219b83d286dbe4f5a1a9f1ed",
+    "db/preflights/20261105_seasonal_consistency.sql": "cb4da6b33b7a798fcf76757e5dbbdfe41fd359b29499bdfb4422394f8b8f765b",
+    "docs/modernization/proposals/mod-017-indexes/preflight.sql": "32ee8ea3b72373b5368a5c2ddb4f5490aa859a5e3ea111eac340540aa467a4d0"
+  },
+  "files": {
+    "schema.sql": {
+      "sha256": "7c95cd9b935678f718ed226730d3c0c7e5fe6ca7d77707051d1a493f52aaee2d",
+      "bytes": 63710
+    },
+    "catalog.json": {
+      "sha256": "04a708f2f4b783cad03bb36b8a3d059caf564ea93dfa22ab9dd895f9894bf9f9",
+      "bytes": 287719
+    },
+    "assessment.json": {
+      "sha256": "6e6e8d2966bbeb4a23a1aa2b9327e86d65a36e784901f6fcb4535632e4d52cbb",
+      "bytes": 1600
+    }
+  },
+  "completed_at": "2026-11-18T04:17:36.687977+00:00"
+}

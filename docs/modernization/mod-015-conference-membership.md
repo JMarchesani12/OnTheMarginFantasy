@@ -52,3 +52,9 @@ review and an explicit migration decision before rollout; full mapping coverage
 cannot be guaranteed by a basic FK. No target metadata/data access, automatic
 cleanup, configured job, dependencies, scheduler change or deployment occurred.
 Historical snapshots/remapping and fair draft scaling remain separate work.
+
+## Prepared schema follow-up — November17,2026
+
+Fresh configured aggregate checks returned0in all nine categories. User approved preparation of required membership sport IDs, preserved deletion policy and dirty refusal. Additive `api/migrations/20261117_seasonal_reference_integrity.sql` is prepared/native-tested (12fixture cases,16direct controls) and reviewed; **not applied to the target**. [Runbook](../../db/preflights/MOD-015-rollout.md). The earlier statement that no migration existed was true at its dated stage; coordinated target rollout remains separately gated.
+
+Subsequent explicit approval: MOD015 constraints APPLIED_AND_VERIFIED on the configured target onNovember17; [receipt](evidence/mod-015-rollout-2026-11-17-8b3245fe0fab49d392d62dddc77e6197.json), [final snapshot](../../db/snapshots/2026-11-17-after-mod015/manifest.json). Required sport ID and10newvalidated constraints, no repairs; existing keys/indexes/delete behavior preserved. Preparation-only statements above describe the earlier stage and are superseded for this target by this rollout record.

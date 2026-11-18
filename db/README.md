@@ -470,3 +470,9 @@ Configured target applied/catalog-verified with1059 slots and10 empty intervals
 unchanged, no overlap/reversed/member/sport mismatches. [Rollout evidence](../docs/modernization/evidence/mod-010-rollout-2026-11-04.json).
 Current target snapshot includes these constraints and requires the extension;
 the frozen baseline/checksums remain unchanged. Backend deployment is separate.
+
+## Dated hosted observations — November17,2026
+
+Use [db/snapshots](snapshots/README.md) for the current dated schema/catalog records rather than treating the historical flat `tables.sql` as a live export. Before/after captures share a read-only exported snapshot within each run, retain ACL/RLS/index/constraint metadata and carry checksums/source provenance. They contain no application rows and are not initialization/migration/data-backup scripts. Frozen October29baseline/checksums remain unchanged.
+
+The configured target now additionally has the approved valid/ready `mod017_owner_member_team` covering index ([rollout receipt](../docs/modernization/evidence/mod-017-rollout-2026-11-17-3241bd9f036441c69353b3168a731e30.json)). The seasonal composite-reference migration `api/migrations/20261117_seasonal_reference_integrity.sql` was separately approved and **APPLIED_AND_VERIFIED** on the configured target; [receipt](../docs/modernization/evidence/mod-015-rollout-2026-11-17-8b3245fe0fab49d392d62dddc77e6197.json) and [final snapshot](snapshots/2026-11-17-after-mod015/manifest.json). Other environments still require fresh review/approval; don't infer their state from a filename. [Runbook](preflights/MOD-015-rollout.md). No old migrations or baseline adoption were rerun.

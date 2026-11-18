@@ -320,3 +320,9 @@ Own-league score SUM now filters eligible user/member/league/stage/refreshed IDs
 ### MOD017 final controlled index selection — 2026-11-16
 
 Local selection complete: one ownership-only proposal, other index families conditional/deferred; no target SQL applied. Backend827/audit71 and native parity/write/recovery/proposal evidence pass; review no findings. [Decisions, evidence and remaining rollout/acceptance gates](mod-017-index-selection.md).
+
+### Hosted closeout inventory — November17,2026
+
+Fresh before/after schema/catalog snapshots captured and the specifically approved ownership index applied/verified. MOD015 required-sport/composite-reference migration prepared and native-tested, not applied. Render services were inspected read-only: API/two active cron jobs remain at854bb9b, behind the audited branch; timeout worker remains user-suspended. Security hardening, coordinated audited application release, readiness/session configuration and browser acceptance remain open. [Current closeout/decisions](audit-closeout-2026-11-17.md). No job triggers or service deployments/configuration mutations performed.
+
+Later November17approval: MOD015 integrity constraints are now APPLIED_AND_VERIFIED on the configured target, with final snapshot/receipt in [closeout](audit-closeout-2026-11-17.md). MOD017 is also applied. Remaining gates are audited application release/runtime configuration, browser privileges and live acceptance; additional refresh/finalization jobs stay unscheduled pending staged confidence/approval.
