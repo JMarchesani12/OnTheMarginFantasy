@@ -43,7 +43,7 @@ class CalendarDatabase:
 
     def execute(self, statement, params):
         assert self.active, 'Query outside owned scope'
-        sql = str(statement)
+        sql = str(statement).replace('FOR UPDATE', '')
         self.queries.append(sql)
         if 'INSERT INTO "Week"' in sql and params.get('weekNumber') == self.fail_week:
             raise RuntimeError('synthetic numbered week failure')
@@ -131,14 +131,17 @@ class ScheduleCalendarServiceTests(unittest.TestCase):
         self.assertEqual(len(service.ensure_weeks_for_job(10)),3)
         self.assertEqual(len(self.db.queries),1)
 
-    def test_bulk_failure_preserves_original_separately_committed_football_week_zero(self):
+    def test_bulk_failure_rolls_back_week_zero_and_retry_creates_complete_plan(self):
         self.football();self.db.fail_week = 2
         service = self.service()
         self.assertEqual(service._get_week_start_weekday(10),1)
         with self.assertRaisesRegex(RuntimeError,'numbered week failure'):
             service.ensure_weeks_for_job(10)
         rows = self.db.connection.execute('SELECT "weekNumber" FROM "Week"').fetchall()
-        self.assertEqual([row[0] for row in rows],[0])
+        self.assertEqual([row[0] for row in rows],[])
+        self.db.fail_week = None
+        retried = service.ensure_weeks_for_job(10)
+        self.assertEqual([row['weekNumber'] for row in retried], [0, 1, 2, 3])
         self.assertFalse(self.db.active)
 
     def test_missing_league_season_and_subdivision_keep_error_contracts(self):
@@ -160,3 +163,15 @@ class ScheduleCalendarServiceTests(unittest.TestCase):
         model = ExistingWeeks.__new__(ExistingWeeks)
         self.assertEqual(model.ensure_weeks_for_league(10),[{'weekNumber':7}])
         self.assertEqual(ScheduleIngestionService(Mock(),'https://example.test///').espn_base_url,'https://example.test')
+
+    def test_supplied_connection_keeps_caller_rollback_and_uncommitted_league_visible(self):
+        service = self.service()
+        with self.assertRaisesRegex(RuntimeError, 'caller rollback'):
+            with self.db.begin() as conn:
+                self.db.connection.execute('UPDATE "League" SET settings=?', ('{"timezone":"UTC"}',))
+                rows = service.ensure_weeks_for_job(10, conn=conn)
+                self.assertEqual(len(rows), 3)
+                self.assertTrue(self.db.active)
+                self.assertEqual(rows[0]['startDate'].hour, 0)
+                raise RuntimeError('caller rollback')
+        self.assertEqual(self.db.connection.execute('SELECT count(*) FROM "Week"').fetchone()[0], 0)

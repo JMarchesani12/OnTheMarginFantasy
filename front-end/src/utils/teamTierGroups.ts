@@ -29,7 +29,7 @@ export function groupTeamsByTier<T extends TierTeam>(teams: readonly T[], sport?
       tier,
       label: tiers.size > 1 ? getTierLabel(tier, sport) : null,
       teams: [...members].sort((a, b) =>
-        (a.conferenceName?.trim() || "Independent").localeCompare(b.conferenceName?.trim() || "Independent")
+        (a.conferenceName?.trim() || "Conference unavailable").localeCompare(b.conferenceName?.trim() || "Conference unavailable")
         || a.teamName.localeCompare(b.teamName)),
     }));
 }

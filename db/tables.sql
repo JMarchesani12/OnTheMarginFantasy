@@ -193,6 +193,7 @@ create table public."LeagueMember" (
   "draftOrder" integer not null,
   "seasonPoints" bigint not null default '0'::bigint,
   constraint "LeagueMember_pkey" primary key (id),
+  constraint "LeagueMember_league_id_key" unique ("leagueId", id),
   constraint "LeagueMember_leagueId_fkey" foreign KEY ("leagueId") references "League" (id) on delete CASCADE,
   constraint "LeagueMember_userId_fkey" foreign KEY ("userId") references "User" (id) on delete CASCADE
 ) TABLESPACE pg_default;
@@ -214,7 +215,10 @@ create table public."LeagueTeamSlot" (
   constraint "LeagueTeamSlot_pkey" primary key (id),
   constraint "LeagueTeamSlot_leagueId_fkey" foreign KEY ("leagueId") references "League" (id) on delete CASCADE,
   constraint "LeagueTeamSlot_memberId_fkey" foreign KEY ("memberId") references "LeagueMember" (id) on delete CASCADE,
-  constraint "LeagueTeamSlot_sportTeamId_fkey" foreign KEY ("sportTeamId") references "SportTeam" (id) on delete CASCADE
+  constraint "LeagueTeamSlot_sportTeamId_fkey" foreign KEY ("sportTeamId") references "SportTeam" (id) on delete CASCADE,
+  constraint "LeagueTeamSlot_interval_check" check ("acquiredWeek" >= 0 and ("droppedWeek" is null or "droppedWeek" >= "acquiredWeek")),
+  constraint "LeagueTeamSlot_same_league_member_fkey" foreign KEY ("leagueId", "memberId") references "LeagueMember" ("leagueId", id) on delete CASCADE,
+  constraint "LeagueTeamSlot_no_overlap" exclude using gist ("leagueId" with =, "sportTeamId" with =, int8range("acquiredWeek"::bigint, "droppedWeek"::bigint, '[)') with &&)
 ) TABLESPACE pg_default;
 
 
@@ -397,6 +401,7 @@ create table public."User" (
   uuid uuid null,
   constraint "User_pkey" primary key (id),
   constraint "User_email_key" unique (email),
+  constraint "User_uuid_key" unique (uuid),
   constraint "User_uuid_fkey" foreign KEY (uuid) references auth.users (id) on delete CASCADE
 ) TABLESPACE pg_default;
 
@@ -411,6 +416,8 @@ create table public."Week" (
   "isLocked" boolean not null default true,
   "scoringComplete" boolean not null default false,
   constraint "Week_pkey" primary key (id),
+  constraint "Week_league_week_number_key" unique ("leagueId", "weekNumber"),
+  constraint "Week_league_id_key" unique ("leagueId", id),
   constraint "Week_leagueId_fkey" foreign KEY ("leagueId") references "League" (id) on delete CASCADE
 ) TABLESPACE pg_default;
 
@@ -425,7 +432,10 @@ create table public."WeeklyTeamScore" (
   rank bigint not null,
   "pointsAwarded" bigint not null,
   constraint "WeeklyTeamScore_pkey" primary key (id),
+  constraint "WeeklyTeamScore_identity_key" unique ("leagueId", "weekId", "memberId"),
   constraint "WeeklyTeamScore_leagueId_fkey" foreign KEY ("leagueId") references "League" (id) on delete CASCADE,
   constraint "WeeklyTeamScore_memberId_fkey" foreign KEY ("memberId") references "LeagueMember" (id) on delete CASCADE,
-  constraint "WeeklyTeamScore_weekId_fkey" foreign KEY ("weekId") references "Week" (id) on delete CASCADE
+  constraint "WeeklyTeamScore_weekId_fkey" foreign KEY ("weekId") references "Week" (id) on delete CASCADE,
+  constraint "WeeklyTeamScore_same_league_week_fkey" foreign KEY ("leagueId", "weekId") references "Week" ("leagueId", id) on delete CASCADE,
+  constraint "WeeklyTeamScore_same_league_member_fkey" foreign KEY ("leagueId", "memberId") references "LeagueMember" ("leagueId", id) on delete CASCADE
 ) TABLESPACE pg_default;

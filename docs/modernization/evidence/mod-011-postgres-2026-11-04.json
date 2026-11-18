@@ -1,0 +1,126 @@
+{
+  "result": "PASS",
+  "scope": "Owned marked disposable PostgreSQL; no hosted admission writes",
+  "tests": {
+    "actual_baseline_check_fk_and_current_migrations": "PASS",
+    "canonical_status_exact_response_once_only": "PASS",
+    "authority_owner_approved_foreign_scope": "PASS",
+    "statement_and_commit_rollback": "PASS",
+    "competing_denial_cancellation": [
+      {
+        "first": "deny",
+        "second": "cancel",
+        "observed_lock_wait": true,
+        "outcomes": {
+          "first": "DENIED",
+          "second": "rejected"
+        }
+      },
+      {
+        "first": "cancel",
+        "second": "deny",
+        "observed_lock_wait": true,
+        "outcomes": {
+          "first": "CANCELLED",
+          "second": "rejected"
+        }
+      }
+    ],
+    "prior_listing_cancellation": {
+      "listing_projection_filter_and_commissioner_revocation": "PASS",
+      "cancellation_scope_owner_state": "PASS",
+      "post_update_and_deferred_commit_rollback": "PASS",
+      "explicit_job_and_user_id_contracts": "PASS",
+      "concurrent_cancellation": [
+        {
+          "path": "actor_service",
+          "observed_lock_wait": true,
+          "outcomes": {
+            "first": [
+              "success",
+              "CANCELLED",
+              null
+            ],
+            "second": [
+              "AdmissionRejected",
+              "Only pending requests can be cancelled"
+            ]
+          }
+        },
+        {
+          "path": "user_id_service",
+          "observed_lock_wait": true,
+          "outcomes": {
+            "first": [
+              "success",
+              "CANCELLED",
+              null
+            ],
+            "second": [
+              "AdmissionRejected",
+              "Only pending requests can be cancelled"
+            ]
+          }
+        }
+      ]
+    },
+    "prior_creation_denial": {
+      "creation_projection_normalization_repeat": "PASS",
+      "membership_and_real_fk_failures": "PASS",
+      "insert_statement_and_commit_rollback": "PASS",
+      "denial_authority_scope_and_resolver": "PASS",
+      "denial_post_update_and_commit_rollback": "PASS",
+      "trusted_and_supplied_connection_compatibility": "PASS",
+      "concurrent_denial": [
+        {
+          "path": "actor_service",
+          "observed_lock_wait": true,
+          "lock_order": [
+            "league",
+            "request"
+          ],
+          "outcomes": {
+            "first": [
+              "success",
+              "DENIED",
+              1
+            ],
+            "second": [
+              "AdmissionRejected",
+              "Join request is not pending"
+            ]
+          }
+        },
+        {
+          "path": "user_id_service",
+          "observed_lock_wait": true,
+          "lock_order": [
+            "league",
+            "request"
+          ],
+          "outcomes": {
+            "first": [
+              "success",
+              "DENIED",
+              1
+            ],
+            "second": [
+              "AdmissionRejected",
+              "Join request is not pending"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "sha256": {
+    "api/endpoints/league/admission/service.py": "677da582e7a37ff56ac1b81bed6cb90e5d1a2c806f67b61b22384f44ca8bee83",
+    "api/endpoints/league/admission/repository.py": "b0cfdfcbb64002b2664bacd32e0cc2cc29977a156101adeb4ce100e4be9af9c5",
+    "db/baselines/20261029/001_schema.sql": "7fe1c17223dd2cf3ebbfdb9d2ca318d4f7ad24f9a6578309c40aad3cfb58a109",
+    "api/migrations/20261030_game_kickoff_tbd.sql": "4fa4d40cf16cf0600a37aec2f915e31efe024c294fe5c5a047d32ad599cf33d4",
+    "api/migrations/20261104_user_identity_unique.sql": "64631ad06193c79bded2e52849e0264b281468ea098e3dfd72d9def01f3dab88",
+    "scripts/modernization/verify_mod011.py": "09b1ea06dcf050c3247e6e7396d06e03050b341069c410a578da1cfbe5ff82bd",
+    "scripts/modernization/verify_admission_slice.py": "1dafa28028f6484e8affc1c19745b3ecfcb2fde7d73345d850ae511a65777dd3",
+    "scripts/modernization/verify_admission_create_deny.py": "0ff0f12be63097f8909995a50df6ae760cdffb4f7466341f86426a79ddbda6f0"
+  }
+}

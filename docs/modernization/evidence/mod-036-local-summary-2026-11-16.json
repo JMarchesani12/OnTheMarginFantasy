@@ -1,0 +1,97 @@
+{
+  "date": "2026-11-16",
+  "result": "PASS_BOUNDED_LOCAL_UI_TIER_AUDIT",
+  "artifact": "mod-036-local-32a82bfdd925460f9148b3a7b4562874.json",
+  "rawSha256": "ddecb5329d4534d138bc665817761cb12dae01eaa1b39b76c278428ddf48beb3",
+  "checks": {
+    "frontendTests": 235,
+    "existingTierTests": 9,
+    "auditTests": 7,
+    "frontendTypecheck": "PASS",
+    "tierTypecheck": "PASS",
+    "importGraph": {
+      "files": 75,
+      "edges": 219,
+      "result": "PASS"
+    },
+    "controlledBuild": "PASS",
+    "componentCases": 9,
+    "savedSamples": 45,
+    "sourceHashes": 120,
+    "benchmarkRenderRequests": 54,
+    "perMountCommitMarkerVerified": false,
+    "diff/newSourceWhitespace": "PASS"
+  },
+  "findings": [
+    "Home horizontal tab pattern lacks arrow navigation/roving focus/tabpanel linkage",
+    "Tier malformed JSON response persists invalid cache and blocks refetch on next invocation"
+  ],
+  "browserCleanup": {
+    "ownedChildPid": 40867,
+    "childExited": true,
+    "serverClosed": true,
+    "profileRemoved": true
+  },
+  "providerTempCacheCleanup": true,
+  "review": {
+    "model": "gpt-6-astra/high",
+    "critical": 0,
+    "important": 0,
+    "minor": 1,
+    "deferredMinors": [
+      "Repeated kind/count may match prior render before new commit; twoRAF is not generation marker. Native activity observed, timings coarse; add marker before detailed future profiling."
+    ],
+    "independent": "7audit tests/rawSHA/120hashes/49assetbytes+compression+hashes/17routeclosures/native+provider+cleanupfacts/scope",
+    "declined": [
+      "MainChrome/broadchecks not rerun",
+      "Fullauthpages/liveprovider/production/AT/mobile/routerecovery/priorMOD018 outside scope"
+    ]
+  },
+  "implementationDeferred": true,
+  "uncommitted": true,
+  "deployed": false,
+  "rulings": [
+    {
+      "decision": "Controlled build excludes repository env; explicit synthetic endpoint/auth definitions",
+      "reason": "Measure code without configured runtime/provider access",
+      "costIfWrong": "Deployed config not measured"
+    },
+    {
+      "decision": "Actual components/nativeChrome with synthetic profile/auth/API boundaries",
+      "reason": "Real DOM/keyboard in an isolated fixture without user data",
+      "costIfWrong": "Full authenticated pages/AT/socket/mobile behavior unknown"
+    },
+    {
+      "decision": "Coarse DOM/twoRAF timing, no CPU/bottleneck/heapleak conclusion",
+      "reason": "Frame scheduling/cumulativemetrics and missing generation marker limit inference",
+      "costIfWrong": "Production rendering requires further profiling"
+    },
+    {
+      "decision": "Separate TS tierloader with cannedfetch/temp caches, never importCLIindex",
+      "reason": "No realprovider/jobs/outputs, preserve existing behavior",
+      "costIfWrong": "Operator/liveprovider recovery unmeasured"
+    },
+    {
+      "decision": "Record Home tab pattern and invalid cache as deferred narrow fixes; no framework/caching/memoization rewrite",
+      "reason": "User defers actual implementation, source absence alone does not prove route failure",
+      "costIfWrong": "Current gaps persist until implementation"
+    },
+    {
+      "decision": "Accept author native cleanup/run records; reviewer does not repeat services",
+      "reason": "Exact owned child/server/profile/cache removal observed, fresh review static/evidence only",
+      "costIfWrong": "Live behavior not independently reproduced"
+    },
+    {
+      "decision": "Preserve priorMOD018/auditcheckout/files/ledger uncommitted, no merge/push/deploy",
+      "reason": "Established user-owned integration workflow",
+      "costIfWrong": "User mustcommit, ignored build artifacts retained"
+    }
+  ],
+  "sourceSha256": {
+    "scripts/modernization/measure_mod036.mjs": "61d5219fd93704a7cb9ecb9d26b7b18b340ccda390daa4bf00a6020629c17e49",
+    "scripts/modernization/mod036_browser.mjs": "1b9fa407fbbc8b2c8c5511ac743f5ce131a4571ea1a4f84f3b8c297a8fdf009b",
+    "scripts/modernization/mod036_fixture.tsx": "affe87b45aa79a65cba2c8c7ef036f31fcf940921059866ab7a819268303ae33",
+    "scripts/modernization/tests/mod036.test.mjs": "4150e1aad4956f1a248a9e8229e5a2a2e219796bb03e5aa950ccb53bcfcfa56e",
+    "docs/modernization/mod-036-local-ui-tier-audit.md": "c46f81433845cc47acb1da48b024720664ba12ea7dd864a4ced84a4067dd8b6f"
+  }
+}

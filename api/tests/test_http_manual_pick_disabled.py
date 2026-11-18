@@ -1,4 +1,5 @@
 """MOD-003B final policy: no HTTP manual allocation or client job bypass."""
+from http_error_assertions import assert_error_response
 import time
 import unittest
 from unittest.mock import patch
@@ -51,12 +52,12 @@ class HttpManualPickDisabledTests(unittest.TestCase):
                     response = self.client.post('/api/draft/pick-manual?actingUserId=1&trustedJob=true',
                                                 headers=headers, json=body)
                     self.assertEqual(response.status_code, 410)
-                    self.assertEqual(response.json, {'error': 'http_manual_pick_disabled'})
+                    assert_error_response(self, response, {'error': 'http_manual_pick_disabled'})
                     self.assert_no_execution()
         response = self.client.post('/api/draft/pick-manual', headers=self.headers(), data='{broken',
                                     content_type='application/json')
         self.assertEqual(response.status_code, 410)
-        self.assertEqual(response.json, {'error': 'http_manual_pick_disabled'})
+        assert_error_response(self, response, {'error': 'http_manual_pick_disabled'})
         self.assert_no_execution()
 
     def test_anonymous_invalid_and_expired_authentication_still_fail_in_middleware(self):

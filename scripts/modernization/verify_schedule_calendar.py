@@ -96,7 +96,7 @@ def tests(engine):
     reset();expect(ValueError,lambda:service.timezone_for_job(999),'League 999 not found')
     query('DELETE FROM "SportSeasonSubdivision"');expect(ValueError,lambda:service._get_sport_season_for_league(10),'no subdivision windows')
     query('DELETE FROM "SportSeason"');expect(ValueError,lambda:service._get_sport_season_for_league(10),'No SportSeason')
-    # Post-insert failures undo the entire numbered-week helper (not previously committed Week0).
+    # Post-insert failures undo the full initialization, including Week0.
     reset();football();triggered=[]
     def fail_second(conn,cursor,statement,params,context,many):
         if 'INSERT INTO "Week"' in statement and params.get('weekNumber')==2:
@@ -104,7 +104,7 @@ def tests(engine):
     event.listen(engine,'after_cursor_execute',fail_second)
     try:expect(RuntimeError,lambda:service.ensure_weeks_for_job(10))
     finally:event.remove(engine,'after_cursor_execute',fail_second)
-    assert triggered==[True] and [r['weekNumber'] for r in weeks()]==[0]
+    assert triggered==[True] and weeks()==[]
     for deferred in (False,True):
         reset()
         with engine.begin() as conn:
@@ -122,11 +122,11 @@ def tests(engine):
         'basketball_opening_dst_persisted_plan_and_existing_week_reuse':'PASS',
         'football_week_zero_original_projection_and_defaults':'PASS',
         'all_subdivisions_continuous_postseason_and_phase_final_calendar_join':'PASS',
-        'numbered_batch_rollback_preserves_prior_week_zero_commit':'PASS',
+        'whole_initialization_rollback_includes_week_zero':'PASS',
         'native_statement_deferred_commit_rollback':'PASS',
         'legacy_db_only_helpers_and_no_provider_client':'PASS',
         'repository_queries_exercised':sorted(covered),
-        'scope_limit':'Calendar only; original helper transaction boundaries preserved. Remaining schedule reads, ingestion/bootstrap and composition are later slices.'}
+        'scope_limit':'MOD-008 whole initialization atomic; standalone legacy helper interfaces retained. Calendar date policy unchanged.'}
 
 
 def main():

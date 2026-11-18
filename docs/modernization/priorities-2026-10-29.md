@@ -75,3 +75,254 @@ MOD-041 produces the decision and pipeline ownership/order; MOD-019 owns safe-er
 ## Immediate next action
 
 Choose MOD-009 for the next implementation run: inspect the locked application path and pending dispatcher, define replay outcome and add isolated fault/state tests. Keep PostgreSQL concurrent-apply verification explicitly outstanding until disposable infrastructure is available. If the user prefers the architecture conversation first, start MOD-038 as a decision-only task; present the alternatives above and obtain agreement before writing a migration design or product code.
+
+## Priority 4 status — 2026-11-03
+
+MOD-034 startup isolation and MOD-028A bounded auth refresh were already implemented. MOD-025 now enforces exact draft-order permutations and start replay conflicts, including native PostgreSQL start/order/finalization lock-race verification. MOD-019 safe errors and documented local resource ceilings are implemented; gateway rate/proxy policy remains open. See [current progress](progress.md#priority-4-continuation--2026-11-03) and [verification](verification.md#priority-4-continuation--2026-11-03). No deployment is implied by this status update.
+
+## Priority 6 status — 2026-11-06
+
+MOD-013 weekly completion/retry, MOD-014 atomic season finalization, MOD-015 seasonal
+conference membership, MOD-016 historical maintenance safeguards, MOD-023 draft
+convergence and MOD-024 runtime recovery are complete in their recorded application/
+synthetic verification scopes. MOD-024 adds listener recovery/shutdown, user-approved
+readiness, safe logs and same-command job overlap handling. See the
+[operational handoff](mod-024-operations.md) and [verification](verification.md#priority-6-mod-024--operational-recovery--2026-11-06).
+
+This closes Priority6 application implementation, without claiming hosted rollout
+or supervision verification. Actual hosted commands/schedules/roles/restart policy,
+MOD-015 composite-constraint rollout and separate historical snapshot/remapping
+work retain their documented boundaries. The intentionally suspended service is
+unchanged. Priority7 is next in the planning queue; no Priority7 work starts here.
+
+
+## Priority 7 status — 2026-11-09
+
+The accepted implementation scopes are complete: MOD-039 backend integer/settings
+helper pilots; MOD-040 shared editor ownership move (also MOD-030); MOD-029 fresh
+Detail/Roster context; MOD-031A clock/connection hooks; MOD-031B draft-order UI;
+reconciled MOD-032 schedule boundaries; and MOD-033 shared ownership reads after
+MOD-033A's separately approved cap correction.
+
+MOD-033 passes backend781/781, clean independent scope review, native PostgreSQL
+ownership characterization and existing draft/transaction/season-membership checks.
+See [closeout evidence](evidence/mod-033-ownership-reads-2026-11-09.json) and
+[verification](verification.md#2026-11-09--mod-033-shared-ownership-read-pilot--priority-7-closeout).
+These are bounded pilots, not a claim that every possible shared helper/query or
+screen has been migrated. Recorded follow-ups/minors and deployment/runtime limits
+remain; changes are uncommitted and undeployed. Priority8 is the next planning row.
+
+
+## Priority 8 status — 2026-11-10
+
+MOD-026 is implemented in its approved application/isolated scope: one API-backed
+profile owner, synchronous session continuity, bounded provisioning, safe signup
+hints, and narrow Home/Settings identity safeguards. Frontend150/150, build and
+import checks pass; the review's source-to-render gap was reproduced and fixed.
+See [evidence](evidence/mod-026-profile-ownership-2026-11-10.json).
+
+MOD-027A now adds own-league loading, stage-specific empty results and safe failure/Retry,
+with account/stage request isolation. Frontend157/157, build and import checks pass;
+see [evidence](evidence/mod-027a-own-league-feedback-2026-11-10.json).
+MOD-027B now coordinates transaction/pending/roster refreshes after successful mutations,
+preserving authoritative ownership reads and independent read retries. See
+[evidence](evidence/mod-027b-roster-refresh-2026-11-10.json). MOD-027C team-search
+loading reset is complete (frontend183/183/build/import PASS). MOD-027D cold-link
+discovery is complete (frontend190/190/build/import PASS). MOD-027E form labels
+and validation associations are complete (frontend193/193/build/import PASS).
+MOD-027F native draft-dialog focus is implemented in its recorded controlled scope
+(frontend201/201/build/import PASS; browser/assistive-technology verification open).
+MOD-027G keyboard draft ordering is implemented (frontend205/205/build/import PASS).
+MOD-027A–G application changes are complete in their recorded scopes; browser/AT
+acceptance and recorded coverage minors remain open. MOD-028B safe frontend error
+parser/create-join pilot is implemented (frontend213/213/build/import PASS); transaction mutation batch also passes frontend221/221/build/import. Completion now covers all45 application HTTP helpers/consumers
+(frontend235/235/build/import PASS), preserving special statuses and partial-save
+guidance. MOD028 application scopes are complete; SDK-authF002 and recorded native
+browser/minor followups remain outside this claim. Performance measurement is next;
+MOD-028B, performance measurement and cleanup retain their separate scope/approvals.
+No live provider/browser/hosted rollout is implied. Work remains uncommitted.
+
+
+## Priority8 performance baseline — 2026-11-11
+
+MOD017 now has a bounded own-league/ownership baseline: three synthetic PostgreSQL
+tiers, parameterized production SQL, warm timing/buffer/result comparisons and
+temporary candidate indexes. See [report](mod-017-query-baselines.md). Ownership
+covering-index followup is supported within this fixture; own-league global score
+aggregation remains substantial. No production index or query changed. Broader
+MOD017 query families, production workload/role/write-cost evidence and actual
+index rollout remain separate; MOD018/020/021/022 are not completed by this run.
+
+
+## MOD017 transaction-read continuation — 2026-11-13
+
+The next bounded synthetic baseline covers league transaction lists, open trades
+and weekly pending candidates. See [report](mod-017-transaction-baselines.md).
+Temporary full/partial indexes help selected fixture reads; open-trade JIT/plan
+cost remains significant. No production query/index or rollout changed. Games,
+team/conference/scoring families and production/write-cost evidence remain open;
+this does not complete MOD017 or authorize subsequent performance cards.
+
+
+## Audit sequencing decision — 2026-11-13
+
+User requested continuing audit measurements and deferring performance/index/query
+implementation until the audit is complete. Temporary indexes inside owned
+disposable benchmark databases remain measurement-only; no production rollout or
+optimization work is authorized by benchmark results.
+
+MOD017 game/schedule baseline now covers member-week/conference-week/team-season
+reads:14 runner tests,3 native tiers and108 equivalent cases pass. See
+[report](mod-017-game-baselines.md). Repeated ownership joins remain substantial
+after game filtering improves. Other matrix families and MOD018/020/021/022
+measurements retain separate scope; no fullMOD017 closure is implied.
+
+
+MOD017 team lookup/conference-count continuation measures actual retrieval/ranking
+and season-first count reads at three sizes:18 runner tests,108 SQL and84 service
+records pass. See [report](mod-017-team-lookup-baselines.md). Full-team retrieval
+remains visible even for misses; ownership indexing helps selected reads while
+the conference-leading candidate regresses them. No optimization implemented;
+remaining query families/performance cards stay open.
+
+
+## MOD017 head-to-head continuation — 2026-11-15
+
+User reconfirmed measurements only, optimizations deferred. Actual head-to-head
+SQL and supplied-connection service mapping now have three-tier baselines:
+24 runner tests,132 SQL/132 service results preserve full independently expected
+rows, boundary dates, swapped flags and one half-open ownership transfer. See
+[report](mod-017-head-to-head-baselines.md). Separate/combined game and ownership
+index evidence supports later evaluation; no application change or MOD017 closure.
+Full scoring/ingestion and remaining performance cards remain separate.
+
+
+## MOD017 stored-score read continuation — 2026-11-15
+
+Weekly-points/season-totals/weekly-ranks and actual trusted job reader measured:
+29 runner tests,180SQL/84service independent full expected records pass at three
+league/score sizes. See [report](mod-017-score-read-baselines.md). Scoped reads
+already use existing identity indexes; extra score indexes show no consistent
+benefit. Preserve no-change conclusion. No optimization implemented; full scoring
+query-count/bonus/postseason/ingestion and remaining cards remain separate.
+
+
+## MOD021 weekly orchestration baseline — 2026-11-15
+
+Actual scorer/schedule/rules/native rolled-back writes now measured for4/8/16
+members across five scenarios:35runner tests,15records/90invocations pass exact
+scores/querycounts/rollback. At16members untied52 statements versus unresolved204
+(120H2H pair reads). See [report](mod-021-weekly-scoring-baseline.md). This supports
+later batching/context design; no optimization implemented. Full season scoring/
+finalization/ingestion and remaining cards remain open.
+
+
+## MOD022 ingestion baseline — 2026-11-15
+
+Actual ingestion/service/parser/SQL measured with canned fetch only and external
+HTTP blocked:40runner tests,12records/72workloads plus2failure/rerun probes pass.
+At16same-season leagues, league loop32fetches/64upserts/640SQL versus existing
+season helper once2/3/29. [Report](mod-022-ingestion-baseline.md). No routing/dedup/
+retry optimization implemented; conflicting duplicates/checkpoints/transport
+retry policy/production behavior remain separate. Actual optimizations deferred.
+
+
+## MOD020 read-triggered lifecycle baseline — 2026-11-15
+
+Actual scoped read service + global lifecycle callback measured:46runner tests,
+24records/144calls pass all-league state/timestamp sets/counts at three sizes.
+Converged5,000-league fixture still incurs1,000updates on500ended/live-draft
+leagues percall. [Report](mod-020-lifecycle-read-baseline.md). Internal denied/
+missing probes are not HTTP bypass evidence; endpoint prechecks are separate.
+No lifecycle policy/scoping/job/index change; optimizations remain deferred.
+
+
+## Small cleanup closeout — 2026-11-15
+
+MOD037 demonstrated local filename/route/bootstrap text corrections complete,
+with Python executableAST and TypeScript emittedJS equivalence and frontend
+import graph75files/219edges PASS. [Report](mod-037-text-cleanup.md).
+MOD035 remaining repository-visible ownership inventory complete with explicit
+keep/no-change decisions, current retirements distinguished from historical
+snapshots. [Inventory](mod-035-legacy-ownership-inventory.md). No uncertain legacy
+code removed, route registered or outside usage/owner guessed. External retirement/
+operator decisions remain separate; MOD018/036 and deferred optimizations remain.
+
+
+## MOD018 league-search baseline — 2026-11-16
+
+Actual league search/service measured at1k/10k/100kleagues:51runner tests,
+72SQL/42service records and4small-fixture walks verified. Equal-name current
+pages returned700rows but695unique matches (five duplicate occurrences/five
+missing); fixture-onlyIDtie probe traversed all700 exactly once across layouts.
+[Report](mod-018-league-search-baseline.md). No app ordering/query/paging change;
+ordering correction deferred to final implementation. MOD036 remains separate.
+
+
+## MOD036 local UI/tier-tool audit — 2026-11-16
+
+Controlled bundle inventory, native Chrome Home/draft-order/scoreboard component
+probes and offline TypeScript tier-loader/cache failures recorded. Frontend235,
+tier9,audit7 tests/bothTSchecks/importgraphPASS;9nativecases/45samples and
+keyboard/AX observations verified. [Report](mod-036-local-ui-tier-audit.md).
+Home tab pattern and invalid tier cache handling are concrete later followups.
+No product fix/optimization; full authenticated screens/AT/mobile/route-error
+recovery/live operator/provider acceptance remains outside this local scope.
+
+
+## Post-audit implementation queue — 2026-11-16
+
+[Consolidated roadmap](post-audit-implementation-2026-11-16.md) now orders the
+deferred work. First three bounded plans cover search ID ordering, Home tabs and
+tier invalid-cache recovery. Larger lifecycle/scoring/ingestion/query work needs
+its own design; index candidates and operational/schema rollout are separate gates.
+This is documentation only: no application fix, migration or deployment started.
+Historical evidence/known acceptance limits and user-owned uncommitted work remain
+preserved. Fair draft scaling remains a separate feature design.
+
+
+## First post-audit implementation — 2026-11-16
+
+MOD018 search ordering now has the final uniqueID key. Routed RED and native
+RED→GREEN prove static6/20/50-row pages complete across filters/layouts;
+backend782/measurement52 pass. [Implementation](mod-018-search-order-implementation.md).
+No page-size/route/payload/index change or deployment. User staging preserved;
+Home tabs and tier-cache plans remain next, not implemented by this batch.
+
+### Home keyboard follow-up — 2026-11-16
+
+MOD036's Home tab keyboard/ARIA finding is implemented locally: manual activation, roving focus, stable labelled panels and hidden inactive shells. Frontend237/237, helper8/8, TypeScript/import checks and native Chrome acceptance pass. [Implementation/evidence](mod-036-home-tabs-implementation.md). Uncommitted; full AT/mobile/production acceptance remains outside this batch.
+
+### Tier-cache follow-up — 2026-11-16
+
+MOD036's TypeScript invalid-cache recovery finding is implemented locally. Tier tests20/20, typecheck and helper tests8/8 pass using canned fetches and disposable directories. [Implementation/evidence](mod-036-tier-cache-implementation.md). No real provider, CLI output, ingestion or deployment changes.
+
+### MOD020 scoped lifecycle implementation — 2026-11-16
+
+Full-detail and own-list reads now explicitly refresh authorized scope atomically; ordinary readers and previews are read-only. Existing lifecycle policy/churn preserved. Backend793/793, audit54/54 and bounded PostgreSQL equivalence/rollback/locking checks pass; final review no material findings. [Report and limits](mod-020-scoped-lifecycle-implementation.md). Uncommitted/undeployed; no scheduler or production performance claim.
+
+### MOD021 rules-only context — 2026-11-16
+
+Supplied-connection weekly scoring now resolves rules once per call, preserving scores, other SQL reads, locks and no-conn behavior. Backend804/804, audit55/55 and native count/equivalence/rollback/boundary checks pass; review found no material issues. [Implementation/evidence/deferred notes](mod-021-weekly-rules-context-implementation.md). Local, uncommitted/undeployed; H2H/game batching and full input consistency remain separate.
+
+### MOD021 tied-group H2H implementation — 2026-11-16
+
+Supplied weekly H2H uses1raw statement per tied group, preserving static scores/pair arithmetic and no-conn behavior with an explicit per-group snapshot. Backend813/813, audit56/56 and PostgreSQL counts/parity/recovery checks pass; review found no material defects. At16members H2H-decides157→38statements, fallback173→54; no production latency claim. [Report/evidence/deferred trace note](mod-021-head-to-head-batch-implementation.md). Local, uncommitted/undeployed; member-game batching/full-input consistency remain separate.
+
+### MOD022 shared live ingestion — 2026-11-16
+
+Live cron shares season/date/group work across leagues with later-valid-wins, identical-skip and shared failure fanout, preserving committed progress and per-league reporting. Backend823/823, audit57/57 and native fields/counters/recovery/real-gate checks pass; review no material issues. At16leagues32→2fetches,64→3upserts,640→76SQL in the fixture. [Report/evidence/limits](mod-022-shared-scoreboard-implementation.md). Local/uncommitted/undeployed; transport retry/bootstrap/checkpoint policy remains separate.
+
+### MOD017 scoped own-league aggregate — 2026-11-16
+
+Own-league score SUM now filters eligible user/member/league/stage/refreshed IDs before grouping; outer results/fallbacks unchanged. Backend827/827, audit60/60 and native100/1000/5000comparison/plan checks pass; review no findings. Sparse5000-league case aggregates12scores instead of480k; hot scans remain disclosed. [Implementation/evidence/tradeoffs](mod-017-own-score-scope-implementation.md). Local/uncommitted/undeployed; index comparisons/rollout remain separate.
+
+### MOD017 final controlled index selection — 2026-11-16
+
+Local selection complete: one ownership-only proposal, other index families conditional/deferred; no target SQL applied. Backend827/audit71 and native parity/write/recovery/proposal evidence pass; review no findings. [Decisions, evidence and remaining rollout/acceptance gates](mod-017-index-selection.md).
+
+### Hosted closeout inventory — November17,2026
+
+Fresh before/after schema/catalog snapshots captured and the specifically approved ownership index applied/verified. MOD015 required-sport/composite-reference migration prepared and native-tested, not applied. Render services were inspected read-only: API/two active cron jobs remain at854bb9b, behind the audited branch; timeout worker remains user-suspended. Security hardening, coordinated audited application release, readiness/session configuration and browser acceptance remain open. [Current closeout/decisions](audit-closeout-2026-11-17.md). No job triggers or service deployments/configuration mutations performed.
+
+Later November17approval: MOD015 integrity constraints are now APPLIED_AND_VERIFIED on the configured target, with final snapshot/receipt in [closeout](audit-closeout-2026-11-17.md). MOD017 is also applied. Remaining gates are audited application release/runtime configuration, browser privileges and live acceptance; additional refresh/finalization jobs stay unscheduled pending staged confidence/approval.

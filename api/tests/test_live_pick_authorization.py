@@ -1,4 +1,5 @@
 """Live-pick ownership: real JWT, routes and transaction SQL; no deployed DB."""
+from http_error_assertions import assert_error_response
 import datetime as dt
 import sqlite3
 import unittest
@@ -12,6 +13,10 @@ from socketioInstance import socketio
 
 
 class LivePickDatabase(fixture.DraftStateDatabase):
+    def __init__(self):
+        super().__init__()
+        self.connection.create_function("pg_notify", 2, lambda channel, payload: None)
+
     def execute(self, statement, params):
         sql = str(statement).replace('FOR UPDATE', '').replace(')::int AS cnt', ') AS cnt').replace(
             "now() + (:selectionTime || ' seconds')::interval",
@@ -47,6 +52,7 @@ class LivePickAuthorizationTests(unittest.TestCase):
             UPDATE "DraftState" SET status = 'live' WHERE "leagueId" = 20;
             ALTER TABLE "SportConference" ADD COLUMN "maxTeamsPerOwner" INTEGER DEFAULT 2;
             INSERT INTO "SportTeam" VALUES (102, 1, 'Available Team');
+            INSERT INTO "ConferenceMembership" VALUES (102,1,2026,501);
             ALTER TABLE "DraftPick" RENAME TO old_pick;
             CREATE TABLE "DraftPick" (id INTEGER PRIMARY KEY AUTOINCREMENT, "leagueId" INTEGER,
                 "createdAt" TEXT DEFAULT '2026-10-28T12:00:00Z', "overallPickNumber" INTEGER,
@@ -58,7 +64,7 @@ class LivePickAuthorizationTests(unittest.TestCase):
                 "memberId" INTEGER, "sportTeamId" INTEGER, "acquiredWeek" INTEGER,
                 "acquiredVia" TEXT, "droppedWeek" INTEGER);
         ''')
-        self.emit = self.enterContext(patch.object(socketio, 'emit'))
+        self.emit = self.enterContext(patch('endpoints.draft.draftEndpoints.broadcast_draft_update'))
         self.body = {'leagueId': 10, 'memberId': 12, 'sportTeamId': 102}
 
     def state(self):
@@ -84,11 +90,11 @@ class LivePickAuthorizationTests(unittest.TestCase):
                                  (league_id, member_id, 0, 'Draft'))
                 self.emit.assert_called_once()
                 args, kwargs = self.emit.call_args
-                self.assertEqual(args[0], 'draft:updated')
+                self.assertEqual(args[0], league_id)
                 self.assertEqual(args[1]['type'], 'pick')
                 self.assertEqual(args[1]['pick'], response.json)
                 self.assertEqual(args[1]['snapshot']['leagueId'], league_id)
-                self.assertEqual(kwargs, {'room': f'draft:{league_id}'})
+                self.assertEqual(kwargs, {'engine': self.db})
 
     def test_commissioner_may_pick_own_turn_and_explicit_week_is_preserved(self):
         self.db.connection.execute('UPDATE "DraftTurn" SET "memberId" = 11 WHERE "leagueId" = 10 AND "overallPickNumber" = 2')
@@ -108,7 +114,7 @@ class LivePickAuthorizationTests(unittest.TestCase):
                 before = self.state()
                 response = self.post({'leagueId': league_id, 'memberId': member_id, 'sportTeamId': 102}, subject)
                 self.assertEqual(response.status_code, 404)
-                self.assertEqual(response.json, {'message': 'League member not found'})
+                assert_error_response(self, response, {'message': 'League member not found'})
                 self.assertEqual(self.state(), before)
                 self.emit.assert_not_called()
 
@@ -139,14 +145,14 @@ class LivePickAuthorizationTests(unittest.TestCase):
         ''')
         response = self.post()
         self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.json, {'error': 'application_identity_ambiguous'})
+        assert_error_response(self, response, {'error': 'application_identity_ambiguous'})
         self.emit.assert_not_called()
 
     def test_owned_wrong_turn_expired_and_unique_conflicts_keep_existing_statuses(self):
         before = self.state()
         response = self.post(dict(self.body, memberId=11), fixture.ALICE)
         self.assertEqual(response.status_code, 409)
-        self.assertEqual(response.json, {'message': 'Not your turn'})
+        assert_error_response(self, response, {'message': 'Not your turn'})
         response = self.post(dict(self.body, sportTeamId=101))
         self.assertEqual(response.status_code, 409)
         self.assertIn('conflict', response.json['message'].lower())
@@ -156,7 +162,7 @@ class LivePickAuthorizationTests(unittest.TestCase):
         before = self.state()
         response = self.post()
         self.assertEqual(response.status_code, 409)
-        self.assertEqual(response.json, {'message': 'Pick window expired'})
+        assert_error_response(self, response, {'message': 'Pick window expired'})
         self.assertEqual(self.state(), before)
         self.emit.assert_not_called()
 
@@ -180,7 +186,7 @@ class LivePickAuthorizationTests(unittest.TestCase):
         self.db.before_query = revoke
         response = self.post()
         self.assertEqual(response.status_code, 404)
-        self.assertEqual(response.json, {'message': 'League member not found'})
+        assert_error_response(self, response, {'message': 'League member not found'})
         self.assertEqual(self.state(), before)
         self.emit.assert_not_called()
 
@@ -192,7 +198,7 @@ class LivePickAuthorizationTests(unittest.TestCase):
         self.db.before_query = fail
         response = self.post()
         self.assertEqual(response.status_code, 500)
-        self.assertEqual(response.json, {'message': 'Failed to create draft pick'})
+        assert_error_response(self, response, {'message': 'Failed to create draft pick'})
         self.assertEqual(self.state(), before)
         self.emit.assert_not_called()
 
@@ -202,3 +208,13 @@ class LivePickAuthorizationTests(unittest.TestCase):
         slot = self.db.connection.execute('SELECT "acquiredWeek" FROM "LeagueTeamSlot"').fetchone()
         self.assertEqual(slot[0], 1)  # Preserve model default, separate from HTTP default 0.
         self.emit.assert_not_called()
+
+    def test_foreign_member_denial_precedes_ownership_mutex(self):
+        def contended(sql):
+            if 'pg_advisory_xact_lock' in sql:
+                raise RuntimeError('synthetic mutex must not be reached')
+        self.db.before_query = contended
+        before = self.state()
+        response = self.client.post('/api/draft/pick', json=self.body, headers=self.headers(fixture.ALICE))
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(self.state(), before)

@@ -1,12 +1,15 @@
+from werkzeug.exceptions import HTTPException
+from sqlalchemy.exc import DataError
 # endpoints/draft/draftEndpoints.py
 from sqlalchemy.exc import IntegrityError
 from flask import request, jsonify
 from endpoints.draft.draftBroadcast import broadcast_draft_update
 from .pick_service import DraftPickService
 from .snapshot_service import DraftSnapshotService
-from .control_service import DraftControlService
+from .control_service import DraftControlService, DraftStartConflict
 from actors import UserActor
 from utils.jsonSafe import jsonSafe
+from utils.requestValidation import integer_value
 from authenticatedPrincipal import PrincipalResolutionError, resolve_authenticated_principal
 
 class DraftEndpoints:
@@ -28,18 +31,10 @@ class DraftEndpoints:
             if missing:
                 return jsonify({'message': f"Missing fields: {', '.join(missing)}"}), 400
 
-            def integer(value, field):
-                if isinstance(value, bool) or not isinstance(value, (int, str)):
-                    raise ValueError(f'{field} must be an integer')
-                try:
-                    return int(value)
-                except ValueError:
-                    raise ValueError(f'{field} must be an integer') from None
-
-            league_id = integer(data['leagueId'], 'leagueId')
-            member_id = integer(data['memberId'], 'memberId')
-            sport_team_id = integer(data['sportTeamId'], 'sportTeamId')
-            week_number = integer(data.get('weekNumber', 0), 'weekNumber')
+            league_id = integer_value(data['leagueId'], 'leagueId')
+            member_id = integer_value(data['memberId'], 'memberId')
+            sport_team_id = integer_value(data['sportTeamId'], 'sportTeamId')
+            week_number = integer_value(data.get('weekNumber', 0), 'weekNumber')
             draft_pick = self.pick_service.pick_live(
                 actor=UserActor(principal.user_id, principal.subject),
                 league_id=league_id,
@@ -52,6 +47,7 @@ class DraftEndpoints:
             broadcast_draft_update(
                 league_id,
                 {"type": "pick", "snapshot": snapshot, "pick": draft_pick},
+                engine=self.db_engine,
             )
             
             return jsonify(jsonSafe(draft_pick)), 201
@@ -74,6 +70,8 @@ class DraftEndpoints:
             # in case anything bubbles up from unique constraints
             return jsonify({"message": "Pick conflict (already taken)."}), 409
 
+        except (HTTPException, DataError, IntegrityError):
+            raise
         except Exception:
             return jsonify({"message": "Failed to create draft pick"}), 500
     
@@ -103,21 +101,13 @@ class DraftEndpoints:
             if action == 'finalize' and ('leagueId' not in body or 'actingUserId' not in body):
                 return jsonify({'message': 'Missing field: leagueId or actingUserId'}), 400
 
-            def integer(value, field):
-                if isinstance(value, bool) or not isinstance(value, (int, str)):
-                    raise ValueError(f'{field} must be an integer')
-                try:
-                    return int(value)
-                except ValueError:
-                    raise ValueError(f'{field} must be an integer') from None
-
             if action != 'order':
                 if 'leagueId' not in body:
                     return jsonify({'message': 'Missing field: leagueId'}), 400
-                league_id = integer(body['leagueId'], 'leagueId')
+                league_id = integer_value(body['leagueId'], 'leagueId')
             # An actor field can assert compatibility, never establish identity.
             if 'actingUserId' in body:
-                if integer(body['actingUserId'], 'actingUserId') != principal.user_id:
+                if integer_value(body['actingUserId'], 'actingUserId') != principal.user_id:
                     return jsonify({'message': 'actingUserId does not match authenticated user'}), 403
 
             if action == 'order':
@@ -126,12 +116,12 @@ class DraftEndpoints:
                     return jsonify({'message': 'memberIdsInOrder must be a non-empty array'}), 400
                 result = self.control_service.set_order(
                     UserActor(principal.user_id, principal.subject), league_id,
-                    [integer(value, 'memberId') for value in ids],
+                    [integer_value(value, 'memberId') for value in ids],
                 )
             elif action == 'finalize':
                 result = self.control_service.finalize(UserActor(principal.user_id, principal.subject), league_id)
                 snapshot = self.snapshot_service.snapshot_for_job(league_id)
-                broadcast_draft_update(league_id, {'type': action, 'snapshot': snapshot})
+                broadcast_draft_update(league_id, {'type': action, 'snapshot': snapshot}, engine=self.db_engine)
             else:
                 method = {
                     'start': self.control_service.start,
@@ -139,14 +129,19 @@ class DraftEndpoints:
                     'resume': self.control_service.resume,
                 }[action]
                 result = method(UserActor(principal.user_id, principal.subject), league_id)
-                broadcast_draft_update(league_id, {'type': action, 'snapshot': result})
+                broadcast_draft_update(league_id, {'type': action, 'snapshot': result}, engine=self.db_engine)
             return jsonify(result), 200
         except PrincipalResolutionError as exc:
             return jsonify({'error': exc.code}), exc.status_code
         except PermissionError as exc:
             return jsonify({'message': str(exc)}), 403
+        except DraftStartConflict as exc:
+            return jsonify({'error': {'code': 'draft_start_conflict', 'message': str(exc)},
+                            'message': str(exc)}), 409
         except ValueError as exc:
             return jsonify({'message': str(exc)}), 400
+        except (HTTPException, DataError, IntegrityError):
+            raise
         except Exception:
             return jsonify({'message': failures[action]}), 500
 
@@ -164,6 +159,8 @@ class DraftEndpoints:
             return jsonify({'message': 'League not found'}), 404
         except ValueError as e:
             return jsonify({"message": str(e)}), 400
+        except (HTTPException, DataError, IntegrityError):
+            raise
         except Exception:
             return jsonify({"message": "Failed to get draft state"}), 500
 
@@ -183,7 +180,9 @@ class DraftEndpoints:
 
         except ValueError as e:
             return jsonify({"message": str(e)}), 400
-        except Exception as e:
+        except (HTTPException, DataError, IntegrityError):
+            raise
+        except Exception:
             # log e
             return jsonify({"message": "Failed to get rounds"}), 500
 

@@ -1,0 +1,45 @@
+{
+  "date": "2026-11-10",
+  "result": "PASS",
+  "scope": "MOD027D URL-backed authenticated restricted-preview discovery",
+  "checks": {
+    "red": "7/7 baseline failures",
+    "frontend": "190/190 PASS",
+    "build": "PASS",
+    "imports": "73 files/194 edges; zero unresolved/cycles",
+    "diff": "PASS"
+  },
+  "behavior": [
+    "strict positive safe URL identity; seeds optional/ignored",
+    "existing ?view=preview restricted projection; backend access policy unchanged",
+    "safe explicit read outcomes and Retry; deterministic /leagues back",
+    "keyed route/account resolver/form; guarded and cancelled preview/member/join work",
+    "failed joins retain input; no automatic mutation retry"
+  ],
+  "decisions": [
+    "User authorized combined design/implementation",
+    "Ignore seeds rather than displaying stale display hints",
+    "Use existing authenticated preview; anonymous access is not introduced",
+    "No missing route authority inferred from seed",
+    "Preserve prior working changes and leave uncommitted/undeployed"
+  ],
+  "limits": [
+    "Controlled hook/request tests, not real browser/React concurrent or live-service proof",
+    "Backend contracts inspected only, not rerun/live verified",
+    "Profile readiness required under existing authenticated API policy"
+  ],
+  "sourceSha256": {
+    "front-end/src/screens/League/DiscoverLeaguePage.tsx": "7884d886ea2bb7cbadcad89fbfc2f61c2a21dc9dd0e4f66c4bcdde1be7d014b6",
+    "front-end/src/api/leagues.ts": "637010c3f279377881053a439ddf5244e74eaba51bfc1f7bfb7ea4a8c2cc70d9",
+    "front-end/tests/discoverUrl.test.ts": "166039964d201649ad975b1c0063a3481f63a7991c79191786d78b571061857d"
+  },
+  "review": {
+    "model": "gpt-6-astra/high",
+    "critical": 0,
+    "important": 0,
+    "minor": 1,
+    "independentChecks": "targeted7/7 and scoped diff PASS",
+    "deferredMinor": "No direct profile-not-ready, standalone pending-unmount, member signal/abort, no-status transport rejection or distinct404/403 wording assertions; source inspected without corresponding defect",
+    "declined": "Browser/real React timing, live auth/backend integration, preceding027A/B/C"
+  }
+}

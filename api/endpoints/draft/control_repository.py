@@ -3,6 +3,19 @@ from sqlalchemy import text
 
 
 class DraftControlRepository:
+    def lock_league(self, conn, league_id):
+        row = conn.execute(text('SELECT status FROM "League" WHERE id = :leagueId FOR UPDATE'),
+                           {'leagueId': league_id}).fetchone()
+        return dict(row._mapping) if row else None
+
+    def has_draft_data(self, conn, league_id):
+        return conn.execute(text('''
+            SELECT 1 FROM "DraftTurn" WHERE "leagueId" = :leagueId
+            UNION ALL
+            SELECT 1 FROM "DraftPick" WHERE "leagueId" = :leagueId
+            LIMIT 1
+        '''), {'leagueId': league_id}).fetchone() is not None
+
     def commissioner(self, conn, league_id):
         row = conn.execute(text("""SELECT commissioner FROM "League" WHERE id = :leagueId"""), {"leagueId": league_id}).fetchone()
         return dict(row._mapping) if row else None
@@ -90,6 +103,11 @@ class DraftControlRepository:
                         "currentMemberId" = EXCLUDED."currentMemberId",
                         "expiresAt" = EXCLUDED."expiresAt",
                         "updatedAt" = now()
+                    WHERE "DraftState".status = 'pre'
+                      AND "DraftState"."currentOverallPickNumber" = 1
+                      AND "DraftState"."currentMemberId" IS NULL
+                      AND "DraftState"."expiresAt" IS NULL
+                      AND "DraftState"."lastPickAt" IS NULL
                 """), {'leagueId': league_id, 'currentMemberId': first_member_id, 'selectionTime': selection_time})
 
     def mark_drafting(self, conn, league_id):
@@ -102,7 +120,7 @@ class DraftControlRepository:
 
     def lock_state(self, conn, league_id):
         row = conn.execute(text("""
-                    SELECT status FROM "DraftState"
+                    SELECT status, "currentOverallPickNumber", "currentMemberId", "expiresAt", "lastPickAt" FROM "DraftState"
                     WHERE "leagueId" = :leagueId
                     FOR UPDATE
                 """), {'leagueId': league_id}).fetchone()

@@ -1,0 +1,35 @@
+{
+  "scope": "Configured database; MOD-010 extension and integrity constraints only; no ownership commands/history changes",
+  "target_fingerprint": "cdabf6a142f596457a3d7bad607032fb0de3dc15672fc3ed5b94c90b9cb0eb16",
+  "before": {
+    "total_slots": 1059,
+    "negative_starts": 0,
+    "reversed_intervals": 0,
+    "empty_intervals": 10,
+    "wrong_member_league_slots": 0,
+    "wrong_sport_slots": 0,
+    "overlapping_pairs": 0,
+    "adjacent_transfers": 0
+  },
+  "after": {
+    "total_slots": 1059,
+    "negative_starts": 0,
+    "reversed_intervals": 0,
+    "empty_intervals": 10,
+    "wrong_member_league_slots": 0,
+    "wrong_sport_slots": 0,
+    "overlapping_pairs": 0,
+    "adjacent_transfers": 0
+  },
+  "counts_unchanged": true,
+  "btree_gist_previously_installed": false,
+  "btree_gist_version": "1.7",
+  "btree_gist_schema": "public",
+  "constraints": {
+    "LeagueTeamSlot_interval_check": true,
+    "LeagueTeamSlot_no_overlap": true,
+    "LeagueTeamSlot_same_league_member_fkey": true
+  },
+  "migration_sha256": "fb3b6c5dd445a6e8da5dd67784d882032a698917e7ac1d9eebb1167120480116",
+  "result": "APPLIED_AND_VERIFIED"
+}

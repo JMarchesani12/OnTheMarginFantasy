@@ -3,6 +3,7 @@
 FOR UPDATE is removed and JSONB arrays decoded to match psycopg rows. SQLite
 cannot verify PostgreSQL row locks, RLS or concurrent authorization revocation.
 """
+from http_error_assertions import assert_error_response
 import json
 import unittest
 from sqlalchemy import text
@@ -87,7 +88,7 @@ class TradeActionAuthorizationTests(unittest.TestCase):
                 before=self.state()
                 response=self.post(operation,member=member,subject=subject,trustedJob=True,actingUserId=2,userId=2)
                 self.assertEqual(response.status_code,404)
-                self.assertEqual(response.json,{'message':'Trade not found'})
+                assert_error_response(self, response, {'message':'Trade not found'})
                 self.assertEqual(self.state(),before)
 
     def test_correct_transaction_under_wrong_url_league_and_foreign_member_denied(self):
@@ -212,7 +213,7 @@ class TradeActionAuthorizationTests(unittest.TestCase):
             response=self.post(operation)
             self.db.before_query=None
             self.assertEqual(response.status_code,500)
-            self.assertEqual(response.json,{'message':'Failed to respond to trade' if operation=='respond' else 'Failed to cancel trade'})
+            assert_error_response(self, response, {'message':'Failed to respond to trade' if operation=='respond' else 'Failed to cancel trade'})
             self.assertEqual(self.state(),before)
 
     def test_partial_actor_context_cannot_fall_back_to_trusted_access(self):

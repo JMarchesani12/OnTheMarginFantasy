@@ -1,0 +1,49 @@
+{
+  "date": "2026-11-09",
+  "result": "PASS",
+  "scope": "MOD031A connection wrapper, reusing unchanged realtime controller/clock",
+  "checks": {
+    "hook": "4/4 RED missing module -> GREEN",
+    "hookPageClock": "12/12 PASS",
+    "fullFrontend": "96/96 PASS",
+    "productionBuild": "PASS",
+    "baselineControllerClock": "byte-identical",
+    "pageCommandAndClearHandlers": "byte-identical",
+    "loader": "same league/request order/AbortSignal/error propagation",
+    "whitespace": "PASS"
+  },
+  "importGraph": {
+    "result": "PASS",
+    "files": 68,
+    "literalRelativeEdges": 182,
+    "unresolved": [],
+    "cycles": [],
+    "canonicalEditorConsumers": [
+      "front-end/src/screens/CreateLeague/CreateLeague.tsx",
+      "front-end/src/screens/League/ManageLeaguePage.tsx"
+    ],
+    "exclusions": [
+      "package/alias imports",
+      "computed imports",
+      "CSS/assets",
+      "package internals"
+    ]
+  },
+  "independentReview": {
+    "findings": 0,
+    "focused": "12/12 PASS"
+  },
+  "notRun": [
+    "browser/DOM/StrictMode scheduling",
+    "native/configured backend/provider/deployment"
+  ],
+  "sha256": {
+    "front-end/src/hooks/useDraftConnection.ts": "18b70a5f9c48a800f7e7510404764afcca38b054fa0c2531eb728fa73fb1ee1e",
+    "front-end/src/screens/League/LeagueDraftPage.tsx": "295d2e4a128821b81fc12a5210058bc17fa2da09ff8f4ddc2909d1e284d3caf4",
+    "front-end/src/lib/draftRealtime.ts": "751af40fc4a3818ce7415a6394e91ec22e610be5e9585fbcf4e53aa74ba98f0f",
+    "front-end/src/hooks/useDraftClock.ts": "ae7837cd962492c16fdfc0e38f6d2c733ace0a4bb415b152799790d9623b8aae",
+    "front-end/tests/useDraftConnection.test.ts": "99edce3a0d380b8462f6e85b57c9496e6794f6b9af27868fa7b613591c65a696",
+    "front-end/tests/draftPageLifecycle.test.ts": "f701939d545692acc12d6da85257f3eae25c2793ca9dace4443499eb4cf2fdb3",
+    "front-end/tests/helpers/draftPageHarness.ts": "115d0d4aa3c0d4fda2a8e78cb94aa84ba22d2ce46cd0de37e651c476aaa9d800"
+  }
+}

@@ -1,0 +1,132 @@
+{
+  "date": "2026-11-09",
+  "result": "PASS",
+  "scope": "MOD-029 Detail/Roster paired context pilot plus narrow MOD-026 subject-binding prerequisite",
+  "checks": {
+    "fullFrontend": "123/123 PASS",
+    "productionBuild": "PASS",
+    "diffCheck": "PASS",
+    "focusedNewTests": "27/27 PASS",
+    "extraction": "shared list/find/fallback resolver; shared mapper retained",
+    "correctness": "subject binding, fresh membership provenance, route/account/retry generations, read abort/latest-wins, scoped mutation completions, partner-first-render masking",
+    "weekIdentity": "roster readiness/selections and mutation invocation/completion/reloads bound to effective week generation, with live cutoff guard"
+  },
+  "requestCounts": {
+    "method": "source-characterized before; actual isolated-page transport calls asserted after, not production timing",
+    "before": {
+      "detailMemberSeededOrCold": {
+        "list": 1
+      },
+      "rosterSeeded": {
+        "list": 0
+      },
+      "rosterColdMember": {
+        "list": 1
+      },
+      "absentFromSuccessfulList": {
+        "list": 1,
+        "fallback": 1
+      }
+    },
+    "after": {
+      "detailMemberSeededOrCold": {
+        "list": 1,
+        "members": 1,
+        "scores": 1
+      },
+      "rosterMemberSeededOrColdAddDropTab": {
+        "list": 1,
+        "teams": 1,
+        "available": 1,
+        "members": 1,
+        "pending": 1
+      },
+      "absentFromSuccessfulList": {
+        "list": 1,
+        "fallback": 1
+      },
+      "listError": {
+        "list": 1,
+        "fallback": 0
+      }
+    },
+    "interpretation": "Seeded Roster intentionally adds one fresh list read. No cache, deduplication or performance reduction claimed; scoreboard count uses fixture week1."
+  },
+  "importGraph": {
+    "result": "PASS",
+    "files": 71,
+    "literalRelativeEdges": 188,
+    "unresolved": [],
+    "cycles": [],
+    "canonicalEditorConsumers": [
+      "front-end/src/screens/CreateLeague/CreateLeague.tsx",
+      "front-end/src/screens/League/ManageLeaguePage.tsx"
+    ],
+    "exclusions": [
+      "package/alias imports",
+      "computed imports",
+      "CSS/assets",
+      "package internals"
+    ]
+  },
+  "independentReview": {
+    "model": "gpt-6-astra high, fresh context",
+    "scopedTestsIndependentlyRun": "24/24 PASS before fix",
+    "critical": 0,
+    "important": 1,
+    "importantResolution": "Cross-week roster readiness/selection/mutation finding reproduced RED, fixed GREEN; final 123/123 suite and build pass. No second review claimed.",
+    "minorDeferred": [
+      "Existing same-league/week pending trade completion can clear a newer partner selection; submitted payload unchanged."
+    ]
+  },
+  "notRun": [
+    "browser/DOM/StrictMode/real session scheduling",
+    "configured backend/DB/provider/deployment",
+    "broader MOD-026 AuthProvider session/provisioning ownership races",
+    "other league-screen conversions or global caching"
+  ],
+  "sha256": {
+    "front-end/src/context/currentUserContext.tsx": "31a6a532200f7cac8e2fa34441a8984c3c8d7b2c7e76c5674e9c242392f9c5fd",
+    "front-end/src/api/leagues.ts": "facd6d3ad63216e647a32968197fe6c83f35653c854cd46e5a65debbee4a5697",
+    "front-end/src/api/roster.ts": "3670cea7b1a968b2f1659892eb24eced7db57d6bfd6b1a203c40f0797669f7f7",
+    "front-end/src/api/scoring.ts": "6ec1e366b81cf49a0a373dbd11e000f94bd3a75df09b340232da0f0200c7ee13",
+    "front-end/src/api/transaction.ts": "a415890f656d92c11f9bbf916660896d126249f768cfeb0204a7ff6bfcc711bb",
+    "front-end/src/screens/League/LeagueDetailPage.tsx": "31543aede9c7e5f840cf98764e227f03dc8129767504ab2b2853d6ee66ec20ee",
+    "front-end/src/screens/League/LeagueRosterPage.tsx": "0bfc7bcba2c13df2aeeb0ab487312b7956fe35c2e8b6d5387d1ac4d176ee684e",
+    "front-end/src/components/League/TradeRequestsPanel.tsx": "6cc2d6f558d9613c9a7c47cb6956900f3b4c8969922895f5aee0f89c17f3aecb",
+    "front-end/src/components/League/PendingTransactionsPanel.tsx": "a84516f967700f25da94bb8d35f29f78fff68800dcea3232ce6e8995564d17d0",
+    "front-end/src/hooks/useLeagueContext.ts": "8b3668adaa96a73513741010cd0184d9c37af63906e588a1ee789d0b40b983db",
+    "front-end/src/hooks/useRequestScope.ts": "9a4c837901a28ec636ff0c2e5cbe2bdce6378e7051989560324e6f8c38765d8f",
+    "front-end/src/utils/leagueContext.ts": "443783b49667ef2233aa4a8407991afff3aaee5a91a951d3d920a68bd2fc4b92",
+    "front-end/tests/currentUserIdentity.test.ts": "0cbf546d6e5b58af7d83458018352757c4bced244d42aef16dae06e9b1dd045e",
+    "front-end/tests/leagueContext.test.ts": "4c642fc3d03afb04d924e454948e285d4d52e9093b5abdb96bc781329e626012",
+    "front-end/tests/leagueContextPages.test.ts": "5fbf8d5859ca521cfb924218533df27353049f0825b9dbca52f25b6805a31d09",
+    "front-end/tests/leagueReadSignals.test.ts": "3208157ba6c27ff2f5a0a22bd41eec6943334b228912b327cfb5c283ede63340",
+    "front-end/tests/requestScope.test.ts": "c3e6f18b5e34e99656338ef097525d5b2c50a13e3a7df760e3f3f99579598c5c",
+    "front-end/tests/transactionPanelScope.test.ts": "c9334fac021cdf6ffd9448cc866f7d3e6141eccd9b5c3b71d8fbe934ecd569e9",
+    "front-end/tests/helpers/leagueContextHarness.ts": "60eeb985ced2e6fbebadc9ed595e96077ae9400d3402002ff5a18e54e192cc38",
+    "front-end/tests/helpers/leagueFixture.ts": "55866389c5825470b04c36cbf4477aedc098d593eee7ad42da76febee5b5d0a1"
+  },
+  "decisions": [
+    {
+      "decision": "Retain established audit workspace and uncommitted changes/ledger; proceed from approved design without another plan approval",
+      "reason": "Existing workflow and explicit implementation authorization",
+      "costIfWrong": "Recovery depends on local ledger rather than commits; no remote integration performed"
+    },
+    {
+      "decision": "Add error Retry controls with new context attempt generation",
+      "reason": "Approved design requires refresh-generation freshness",
+      "costIfWrong": "Small new error-state control; exercised by paired page tests"
+    },
+    {
+      "decision": "Share Error constructor and normalize nested payload arrays in isolated VM harness",
+      "reason": "Avoid false cross-realm test failures without changing product semantics",
+      "costIfWrong": "Harness does not model cross-realm/browser scheduling behavior"
+    },
+    {
+      "decision": "Leave broad AuthContext session/provisioning, live backend/provider finality, browser scheduling and other screen migrations outside this pilot",
+      "reason": "Explicit approved scope and isolated validation contract",
+      "costIfWrong": "Those areas can still contain defects; no global identity/runtime guarantee"
+    }
+  ]
+}

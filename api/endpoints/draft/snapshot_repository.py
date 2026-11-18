@@ -1,3 +1,4 @@
+from utils.conference_membership import conference_sql
 """Draft snapshot SQL; caller supplies every connection and transaction."""
 from sqlalchemy import text
 
@@ -34,7 +35,7 @@ class DraftSnapshotRepository:
         return [dict(row) for row in rows]
 
     def snapshot_picks(self, conn, league_id):
-        rows = conn.execute(text("""
+        rows = conn.execute(text(conference_sql("""
                     WITH league_info AS (
                       SELECT "seasonYear"
                       FROM "League"
@@ -59,6 +60,7 @@ class DraftSnapshotRepository:
                     LEFT JOIN "ConferenceMembership" cm
                       ON cm."sportTeamId" = st.id
                      AND cm."sportId" = st."sportId"
+             AND cm."sportId" = (SELECT sport FROM "League" WHERE id=:leagueId)
                      AND (cm."seasonYear" IS NULL OR cm."seasonYear" = li."seasonYear")
                     LEFT JOIN "SportConference" sc
                       ON sc.id = cm."sportConferenceId"
@@ -67,7 +69,7 @@ class DraftSnapshotRepository:
                       ON conf.id = sc."conferenceId"
                     WHERE dp."leagueId" = :leagueId
                     ORDER BY dp."overallPickNumber"
-                """), {'leagueId': league_id}).mappings().all()
+                """, '(SELECT "seasonYear" FROM "League" WHERE id=:leagueId)')), {'leagueId': league_id}).mappings().all()
         return [dict(row) for row in rows]
 
     def repair_completed(self, conn, league_id):

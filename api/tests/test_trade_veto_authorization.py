@@ -1,4 +1,5 @@
 """Veto ownership/scope: real SQL/JWT with existing synthetic transaction fixture."""
+from http_error_assertions import assert_error_response
 import unittest
 import test_trade_action_authorization as actions
 import test_free_agency_authorization as fixture
@@ -60,7 +61,7 @@ class TradeVetoAuthorizationTests(unittest.TestCase):
                 self.db.queries.clear()
                 response=self.post(member,subject,league,tx,trustedJob=True,actingUserId=3,userId=3,leagueId=10)
                 self.assertEqual(response.status_code,404)
-                self.assertEqual(response.json,{'message':'Trade not found'})
+                assert_error_response(self, response, {'message':'Trade not found'})
                 self.assertEqual(self.state(),before)
                 self.assertFalse(any('TransactionVote' in sql for sql in self.db.queries))
 
@@ -154,5 +155,5 @@ class TradeVetoAuthorizationTests(unittest.TestCase):
         self.db.before_query=fail
         response=self.post()
         self.assertEqual(response.status_code,500)
-        self.assertEqual(response.json,{'message':'Failed to veto trade'})
+        assert_error_response(self, response, {'message':'Failed to veto trade'})
         self.assertEqual(self.state(),before)

@@ -1,5 +1,9 @@
+from utils.conference_membership import require_member_roster_mappings
+from utils.conference_caps import require_conference_cap
 """Transaction use cases and connection ownership, independent of transport."""
+from contextlib import nullcontext
 from actors import UserActor
+from utils.ownership import lock_ownership, transaction_league_hint
 from .contracts import TransactionAccessDenied, TransactionNotFound, TradeRejected
 from .repository import TransactionRepository
 
@@ -37,6 +41,7 @@ class TransactionService:
     def validate_trade_in_transaction(self, conn, league_id, week_number,
                                       from_member_id, to_member_id,
                                       from_team_ids, to_team_ids):
+        require_member_roster_mappings(conn, league_id, [from_member_id, to_member_id], week_number, from_team_ids + to_team_ids)
         ownership = self.repository.trade_ownership(conn, league_id, week_number,
                                                    from_team_ids, to_team_ids)
         for member_id, team_ids in ((from_member_id, from_team_ids), (to_member_id, to_team_ids)):
@@ -46,21 +51,27 @@ class TransactionService:
         # Preserve query order and existing conference semantics during extraction.
         from_counts = self.repository.conference_counts(conn, league_id, week_number, from_member_id, from_team_ids)
         to_counts = self.repository.conference_counts(conn, league_id, week_number, to_member_id, to_team_ids)
-        from_incoming = self.repository.incoming_confs(conn, to_team_ids)
-        to_incoming = self.repository.incoming_confs(conn, from_team_ids)
+        from_incoming = self.repository.incoming_confs(conn, to_team_ids, league_id)
+        to_incoming = self.repository.incoming_confs(conn, from_team_ids, league_id)
         limits = self.repository.conference_limits(conn)
         for conf_id, add in from_incoming.items():
-            if from_counts.get(conf_id, 0) + add > limits.get(conf_id, 999):
+            if from_counts.get(conf_id, 0) + add > require_conference_cap(limits.get(conf_id), conf_id):
                 raise TradeRejected('Conference limit exceeded for proposing member')
         for conf_id, add in to_incoming.items():
-            if to_counts.get(conf_id, 0) + add > limits.get(conf_id, 999):
+            if to_counts.get(conf_id, 0) + add > require_conference_cap(limits.get(conf_id), conf_id):
                 raise TradeRejected('Conference limit exceeded for receiving member')
 
-    def apply_trade_for_job(self, transaction_id: int) -> None:
-        with self.engine.begin() as conn:
+    def apply_trade_for_job(self, transaction_id: int, conn=None) -> None:
+        with (nullcontext(conn) if conn is not None else self.engine.begin()) as conn:
+            league_id = transaction_league_hint(conn, transaction_id)
+            if league_id is None:
+                raise TransactionNotFound('Transaction not found')
+            lock_ownership(conn, league_id)
             tx = self.repository.lock_trade(conn, transaction_id)
             if tx is None:
                 raise TransactionNotFound('Transaction not found')
+            if tx['leagueId'] != league_id:
+                raise TradeRejected('Transaction league changed')
             if tx['type'] != 'TRADE':
                 raise TradeRejected('Not a trade transaction')
             if tx['status'] != 'PENDING_APPLY':

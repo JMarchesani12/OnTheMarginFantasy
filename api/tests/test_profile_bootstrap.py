@@ -1,4 +1,5 @@
 """Real auth/routes/profile SQL; synthetic data and production auth allowlist."""
+from http_error_assertions import assert_error_response
 import ast
 import logging
 import time
@@ -57,7 +58,7 @@ class ProfileBootstrapTests(unittest.TestCase):
                 self.assertEqual(own.json['id'], expected_id)
                 denied = self.client.get('/api/user/byUuid/' + foreign, headers=self.headers(subject))
                 self.assertEqual(denied.status_code, 404)
-                self.assertEqual(denied.json, {'message': 'User not found'})
+                assert_error_response(self, denied, {'message': 'User not found'})
 
     def test_missing_profile_can_be_created_from_claims_then_reloaded(self):
         headers = self.headers(NEW_USER, email='new@example.test')
@@ -103,7 +104,7 @@ class ProfileBootstrapTests(unittest.TestCase):
             with self.subTest(method=method):
                 response = getattr(self.client, method)(url, headers=self.headers(), json={})
                 self.assertEqual(response.status_code, 403)
-                self.assertEqual(response.json, {'error': 'application_identity_ambiguous'})
+                assert_error_response(self, response, {'error': 'application_identity_ambiguous'})
                 self.assertEqual(self.count(), 3)
 
     def test_provisioning_requires_valid_subject_and_claim_email(self):
@@ -150,5 +151,5 @@ class ProfileBootstrapTests(unittest.TestCase):
                 headers=self.headers(NEW_USER, email='new@example.test'),
                 json={'displayName': 'New'})
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json, {'message': 'User creation failed'})
+        assert_error_response(self, response, {'message': 'User creation failed'})
         self.assertEqual(self.count(), 2)

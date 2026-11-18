@@ -1,0 +1,94 @@
+{
+  "date": "2026-11-15",
+  "result": "PASS_BOUNDED_READ_TRIGGERED_LIFECYCLE_BASELINE",
+  "artifact": "mod-020-lifecycle-e8c0ffc2c8894873b6671cef89b36d4d.json",
+  "rawSha256": "371b2b953fc8098146fb8765ef07847742a12cc348fa8bd16bd996c8290178db",
+  "checks": {
+    "units": "46/46 PASS",
+    "leagueCounts": [
+      100,
+      1000,
+      5000
+    ],
+    "records": 24,
+    "invocations": 144,
+    "provenanceHashes": 14,
+    "allLeagueStatusesAndTimestampSets": true,
+    "selectedBusinessProjectionOnly": true,
+    "productionCodeChanged": false,
+    "timingSamples": 120,
+    "diff/newSourceWhitespace": "PASS"
+  },
+  "review": {
+    "model": "gpt-6-astra/high",
+    "critical": 0,
+    "important": 0,
+    "minor": 1,
+    "deferredMinors": [
+      "Runner counts statements but lacks explicit execution-sequence assertion; current service/captured ordering correct, future denied/missing reordering regression could escape"
+    ],
+    "independent": "46units,24records/144invocations/120samples,sequentialpredicate model/state/touched/statuschanged/phase/preparedcounts/projections/medians,14source hashes/rawSHA/reportlimits",
+    "declined": [
+      "MOD022 separately reviewed/outside scope",
+      "Native reproduction/removal/zeroDBs/historicalRED author-observed",
+      "Production authorization/concurrency/timezone-boundaries/optimization policy outside scope"
+    ]
+  },
+  "cleanup": {
+    "databaseCountZero": true,
+    "ownedContainer": "7c4572fbd83a1c5da4df4faabae67f4982d3aff8d026ecf68fea1dd541ecdb63",
+    "labelsVerified": {
+      "otm.synthetic": "true",
+      "otm.task": "mod020-lifecycle"
+    },
+    "persistentMounts": [],
+    "containerRemoved": true,
+    "remainingLifecycleContainers": 0,
+    "dockerAndImageCacheRetained": true
+  },
+  "implementationDeferred": true,
+  "uncommitted": true,
+  "deployed": false,
+  "rulings": [
+    {
+      "decision": "Audit-only actual internal reader plus real global lifecycle callback",
+      "reason": "User defers optimizations; measure existing read-triggered work",
+      "costIfWrong": "Transport/resource overhead remains unknown"
+    },
+    {
+      "decision": "Record ended/live repeated writes without status-policy changes",
+      "reason": "Status-convergent behavior is measurable, policy/optimization implementation deferred",
+      "costIfWrong": "Current repeated updates remain until followup"
+    },
+    {
+      "decision": "Explicitly label inherited preoverride seed facts and actual prepared states",
+      "reason": "Avoid stale fixture metadata ambiguity",
+      "costIfWrong": "Synthetic status mix still differs from production"
+    },
+    {
+      "decision": "Denied/missing probes are direct service boundaries, not HTTP bypass evidence",
+      "reason": "Endpoint access checks may reject before callback",
+      "costIfWrong": "Full transport behavior not verified"
+    },
+    {
+      "decision": "Selected business projection plus separate full-status/timestamp sets",
+      "reason": "Exclude volatile output timestamp from stable projection, verify effects independently",
+      "costIfWrong": "Other response fields unverified"
+    },
+    {
+      "decision": "Accept author native cleanup/RED evidence; production/concurrency/timezone/policy unclaimed",
+      "reason": "Fresh reviewer read-only without services",
+      "costIfWrong": "Live behavior not independently reproduced"
+    },
+    {
+      "decision": "Preserve audit checkout/prior MOD022/files/ledger uncommitted, no merge/push/deploy",
+      "reason": "Established user-owned integration workflow",
+      "costIfWrong": "User mustcommit, Docker/cache retained"
+    }
+  ],
+  "sourceSha256": {
+    "scripts/modernization/measure_mod020_lifecycle.py": "3a9ed2a48cd318e2dec5bfbf7e95e062b7de46c7567de380302aa96c1615b816",
+    "scripts/modernization/tests/test_mod020_lifecycle.py": "0973901e6658fd15bdc5dd52442316c70aa1070e5d2042f4db60b686aa28a1fa",
+    "docs/modernization/mod-020-lifecycle-read-baseline.md": "89cb8eb34befd5822a8cd9e5963b07a9675e519772ba700d2869048988a72ad0"
+  }
+}

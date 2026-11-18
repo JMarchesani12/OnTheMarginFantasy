@@ -1,4 +1,6 @@
+import { safeErrorMessage, READ_ERROR } from "../../api/safeError";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRequestScope } from "../../hooks/useRequestScope";
 import type { LeagueMember } from "../../types/leagueMember";
 import type { PendingTransaction, PendingTransactionsResponse } from "../../types/roster";
 import { getPendingTradesAndAddDrop } from "../../api/transaction";
@@ -6,6 +8,8 @@ import "./TradeRequestsPanel.css";
 
 type PendingTransactionsPanelProps = {
   leagueId: number;
+  refreshRevision?: number;
+  isCurrent: () => boolean;
   members: LeagueMember[];
   teamNameLookup: Record<number, string>;
 };
@@ -20,9 +24,12 @@ const formatTypeLabel = (type: string | null | undefined) => {
 
 const PendingTransactionsPanel = ({
   leagueId,
+  refreshRevision = 0,
+  isCurrent,
   members,
   teamNameLookup,
 }: PendingTransactionsPanelProps) => {
+  const scope = useRequestScope(isCurrent);
   const [pending, setPending] = useState<PendingTransactionsResponse>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,21 +57,25 @@ const PendingTransactionsPanel = ({
     teamNameLookup[teamId] ?? `Team #${teamId}`;
 
   const loadPending = useCallback(async () => {
+    if (!scope.isCurrent()) return;
+    const request = scope.capture("pending");
+    const current = () => request() && isCurrent();
     try {
       setLoading(true);
       setError(null);
-      const data = await getPendingTradesAndAddDrop(leagueId);
-      setPending(data ?? []);
+      const data = await getPendingTradesAndAddDrop(leagueId, request.signal);
+      if (current()) setPending(data ?? []);
     } catch (err: any) {
-      setError(err?.message ?? "Failed to load pending transactions");
+      if (current()) setError(safeErrorMessage(err, READ_ERROR));
     } finally {
-      setLoading(false);
+      if (current()) setLoading(false);
     }
-  }, [leagueId]);
+  }, [leagueId, scope, isCurrent]);
 
   useEffect(() => {
     loadPending();
-  }, [loadPending]);
+    return () => scope.cancel("pending");
+  }, [loadPending, refreshRevision, scope]);
 
   const sortedPending = useMemo(() => {
     return [...pending].sort((a, b) => {

@@ -1,16 +1,19 @@
-"""Trade/free-agent workflows, actor policy and original transaction scopes.
+from utils.conference_membership import require_member_roster_mappings
+from utils.conference_caps import require_conference_cap
+"""Trade/free-agent workflows, actor policy and supplied ownership transactions.
 
 The initial TransactionService read/apply pilot remains an independent capability.
 Established public/helpers remain available on this service.
 """
 import json
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy.engine import Engine
 from .service import TransactionService
 from .workflow_repository import TransactionWorkflowRepository
 from actors import UserActor
+from utils.ownership import lock_ownership, transaction_league_hint
 from .contracts import TradeRejected, TransactionNotFound, TransactionAccessDenied
 
 
@@ -43,10 +46,10 @@ class TransactionWorkflowService:
 
     # ---------- League / settings helpers ----------
 
-    def _get_league_settings(self, league_id: int) -> Dict[str, Any]:
+    def _get_league_settings(self, league_id: int, conn=None) -> Dict[str, Any]:
 
 
-        with self.db.connect() as conn:
+        with (nullcontext(conn) if conn is not None else self.db.connect()) as conn:
             row = self.workflow_repository.league_settings(conn, {"league_id": league_id}).fetchone()
 
         if not row:
@@ -61,8 +64,8 @@ class TransactionWorkflowService:
 
         return settings
 
-    def _get_max_swaps_for_league(self, league_id: int) -> Optional[int]:
-        settings = self._get_league_settings(league_id)
+    def _get_max_swaps_for_league(self, league_id: int, conn=None) -> Optional[int]:
+        settings = self._get_league_settings(league_id, conn=conn)
         roster_settings = settings.get("roster") or {}
         max_swaps = roster_settings.get("maxSwaps")
 
@@ -74,14 +77,14 @@ class TransactionWorkflowService:
         except (TypeError, ValueError):
             return None
 
-    def _get_member_swap_count(self, league_id: int, member_id: int) -> int:
+    def _get_member_swap_count(self, league_id: int, member_id: int, conn=None) -> int:
         """
         Counts how many FREE_AGENT transactions this member has in this league.
         Adjust WHERE if you later track statuses (e.g. only COMPLETED).
         """
 
 
-        with self.db.connect() as conn:
+        with (nullcontext(conn) if conn is not None else self.db.connect()) as conn:
             row = self.workflow_repository.member_swap_count(conn, {
                     "league_id": league_id,
                     "member_id": member_id,
@@ -90,14 +93,14 @@ class TransactionWorkflowService:
 
         return int(row._mapping["count"])
 
-    def _ensure_member_can_swap(self, league_id: int, member_id: int):
-        max_swaps = self._get_max_swaps_for_league(league_id)
+    def _ensure_member_can_swap(self, league_id: int, member_id: int, conn=None):
+        max_swaps = self._get_max_swaps_for_league(league_id, conn=conn)
 
         # None or <= 0 => unlimited
         if max_swaps is None or max_swaps <= 0:
             return
 
-        used = self._get_member_swap_count(league_id, member_id)
+        used = self._get_member_swap_count(league_id, member_id, conn=conn)
 
         if used >= max_swaps:
             raise self.SwapLimitExceeded(
@@ -105,7 +108,7 @@ class TransactionWorkflowService:
             )
 
     def _validate_members_in_league(
-        self, league_id: int, member_ids: List[int]
+        self, league_id: int, member_ids: List[int], conn=None
     ):
         if not member_ids:
             return
@@ -116,7 +119,7 @@ class TransactionWorkflowService:
             "member_ids": member_ids,
         }
 
-        with self.db.connect() as conn:
+        with (nullcontext(conn) if conn is not None else self.db.connect()) as conn:
             row = self.workflow_repository.member_count(conn, params).fetchone()
 
         count = int(row._mapping["count"])
@@ -139,14 +142,14 @@ class TransactionWorkflowService:
             raise ValueError("Free agent deadline has passed")
 
 
-    def _get_week_for_league(self, league_id: int, week_id: int) -> Dict[str, Any]:
+    def _get_week_for_league(self, league_id: int, week_id: int, conn=None) -> Dict[str, Any]:
         """
         Fetches the Week row for a league and validates ownership.
         Returns: { id, weekNumber, isLocked }
         """
 
 
-        with self.db.connect() as conn:
+        with (nullcontext(conn) if conn is not None else self.db.connect()) as conn:
             row = self.workflow_repository.week_for_league(conn, {"week_id": week_id, "league_id": league_id}).fetchone()
 
         if not row:
@@ -185,25 +188,38 @@ class TransactionWorkflowService:
             return [int(x) for x in json.loads(raw)]
         return [int(x) for x in list(raw)]
 
-    def apply_free_agent_transaction(self, transaction_id: int) -> None:
-        with self.db.begin() as conn:
+    def apply_free_agent_transaction(self, transaction_id: int, conn=None) -> None:
+        with (nullcontext(conn) if conn is not None else self.db.begin()) as conn:
+            league_id = transaction_league_hint(conn, transaction_id)
+            if league_id is None:
+                raise ValueError('Transaction not found')
+            lock_ownership(conn, league_id)
             tx = self.workflow_repository.free_agent_for_update(conn, {"id": transaction_id}).fetchone()
 
             if not tx:
                 raise ValueError("Transaction not found")
 
             txm = tx._mapping
+            if txm['leagueId'] != league_id:
+                raise ValueError('Transaction league changed')
             if txm["type"] != self.TYPE_FREE_AGENT:
                 raise ValueError("Transaction is not a free agent add/drop")
             if txm["status"] != self.STATUS_PENDING:
                 raise ValueError("Transaction is not pending apply")
 
-            week = self._get_week_for_league(txm["leagueId"], txm["weekId"])
+            week = self._get_week_for_league(txm["leagueId"], txm["weekId"], conn=conn)
             week_number = int(week["weekNumber"])
 
             drop_team_ids = self._parse_team_ids(txm["fromTeamIds"])
             add_team_ids = self._parse_team_ids(txm["toTeamIds"])
 
+            self._validate_members_in_league(league_id, [txm['memberFromId']], conn=conn)
+            require_member_roster_mappings(conn, league_id, [txm['memberFromId']], week_number, drop_team_ids + add_team_ids)
+            if len(set(drop_team_ids)) != len(drop_team_ids) or len(set(add_team_ids)) != len(add_team_ids):
+                raise ValueError('Duplicate teams in queued add/drop')
+            for team_id in drop_team_ids:
+                if not self._is_team_owned_by_member_in_week(conn, league_id, txm['memberFromId'], team_id, week_number):
+                    raise ValueError('Queued drop is no longer owned by this member')
             if drop_team_ids:
                 self.workflow_repository.drop_free_agent_slots(conn, {
                         "league_id": txm["leagueId"],
@@ -213,7 +229,17 @@ class TransactionWorkflowService:
                     })
 
             if add_team_ids:
-
+                info = self._get_team_conference_info(conn, add_team_ids, league_id)
+                counts = self._get_member_conference_counts(conn, league_id, txm['memberFromId'], week_number)
+                for team_id in add_team_ids:
+                    if self._is_team_owned_in_week(conn, league_id, team_id, week_number):
+                        raise ValueError('Queued add is no longer a free agent')
+                    conference = info.get(team_id)
+                    if conference:
+                        cid = conference['sportConferenceId']
+                        counts[cid] = counts.get(cid, 0) + 1
+                        if counts[cid] > require_conference_cap(conference.get('maxTeamsPerOwner'), cid):
+                            raise ValueError('Queued add exceeds maxTeamsPerOwner')
                 rows = [
                     {
                         "league_id": txm["leagueId"],
@@ -228,8 +254,9 @@ class TransactionWorkflowService:
 
             self.workflow_repository.complete_free_agent(conn, {"status": self.STATUS_COMPLETED, "id": transaction_id})
 
-    def apply_pending_transaction(self, transaction_id: int) -> None:
-        with self.db.connect() as conn:
+    def apply_pending_transaction(self, transaction_id: int, conn=None) -> None:
+        supplied = conn is not None
+        with (nullcontext(conn) if conn is not None else self.db.connect()) as conn:
             tx = self.workflow_repository.pending_transaction(conn, {"id": transaction_id}).fetchone()
 
         if not tx:
@@ -240,9 +267,9 @@ class TransactionWorkflowService:
             raise ValueError("Transaction is not pending apply")
 
         if txm["type"] == self.TYPE_TRADE:
-            self.apply_trade(transaction_id)
+            self.apply_trade(transaction_id, **({'conn': conn} if supplied else {}))
         elif txm["type"] == self.TYPE_FREE_AGENT:
-            self.apply_free_agent_transaction(transaction_id)
+            self.apply_free_agent_transaction(transaction_id, **({'conn': conn} if supplied else {}))
         else:
             raise ValueError(f"Unsupported transaction type: {txm['type']}")
 
@@ -250,13 +277,14 @@ class TransactionWorkflowService:
         self,
         league_id: int,
         after_week_number: int,
+        conn=None,
     ) -> Dict[str, Any]:
         """
         Returns the next unlocked week after the given week number.
         """
 
 
-        with self.db.connect() as conn:
+        with (nullcontext(conn) if conn is not None else self.db.connect()) as conn:
             row = self.workflow_repository.next_unlocked_week(conn, {"league_id": league_id, "week_number": after_week_number}).fetchone()
 
         if not row:
@@ -374,7 +402,7 @@ class TransactionWorkflowService:
 
         HTTP must supply both verified actor and URL league. Trusted model calls
         omit both. Role predicates come only from this fixed server-side mapping.
-        Existing transaction row locking is retained; no new concurrency guarantee.
+        Ownership mutex precedes transaction row locking and weekly closure.
         """
         if (league_id is None) != (acting_user_id is None):
             raise ValueError('league_id and acting_user_id must be supplied together')
@@ -388,6 +416,10 @@ class TransactionWorkflowService:
         with self.db.begin() as conn:
             if interactive:
                 self.workflow_repository.assert_owned_member(conn, league_id, member_id, acting_user_id)
+            # Acceptance/veto/cancellation must not race weekly closure or apply.
+            actual_league = transaction_league_hint(conn, transaction_id)
+            if actual_league is not None:
+                lock_ownership(conn, actual_league)
             tx = self.workflow_repository.trade_for_action(conn, params, role).fetchone()
             if tx is None:
                 if interactive:
@@ -458,10 +490,11 @@ class TransactionWorkflowService:
     def apply_trade(
         self,
         transaction_id: int,
+        conn=None,
     ):
         # Compatibility boundary for the dispatcher, jobs and existing callers.
         try:
-            return self._transaction_service.apply_trade_for_job(transaction_id)
+            return self._transaction_service.apply_trade_for_job(transaction_id, **({'conn': conn} if conn is not None else {}))
         except (TradeRejected, TransactionNotFound) as exc:
             raise ValueError(str(exc)) from exc
 
@@ -531,7 +564,7 @@ class TransactionWorkflowService:
         return row is not None
 
 
-    def _get_team_conference_info(self, conn, team_ids: List[int]) -> Dict[int, Dict[str, int]]:
+    def _get_team_conference_info(self, conn, team_ids: List[int], league_id: int) -> Dict[int, Dict[str, int]]:
         """
         For each team_id, returns its sportConferenceId and that conference's maxTeamsPerOwner.
 
@@ -543,16 +576,14 @@ class TransactionWorkflowService:
         if not team_ids:
             return {}
 
-        rows = self.workflow_repository.team_conference_info(conn, {"team_ids": team_ids}).mappings().all()
+        rows = self.workflow_repository.team_conference_info(conn, {"team_ids": team_ids, "league_id": league_id}).mappings().all()
 
         info: Dict[int, Dict[str, int]] = {}
         for r in rows:
             tid = int(r["sportTeamId"])
-            # If you ever add seasonYear to ConferenceMembership filtering,
-            # this is where you'd apply it.
             info[tid] = {
                 "sportConferenceId": int(r["sportConferenceId"]),
-                "maxTeamsPerOwner": int(r["maxTeamsPerOwner"]),
+                "maxTeamsPerOwner": require_conference_cap(r.get("maxTeamsPerOwner"), r["sportConferenceId"]),
             }
 
         # Safety: if any requested team is missing conference membership data
@@ -597,30 +628,20 @@ class TransactionWorkflowService:
         """
         Performs a free-agency add/drop for a single league member…
         """
-        # HTTP supplies the verified actor; None is only for trusted model calls.
-        if acting_user_id is not None:
-            with self.db.connect() as conn:
-                self.workflow_repository.assert_owned_member(conn, league_id, member_id, acting_user_id)
-        week_info = self._get_week_for_league(league_id, week_id)
-        week_number = week_info["weekNumber"]
-        if week_info["isLocked"]:
-            next_week = self._get_next_unlocked_week_for_league(
-                league_id,
-                after_week_number=int(week_number),
-            )
-            week_id = int(next_week["id"])
-            week_number = int(next_week["weekNumber"])
-
-        # Enforce swap limit first
-        self._ensure_member_can_swap(league_id, member_id)
-
-        # Ensure member belongs to league
-        self._validate_members_in_league(league_id, [member_id])
-
         with self.db.begin() as conn:
             if acting_user_id is not None:
                 self.workflow_repository.assert_owned_member(conn, league_id, member_id, acting_user_id)
+            lock_ownership(conn, league_id)
+            week_info = self._get_week_for_league(league_id, week_id, conn=conn)
+            week_number = week_info['weekNumber']
+            if week_info['isLocked']:
+                next_week = self._get_next_unlocked_week_for_league(
+                    league_id, after_week_number=int(week_number), conn=conn)
+                week_id, week_number = int(next_week['id']), int(next_week['weekNumber'])
+            self._ensure_member_can_swap(league_id, member_id, conn=conn)
+            self._validate_members_in_league(league_id, [member_id], conn=conn)
             self._assert_free_agent_deadline(conn, league_id)
+            require_member_roster_mappings(conn, league_id, [member_id], week_number, [team for team in (add_team_id, drop_team_id) if team is not None])
             pending = self._get_pending_free_agent_team_ids_for_week(
                 conn,
                 league_id=league_id,
@@ -646,7 +667,7 @@ class TransactionWorkflowService:
                 involved_team_ids.append(drop_team_id)
 
             team_conf_info = (
-                self._get_team_conference_info(conn, involved_team_ids)
+                self._get_team_conference_info(conn, involved_team_ids, league_id)
                 if involved_team_ids
                 else {}
             )
@@ -702,9 +723,9 @@ class TransactionWorkflowService:
 
                 info = team_conf_info[add_team_id]
                 cid = info["sportConferenceId"]
-                max_per = conf_limits.get(cid)
+                max_per = require_conference_cap(conf_limits.get(cid), cid)
                 new_count = counts_after.get(cid, 0) + 1
-                if max_per is not None and new_count > max_per:
+                if new_count > max_per:
                     raise ValueError(
                         f"Member {member_id} would exceed maxTeamsPerOwner "
                         f"({new_count}/{max_per}) in conference {cid}"
@@ -801,12 +822,15 @@ class TransactionWorkflowService:
 
         violations = []
         for r in rows:
+            cap = require_conference_cap(r.get("maxTeamsPerOwner"), r.get("sportConferenceId"))
+            if int(r["count"]) <= cap:
+                continue
             violations.append(
                 {
                     "memberId": int(r["memberId"]),
                     "sportConferenceId": int(r["sportConferenceId"]),
                     "count": int(r["count"]),
-                    "maxTeamsPerOwner": int(r["maxTeamsPerOwner"]),
+                    "maxTeamsPerOwner": cap,
                 }
             )
 
@@ -1029,8 +1053,8 @@ class TransactionWorkflowService:
     def open_trades_for_job(self, league_id, member_id):
         return self.get_open_trade_transactions_for_member(league_id, member_id)
 
-    def apply_pending_for_job(self, transaction_id):
-        return self.apply_pending_transaction(transaction_id)
+    def apply_pending_for_job(self, transaction_id, conn=None):
+        return self.apply_pending_transaction(transaction_id, **({'conn': conn} if conn is not None else {}))
 
     def apply_free_agent_for_job(self, transaction_id):
         return self.apply_free_agent_transaction(transaction_id)

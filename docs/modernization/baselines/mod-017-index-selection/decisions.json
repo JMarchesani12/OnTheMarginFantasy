@@ -1,0 +1,163 @@
+{
+  "date": "2026-11-16",
+  "result": "PASS",
+  "scope": "Local controlled index selection only; no target DDL",
+  "artifacts": {
+    "reads": "docs/modernization/baselines/mod-017-index-selection/final/mod-017-indexes-a00b821d69244e488a098436883a2dd3.json",
+    "costs": "docs/modernization/baselines/mod-017-index-selection/costs/mod-017-indexes-6de08f010bd04da7ab4cb5618865b5a9.json",
+    "proposals": "docs/modernization/baselines/mod-017-index-selection/proposals/mod-017-indexes-9c7d82e6c76c4463a25152413e4d06c0.json"
+  },
+  "read_config_case_records": 976,
+  "read_samples": 4880,
+  "sizes": [
+    100,
+    1000,
+    5000
+  ],
+  "pending_densities": [
+    0,
+    0.001,
+    0.1,
+    0.5
+  ],
+  "backlogs": [
+    0,
+    1,
+    12
+  ],
+  "database_records": 16,
+  "write_operations": 270,
+  "proposal_cases": 9,
+  "source_changes": [
+    {
+      "path": "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/scripts/modernization/mod017_index_support.py",
+      "captured_sha256": "51008ef2bd814c976155a989a5bd05f48fc5d498027626ade117bbf7edb4a828",
+      "preserved_source": "docs/modernization/baselines/mod-017-index-selection/sources/mod017_index_support-51008ef2bd814c976155a989a5bd05f48fc5d498027626ade117bbf7edb4a828.py",
+      "change": "Post-measurement exception cleanup metadata correction only; query/measurement/configuration behavior unchanged. RED/GREEN71audit checks."
+    }
+  ],
+  "decisions": {
+    "ownership": {
+      "decision": "supported proposal",
+      "candidate": "member-led only",
+      "reason": "Point reads, counts, labels and current group H2H improve; team-led has no material point advantage at screening and identical storage. Keep all baseline integrity indexes."
+    },
+    "game": {
+      "decision": "conditional/deferred",
+      "reason": "Large fixture gains, but repeatable small group-H2H nested-loop regression; additional WAL/storage. No executable proposal until workload/plan tradeoff is accepted."
+    },
+    "pending": {
+      "decision": "conditional/deferred",
+      "reason": "Sparse pending path improves; dense weekly candidate gains fade/regress, all-status list plans can regress. Missing production density/mix; no executable proposal."
+    },
+    "history": {
+      "decision": "conditional/deferred",
+      "reason": "Both alternatives improve some large list reads, but small fixture/open-trade/weekly costs conflict and observed all-status/status-filtered mix unknown. Do not add both."
+    }
+  },
+  "selected_read_medians_ms": {
+    "100_ownership_any_current": {
+      "baseline": 0.59,
+      "member": 0.298,
+      "member+game": 0.276
+    },
+    "100_group_current": {
+      "baseline": 1.206,
+      "member": 0.748,
+      "member+game": 0.657
+    },
+    "100_h2h_group_current": {
+      "baseline": 1.164,
+      "member": 0.822,
+      "member+game": 1.192
+    },
+    "100_team_season": {
+      "baseline": 1.369,
+      "member": 0.884,
+      "member+game": 0.663
+    },
+    "100_own_hot_all": {
+      "baseline": 2.733,
+      "member": 2.387,
+      "member+game": 2.457
+    },
+    "1000_ownership_any_current": {
+      "baseline": 6.591,
+      "member": 0.285,
+      "member+game": 0.289
+    },
+    "1000_group_current": {
+      "baseline": 5.095,
+      "member": 0.58,
+      "member+game": 0.571
+    },
+    "1000_h2h_group_current": {
+      "baseline": 5.765,
+      "member": 0.716,
+      "member+game": 0.654
+    },
+    "1000_team_season": {
+      "baseline": 8.481,
+      "member": 3.889,
+      "member+game": 0.756
+    },
+    "1000_own_hot_all": {
+      "baseline": 17.312,
+      "member": 17.527,
+      "member+game": 17.197
+    },
+    "5000_ownership_any_current": {
+      "baseline": 22.597,
+      "member": 0.317,
+      "member+game": 0.348
+    },
+    "5000_group_current": {
+      "baseline": 20.76,
+      "member": 0.733,
+      "member+game": 0.726
+    },
+    "5000_h2h_group_current": {
+      "baseline": 20.834,
+      "member": 1.68,
+      "member+game": 0.846
+    },
+    "5000_team_season": {
+      "baseline": 38.427,
+      "member": 22.278,
+      "member+game": 1.062
+    },
+    "5000_own_hot_all": {
+      "baseline": 78.69,
+      "member": 78.51,
+      "member+game": 77.158
+    }
+  },
+  "cleanup": {
+    "owned_databases_remaining": 0,
+    "task_containers_remaining": 0,
+    "removed_container": "cec869b9b2b0297c5b066af252a6e741661a803ef8101a0349ce5fcbe396f858",
+    "method": "Marked-loopback admin query returned []; exact docker rm -f succeeded; task-label docker ps -a returned empty",
+    "unrelated_services": "Left running; image/cache retained"
+  },
+  "verification": {
+    "backend_tests": 827,
+    "audit_tests": 71,
+    "review": "No Critical/Important/Minor findings",
+    "reviewer": "mod017_index_selection_final_review",
+    "reviewer_independent_checks": [
+      "71audit tests",
+      "976records/4880samples",
+      "matrix/output parity",
+      "270writes",
+      "9proposal cases",
+      "16recorded removals",
+      "preserved-source hash",
+      "plan/WAL evidence"
+    ],
+    "limits": [
+      "Production target/roles/traffic not reviewed",
+      "Reviewer did not connect to Docker/DB",
+      "Backend and actual container cleanup verified by executor; broader acceptance separate"
+    ]
+  }
+}

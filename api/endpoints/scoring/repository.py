@@ -1,4 +1,4 @@
-"""Scoring read persistence on caller-supplied connections."""
+"""Scoring SQL on caller-supplied connections; season standings/bonuses are computed reads."""
 from sqlalchemy import bindparam, text
 from utils.authorization import league_read_scope
 
@@ -74,6 +74,13 @@ class ScoringRepository:
             ORDER BY id
         """)
         return conn.execute(sql, {'leagueId': league_id}).fetchall()
+
+    def lock_scoring_week(self, conn, league_id, week_id):
+        return conn.execute(text('''
+            SELECT id FROM "Week"
+            WHERE "leagueId"=:leagueId AND id=:weekId
+            FOR UPDATE
+        '''), {'leagueId': league_id, 'weekId': week_id}).fetchone()
 
     def delete_weekly_scores(self, conn, league_id, week_id):
         sql = text("""

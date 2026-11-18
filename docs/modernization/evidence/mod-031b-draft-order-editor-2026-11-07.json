@@ -1,0 +1,64 @@
+{
+  "date": "2026-11-07",
+  "result": "PASS",
+  "scope": "MOD031B presentational draft-order extraction, preserving parent state/gates/actions",
+  "baselineParentSha256": "626340b68dcfb9ddc429d36c24054d24d4bef07f366a3cd1f5aa8574b4ffcec4",
+  "checks": {
+    "actualParentCharacterizationBeforeExtraction": "5/5 PASS",
+    "childTests": "3/3 RED missing component -> GREEN",
+    "focused": "8/8 PASS",
+    "fullFrontend": "86/86 PASS",
+    "productionTypeScriptBuild": "PASS",
+    "parentOutsideImportAndSubtree": "byte-identical to captured pre-extraction baseline",
+    "childMarkup": "same after approved prop-binding/indent substitutions",
+    "styles": "byte-identical",
+    "priorPilots": "preserved by parent baseline comparison",
+    "whitespace": "PASS"
+  },
+  "importGraph": {
+    "result": "PASS",
+    "files": 66,
+    "literalRelativeEdges": 180,
+    "unresolved": [],
+    "cycles": [],
+    "canonicalEditorConsumers": [
+      "front-end/src/screens/CreateLeague/CreateLeague.tsx",
+      "front-end/src/screens/League/ManageLeaguePage.tsx"
+    ],
+    "exclusions": [
+      "package/alias imports",
+      "computed imports",
+      "CSS/assets",
+      "package internals"
+    ]
+  },
+  "commands": [
+    "node --test --experimental-strip-types tests/manageDraftOrder.test.ts tests/draftOrderEditor.test.ts",
+    "node --test --experimental-strip-types tests/*.test.ts",
+    "npm run build",
+    "node scripts/modernization/verify_frontend_imports.cjs",
+    "git diff --check"
+  ],
+  "independentReview": {
+    "result": "PASS",
+    "findings": 0,
+    "focused": "8/8 PASS"
+  },
+  "preservedExistingBehavior": [
+    "Save and Start Draft saves without starting; separate behavior-change follow-up",
+    "Pointer-only ordering; MOD027G keyboard controls remain separate"
+  ],
+  "notRun": [
+    "browser DOM/E2E",
+    "backend/native/configured runtime/provider/deployment"
+  ],
+  "sha256": {
+    "front-end/src/screens/League/ManageLeaguePage.tsx": "22b93f725a13e3edcc33313637af9b63734c4c02471958a0d81dec9aeec2680c",
+    "front-end/src/components/League/DraftOrderEditor.tsx": "2ccb57bc17ff157b511cd0c5016a6167b6c4dfadc002c42dafd2af62c48e21bb",
+    "front-end/src/screens/League/ManageLeaguePage.css": "3126c3c509d71d4eee8a9297b38daacd1a54e141aaceecf9b4d8aa3e76d6f94b",
+    "front-end/src/screens/CreateLeague/CreateLeague.css": "2f4950ce36c16b3833fb5221ddb0ae82fe5385919af7ab2b4099e7ad9f789c34",
+    "front-end/tests/manageDraftOrder.test.ts": "c8fb2e8a7db0995d4b91d752b89e136cca566134873e4e387dabf0269b1c68e4",
+    "front-end/tests/draftOrderEditor.test.ts": "40d243ca5c020fb483d65376f5286c7c4f9b2ea7731a9b4a927340e653efc9c7",
+    "front-end/tests/helpers/manageLeagueHarness.ts": "44db7f79ed096e7f62de03481bb61aac2c976137662e0776781fa62f03051e4b"
+  }
+}

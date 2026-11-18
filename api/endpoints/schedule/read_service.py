@@ -4,6 +4,7 @@ Internal trusted capabilities preserve existing caller policy; transport/job wir
 is migrated separately. No provider URL/client or configured engine is needed.
 """
 import re
+from contextlib import nullcontext
 from typing import Any, Dict, List, Optional
 from rules.leagueRules import resolve_rules, adjust_margin, rule_summary
 from rules.tournamentRules import score_margin
@@ -24,23 +25,31 @@ class ScheduleReadService(ScheduleCalendarService):
             self._read_repository = repository
         return repository
 
+    def resolve_member_game_rules_for_scoring(self, league_id: int, conn) -> dict:
+        """Resolve once on the scoring caller's connection; acquire no locks."""
+        if conn is None:
+            raise ValueError('A supplied scoring connection is required')
+        league = self._get_league(league_id, conn=conn)
+        return resolve_rules(league['sport'], league.get('settings'))
+
     def get_member_games_for_week(
         self,
         league_id: int,
         member_id: int,
         week_number: int,
         resolved_rules: Optional[dict] = None,
+        conn=None,
     ) -> list[dict]:
         """
         Return all games that count for this member in this week, with memberPointDiff
         already computed (everyone-vs-everyone, single-owner perspective).
         """
         if resolved_rules is None:
-            league = self._get_league(league_id)
+            league = self._get_league(league_id, **({'conn': conn} if conn is not None else {}))
             resolved_rules = resolve_rules(league['sport'], league.get('settings'))
         
 
-        with self.db.begin() as conn:
+        with (nullcontext(conn) if conn is not None else self.db.begin()) as conn:
             rows = self.read_repository.member_games(conn, {
                     "leagueId": league_id,
                     "memberId": member_id,
@@ -81,6 +90,7 @@ class ScheduleReadService(ScheduleCalendarService):
         member_a_id: int,
         member_b_id: int,
         week_number: int,
+        conn=None,
     ) -> list[dict]:
         """
         All games in this week where a team owned by member A played
@@ -88,7 +98,7 @@ class ScheduleReadService(ScheduleCalendarService):
         """
         
 
-        with self.db.begin() as conn:
+        with (nullcontext(conn) if conn is not None else self.db.begin()) as conn:
             rows = self.read_repository.head_to_head_games(conn, {
                     "leagueId": league_id,
                     "weekNumber": week_number,
@@ -97,6 +107,18 @@ class ScheduleReadService(ScheduleCalendarService):
                 }).fetchall()
 
         return [dict(r._mapping) for r in rows]
+
+    def get_head_to_head_games_for_members(self, league_id, member_ids, week_number, conn):
+        """One raw H2H statement view for a tied group; never own a transaction."""
+        if conn is None:
+            raise ValueError('A supplied scoring connection is required')
+        member_ids = sorted({int(member) for member in member_ids})
+        if len(member_ids) < 2:
+            return []
+        rows = self.read_repository.head_to_head_games_for_members(conn, {
+            'leagueId': league_id, 'weekNumber': week_number, 'memberIds': member_ids,
+        }).fetchall()
+        return [dict(row._mapping) for row in rows]
 
     def get_week_for_league(
         self,

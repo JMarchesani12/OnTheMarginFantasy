@@ -397,8 +397,10 @@ explicit prerequisites for operational use.
 
 ## Current schema after the main/audit integration
 
-The current `db/tables.sql` and `api/migrations/20261030_game_kickoff_tbd.sql`
-are identical to main at merge parent `ae8a103`. `GameResult.timeTBD` is a boolean,
+At the main/audit integration, `db/tables.sql` and
+`api/migrations/20261030_game_kickoff_tbd.sql` matched main at merge parent
+`ae8a103`. The current intended snapshot additionally includes the additive
+MOD-006 `User_uuid_key`, MOD-008 period/score keys and MOD-010 ownership constraints described below. `GameResult.timeTBD` is a boolean,
 NOT NULL, default false. A read-only configured-database catalog check on
 2026-11-02 confirmed that exact column definition; no hosted DDL was executed.
 This column check does not claim a fresh full hosted schema comparison.
@@ -421,3 +423,56 @@ Disposable PostgreSQL verification, including baseline-plus-migration, replay,
 read projections and actual parser/upsert transitions, is reproducible with
 `python3 scripts/modernization/verify_main_audit_merge.py` against the documented
 marked synthetic server on port 55439. See [merge evidence](../docs/modernization/evidence/main-audit-merge-2026-11-02.json).
+
+
+## MOD-006 linked-profile uniqueness — prepared 2026-11-04
+
+The intended current snapshot now adds `User_uuid_key UNIQUE(uuid)`, preserving
+nullable legacy UUIDs, email uniqueness and the auth-user FK. Supported fresh
+initialization applies the frozen baseline, the October30 kickoff migration,
+then [November4 identity uniqueness](../api/migrations/20261104_user_identity_unique.sql).
+Existing databases require the [aggregate preflight and rollout/remediation runbook](preflights/README.md)
+before operational application. The migration refuses duplicate linked profiles
+without changing rows; it does not merge or link accounts. Hosted preflight and
+installation were initially pending. On2026-11-04 the maintainer authorized
+both on the configured application database:14 profiles,0 unlinked,0 duplicates,
+counts unchanged after installation, and the valid null-distinct constraint
+verified. [Rollout evidence](../docs/modernization/evidence/mod-006-rollout-2026-11-04.json).
+No backend deployment or account remediation was included. The frozen baseline/checksums remain unchanged;
+its historical expected catalog is not the upgraded schema reference.
+
+
+## MOD-008 week/score identity — 2026-11-04
+
+After the frozen baseline, kickoff migration and User identity migration, apply
+[week/score identity](../api/migrations/20261104_week_score_identity.sql) only after
+its [aggregate preflight and rollout review](preflights/MOD-008.md). Current
+`db/tables.sql` includes the two natural keys, composite parent unique keys and
+same-league score FKs. Existing FK cascade behavior is retained; no historical
+rows are deduplicated or rebuilt. Frozen baseline/checksums remain unchanged.
+
+The configured target was clean (176 weeks,340 scores) and the bounded migration
+was applied/catalog-verified with unchanged counts on2026-11-04. [Rollout evidence](../docs/modernization/evidence/mod-008-rollout-2026-11-04.json).
+Other targets require their own readiness check. Backend application deployment
+is separate and was not performed by the database rollout.
+
+
+## MOD-010 ownership integrity — 2026-11-04
+
+After User and week/score identity migrations, apply
+[ownership integrity](../api/migrations/20261104_ownership_integrity.sql) with its
+[aggregate preflight and rollout/recovery review](preflights/MOD-010.md). It enables
+platform-supplied btree_gist if absent and adds an interval CHECK, same-league
+member FK and nondeferrable half-open overlap exclusion. Empty/adjacent/future
+valid ranges are preserved; no history is cleaned or reassigned.
+
+Configured target applied/catalog-verified with1059 slots and10 empty intervals
+unchanged, no overlap/reversed/member/sport mismatches. [Rollout evidence](../docs/modernization/evidence/mod-010-rollout-2026-11-04.json).
+Current target snapshot includes these constraints and requires the extension;
+the frozen baseline/checksums remain unchanged. Backend deployment is separate.
+
+## Dated hosted observations — November17,2026
+
+Use [db/snapshots](snapshots/README.md) for the current dated schema/catalog records rather than treating the historical flat `tables.sql` as a live export. Before/after captures share a read-only exported snapshot within each run, retain ACL/RLS/index/constraint metadata and carry checksums/source provenance. They contain no application rows and are not initialization/migration/data-backup scripts. Frozen October29baseline/checksums remain unchanged.
+
+The configured target now additionally has the approved valid/ready `mod017_owner_member_team` covering index ([rollout receipt](../docs/modernization/evidence/mod-017-rollout-2026-11-17-3241bd9f036441c69353b3168a731e30.json)). The seasonal composite-reference migration `api/migrations/20261117_seasonal_reference_integrity.sql` was separately approved and **APPLIED_AND_VERIFIED** on the configured target; [receipt](../docs/modernization/evidence/mod-015-rollout-2026-11-17-8b3245fe0fab49d392d62dddc77e6197.json) and [final snapshot](snapshots/2026-11-17-after-mod015/manifest.json). Other environments still require fresh review/approval; don't infer their state from a filename. [Runbook](preflights/MOD-015-rollout.md). No old migrations or baseline adoption were rerun.

@@ -77,8 +77,8 @@ def tests(engine, database):
 
     # Pin actual jsonb_set behavior: an absent parent is not implicitly created.
     for setting, players, expected in ((None,2,{}),({'timezone':'UTC'},2,{'timezone':'UTC'}),
-            ({'draft':{},'keep':True},20,{'draft':{'numberOfRounds':1},'keep':True}),
-            ({'draft':{'numberOfRounds':9}},0,{'draft':{'numberOfRounds':8}})):
+            ({'draft':{},'keep':True},20,{'draft':{'numberOfRounds':7},'keep':True}),
+            ({'draft':{'numberOfRounds':9}},0,{'draft':{'numberOfRounds':7}})):
         reset()
         with engine.begin() as conn:
             conn.execute(text('UPDATE "League" SET settings=CAST(:settings AS jsonb),"numPlayers"=:players WHERE id=10'),

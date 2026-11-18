@@ -1,0 +1,28 @@
+{
+  "scope": "Configured application database; authorized aggregate preflight and MOD-006 only",
+  "target_fingerprint": "cdabf6a142f596457a3d7bad607032fb0de3dc15672fc3ed5b94c90b9cb0eb16",
+  "before": {
+    "total_profiles": 14,
+    "unlinked_profiles": 0,
+    "duplicate_subject_groups": 0,
+    "profiles_in_duplicate_groups": 0
+  },
+  "before_catalog": {
+    "nullable_uuid": true,
+    "identity_constraint_present": false,
+    "identity_constraint_valid": null
+  },
+  "after": {
+    "total_profiles": 14,
+    "unlinked_profiles": 0,
+    "duplicate_subject_groups": 0,
+    "profiles_in_duplicate_groups": 0
+  },
+  "after_catalog": {
+    "nullable_uuid": true,
+    "identity_constraint_present": true,
+    "identity_constraint_valid": true
+  },
+  "result": "APPLIED_AND_VERIFIED",
+  "migration_sha256": "64631ad06193c79bded2e52849e0264b281468ea098e3dfd72d9def01f3dab88"
+}

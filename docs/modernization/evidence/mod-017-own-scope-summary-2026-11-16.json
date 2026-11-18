@@ -1,0 +1,82 @@
+{
+  "result": "PASS_LOCAL_OWN_SCORE_SCOPE",
+  "artifact": "mod-017-own-scope-6841f069396249aaa3f2859566314d66.json",
+  "sha256": "6b9deaaf6505f6a7095f341482f811d406cb205d5246399e2eb810c8794747dd",
+  "checks": {
+    "backend": 827,
+    "auditHelpers": 60,
+    "focused": 4,
+    "nativeTiers": [
+      100,
+      1000,
+      5000
+    ],
+    "comparisonRecords": 39,
+    "explainPlans": 72,
+    "semanticCases": 72,
+    "foreignWeekControl": true,
+    "sourceHashes": 12,
+    "equalKeyPermutationsObserved": 0
+  },
+  "at5000": {
+    "sparseAggregateRows": {
+      "old": 480000,
+      "new": 12
+    },
+    "hotAggregateRows": {
+      "old": 480000,
+      "new": 60000
+    },
+    "hotScanRows": {
+      "old": 480000,
+      "new": 480000
+    },
+    "medianMs": {
+      "sparse": {
+        "old": 36.44,
+        "new": 3.28
+      },
+      "hot": {
+        "old": 87.55,
+        "new": 69.73
+      },
+      "hotSupplied": {
+        "old": 92.88,
+        "new": 90.81
+      },
+      "absent": {
+        "old": 1.41,
+        "new": 2.04
+      }
+    }
+  },
+  "review": {
+    "critical": 0,
+    "important": 0,
+    "minor": 0,
+    "independentFocusedTests": [
+      4,
+      8,
+      3
+    ],
+    "sourceHashesMatched": true
+  },
+  "cleanup": {
+    "ownedDatabaseCount": 0,
+    "exactContainer": "886d47ef6aac0370f9a9549fca895c79a3c4cb8c7d6d7115098cb865a89bf847",
+    "labelsVerified": true,
+    "loopback": "127.0.0.1:55439",
+    "persistentMounts": [],
+    "containerRemoved": true,
+    "remainingTaskContainers": 0,
+    "dockerAndCacheRetained": true
+  },
+  "uncommitted": true,
+  "deployed": false,
+  "limits": [
+    "Local alternating warm samples, not production latency guarantee",
+    "Hot scans remain global; absent planning overhead",
+    "Equal SQL sort-key order unspecified; full typed multiplicity preserved",
+    "Production RLS/workloads/index selection not validated"
+  ]
+}

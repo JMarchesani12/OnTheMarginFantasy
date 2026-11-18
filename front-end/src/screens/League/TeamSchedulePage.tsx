@@ -1,3 +1,4 @@
+import { safeErrorMessage, READ_ERROR } from "../../api/safeError";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import type { League } from "../../types/league";
@@ -80,7 +81,7 @@ const TeamSchedulePage = () => {
         }
       } catch (err: any) {
         if (isMounted) {
-          setLeagueError(err?.message ?? "Failed to load league details.");
+          setLeagueError(safeErrorMessage(err, READ_ERROR));
         }
       } finally {
         if (isMounted) {
@@ -114,7 +115,7 @@ const TeamSchedulePage = () => {
         }
       } catch (err: any) {
         if (!isCancelled) {
-          setError(err?.message ?? "Failed to load team schedule");
+          setError(safeErrorMessage(err, READ_ERROR));
         }
       } finally {
         if (!isCancelled) {

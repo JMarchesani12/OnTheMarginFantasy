@@ -1,0 +1,1502 @@
+{
+  "result": "APPLIED_AND_VERIFIED",
+  "started_at": "2026-11-18T03:47:30.455456+00:00",
+  "authorization": "User explicitly approved single concurrent ownership index, verification and after snapshot on2026-11-17",
+  "scope": "One index only; no application row/grant/constraint/job/service changes",
+  "snapshot_before": "db/snapshots/2026-11-17",
+  "run_id": "3241bd9f036441c69353b3168a731e30",
+  "target_fingerprint": "781c5045c99fd3a79f0c95e407f93e1dd1fd180c96553d09fede0b94c40d3e12",
+  "before_preflight": {
+    "ok": true,
+    "create": true,
+    "catalog": [
+      {
+        "oid": "17585",
+        "relname": "LeagueTeamSlot_pkey",
+        "indisvalid": true,
+        "indisready": true,
+        "indisunique": true,
+        "indisprimary": true,
+        "indisexclusion": false,
+        "constraints": [
+          "LeagueTeamSlot_pkey"
+        ],
+        "shape": false
+      },
+      {
+        "oid": "202501",
+        "relname": "LeagueTeamSlot_no_overlap",
+        "indisvalid": true,
+        "indisready": true,
+        "indisunique": false,
+        "indisprimary": false,
+        "indisexclusion": true,
+        "constraints": [
+          "LeagueTeamSlot_no_overlap"
+        ],
+        "shape": false
+      }
+    ]
+  },
+  "before_catalog": [
+    {
+      "oid": 17555,
+      "name": "Conference_pkey",
+      "schema": "public",
+      "table_name": "Conference",
+      "method": "btree",
+      "unique": true,
+      "primary": true,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "id"
+      ],
+      "includes": [],
+      "operator_classes": "3124",
+      "collations": "0",
+      "options": "0",
+      "predicate": null,
+      "constraints": [
+        "Conference_pkey",
+        "SportConference_conferenceId_fkey"
+      ],
+      "definition": "CREATE UNIQUE INDEX \"Conference_pkey\" ON public.\"Conference\" USING btree (id)",
+      "bytes": 16384
+    },
+    {
+      "oid": 200225,
+      "name": "ConferenceMembership_one_conference_per_team_sport_season",
+      "schema": "public",
+      "table_name": "ConferenceMembership",
+      "method": "btree",
+      "unique": true,
+      "primary": false,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "\"sportTeamId\"",
+        "\"sportId\"",
+        "\"seasonYear\""
+      ],
+      "includes": [],
+      "operator_classes": "3124 3124 3124",
+      "collations": "0 0 0",
+      "options": "0 0 0",
+      "predicate": "(\"seasonYear\" IS NOT NULL)",
+      "constraints": [],
+      "definition": "CREATE UNIQUE INDEX \"ConferenceMembership_one_conference_per_team_sport_season\" ON public.\"ConferenceMembership\" USING btree (\"sportTeamId\", \"sportId\", \"seasonYear\") WHERE (\"seasonYear\" IS NOT NULL)",
+      "bytes": 8192
+    },
+    {
+      "oid": 200224,
+      "name": "ConferenceMembership_one_current_conference_per_team_sport",
+      "schema": "public",
+      "table_name": "ConferenceMembership",
+      "method": "btree",
+      "unique": true,
+      "primary": false,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "\"sportTeamId\"",
+        "\"sportId\""
+      ],
+      "includes": [],
+      "operator_classes": "3124 3124",
+      "collations": "0 0",
+      "options": "0 0",
+      "predicate": "(\"seasonYear\" IS NULL)",
+      "constraints": [],
+      "definition": "CREATE UNIQUE INDEX \"ConferenceMembership_one_current_conference_per_team_sport\" ON public.\"ConferenceMembership\" USING btree (\"sportTeamId\", \"sportId\") WHERE (\"seasonYear\" IS NULL)",
+      "bytes": 73728
+    },
+    {
+      "oid": 19033,
+      "name": "ConferenceMembership_pkey",
+      "schema": "public",
+      "table_name": "ConferenceMembership",
+      "method": "btree",
+      "unique": true,
+      "primary": true,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "id"
+      ],
+      "includes": [],
+      "operator_classes": "3124",
+      "collations": "0",
+      "options": "0",
+      "predicate": null,
+      "constraints": [
+        "ConferenceMembership_pkey"
+      ],
+      "definition": "CREATE UNIQUE INDEX \"ConferenceMembership_pkey\" ON public.\"ConferenceMembership\" USING btree (id)",
+      "bytes": 49152
+    },
+    {
+      "oid": 17712,
+      "name": "DraftPick_pkey",
+      "schema": "public",
+      "table_name": "DraftPick",
+      "method": "btree",
+      "unique": true,
+      "primary": true,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "id"
+      ],
+      "includes": [],
+      "operator_classes": "3124",
+      "collations": "0",
+      "options": "0",
+      "predicate": null,
+      "constraints": [
+        "DraftPick_pkey"
+      ],
+      "definition": "CREATE UNIQUE INDEX \"DraftPick_pkey\" ON public.\"DraftPick\" USING btree (id)",
+      "bytes": 40960
+    },
+    {
+      "oid": 52820,
+      "name": "draftpick_league_created_idx",
+      "schema": "public",
+      "table_name": "DraftPick",
+      "method": "btree",
+      "unique": false,
+      "primary": false,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "\"leagueId\"",
+        "\"createdAt\""
+      ],
+      "includes": [],
+      "operator_classes": "3124 3127",
+      "collations": "0 0",
+      "options": "0 0",
+      "predicate": null,
+      "constraints": [],
+      "definition": "CREATE INDEX draftpick_league_created_idx ON public.\"DraftPick\" USING btree (\"leagueId\", \"createdAt\")",
+      "bytes": 57344
+    },
+    {
+      "oid": 52821,
+      "name": "draftpick_league_overall_idx",
+      "schema": "public",
+      "table_name": "DraftPick",
+      "method": "btree",
+      "unique": false,
+      "primary": false,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "\"leagueId\"",
+        "\"overallPickNumber\""
+      ],
+      "includes": [],
+      "operator_classes": "3124 3124",
+      "collations": "0 0",
+      "options": "0 0",
+      "predicate": null,
+      "constraints": [],
+      "definition": "CREATE INDEX draftpick_league_overall_idx ON public.\"DraftPick\" USING btree (\"leagueId\", \"overallPickNumber\")",
+      "bytes": 57344
+    },
+    {
+      "oid": 52816,
+      "name": "draftpick_league_overall_unique",
+      "schema": "public",
+      "table_name": "DraftPick",
+      "method": "btree",
+      "unique": true,
+      "primary": false,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "\"leagueId\"",
+        "\"overallPickNumber\""
+      ],
+      "includes": [],
+      "operator_classes": "3124 3124",
+      "collations": "0 0",
+      "options": "0 0",
+      "predicate": null,
+      "constraints": [
+        "draftpick_league_overall_unique"
+      ],
+      "definition": "CREATE UNIQUE INDEX draftpick_league_overall_unique ON public.\"DraftPick\" USING btree (\"leagueId\", \"overallPickNumber\")",
+      "bytes": 57344
+    },
+    {
+      "oid": 52818,
+      "name": "draftpick_league_team_unique",
+      "schema": "public",
+      "table_name": "DraftPick",
+      "method": "btree",
+      "unique": true,
+      "primary": false,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "\"leagueId\"",
+        "\"sportTeamId\""
+      ],
+      "includes": [],
+      "operator_classes": "3124 3124",
+      "collations": "0 0",
+      "options": "0 0",
+      "predicate": null,
+      "constraints": [
+        "draftpick_league_team_unique"
+      ],
+      "definition": "CREATE UNIQUE INDEX draftpick_league_team_unique ON public.\"DraftPick\" USING btree (\"leagueId\", \"sportTeamId\")",
+      "bytes": 57344
+    },
+    {
+      "oid": 52830,
+      "name": "DraftState_pkey",
+      "schema": "public",
+      "table_name": "DraftState",
+      "method": "btree",
+      "unique": true,
+      "primary": true,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "\"leagueId\""
+      ],
+      "includes": [],
+      "operator_classes": "3124",
+      "collations": "0",
+      "options": "0",
+      "predicate": null,
+      "constraints": [
+        "DraftState_pkey"
+      ],
+      "definition": "CREATE UNIQUE INDEX \"DraftState_pkey\" ON public.\"DraftState\" USING btree (\"leagueId\")",
+      "bytes": 16384
+    },
+    {
+      "oid": 52842,
+      "name": "draftstate_status_expires_idx",
+      "schema": "public",
+      "table_name": "DraftState",
+      "method": "btree",
+      "unique": false,
+      "primary": false,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "status",
+        "\"expiresAt\""
+      ],
+      "includes": [],
+      "operator_classes": "3126 3127",
+      "collations": "100 0",
+      "options": "0 0",
+      "predicate": null,
+      "constraints": [],
+      "definition": "CREATE INDEX draftstate_status_expires_idx ON public.\"DraftState\" USING btree (status, \"expiresAt\")",
+      "bytes": 16384
+    },
+    {
+      "oid": 61082,
+      "name": "DraftTurn_league_member_idx",
+      "schema": "public",
+      "table_name": "DraftTurn",
+      "method": "btree",
+      "unique": false,
+      "primary": false,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "\"leagueId\"",
+        "\"memberId\""
+      ],
+      "includes": [],
+      "operator_classes": "3124 3124",
+      "collations": "0 0",
+      "options": "0 0",
+      "predicate": null,
+      "constraints": [],
+      "definition": "CREATE INDEX \"DraftTurn_league_member_idx\" ON public.\"DraftTurn\" USING btree (\"leagueId\", \"memberId\")",
+      "bytes": 16384
+    },
+    {
+      "oid": 61070,
+      "name": "DraftTurn_pkey",
+      "schema": "public",
+      "table_name": "DraftTurn",
+      "method": "btree",
+      "unique": true,
+      "primary": true,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "\"leagueId\"",
+        "\"overallPickNumber\""
+      ],
+      "includes": [],
+      "operator_classes": "3124 3124",
+      "collations": "0 0",
+      "options": "0 0",
+      "predicate": null,
+      "constraints": [
+        "DraftTurn_pkey"
+      ],
+      "definition": "CREATE UNIQUE INDEX \"DraftTurn_pkey\" ON public.\"DraftTurn\" USING btree (\"leagueId\", \"overallPickNumber\")",
+      "bytes": 57344
+    },
+    {
+      "oid": 17634,
+      "name": "GameResult_pkey",
+      "schema": "public",
+      "table_name": "GameResult",
+      "method": "btree",
+      "unique": true,
+      "primary": true,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "id"
+      ],
+      "includes": [],
+      "operator_classes": "3124",
+      "collations": "0",
+      "options": "0",
+      "predicate": null,
+      "constraints": [
+        "GameResult_pkey"
+      ],
+      "definition": "CREATE UNIQUE INDEX \"GameResult_pkey\" ON public.\"GameResult\" USING btree (id)",
+      "bytes": 352256
+    },
+    {
+      "oid": 44601,
+      "name": "gamer_esn_unique",
+      "schema": "public",
+      "table_name": "GameResult",
+      "method": "btree",
+      "unique": true,
+      "primary": false,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "sport",
+        "\"sportSeasonId\"",
+        "\"externalGameId\""
+      ],
+      "includes": [],
+      "operator_classes": "3124 3124 3126",
+      "collations": "0 0 100",
+      "options": "0 0 0",
+      "predicate": null,
+      "constraints": [
+        "gamer_esn_unique"
+      ],
+      "definition": "CREATE UNIQUE INDEX gamer_esn_unique ON public.\"GameResult\" USING btree (sport, \"sportSeasonId\", \"externalGameId\")",
+      "bytes": 974848
+    },
+    {
+      "oid": 48212,
+      "name": "League_isDiscoverable_idx",
+      "schema": "public",
+      "table_name": "League",
+      "method": "btree",
+      "unique": false,
+      "primary": false,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "\"isDiscoverable\""
+      ],
+      "includes": [],
+      "operator_classes": "10003",
+      "collations": "0",
+      "options": "0",
+      "predicate": null,
+      "constraints": [],
+      "definition": "CREATE INDEX \"League_isDiscoverable_idx\" ON public.\"League\" USING btree (\"isDiscoverable\")",
+      "bytes": 16384
+    },
+    {
+      "oid": 48213,
+      "name": "League_name_trgm_discoverable_sport_idx",
+      "schema": "public",
+      "table_name": "League",
+      "method": "gin",
+      "unique": false,
+      "primary": false,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "name"
+      ],
+      "includes": [],
+      "operator_classes": "48182",
+      "collations": "100",
+      "options": "0",
+      "predicate": "(\"isDiscoverable\" = true)",
+      "constraints": [],
+      "definition": "CREATE INDEX \"League_name_trgm_discoverable_sport_idx\" ON public.\"League\" USING gin (name gin_trgm_ops) WHERE (\"isDiscoverable\" = true)",
+      "bytes": 24576
+    },
+    {
+      "oid": 48211,
+      "name": "League_name_trgm_idx",
+      "schema": "public",
+      "table_name": "League",
+      "method": "gin",
+      "unique": false,
+      "primary": false,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "name"
+      ],
+      "includes": [],
+      "operator_classes": "48182",
+      "collations": "100",
+      "options": "0",
+      "predicate": null,
+      "constraints": [],
+      "definition": "CREATE INDEX \"League_name_trgm_idx\" ON public.\"League\" USING gin (name gin_trgm_ops)",
+      "bytes": 24576
+    },
+    {
+      "oid": 17512,
+      "name": "League_pkey",
+      "schema": "public",
+      "table_name": "League",
+      "method": "btree",
+      "unique": true,
+      "primary": true,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "id"
+      ],
+      "includes": [],
+      "operator_classes": "3124",
+      "collations": "0",
+      "options": "0",
+      "predicate": null,
+      "constraints": [
+        "DraftPick_leagueId_fkey",
+        "DraftState_leagueId_fkey",
+        "DraftTurn_leagueId_fkey",
+        "LeagueJoinRequest_leagueId_fkey",
+        "LeagueMember_leagueId_fkey",
+        "LeagueTeamSlot_leagueId_fkey",
+        "League_pkey",
+        "Transaction_leagueId_fkey",
+        "Week_leagueId_fkey",
+        "WeeklyTeamScore_leagueId_fkey"
+      ],
+      "definition": "CREATE UNIQUE INDEX \"League_pkey\" ON public.\"League\" USING btree (id)",
+      "bytes": 16384
+    },
+    {
+      "oid": 48106,
+      "name": "LeagueJoinRequest_pkey",
+      "schema": "public",
+      "table_name": "LeagueJoinRequest",
+      "method": "btree",
+      "unique": true,
+      "primary": true,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "id"
+      ],
+      "includes": [],
+      "operator_classes": "3124",
+      "collations": "0",
+      "options": "0",
+      "predicate": null,
+      "constraints": [
+        "LeagueJoinRequest_pkey"
+      ],
+      "definition": "CREATE UNIQUE INDEX \"LeagueJoinRequest_pkey\" ON public.\"LeagueJoinRequest\" USING btree (id)",
+      "bytes": 16384
+    },
+    {
+      "oid": 48123,
+      "name": "LeagueJoinRequest_unique_pending",
+      "schema": "public",
+      "table_name": "LeagueJoinRequest",
+      "method": "btree",
+      "unique": true,
+      "primary": false,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "\"leagueId\"",
+        "\"userId\""
+      ],
+      "includes": [],
+      "operator_classes": "3124 3124",
+      "collations": "0 0",
+      "options": "0 0",
+      "predicate": "(status = 'PENDING'::text)",
+      "constraints": [],
+      "definition": "CREATE UNIQUE INDEX \"LeagueJoinRequest_unique_pending\" ON public.\"LeagueJoinRequest\" USING btree (\"leagueId\", \"userId\") WHERE (status = 'PENDING'::text)",
+      "bytes": 16384
+    },
+    {
+      "oid": 201831,
+      "name": "LeagueMember_league_id_key",
+      "schema": "public",
+      "table_name": "LeagueMember",
+      "method": "btree",
+      "unique": true,
+      "primary": false,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "\"leagueId\"",
+        "id"
+      ],
+      "includes": [],
+      "operator_classes": "3124 3124",
+      "collations": "0 0",
+      "options": "0 0",
+      "predicate": null,
+      "constraints": [
+        "LeagueMember_league_id_key",
+        "LeagueTeamSlot_same_league_member_fkey",
+        "WeeklyTeamScore_same_league_member_fkey"
+      ],
+      "definition": "CREATE UNIQUE INDEX \"LeagueMember_league_id_key\" ON public.\"LeagueMember\" USING btree (\"leagueId\", id)",
+      "bytes": 16384
+    },
+    {
+      "oid": 17531,
+      "name": "LeagueMember_pkey",
+      "schema": "public",
+      "table_name": "LeagueMember",
+      "method": "btree",
+      "unique": true,
+      "primary": true,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "id"
+      ],
+      "includes": [],
+      "operator_classes": "3124",
+      "collations": "0",
+      "options": "0",
+      "predicate": null,
+      "constraints": [
+        "DraftPick_memberId_fkey",
+        "DraftState_currentMemberId_fkey",
+        "DraftTurn_memberId_fkey",
+        "LeagueMember_pkey",
+        "LeagueTeamSlot_memberId_fkey",
+        "TransactionVote_leagueMemberId_fkey",
+        "Transaction_memberFromId_fkey",
+        "Transaction_memberToId_fkey",
+        "WeeklyTeamScore_memberId_fkey"
+      ],
+      "definition": "CREATE UNIQUE INDEX \"LeagueMember_pkey\" ON public.\"LeagueMember\" USING btree (id)",
+      "bytes": 16384
+    },
+    {
+      "oid": 50557,
+      "name": "LeagueMember_unique_league_draftOrder",
+      "schema": "public",
+      "table_name": "LeagueMember",
+      "method": "btree",
+      "unique": true,
+      "primary": false,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "\"leagueId\"",
+        "\"draftOrder\""
+      ],
+      "includes": [],
+      "operator_classes": "3124 1978",
+      "collations": "0 0",
+      "options": "0 0",
+      "predicate": null,
+      "constraints": [],
+      "definition": "CREATE UNIQUE INDEX \"LeagueMember_unique_league_draftOrder\" ON public.\"LeagueMember\" USING btree (\"leagueId\", \"draftOrder\")",
+      "bytes": 16384
+    },
+    {
+      "oid": 48124,
+      "name": "LeagueMember_unique_user_league",
+      "schema": "public",
+      "table_name": "LeagueMember",
+      "method": "btree",
+      "unique": true,
+      "primary": false,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "\"leagueId\"",
+        "\"userId\""
+      ],
+      "includes": [],
+      "operator_classes": "3124 3124",
+      "collations": "0 0",
+      "options": "0 0",
+      "predicate": null,
+      "constraints": [],
+      "definition": "CREATE UNIQUE INDEX \"LeagueMember_unique_user_league\" ON public.\"LeagueMember\" USING btree (\"leagueId\", \"userId\")",
+      "bytes": 16384
+    },
+    {
+      "oid": 202501,
+      "name": "LeagueTeamSlot_no_overlap",
+      "schema": "public",
+      "table_name": "LeagueTeamSlot",
+      "method": "gist",
+      "unique": false,
+      "primary": false,
+      "exclusion": true,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "\"leagueId\"",
+        "\"sportTeamId\"",
+        "int8range(\"acquiredWeek\"::bigint, \"droppedWeek\"::bigint, '[)'::text)"
+      ],
+      "includes": [],
+      "operator_classes": "201980 201980 10078",
+      "collations": "0 0 0",
+      "options": "0 0 0",
+      "predicate": null,
+      "constraints": [
+        "LeagueTeamSlot_no_overlap"
+      ],
+      "definition": "CREATE INDEX \"LeagueTeamSlot_no_overlap\" ON public.\"LeagueTeamSlot\" USING gist (\"leagueId\", \"sportTeamId\", int8range((\"acquiredWeek\")::bigint, (\"droppedWeek\")::bigint, '[)'::text))",
+      "bytes": 114688
+    },
+    {
+      "oid": 17585,
+      "name": "LeagueTeamSlot_pkey",
+      "schema": "public",
+      "table_name": "LeagueTeamSlot",
+      "method": "btree",
+      "unique": true,
+      "primary": true,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "id"
+      ],
+      "includes": [],
+      "operator_classes": "3124",
+      "collations": "0",
+      "options": "0",
+      "predicate": null,
+      "constraints": [
+        "LeagueTeamSlot_pkey"
+      ],
+      "definition": "CREATE UNIQUE INDEX \"LeagueTeamSlot_pkey\" ON public.\"LeagueTeamSlot\" USING btree (id)",
+      "bytes": 49152
+    },
+    {
+      "oid": 18979,
+      "name": "School_pkey",
+      "schema": "public",
+      "table_name": "School",
+      "method": "btree",
+      "unique": true,
+      "primary": true,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "id"
+      ],
+      "includes": [],
+      "operator_classes": "3124",
+      "collations": "0",
+      "options": "0",
+      "predicate": null,
+      "constraints": [
+        "School_pkey",
+        "SportTeam_schoolId_fkey"
+      ],
+      "definition": "CREATE UNIQUE INDEX \"School_pkey\" ON public.\"School\" USING btree (id)",
+      "bytes": 16384
+    },
+    {
+      "oid": 25621,
+      "name": "SeasonPhase_pkey",
+      "schema": "public",
+      "table_name": "SeasonPhase",
+      "method": "btree",
+      "unique": true,
+      "primary": true,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "id"
+      ],
+      "includes": [],
+      "operator_classes": "3124",
+      "collations": "0",
+      "options": "0",
+      "predicate": null,
+      "constraints": [
+        "GameResult_seasonPhaseId_fkey",
+        "SeasonPhase_pkey"
+      ],
+      "definition": "CREATE UNIQUE INDEX \"SeasonPhase_pkey\" ON public.\"SeasonPhase\" USING btree (id)",
+      "bytes": 16384
+    },
+    {
+      "oid": 54000,
+      "name": "SeasonPhase_regular_unique",
+      "schema": "public",
+      "table_name": "SeasonPhase",
+      "method": "btree",
+      "unique": true,
+      "primary": false,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "\"sportSeasonId\""
+      ],
+      "includes": [],
+      "operator_classes": "3124",
+      "collations": "0",
+      "options": "0",
+      "predicate": "((type = 'RegularSeason'::text) AND (\"tournamentId\" IS NULL))",
+      "constraints": [],
+      "definition": "CREATE UNIQUE INDEX \"SeasonPhase_regular_unique\" ON public.\"SeasonPhase\" USING btree (\"sportSeasonId\") WHERE ((type = 'RegularSeason'::text) AND (\"tournamentId\" IS NULL))",
+      "bytes": 16384
+    },
+    {
+      "oid": 54001,
+      "name": "SeasonPhase_tournament_unique",
+      "schema": "public",
+      "table_name": "SeasonPhase",
+      "method": "btree",
+      "unique": true,
+      "primary": false,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "\"sportSeasonId\"",
+        "type",
+        "\"tournamentId\""
+      ],
+      "includes": [],
+      "operator_classes": "3124 3126 3124",
+      "collations": "0 100 0",
+      "options": "0 0 0",
+      "predicate": "(\"tournamentId\" IS NOT NULL)",
+      "constraints": [],
+      "definition": "CREATE UNIQUE INDEX \"SeasonPhase_tournament_unique\" ON public.\"SeasonPhase\" USING btree (\"sportSeasonId\", type, \"tournamentId\") WHERE (\"tournamentId\" IS NOT NULL)",
+      "bytes": 16384
+    },
+    {
+      "oid": 17838,
+      "name": "Sport_pkey",
+      "schema": "public",
+      "table_name": "Sport",
+      "method": "btree",
+      "unique": true,
+      "primary": true,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "id"
+      ],
+      "includes": [],
+      "operator_classes": "3124",
+      "collations": "0",
+      "options": "0",
+      "predicate": null,
+      "constraints": [
+        "ConferenceMembership_sportId_fkey",
+        "GameResult_sport_fkey",
+        "League_sport_fkey",
+        "SportConference_sportId_fkey",
+        "SportSeason_sportId_fkey",
+        "SportTeam_sportId_fkey",
+        "Sport_pkey",
+        "TournamentDefinition_sportId_fkey"
+      ],
+      "definition": "CREATE UNIQUE INDEX \"Sport_pkey\" ON public.\"Sport\" USING btree (id)",
+      "bytes": 16384
+    },
+    {
+      "oid": 18991,
+      "name": "SportConference_pkey",
+      "schema": "public",
+      "table_name": "SportConference",
+      "method": "btree",
+      "unique": true,
+      "primary": true,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "id"
+      ],
+      "includes": [],
+      "operator_classes": "3124",
+      "collations": "0",
+      "options": "0",
+      "predicate": null,
+      "constraints": [
+        "ConferenceMembership_sportConferenceId_fkey",
+        "SportConference_pkey",
+        "TournamentDefinition_sportConferenceId_fkey"
+      ],
+      "definition": "CREATE UNIQUE INDEX \"SportConference_pkey\" ON public.\"SportConference\" USING btree (id)",
+      "bytes": 16384
+    },
+    {
+      "oid": 25062,
+      "name": "SportSeason_pkey",
+      "schema": "public",
+      "table_name": "SportSeason",
+      "method": "btree",
+      "unique": true,
+      "primary": true,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "id"
+      ],
+      "includes": [],
+      "operator_classes": "3124",
+      "collations": "0",
+      "options": "0",
+      "predicate": null,
+      "constraints": [
+        "GameResult_sportSeasonId_fkey",
+        "SeasonPhase_sportSeasonId_fkey",
+        "SportSeasonSubdivision_sportSeasonId_fkey",
+        "SportSeason_pkey"
+      ],
+      "definition": "CREATE UNIQUE INDEX \"SportSeason_pkey\" ON public.\"SportSeason\" USING btree (id)",
+      "bytes": 16384
+    },
+    {
+      "oid": 25064,
+      "name": "SportSeason_sport_year_unique",
+      "schema": "public",
+      "table_name": "SportSeason",
+      "method": "btree",
+      "unique": true,
+      "primary": false,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "\"sportId\"",
+        "\"seasonYear\""
+      ],
+      "includes": [],
+      "operator_classes": "3124 1978",
+      "collations": "0 0",
+      "options": "0 0",
+      "predicate": null,
+      "constraints": [
+        "SportSeason_sport_year_unique"
+      ],
+      "definition": "CREATE UNIQUE INDEX \"SportSeason_sport_year_unique\" ON public.\"SportSeason\" USING btree (\"sportId\", \"seasonYear\")",
+      "bytes": 16384
+    },
+    {
+      "oid": 199957,
+      "name": "SportSeasonSubdivision_pkey",
+      "schema": "public",
+      "table_name": "SportSeasonSubdivision",
+      "method": "btree",
+      "unique": true,
+      "primary": true,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "id"
+      ],
+      "includes": [],
+      "operator_classes": "3124",
+      "collations": "0",
+      "options": "0",
+      "predicate": null,
+      "constraints": [
+        "SportSeasonSubdivision_pkey"
+      ],
+      "definition": "CREATE UNIQUE INDEX \"SportSeasonSubdivision_pkey\" ON public.\"SportSeasonSubdivision\" USING btree (id)",
+      "bytes": 16384
+    },
+    {
+      "oid": 199959,
+      "name": "SportSeasonSubdivision_sportSeason_code_key",
+      "schema": "public",
+      "table_name": "SportSeasonSubdivision",
+      "method": "btree",
+      "unique": true,
+      "primary": false,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "\"sportSeasonId\"",
+        "code"
+      ],
+      "includes": [],
+      "operator_classes": "3124 3126",
+      "collations": "0 100",
+      "options": "0 0",
+      "predicate": null,
+      "constraints": [
+        "SportSeasonSubdivision_sportSeason_code_key"
+      ],
+      "definition": "CREATE UNIQUE INDEX \"SportSeasonSubdivision_sportSeason_code_key\" ON public.\"SportSeasonSubdivision\" USING btree (\"sportSeasonId\", code)",
+      "bytes": 16384
+    },
+    {
+      "oid": 19013,
+      "name": "SportTeam_pkey",
+      "schema": "public",
+      "table_name": "SportTeam",
+      "method": "btree",
+      "unique": true,
+      "primary": true,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "id"
+      ],
+      "includes": [],
+      "operator_classes": "3124",
+      "collations": "0",
+      "options": "0",
+      "predicate": null,
+      "constraints": [
+        "ConferenceMembership_sportTeamId_fkey",
+        "DraftPick_sportTeamId_fkey",
+        "GameResult_awayTeamId_fkey",
+        "GameResult_homeTeamId_fkey",
+        "LeagueTeamSlot_sportTeamId_fkey",
+        "SportTeam_pkey"
+      ],
+      "definition": "CREATE UNIQUE INDEX \"SportTeam_pkey\" ON public.\"SportTeam\" USING btree (id)",
+      "bytes": 32768
+    },
+    {
+      "oid": 25582,
+      "name": "TournamentDefinition_pkey",
+      "schema": "public",
+      "table_name": "TournamentDefinition",
+      "method": "btree",
+      "unique": true,
+      "primary": true,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "id"
+      ],
+      "includes": [],
+      "operator_classes": "3124",
+      "collations": "0",
+      "options": "0",
+      "predicate": null,
+      "constraints": [
+        "SeasonPhase_tournamentId_fkey",
+        "TournamentDefinition_pkey"
+      ],
+      "definition": "CREATE UNIQUE INDEX \"TournamentDefinition_pkey\" ON public.\"TournamentDefinition\" USING btree (id)",
+      "bytes": 16384
+    },
+    {
+      "oid": 25584,
+      "name": "TournamentDefinition_sport_code_key",
+      "schema": "public",
+      "table_name": "TournamentDefinition",
+      "method": "btree",
+      "unique": true,
+      "primary": false,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "\"sportId\"",
+        "code"
+      ],
+      "includes": [],
+      "operator_classes": "3124 3126",
+      "collations": "0 100",
+      "options": "0 0",
+      "predicate": null,
+      "constraints": [
+        "TournamentDefinition_sport_code_key"
+      ],
+      "definition": "CREATE UNIQUE INDEX \"TournamentDefinition_sport_code_key\" ON public.\"TournamentDefinition\" USING btree (\"sportId\", code)",
+      "bytes": 16384
+    },
+    {
+      "oid": 17682,
+      "name": "Transaction_pkey",
+      "schema": "public",
+      "table_name": "Transaction",
+      "method": "btree",
+      "unique": true,
+      "primary": true,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "id"
+      ],
+      "includes": [],
+      "operator_classes": "3124",
+      "collations": "0",
+      "options": "0",
+      "predicate": null,
+      "constraints": [
+        "TransactionVote_transactionId_fkey",
+        "Transaction_pkey"
+      ],
+      "definition": "CREATE UNIQUE INDEX \"Transaction_pkey\" ON public.\"Transaction\" USING btree (id)",
+      "bytes": 16384
+    },
+    {
+      "oid": 33128,
+      "name": "TransactionVote_pkey",
+      "schema": "public",
+      "table_name": "TransactionVote",
+      "method": "btree",
+      "unique": true,
+      "primary": true,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "id"
+      ],
+      "includes": [],
+      "operator_classes": "3124",
+      "collations": "0",
+      "options": "0",
+      "predicate": null,
+      "constraints": [
+        "TransactionVote_pkey"
+      ],
+      "definition": "CREATE UNIQUE INDEX \"TransactionVote_pkey\" ON public.\"TransactionVote\" USING btree (id)",
+      "bytes": 16384
+    },
+    {
+      "oid": 33130,
+      "name": "transaction_vote_unique",
+      "schema": "public",
+      "table_name": "TransactionVote",
+      "method": "btree",
+      "unique": true,
+      "primary": false,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "\"transactionId\"",
+        "\"leagueMemberId\""
+      ],
+      "includes": [],
+      "operator_classes": "3124 3124",
+      "collations": "0 0",
+      "options": "0 0",
+      "predicate": null,
+      "constraints": [
+        "transaction_vote_unique"
+      ],
+      "definition": "CREATE UNIQUE INDEX transaction_vote_unique ON public.\"TransactionVote\" USING btree (\"transactionId\", \"leagueMemberId\")",
+      "bytes": 16384
+    },
+    {
+      "oid": 17497,
+      "name": "User_email_key",
+      "schema": "public",
+      "table_name": "User",
+      "method": "btree",
+      "unique": true,
+      "primary": false,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "email"
+      ],
+      "includes": [],
+      "operator_classes": "3126",
+      "collations": "100",
+      "options": "0",
+      "predicate": null,
+      "constraints": [
+        "User_email_key"
+      ],
+      "definition": "CREATE UNIQUE INDEX \"User_email_key\" ON public.\"User\" USING btree (email)",
+      "bytes": 16384
+    },
+    {
+      "oid": 17501,
+      "name": "User_pkey",
+      "schema": "public",
+      "table_name": "User",
+      "method": "btree",
+      "unique": true,
+      "primary": true,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "id"
+      ],
+      "includes": [],
+      "operator_classes": "3124",
+      "collations": "0",
+      "options": "0",
+      "predicate": null,
+      "constraints": [
+        "LeagueJoinRequest_resolvedByUserId_fkey",
+        "LeagueJoinRequest_userId_fkey",
+        "LeagueMember_userId_fkey",
+        "League_commissioner_fkey",
+        "User_pkey"
+      ],
+      "definition": "CREATE UNIQUE INDEX \"User_pkey\" ON public.\"User\" USING btree (id)",
+      "bytes": 16384
+    },
+    {
+      "oid": 201825,
+      "name": "User_uuid_key",
+      "schema": "public",
+      "table_name": "User",
+      "method": "btree",
+      "unique": true,
+      "primary": false,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "uuid"
+      ],
+      "includes": [],
+      "operator_classes": "10065",
+      "collations": "0",
+      "options": "0",
+      "predicate": null,
+      "constraints": [
+        "User_uuid_key"
+      ],
+      "definition": "CREATE UNIQUE INDEX \"User_uuid_key\" ON public.\"User\" USING btree (uuid)",
+      "bytes": 16384
+    },
+    {
+      "oid": 201829,
+      "name": "Week_league_id_key",
+      "schema": "public",
+      "table_name": "Week",
+      "method": "btree",
+      "unique": true,
+      "primary": false,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "\"leagueId\"",
+        "id"
+      ],
+      "includes": [],
+      "operator_classes": "3124 3124",
+      "collations": "0 0",
+      "options": "0 0",
+      "predicate": null,
+      "constraints": [
+        "Week_league_id_key",
+        "WeeklyTeamScore_same_league_week_fkey"
+      ],
+      "definition": "CREATE UNIQUE INDEX \"Week_league_id_key\" ON public.\"Week\" USING btree (\"leagueId\", id)",
+      "bytes": 16384
+    },
+    {
+      "oid": 201827,
+      "name": "Week_league_week_number_key",
+      "schema": "public",
+      "table_name": "Week",
+      "method": "btree",
+      "unique": true,
+      "primary": false,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "\"leagueId\"",
+        "\"weekNumber\""
+      ],
+      "includes": [],
+      "operator_classes": "3124 1978",
+      "collations": "0 0",
+      "options": "0 0",
+      "predicate": null,
+      "constraints": [
+        "Week_league_week_number_key"
+      ],
+      "definition": "CREATE UNIQUE INDEX \"Week_league_week_number_key\" ON public.\"Week\" USING btree (\"leagueId\", \"weekNumber\")",
+      "bytes": 16384
+    },
+    {
+      "oid": 17617,
+      "name": "Week_pkey",
+      "schema": "public",
+      "table_name": "Week",
+      "method": "btree",
+      "unique": true,
+      "primary": true,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "id"
+      ],
+      "includes": [],
+      "operator_classes": "3124",
+      "collations": "0",
+      "options": "0",
+      "predicate": null,
+      "constraints": [
+        "Transaction_weekId_fkey",
+        "Week_pkey",
+        "WeeklyTeamScore_weekId_fkey"
+      ],
+      "definition": "CREATE UNIQUE INDEX \"Week_pkey\" ON public.\"Week\" USING btree (id)",
+      "bytes": 16384
+    },
+    {
+      "oid": 201833,
+      "name": "WeeklyTeamScore_identity_key",
+      "schema": "public",
+      "table_name": "WeeklyTeamScore",
+      "method": "btree",
+      "unique": true,
+      "primary": false,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "\"leagueId\"",
+        "\"weekId\"",
+        "\"memberId\""
+      ],
+      "includes": [],
+      "operator_classes": "3124 3124 3124",
+      "collations": "0 0 0",
+      "options": "0 0 0",
+      "predicate": null,
+      "constraints": [
+        "WeeklyTeamScore_identity_key"
+      ],
+      "definition": "CREATE UNIQUE INDEX \"WeeklyTeamScore_identity_key\" ON public.\"WeeklyTeamScore\" USING btree (\"leagueId\", \"weekId\", \"memberId\")",
+      "bytes": 32768
+    },
+    {
+      "oid": 17655,
+      "name": "WeeklyTeamScore_pkey",
+      "schema": "public",
+      "table_name": "WeeklyTeamScore",
+      "method": "btree",
+      "unique": true,
+      "primary": true,
+      "exclusion": false,
+      "valid": true,
+      "ready": true,
+      "nulls_not_distinct": false,
+      "key_definitions": [
+        "id"
+      ],
+      "includes": [],
+      "operator_classes": "3124",
+      "collations": "0",
+      "options": "0",
+      "predicate": null,
+      "constraints": [
+        "WeeklyTeamScore_pkey"
+      ],
+      "definition": "CREATE UNIQUE INDEX \"WeeklyTeamScore_pkey\" ON public.\"WeeklyTeamScore\" USING btree (id)",
+      "bytes": 16384
+    }
+  ],
+  "package_hashes": {
+    "verify.sql": "b4b4a45fcfaa7353495def89ec82aa1988cd8872cc04817f18ae2af59aa75a7b",
+    "preflight.sql": "32ee8ea3b72373b5368a5c2ddb4f5490aa859a5e3ea111eac340540aa467a4d0",
+    "recovery.sql": "038a42fad08adacff8f83ada21f11a8dab6bc9fd34943ab8d2c9ae27f1845b8e",
+    "create.sql": "8ac67e3766047e5a13463082c445c6b41e5a78802bf6ec69e11fdedf56458824"
+  },
+  "psql_returncode": 0,
+  "transcript": "SET\nSET\n[{\"oid\":\"17585\",\"relname\":\"LeagueTeamSlot_pkey\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":true,\"indisexclusion\":false,\"constraints\":[\"LeagueTeamSlot_pkey\"],\"shape\":false}, {\"oid\":\"202501\",\"relname\":\"LeagueTeamSlot_no_overlap\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":false,\"indisprimary\":false,\"indisexclusion\":true,\"constraints\":[\"LeagueTeamSlot_no_overlap\"],\"shape\":false}]\nCREATE INDEX\nCreated member; same-session recovery receipt captured. Preserve transcript.\nSET\nSET\n[{\"oid\":\"17585\",\"relname\":\"LeagueTeamSlot_pkey\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":true,\"indisprimary\":true,\"indisexclusion\":false,\"constraints\":[\"LeagueTeamSlot_pkey\"],\"shape\":false}, {\"oid\":\"202501\",\"relname\":\"LeagueTeamSlot_no_overlap\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":false,\"indisprimary\":false,\"indisexclusion\":true,\"constraints\":[\"LeagueTeamSlot_no_overlap\"],\"shape\":false}, {\"oid\":\"202824\",\"relname\":\"mod017_owner_member_team\",\"indisvalid\":true,\"indisready\":true,\"indisunique\":false,\"indisprimary\":false,\"indisexclusion\":false,\"constraints\":[],\"shape\":true}]\nCatalog verification passed. Operator must separately verify current query outputs/plans under target traffic.\n",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "after_preflight": {
+    "ok": true,
+    "create": false,
+    "catalog": [
+      {
+        "oid": "17585",
+        "relname": "LeagueTeamSlot_pkey",
+        "indisvalid": true,
+        "indisready": true,
+        "indisunique": true,
+        "indisprimary": true,
+        "indisexclusion": false,
+        "constraints": [
+          "LeagueTeamSlot_pkey"
+        ],
+        "shape": false
+      },
+      {
+        "oid": "202501",
+        "relname": "LeagueTeamSlot_no_overlap",
+        "indisvalid": true,
+        "indisready": true,
+        "indisunique": false,
+        "indisprimary": false,
+        "indisexclusion": true,
+        "constraints": [
+          "LeagueTeamSlot_no_overlap"
+        ],
+        "shape": false
+      },
+      {
+        "oid": "202824",
+        "relname": "mod017_owner_member_team",
+        "indisvalid": true,
+        "indisready": true,
+        "indisunique": false,
+        "indisprimary": false,
+        "indisexclusion": false,
+        "constraints": [],
+        "shape": true
+      }
+    ]
+  },
+  "created_index": {
+    "oid": 202824,
+    "name": "mod017_owner_member_team",
+    "schema": "public",
+    "table_name": "LeagueTeamSlot",
+    "method": "btree",
+    "unique": false,
+    "primary": false,
+    "exclusion": false,
+    "valid": true,
+    "ready": true,
+    "nulls_not_distinct": false,
+    "key_definitions": [
+      "\"leagueId\"",
+      "\"memberId\"",
+      "\"sportTeamId\""
+    ],
+    "includes": [
+      "\"acquiredWeek\"",
+      "\"droppedWeek\""
+    ],
+    "operator_classes": "3124 3124 3124",
+    "collations": "0 0 0",
+    "options": "0 0 0",
+    "predicate": null,
+    "constraints": [],
+    "definition": "CREATE INDEX mod017_owner_member_team ON public.\"LeagueTeamSlot\" USING btree (\"leagueId\", \"memberId\", \"sportTeamId\") INCLUDE (\"acquiredWeek\", \"droppedWeek\")",
+    "bytes": 81920
+  },
+  "baseline_catalog_preserved": true,
+  "completed_at": "2026-11-18T03:47:32.522360+00:00",
+  "recovery": "Successful new OID/definition saved. Original psql session ended; any future removal requires fresh explicit review, not fabricated same-session receipts.",
+  "client_container_cleanup": "verified"
+}

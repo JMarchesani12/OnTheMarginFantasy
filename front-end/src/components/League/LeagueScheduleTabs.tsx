@@ -1,3 +1,4 @@
+import { safeErrorMessage, READ_ERROR } from "../../api/safeError";
 // src/components/League/LeagueScheduleTabs.tsx
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import type { LeagueMember } from "../../types/leagueMember";
@@ -96,7 +97,7 @@ export const LeagueScheduleTabs = ({
 
         if (!cancelled) setSchedule(data);
       } catch (err: unknown) {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load schedule");
+        if (!cancelled) setError(safeErrorMessage(err, READ_ERROR));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -256,8 +257,8 @@ export const LeagueScheduleTabs = ({
         cellsByDate
       }))
       .sort((a, b) => {
-        const aConference = a.conferenceName ?? "Independent";
-        const bConference = b.conferenceName ?? "Independent";
+        const aConference = a.conferenceName ?? "Conference unavailable";
+        const bConference = b.conferenceName ?? "Conference unavailable";
         const conferenceMatch = aConference.localeCompare(bConference);
         if (conferenceMatch !== 0) {
           return conferenceMatch;
@@ -466,7 +467,7 @@ export const LeagueScheduleTabs = ({
                     <td className="league-schedule__team-col">
                       <div className="league-schedule__team-col-content">
                         <div className="league-schedule__team-conf">
-                          {row.conferenceName ?? "Independent"}
+                          {row.conferenceName ?? "Conference unavailable"}
                         </div>
                         <div className="league-schedule__team-name">
                           {row.teamName}

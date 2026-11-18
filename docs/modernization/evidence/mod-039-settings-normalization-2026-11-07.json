@@ -1,0 +1,34 @@
+{
+  "date": "2026-11-07",
+  "result": "PASS",
+  "scope": "Second bounded MOD039 pilot: frontend Manage League settings normalization",
+  "checks": {
+    "actual_function_characterization_before_extraction": "3/3 PASS",
+    "actual_shared_import_binding": "RED empty calls -> GREEN",
+    "focused": "4/4 PASS",
+    "full_frontend": "78/78 PASS",
+    "production_build": "PASS",
+    "whitespace": "PASS",
+    "prior_backend_pilot_hashes": "unchanged"
+  },
+  "commands": [
+    "node --test --experimental-strip-types tests/leagueSettingsNormalization.test.ts",
+    "node --test --experimental-strip-types tests/*.test.ts",
+    "npm run build",
+    "git diff --check"
+  ],
+  "not_run": [
+    "browser DOM/end-to-end",
+    "backend/native/configured runtime/DB/provider"
+  ],
+  "sha256": {
+    "front-end/src/screens/League/ManageLeaguePage.tsx": "ef4d91df763c91f2a91b821eb32f0a34e54ae538af8b2de92efcfebc8c9a239b",
+    "front-end/src/utils/leagueMapping.ts": "61e4af5cd84933a4f82a1cf935a9282d285d7f6510907f16366160463a5fcc64",
+    "front-end/tests/leagueSettingsNormalization.test.ts": "9cc53ed3a9a3319071a9262c7fb27d600a486e109c9bd0fc75ac8841694464e7"
+  },
+  "independent_review": {
+    "result": "PASS",
+    "findings": 0,
+    "focused_tests": "4/4 PASS"
+  }
+}

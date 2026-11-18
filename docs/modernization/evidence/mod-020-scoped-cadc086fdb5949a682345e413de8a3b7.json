@@ -1,0 +1,3568 @@
+{
+  "run_id": "cadc086fdb5949a682345e413de8a3b7",
+  "result": "FAILED",
+  "started_at": "2026-11-16T21:01:49.849669+00:00",
+  "databases": [
+    {
+      "name": "otm_mod017_cc06bed519494031abbf9f2129a13fcb",
+      "cleanup": "removed"
+    }
+  ],
+  "cleanup": "verified",
+  "provenance": {
+    "db/baselines/20261029/001_schema.sql": "7fe1c17223dd2cf3ebbfdb9d2ca318d4f7ad24f9a6578309c40aad3cfb58a109",
+    "api/migrations/20261104_user_identity_unique.sql": "64631ad06193c79bded2e52849e0264b281468ea098e3dfd72d9def01f3dab88",
+    "api/migrations/20261104_week_score_identity.sql": "b6a040b0d2599e32e4d87d7c59c30aecbbaa22cca7d79c07d988279a36c2e244",
+    "api/migrations/20261104_ownership_integrity.sql": "fb3b6c5dd445a6e8da5dd67784d882032a698917e7ac1d9eebb1167120480116",
+    "scripts/modernization/measure_mod017.py": "1a7fcad698597ad9bfce62532813a27d6486e37fd3580ef24d861c2f034a1868",
+    "scripts/modernization/measure_mod020_lifecycle.py": "2df0c6aa2ea50b8c4d87a042fd9e2cb935d8cf64b68d61a3a9ad69564a1df511",
+    "scripts/modernization/verify_mod020_scoped_lifecycle.py": "103321c206678c09e9a626beb093c57a8eb37346d20d532d624737deaee073da",
+    "api/endpoints/league/lifecycle/query_service.py": "c967b1d7619c09d543462f2fac0ff5bad2eed82e333bb82ca3dc52ae7226a483",
+    "api/endpoints/league/lifecycle/repository.py": "35e41d20d6c0d00e139066539675e3a132630e112cc60bf9d342111a46cdf2af",
+    "api/endpoints/league/lifecycle/service.py": "499744d42f9ca797cdcec7abbd77f28c41a8a962d71f2d7032935b70e9cc1dad",
+    "api/endpoints/league/reads/service.py": "2284b2c3b4043bcec353a594fa0f50f20324c1a8be463c0f5b543fbb94004bc1",
+    "api/endpoints/league/reads/repository.py": "509efe07fd1c05916b7a775abe7ef378a5c95e622db96e2af23e53c373165df4",
+    "api/endpoints/league/leagueEndpoints.py": "847f227b6994446aa74872e5ebb86353a9c185e288b09b18d40470fa0c1af2dc",
+    "api/utils/authorization.py": "76bd2e7086a2ef1086987feb1e461e53944ba6a290970aee74715d03b64bbecb",
+    "api/endpoints/draft/control_repository.py": "a89ac61be51faae11c6c7edb4408d90448b1850f2fe4fba9bf3869b6ff107a48",
+    "api/endpoints/league/members/repository.py": "19aa4eea01275ec9d5122a3f76d1ca21ae57fe3341cb081ecc1ba632b28ac5f2"
+  },
+  "fixture": {
+    "anchor": "2026-11-16T21:01:50.062322+00:00",
+    "counts": {
+      "League": 100,
+      "LeagueMember": 800,
+      "Week": 1300,
+      "WeeklyTeamScore": 9600,
+      "LeagueTeamSlot": 16000
+    },
+    "user_count": 701,
+    "hot_user_memberships": 100,
+    "sparse_user_memberships": 1,
+    "current_week": 13,
+    "scored_weeks": 12,
+    "teams_contributing_to_score_value": 4,
+    "pre_override_seed_status_counts": {
+      "active": 67,
+      "completed": 33
+    },
+    "observed_utc_day": "2026-11-16",
+    "groups": 10,
+    "group_size": 10,
+    "initial_status_counts": {
+      "In-Season": 30,
+      "Pre-Draft": 40,
+      "Completed": 20,
+      "Post-Draft": 10
+    },
+    "final_status_counts": {
+      "Pre-Draft": 20,
+      "Drafting": 20,
+      "Post-Draft": 10,
+      "In-Season": 20,
+      "Completed": 30
+    },
+    "all_timezones": "UTC"
+  },
+  "unadapted_measurement": [
+    {
+      "contract": "authorized-scoped-v2",
+      "call": "detail",
+      "mode": "dirty",
+      "leagues": 100,
+      "result_projection": {
+        "rows": 1,
+        "canonical_json_bytes": 134,
+        "sha256": "4f82c3cb1c7c5e17673acdd171a6c3992b25e5f5575da1e3746181ae0f19becb"
+      },
+      "final_statuses": {
+        "rows": 100,
+        "canonical_json_bytes": 3103,
+        "sha256": "b9d692e6fb8b14a55e57b3f5ba071d9f98b4558f5f9f88f503c301604e7692fb"
+      },
+      "samples": [
+        {
+          "total_ms": 5.699665998690762,
+          "sequence": [
+            "candidates",
+            "state_lock",
+            "league_lock",
+            "state_check",
+            "authorize",
+            "pre",
+            "drafting",
+            "post",
+            "in_season",
+            "completed",
+            "read"
+          ],
+          "statements": {
+            "candidates": 1,
+            "state_lock": 1,
+            "league_lock": 1,
+            "state_check": 1,
+            "authorize": 1,
+            "pre": 1,
+            "drafting": 1,
+            "post": 1,
+            "in_season": 1,
+            "completed": 1,
+            "read": 1
+          },
+          "phase_rows": {
+            "pre": 1,
+            "drafting": 0,
+            "post": 0,
+            "in_season": 0,
+            "completed": 0
+          },
+          "row_updates": 1,
+          "touched_ids": [
+            1
+          ],
+          "changed_ids": [
+            1
+          ]
+        },
+        {
+          "total_ms": 5.937041001743637,
+          "sequence": [
+            "candidates",
+            "state_lock",
+            "league_lock",
+            "state_check",
+            "authorize",
+            "pre",
+            "drafting",
+            "post",
+            "in_season",
+            "completed",
+            "read"
+          ],
+          "statements": {
+            "candidates": 1,
+            "state_lock": 1,
+            "league_lock": 1,
+            "state_check": 1,
+            "authorize": 1,
+            "pre": 1,
+            "drafting": 1,
+            "post": 1,
+            "in_season": 1,
+            "completed": 1,
+            "read": 1
+          },
+          "phase_rows": {
+            "pre": 1,
+            "drafting": 0,
+            "post": 0,
+            "in_season": 0,
+            "completed": 0
+          },
+          "row_updates": 1,
+          "touched_ids": [
+            1
+          ],
+          "changed_ids": [
+            1
+          ]
+        },
+        {
+          "total_ms": 5.226624998613261,
+          "sequence": [
+            "candidates",
+            "state_lock",
+            "league_lock",
+            "state_check",
+            "authorize",
+            "pre",
+            "drafting",
+            "post",
+            "in_season",
+            "completed",
+            "read"
+          ],
+          "statements": {
+            "candidates": 1,
+            "state_lock": 1,
+            "league_lock": 1,
+            "state_check": 1,
+            "authorize": 1,
+            "pre": 1,
+            "drafting": 1,
+            "post": 1,
+            "in_season": 1,
+            "completed": 1,
+            "read": 1
+          },
+          "phase_rows": {
+            "pre": 1,
+            "drafting": 0,
+            "post": 0,
+            "in_season": 0,
+            "completed": 0
+          },
+          "row_updates": 1,
+          "touched_ids": [
+            1
+          ],
+          "changed_ids": [
+            1
+          ]
+        },
+        {
+          "total_ms": 4.74420799582731,
+          "sequence": [
+            "candidates",
+            "state_lock",
+            "league_lock",
+            "state_check",
+            "authorize",
+            "pre",
+            "drafting",
+            "post",
+            "in_season",
+            "completed",
+            "read"
+          ],
+          "statements": {
+            "candidates": 1,
+            "state_lock": 1,
+            "league_lock": 1,
+            "state_check": 1,
+            "authorize": 1,
+            "pre": 1,
+            "drafting": 1,
+            "post": 1,
+            "in_season": 1,
+            "completed": 1,
+            "read": 1
+          },
+          "phase_rows": {
+            "pre": 1,
+            "drafting": 0,
+            "post": 0,
+            "in_season": 0,
+            "completed": 0
+          },
+          "row_updates": 1,
+          "touched_ids": [
+            1
+          ],
+          "changed_ids": [
+            1
+          ]
+        },
+        {
+          "total_ms": 4.688625005655922,
+          "sequence": [
+            "candidates",
+            "state_lock",
+            "league_lock",
+            "state_check",
+            "authorize",
+            "pre",
+            "drafting",
+            "post",
+            "in_season",
+            "completed",
+            "read"
+          ],
+          "statements": {
+            "candidates": 1,
+            "state_lock": 1,
+            "league_lock": 1,
+            "state_check": 1,
+            "authorize": 1,
+            "pre": 1,
+            "drafting": 1,
+            "post": 1,
+            "in_season": 1,
+            "completed": 1,
+            "read": 1
+          },
+          "phase_rows": {
+            "pre": 1,
+            "drafting": 0,
+            "post": 0,
+            "in_season": 0,
+            "completed": 0
+          },
+          "row_updates": 1,
+          "touched_ids": [
+            1
+          ],
+          "changed_ids": [
+            1
+          ]
+        }
+      ],
+      "median_total_ms": 5.226624998613261,
+      "statement_examples": {
+        "candidates": {
+          "sql": "SELECT l.id FROM \"League\" l WHERE (l.commissioner=%(reader_id)s OR EXISTS (SELECT 1 FROM \"LeagueMember\" lm WHERE lm.\"leagueId\"=l.id AND lm.\"userId\"=%(reader_id)s)) AND l.id=%(league_id)s ORDER BY l.id",
+          "parameters": {
+            "reader_id": 2,
+            "league_id": 1
+          }
+        },
+        "state_lock": {
+          "sql": "SELECT \"leagueId\" FROM \"DraftState\" WHERE \"leagueId\"=%(id)s FOR UPDATE",
+          "parameters": {
+            "id": 1
+          }
+        },
+        "league_lock": {
+          "sql": "SELECT id FROM \"League\" WHERE id=%(id)s FOR UPDATE",
+          "parameters": {
+            "id": 1
+          }
+        },
+        "state_check": {
+          "sql": "SELECT \"leagueId\" FROM \"DraftState\" WHERE \"leagueId\"=%(id)s",
+          "parameters": {
+            "id": 1
+          }
+        },
+        "authorize": {
+          "sql": "SELECT l.id FROM \"League\" l WHERE l.id=%(id)s AND (l.commissioner=%(reader_id)s OR EXISTS (SELECT 1 FROM \"LeagueMember\" lm WHERE lm.\"leagueId\"=l.id AND lm.\"userId\"=%(reader_id)s))",
+          "parameters": {
+            "id": 1,
+            "reader_id": 2
+          }
+        },
+        "pre": {
+          "sql": "\n                UPDATE \"League\" l\n                SET status = 'Pre-Draft',\n                    \"updatedAt\" = now()\n                WHERE l.id IN (%(scope_ids_1)s) AND (l.commissioner=%(reader_id)s OR EXISTS (SELECT 1 FROM \"LeagueMember\" lm WHERE lm.\"leagueId\"=l.id AND lm.\"userId\"=%(reader_id)s)) AND l.status NOT IN ('Pre-Draft', 'Completed')\n                  AND NOT EXISTS (\n                    SELECT 1\n                    FROM \"DraftState\" ds\n                    WHERE ds.\"leagueId\" = l.id\n                      AND ds.status IN ('live', 'paused', 'complete')\n                  )\n            ",
+          "parameters": {
+            "reader_id": 2,
+            "scope_ids_1": 1
+          }
+        },
+        "drafting": {
+          "sql": "\n                UPDATE \"League\" l\n                SET status = 'Drafting',\n                    \"updatedAt\" = now()\n                FROM \"DraftState\" ds\n                WHERE l.id IN (%(scope_ids_1)s) AND (l.commissioner=%(reader_id)s OR EXISTS (SELECT 1 FROM \"LeagueMember\" lm WHERE lm.\"leagueId\"=l.id AND lm.\"userId\"=%(reader_id)s)) AND ds.\"leagueId\" = l.id\n                  AND ds.status IN ('live', 'paused')\n                  AND l.status <> 'Drafting'\n            ",
+          "parameters": {
+            "reader_id": 2,
+            "scope_ids_1": 1
+          }
+        },
+        "post": {
+          "sql": "\n                UPDATE \"League\" l\n                SET status = 'Post-Draft',\n                    \"updatedAt\" = now()\n                FROM \"League\" source\n                JOIN \"SportSeason\" ss\n                  ON ss.\"sportId\" = source.sport\n                 AND ss.\"seasonYear\" = source.\"seasonYear\"\n                LEFT JOIN \"DraftState\" ds ON ds.\"leagueId\" = source.id\n                WHERE l.id IN (%(scope_ids_1)s) AND (l.commissioner=%(reader_id)s OR EXISTS (SELECT 1 FROM \"LeagueMember\" lm WHERE lm.\"leagueId\"=l.id AND lm.\"userId\"=%(reader_id)s)) AND source.id = l.id\n                  AND ds.status = 'complete'\n                  AND (now() AT TIME ZONE COALESCE(\n    NULLIF(l.settings #>> '{schedule,timezone}', ''),\n    NULLIF(l.settings #>> '{schedule,timeZone}', ''),\n    NULLIF(l.settings ->> 'timezone', ''),\n    NULLIF(l.settings ->> 'timeZone', ''), 'UTC'\n))::date < ss.\"seasonStart\"::date\n                  AND l.status <> 'Completed'\n                  AND l.status <> 'Post-Draft'\n            ",
+          "parameters": {
+            "reader_id": 2,
+            "scope_ids_1": 1
+          }
+        },
+        "in_season": {
+          "sql": "\n                UPDATE \"League\" l\n                SET status = 'In-Season',\n                    \"updatedAt\" = now()\n                FROM \"SportSeason\" ss\n                WHERE l.id IN (%(scope_ids_1)s) AND (l.commissioner=%(reader_id)s OR EXISTS (SELECT 1 FROM \"LeagueMember\" lm WHERE lm.\"leagueId\"=l.id AND lm.\"userId\"=%(reader_id)s)) AND ss.\"sportId\" = l.sport\n                  AND ss.\"seasonYear\" = l.\"seasonYear\"\n                  AND (now() AT TIME ZONE COALESCE(\n    NULLIF(l.settings #>> '{schedule,timezone}', ''),\n    NULLIF(l.settings #>> '{schedule,timeZone}', ''),\n    NULLIF(l.settings ->> 'timezone', ''),\n    NULLIF(l.settings ->> 'timeZone', ''), 'UTC'\n))::date >= ss.\"seasonStart\"::date\n                  AND (now() AT TIME ZONE COALESCE(\n    NULLIF(l.settings #>> '{schedule,timezone}', ''),\n    NULLIF(l.settings #>> '{schedule,timeZone}', ''),\n    NULLIF(l.settings ->> 'timezone', ''),\n    NULLIF(l.settings ->> 'timeZone', ''), 'UTC'\n))::date <= ss.\"seasonEnd\"::date\n                  AND l.status NOT IN ('Drafting', 'In-Season', 'Completed')\n                  AND EXISTS (\n                    SELECT 1\n                    FROM \"DraftState\" ds\n                    WHERE ds.\"leagueId\" = l.id\n                      AND ds.status = 'complete'\n                  )\n            ",
+          "parameters": {
+            "reader_id": 2,
+            "scope_ids_1": 1
+          }
+        },
+        "completed": {
+          "sql": "\n                UPDATE \"League\" l\n                SET status = 'Completed',\n                    \"updatedAt\" = now()\n                FROM \"SportSeason\" ss\n                WHERE l.id IN (%(scope_ids_1)s) AND (l.commissioner=%(reader_id)s OR EXISTS (SELECT 1 FROM \"LeagueMember\" lm WHERE lm.\"leagueId\"=l.id AND lm.\"userId\"=%(reader_id)s)) AND ss.\"sportId\" = l.sport\n                  AND ss.\"seasonYear\" = l.\"seasonYear\"\n                  AND (now() AT TIME ZONE COALESCE(\n    NULLIF(l.settings #>> '{schedule,timezone}', ''),\n    NULLIF(l.settings #>> '{schedule,timeZone}', ''),\n    NULLIF(l.settings ->> 'timezone', ''),\n    NULLIF(l.settings ->> 'timeZone', ''), 'UTC'\n))::date > ss.\"seasonEnd\"::date\n                  AND l.status <> 'Completed'\n            ",
+          "parameters": {
+            "reader_id": 2,
+            "scope_ids_1": 1
+          }
+        },
+        "read": {
+          "sql": "\n                SELECT\n                    l.*,\n                    w.id AS \"currentWeekId\",\n                    w.\"weekNumber\" AS \"currentWeekNumber\",\n                    w.\"startDate\" AS \"currentWeekStartDate\",\n                    w.\"endDate\" AS \"currentWeekEndDate\"\n                FROM \"League\" l\n                LEFT JOIN \"Week\" w\n                  ON w.\"leagueId\" = l.id\n                 AND now() >= COALESCE(\n                    w.\"startDate\",\n                    w.\"endDate\" + interval '1 microsecond' - interval '7 days'\n                 )\n                 AND now() <= w.\"endDate\"\n                WHERE l.id = %(leagueId)s\n                AND EXISTS (\n        SELECT 1 FROM \"League\" read_league\n        WHERE read_league.id = %(readLeagueId)s\n          AND (read_league.commissioner = %(readerUserId)s OR EXISTS (\n              SELECT 1 FROM \"LeagueMember\" read_member\n              WHERE read_member.\"leagueId\" = read_league.id\n                AND read_member.\"userId\" = %(readerUserId)s\n          ))\n    )\n                ORDER BY w.\"weekNumber\" DESC NULLS LAST\n                LIMIT 1\n            ",
+          "parameters": {
+            "leagueId": 1,
+            "readLeagueId": 1,
+            "readerUserId": 2
+          }
+        }
+      },
+      "invocations": 6
+    },
+    {
+      "contract": "authorized-scoped-v2",
+      "call": "detail",
+      "mode": "steady",
+      "leagues": 100,
+      "result_projection": {
+        "rows": 1,
+        "canonical_json_bytes": 134,
+        "sha256": "4f82c3cb1c7c5e17673acdd171a6c3992b25e5f5575da1e3746181ae0f19becb"
+      },
+      "final_statuses": {
+        "rows": 100,
+        "canonical_json_bytes": 3083,
+        "sha256": "3b97943e5147ecc54669490f284fd8a6a9197fbdbda92a7388fee541938dfda0"
+      },
+      "samples": [
+        {
+          "total_ms": 4.538832989055663,
+          "sequence": [
+            "candidates",
+            "state_lock",
+            "league_lock",
+            "state_check",
+            "authorize",
+            "pre",
+            "drafting",
+            "post",
+            "in_season",
+            "completed",
+            "read"
+          ],
+          "statements": {
+            "candidates": 1,
+            "state_lock": 1,
+            "league_lock": 1,
+            "state_check": 1,
+            "authorize": 1,
+            "pre": 1,
+            "drafting": 1,
+            "post": 1,
+            "in_season": 1,
+            "completed": 1,
+            "read": 1
+          },
+          "phase_rows": {
+            "pre": 0,
+            "drafting": 0,
+            "post": 0,
+            "in_season": 0,
+            "completed": 0
+          },
+          "row_updates": 0,
+          "touched_ids": [],
+          "changed_ids": []
+        },
+        {
+          "total_ms": 4.551000005449168,
+          "sequence": [
+            "candidates",
+            "state_lock",
+            "league_lock",
+            "state_check",
+            "authorize",
+            "pre",
+            "drafting",
+            "post",
+            "in_season",
+            "completed",
+            "read"
+          ],
+          "statements": {
+            "candidates": 1,
+            "state_lock": 1,
+            "league_lock": 1,
+            "state_check": 1,
+            "authorize": 1,
+            "pre": 1,
+            "drafting": 1,
+            "post": 1,
+            "in_season": 1,
+            "completed": 1,
+            "read": 1
+          },
+          "phase_rows": {
+            "pre": 0,
+            "drafting": 0,
+            "post": 0,
+            "in_season": 0,
+            "completed": 0
+          },
+          "row_updates": 0,
+          "touched_ids": [],
+          "changed_ids": []
+        },
+        {
+          "total_ms": 4.541042013443075,
+          "sequence": [
+            "candidates",
+            "state_lock",
+            "league_lock",
+            "state_check",
+            "authorize",
+            "pre",
+            "drafting",
+            "post",
+            "in_season",
+            "completed",
+            "read"
+          ],
+          "statements": {
+            "candidates": 1,
+            "state_lock": 1,
+            "league_lock": 1,
+            "state_check": 1,
+            "authorize": 1,
+            "pre": 1,
+            "drafting": 1,
+            "post": 1,
+            "in_season": 1,
+            "completed": 1,
+            "read": 1
+          },
+          "phase_rows": {
+            "pre": 0,
+            "drafting": 0,
+            "post": 0,
+            "in_season": 0,
+            "completed": 0
+          },
+          "row_updates": 0,
+          "touched_ids": [],
+          "changed_ids": []
+        },
+        {
+          "total_ms": 4.412207999848761,
+          "sequence": [
+            "candidates",
+            "state_lock",
+            "league_lock",
+            "state_check",
+            "authorize",
+            "pre",
+            "drafting",
+            "post",
+            "in_season",
+            "completed",
+            "read"
+          ],
+          "statements": {
+            "candidates": 1,
+            "state_lock": 1,
+            "league_lock": 1,
+            "state_check": 1,
+            "authorize": 1,
+            "pre": 1,
+            "drafting": 1,
+            "post": 1,
+            "in_season": 1,
+            "completed": 1,
+            "read": 1
+          },
+          "phase_rows": {
+            "pre": 0,
+            "drafting": 0,
+            "post": 0,
+            "in_season": 0,
+            "completed": 0
+          },
+          "row_updates": 0,
+          "touched_ids": [],
+          "changed_ids": []
+        },
+        {
+          "total_ms": 4.644499989808537,
+          "sequence": [
+            "candidates",
+            "state_lock",
+            "league_lock",
+            "state_check",
+            "authorize",
+            "pre",
+            "drafting",
+            "post",
+            "in_season",
+            "completed",
+            "read"
+          ],
+          "statements": {
+            "candidates": 1,
+            "state_lock": 1,
+            "league_lock": 1,
+            "state_check": 1,
+            "authorize": 1,
+            "pre": 1,
+            "drafting": 1,
+            "post": 1,
+            "in_season": 1,
+            "completed": 1,
+            "read": 1
+          },
+          "phase_rows": {
+            "pre": 0,
+            "drafting": 0,
+            "post": 0,
+            "in_season": 0,
+            "completed": 0
+          },
+          "row_updates": 0,
+          "touched_ids": [],
+          "changed_ids": []
+        }
+      ],
+      "median_total_ms": 4.541042013443075,
+      "statement_examples": {
+        "candidates": {
+          "sql": "SELECT l.id FROM \"League\" l WHERE (l.commissioner=%(reader_id)s OR EXISTS (SELECT 1 FROM \"LeagueMember\" lm WHERE lm.\"leagueId\"=l.id AND lm.\"userId\"=%(reader_id)s)) AND l.id=%(league_id)s ORDER BY l.id",
+          "parameters": {
+            "reader_id": 2,
+            "league_id": 1
+          }
+        },
+        "state_lock": {
+          "sql": "SELECT \"leagueId\" FROM \"DraftState\" WHERE \"leagueId\"=%(id)s FOR UPDATE",
+          "parameters": {
+            "id": 1
+          }
+        },
+        "league_lock": {
+          "sql": "SELECT id FROM \"League\" WHERE id=%(id)s FOR UPDATE",
+          "parameters": {
+            "id": 1
+          }
+        },
+        "state_check": {
+          "sql": "SELECT \"leagueId\" FROM \"DraftState\" WHERE \"leagueId\"=%(id)s",
+          "parameters": {
+            "id": 1
+          }
+        },
+        "authorize": {
+          "sql": "SELECT l.id FROM \"League\" l WHERE l.id=%(id)s AND (l.commissioner=%(reader_id)s OR EXISTS (SELECT 1 FROM \"LeagueMember\" lm WHERE lm.\"leagueId\"=l.id AND lm.\"userId\"=%(reader_id)s))",
+          "parameters": {
+            "id": 1,
+            "reader_id": 2
+          }
+        },
+        "pre": {
+          "sql": "\n                UPDATE \"League\" l\n                SET status = 'Pre-Draft',\n                    \"updatedAt\" = now()\n                WHERE l.id IN (%(scope_ids_1)s) AND (l.commissioner=%(reader_id)s OR EXISTS (SELECT 1 FROM \"LeagueMember\" lm WHERE lm.\"leagueId\"=l.id AND lm.\"userId\"=%(reader_id)s)) AND l.status NOT IN ('Pre-Draft', 'Completed')\n                  AND NOT EXISTS (\n                    SELECT 1\n                    FROM \"DraftState\" ds\n                    WHERE ds.\"leagueId\" = l.id\n                      AND ds.status IN ('live', 'paused', 'complete')\n                  )\n            ",
+          "parameters": {
+            "reader_id": 2,
+            "scope_ids_1": 1
+          }
+        },
+        "drafting": {
+          "sql": "\n                UPDATE \"League\" l\n                SET status = 'Drafting',\n                    \"updatedAt\" = now()\n                FROM \"DraftState\" ds\n                WHERE l.id IN (%(scope_ids_1)s) AND (l.commissioner=%(reader_id)s OR EXISTS (SELECT 1 FROM \"LeagueMember\" lm WHERE lm.\"leagueId\"=l.id AND lm.\"userId\"=%(reader_id)s)) AND ds.\"leagueId\" = l.id\n                  AND ds.status IN ('live', 'paused')\n                  AND l.status <> 'Drafting'\n            ",
+          "parameters": {
+            "reader_id": 2,
+            "scope_ids_1": 1
+          }
+        },
+        "post": {
+          "sql": "\n                UPDATE \"League\" l\n                SET status = 'Post-Draft',\n                    \"updatedAt\" = now()\n                FROM \"League\" source\n                JOIN \"SportSeason\" ss\n                  ON ss.\"sportId\" = source.sport\n                 AND ss.\"seasonYear\" = source.\"seasonYear\"\n                LEFT JOIN \"DraftState\" ds ON ds.\"leagueId\" = source.id\n                WHERE l.id IN (%(scope_ids_1)s) AND (l.commissioner=%(reader_id)s OR EXISTS (SELECT 1 FROM \"LeagueMember\" lm WHERE lm.\"leagueId\"=l.id AND lm.\"userId\"=%(reader_id)s)) AND source.id = l.id\n                  AND ds.status = 'complete'\n                  AND (now() AT TIME ZONE COALESCE(\n    NULLIF(l.settings #>> '{schedule,timezone}', ''),\n    NULLIF(l.settings #>> '{schedule,timeZone}', ''),\n    NULLIF(l.settings ->> 'timezone', ''),\n    NULLIF(l.settings ->> 'timeZone', ''), 'UTC'\n))::date < ss.\"seasonStart\"::date\n                  AND l.status <> 'Completed'\n                  AND l.status <> 'Post-Draft'\n            ",
+          "parameters": {
+            "reader_id": 2,
+            "scope_ids_1": 1
+          }
+        },
+        "in_season": {
+          "sql": "\n                UPDATE \"League\" l\n                SET status = 'In-Season',\n                    \"updatedAt\" = now()\n                FROM \"SportSeason\" ss\n                WHERE l.id IN (%(scope_ids_1)s) AND (l.commissioner=%(reader_id)s OR EXISTS (SELECT 1 FROM \"LeagueMember\" lm WHERE lm.\"leagueId\"=l.id AND lm.\"userId\"=%(reader_id)s)) AND ss.\"sportId\" = l.sport\n                  AND ss.\"seasonYear\" = l.\"seasonYear\"\n                  AND (now() AT TIME ZONE COALESCE(\n    NULLIF(l.settings #>> '{schedule,timezone}', ''),\n    NULLIF(l.settings #>> '{schedule,timeZone}', ''),\n    NULLIF(l.settings ->> 'timezone', ''),\n    NULLIF(l.settings ->> 'timeZone', ''), 'UTC'\n))::date >= ss.\"seasonStart\"::date\n                  AND (now() AT TIME ZONE COALESCE(\n    NULLIF(l.settings #>> '{schedule,timezone}', ''),\n    NULLIF(l.settings #>> '{schedule,timeZone}', ''),\n    NULLIF(l.settings ->> 'timezone', ''),\n    NULLIF(l.settings ->> 'timeZone', ''), 'UTC'\n))::date <= ss.\"seasonEnd\"::date\n                  AND l.status NOT IN ('Drafting', 'In-Season', 'Completed')\n                  AND EXISTS (\n                    SELECT 1\n                    FROM \"DraftState\" ds\n                    WHERE ds.\"leagueId\" = l.id\n                      AND ds.status = 'complete'\n                  )\n            ",
+          "parameters": {
+            "reader_id": 2,
+            "scope_ids_1": 1
+          }
+        },
+        "completed": {
+          "sql": "\n                UPDATE \"League\" l\n                SET status = 'Completed',\n                    \"updatedAt\" = now()\n                FROM \"SportSeason\" ss\n                WHERE l.id IN (%(scope_ids_1)s) AND (l.commissioner=%(reader_id)s OR EXISTS (SELECT 1 FROM \"LeagueMember\" lm WHERE lm.\"leagueId\"=l.id AND lm.\"userId\"=%(reader_id)s)) AND ss.\"sportId\" = l.sport\n                  AND ss.\"seasonYear\" = l.\"seasonYear\"\n                  AND (now() AT TIME ZONE COALESCE(\n    NULLIF(l.settings #>> '{schedule,timezone}', ''),\n    NULLIF(l.settings #>> '{schedule,timeZone}', ''),\n    NULLIF(l.settings ->> 'timezone', ''),\n    NULLIF(l.settings ->> 'timeZone', ''), 'UTC'\n))::date > ss.\"seasonEnd\"::date\n                  AND l.status <> 'Completed'\n            ",
+          "parameters": {
+            "reader_id": 2,
+            "scope_ids_1": 1
+          }
+        },
+        "read": {
+          "sql": "\n                SELECT\n                    l.*,\n                    w.id AS \"currentWeekId\",\n                    w.\"weekNumber\" AS \"currentWeekNumber\",\n                    w.\"startDate\" AS \"currentWeekStartDate\",\n                    w.\"endDate\" AS \"currentWeekEndDate\"\n                FROM \"League\" l\n                LEFT JOIN \"Week\" w\n                  ON w.\"leagueId\" = l.id\n                 AND now() >= COALESCE(\n                    w.\"startDate\",\n                    w.\"endDate\" + interval '1 microsecond' - interval '7 days'\n                 )\n                 AND now() <= w.\"endDate\"\n                WHERE l.id = %(leagueId)s\n                AND EXISTS (\n        SELECT 1 FROM \"League\" read_league\n        WHERE read_league.id = %(readLeagueId)s\n          AND (read_league.commissioner = %(readerUserId)s OR EXISTS (\n              SELECT 1 FROM \"LeagueMember\" read_member\n              WHERE read_member.\"leagueId\" = read_league.id\n                AND read_member.\"userId\" = %(readerUserId)s\n          ))\n    )\n                ORDER BY w.\"weekNumber\" DESC NULLS LAST\n                LIMIT 1\n            ",
+          "parameters": {
+            "leagueId": 1,
+            "readLeagueId": 1,
+            "readerUserId": 2
+          }
+        }
+      },
+      "invocations": 6
+    },
+    {
+      "contract": "authorized-scoped-v2",
+      "call": "denied",
+      "mode": "dirty",
+      "leagues": 100,
+      "result_projection": {
+        "rows": 0,
+        "canonical_json_bytes": 2,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "final_statuses": {
+        "rows": 100,
+        "canonical_json_bytes": 3103,
+        "sha256": "cb20fc0d3d72d6698d4614890d7076823ca39569509e145c161a193acdaff29d"
+      },
+      "samples": [
+        {
+          "total_ms": 0.8430410089204088,
+          "sequence": [
+            "candidates"
+          ],
+          "statements": {
+            "candidates": 1
+          },
+          "phase_rows": {},
+          "row_updates": 0,
+          "touched_ids": [],
+          "changed_ids": []
+        },
+        {
+          "total_ms": 0.7666250021429732,
+          "sequence": [
+            "candidates"
+          ],
+          "statements": {
+            "candidates": 1
+          },
+          "phase_rows": {},
+          "row_updates": 0,
+          "touched_ids": [],
+          "changed_ids": []
+        },
+        {
+          "total_ms": 0.7916250033304095,
+          "sequence": [
+            "candidates"
+          ],
+          "statements": {
+            "candidates": 1
+          },
+          "phase_rows": {},
+          "row_updates": 0,
+          "touched_ids": [],
+          "changed_ids": []
+        },
+        {
+          "total_ms": 0.7547920104116201,
+          "sequence": [
+            "candidates"
+          ],
+          "statements": {
+            "candidates": 1
+          },
+          "phase_rows": {},
+          "row_updates": 0,
+          "touched_ids": [],
+          "changed_ids": []
+        },
+        {
+          "total_ms": 0.83683300181292,
+          "sequence": [
+            "candidates"
+          ],
+          "statements": {
+            "candidates": 1
+          },
+          "phase_rows": {},
+          "row_updates": 0,
+          "touched_ids": [],
+          "changed_ids": []
+        }
+      ],
+      "median_total_ms": 0.7916250033304095,
+      "statement_examples": {
+        "candidates": {
+          "sql": "SELECT l.id FROM \"League\" l WHERE (l.commissioner=%(reader_id)s OR EXISTS (SELECT 1 FROM \"LeagueMember\" lm WHERE lm.\"leagueId\"=l.id AND lm.\"userId\"=%(reader_id)s)) AND l.id=%(league_id)s ORDER BY l.id",
+          "parameters": {
+            "reader_id": 99999999,
+            "league_id": 1
+          }
+        }
+      },
+      "invocations": 6
+    },
+    {
+      "contract": "authorized-scoped-v2",
+      "call": "denied",
+      "mode": "steady",
+      "leagues": 100,
+      "result_projection": {
+        "rows": 0,
+        "canonical_json_bytes": 2,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "final_statuses": {
+        "rows": 100,
+        "canonical_json_bytes": 3083,
+        "sha256": "3b97943e5147ecc54669490f284fd8a6a9197fbdbda92a7388fee541938dfda0"
+      },
+      "samples": [
+        {
+          "total_ms": 0.7948749989736825,
+          "sequence": [
+            "candidates"
+          ],
+          "statements": {
+            "candidates": 1
+          },
+          "phase_rows": {},
+          "row_updates": 0,
+          "touched_ids": [],
+          "changed_ids": []
+        },
+        {
+          "total_ms": 0.8157499978551641,
+          "sequence": [
+            "candidates"
+          ],
+          "statements": {
+            "candidates": 1
+          },
+          "phase_rows": {},
+          "row_updates": 0,
+          "touched_ids": [],
+          "changed_ids": []
+        },
+        {
+          "total_ms": 0.8651250100228935,
+          "sequence": [
+            "candidates"
+          ],
+          "statements": {
+            "candidates": 1
+          },
+          "phase_rows": {},
+          "row_updates": 0,
+          "touched_ids": [],
+          "changed_ids": []
+        },
+        {
+          "total_ms": 0.8336669998243451,
+          "sequence": [
+            "candidates"
+          ],
+          "statements": {
+            "candidates": 1
+          },
+          "phase_rows": {},
+          "row_updates": 0,
+          "touched_ids": [],
+          "changed_ids": []
+        },
+        {
+          "total_ms": 0.7905419915914536,
+          "sequence": [
+            "candidates"
+          ],
+          "statements": {
+            "candidates": 1
+          },
+          "phase_rows": {},
+          "row_updates": 0,
+          "touched_ids": [],
+          "changed_ids": []
+        }
+      ],
+      "median_total_ms": 0.8157499978551641,
+      "statement_examples": {
+        "candidates": {
+          "sql": "SELECT l.id FROM \"League\" l WHERE (l.commissioner=%(reader_id)s OR EXISTS (SELECT 1 FROM \"LeagueMember\" lm WHERE lm.\"leagueId\"=l.id AND lm.\"userId\"=%(reader_id)s)) AND l.id=%(league_id)s ORDER BY l.id",
+          "parameters": {
+            "reader_id": 99999999,
+            "league_id": 1
+          }
+        }
+      },
+      "invocations": 6
+    },
+    {
+      "contract": "authorized-scoped-v2",
+      "call": "missing",
+      "mode": "dirty",
+      "leagues": 100,
+      "result_projection": {
+        "rows": 0,
+        "canonical_json_bytes": 2,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "final_statuses": {
+        "rows": 100,
+        "canonical_json_bytes": 3103,
+        "sha256": "cb20fc0d3d72d6698d4614890d7076823ca39569509e145c161a193acdaff29d"
+      },
+      "samples": [
+        {
+          "total_ms": 0.834165999549441,
+          "sequence": [
+            "candidates"
+          ],
+          "statements": {
+            "candidates": 1
+          },
+          "phase_rows": {},
+          "row_updates": 0,
+          "touched_ids": [],
+          "changed_ids": []
+        },
+        {
+          "total_ms": 0.8011669997358695,
+          "sequence": [
+            "candidates"
+          ],
+          "statements": {
+            "candidates": 1
+          },
+          "phase_rows": {},
+          "row_updates": 0,
+          "touched_ids": [],
+          "changed_ids": []
+        },
+        {
+          "total_ms": 0.8267910016002133,
+          "sequence": [
+            "candidates"
+          ],
+          "statements": {
+            "candidates": 1
+          },
+          "phase_rows": {},
+          "row_updates": 0,
+          "touched_ids": [],
+          "changed_ids": []
+        },
+        {
+          "total_ms": 0.7903329969849437,
+          "sequence": [
+            "candidates"
+          ],
+          "statements": {
+            "candidates": 1
+          },
+          "phase_rows": {},
+          "row_updates": 0,
+          "touched_ids": [],
+          "changed_ids": []
+        },
+        {
+          "total_ms": 0.8024580019991845,
+          "sequence": [
+            "candidates"
+          ],
+          "statements": {
+            "candidates": 1
+          },
+          "phase_rows": {},
+          "row_updates": 0,
+          "touched_ids": [],
+          "changed_ids": []
+        }
+      ],
+      "median_total_ms": 0.8024580019991845,
+      "statement_examples": {
+        "candidates": {
+          "sql": "SELECT l.id FROM \"League\" l WHERE (l.commissioner=%(reader_id)s OR EXISTS (SELECT 1 FROM \"LeagueMember\" lm WHERE lm.\"leagueId\"=l.id AND lm.\"userId\"=%(reader_id)s)) AND l.id=%(league_id)s ORDER BY l.id",
+          "parameters": {
+            "reader_id": 2,
+            "league_id": 200
+          }
+        }
+      },
+      "invocations": 6
+    },
+    {
+      "contract": "authorized-scoped-v2",
+      "call": "missing",
+      "mode": "steady",
+      "leagues": 100,
+      "result_projection": {
+        "rows": 0,
+        "canonical_json_bytes": 2,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "final_statuses": {
+        "rows": 100,
+        "canonical_json_bytes": 3083,
+        "sha256": "3b97943e5147ecc54669490f284fd8a6a9197fbdbda92a7388fee541938dfda0"
+      },
+      "samples": [
+        {
+          "total_ms": 0.7813749980414286,
+          "sequence": [
+            "candidates"
+          ],
+          "statements": {
+            "candidates": 1
+          },
+          "phase_rows": {},
+          "row_updates": 0,
+          "touched_ids": [],
+          "changed_ids": []
+        },
+        {
+          "total_ms": 0.8132500079227611,
+          "sequence": [
+            "candidates"
+          ],
+          "statements": {
+            "candidates": 1
+          },
+          "phase_rows": {},
+          "row_updates": 0,
+          "touched_ids": [],
+          "changed_ids": []
+        },
+        {
+          "total_ms": 0.8557499968446791,
+          "sequence": [
+            "candidates"
+          ],
+          "statements": {
+            "candidates": 1
+          },
+          "phase_rows": {},
+          "row_updates": 0,
+          "touched_ids": [],
+          "changed_ids": []
+        },
+        {
+          "total_ms": 0.8027080039028078,
+          "sequence": [
+            "candidates"
+          ],
+          "statements": {
+            "candidates": 1
+          },
+          "phase_rows": {},
+          "row_updates": 0,
+          "touched_ids": [],
+          "changed_ids": []
+        },
+        {
+          "total_ms": 0.8209999941755086,
+          "sequence": [
+            "candidates"
+          ],
+          "statements": {
+            "candidates": 1
+          },
+          "phase_rows": {},
+          "row_updates": 0,
+          "touched_ids": [],
+          "changed_ids": []
+        }
+      ],
+      "median_total_ms": 0.8132500079227611,
+      "statement_examples": {
+        "candidates": {
+          "sql": "SELECT l.id FROM \"League\" l WHERE (l.commissioner=%(reader_id)s OR EXISTS (SELECT 1 FROM \"LeagueMember\" lm WHERE lm.\"leagueId\"=l.id AND lm.\"userId\"=%(reader_id)s)) AND l.id=%(league_id)s ORDER BY l.id",
+          "parameters": {
+            "reader_id": 2,
+            "league_id": 200
+          }
+        }
+      },
+      "invocations": 6
+    },
+    {
+      "contract": "authorized-scoped-v2",
+      "call": "mine",
+      "mode": "dirty",
+      "leagues": 100,
+      "result_projection": {
+        "rows": 1,
+        "canonical_json_bytes": 190,
+        "sha256": "09ab0d4544134c33ef64867f50eef676b9421ec38a6c222f1a700d45e24d28cc"
+      },
+      "final_statuses": {
+        "rows": 100,
+        "canonical_json_bytes": 3103,
+        "sha256": "b9d692e6fb8b14a55e57b3f5ba071d9f98b4558f5f9f88f503c301604e7692fb"
+      },
+      "samples": [
+        {
+          "total_ms": 5.115334002766758,
+          "sequence": [
+            "candidates",
+            "state_lock",
+            "league_lock",
+            "state_check",
+            "authorize",
+            "pre",
+            "drafting",
+            "post",
+            "in_season",
+            "completed",
+            "read"
+          ],
+          "statements": {
+            "candidates": 1,
+            "state_lock": 1,
+            "league_lock": 1,
+            "state_check": 1,
+            "authorize": 1,
+            "pre": 1,
+            "drafting": 1,
+            "post": 1,
+            "in_season": 1,
+            "completed": 1,
+            "read": 1
+          },
+          "phase_rows": {
+            "pre": 1,
+            "drafting": 0,
+            "post": 0,
+            "in_season": 0,
+            "completed": 0
+          },
+          "row_updates": 1,
+          "touched_ids": [
+            1
+          ],
+          "changed_ids": [
+            1
+          ]
+        },
+        {
+          "total_ms": 5.196250000153668,
+          "sequence": [
+            "candidates",
+            "state_lock",
+            "league_lock",
+            "state_check",
+            "authorize",
+            "pre",
+            "drafting",
+            "post",
+            "in_season",
+            "completed",
+            "read"
+          ],
+          "statements": {
+            "candidates": 1,
+            "state_lock": 1,
+            "league_lock": 1,
+            "state_check": 1,
+            "authorize": 1,
+            "pre": 1,
+            "drafting": 1,
+            "post": 1,
+            "in_season": 1,
+            "completed": 1,
+            "read": 1
+          },
+          "phase_rows": {
+            "pre": 1,
+            "drafting": 0,
+            "post": 0,
+            "in_season": 0,
+            "completed": 0
+          },
+          "row_updates": 1,
+          "touched_ids": [
+            1
+          ],
+          "changed_ids": [
+            1
+          ]
+        },
+        {
+          "total_ms": 4.937083009281196,
+          "sequence": [
+            "candidates",
+            "state_lock",
+            "league_lock",
+            "state_check",
+            "authorize",
+            "pre",
+            "drafting",
+            "post",
+            "in_season",
+            "completed",
+            "read"
+          ],
+          "statements": {
+            "candidates": 1,
+            "state_lock": 1,
+            "league_lock": 1,
+            "state_check": 1,
+            "authorize": 1,
+            "pre": 1,
+            "drafting": 1,
+            "post": 1,
+            "in_season": 1,
+            "completed": 1,
+            "read": 1
+          },
+          "phase_rows": {
+            "pre": 1,
+            "drafting": 0,
+            "post": 0,
+            "in_season": 0,
+            "completed": 0
+          },
+          "row_updates": 1,
+          "touched_ids": [
+            1
+          ],
+          "changed_ids": [
+            1
+          ]
+        },
+        {
+          "total_ms": 5.487625006935559,
+          "sequence": [
+            "candidates",
+            "state_lock",
+            "league_lock",
+            "state_check",
+            "authorize",
+            "pre",
+            "drafting",
+            "post",
+            "in_season",
+            "completed",
+            "read"
+          ],
+          "statements": {
+            "candidates": 1,
+            "state_lock": 1,
+            "league_lock": 1,
+            "state_check": 1,
+            "authorize": 1,
+            "pre": 1,
+            "drafting": 1,
+            "post": 1,
+            "in_season": 1,
+            "completed": 1,
+            "read": 1
+          },
+          "phase_rows": {
+            "pre": 1,
+            "drafting": 0,
+            "post": 0,
+            "in_season": 0,
+            "completed": 0
+          },
+          "row_updates": 1,
+          "touched_ids": [
+            1
+          ],
+          "changed_ids": [
+            1
+          ]
+        },
+        {
+          "total_ms": 5.170082993572578,
+          "sequence": [
+            "candidates",
+            "state_lock",
+            "league_lock",
+            "state_check",
+            "authorize",
+            "pre",
+            "drafting",
+            "post",
+            "in_season",
+            "completed",
+            "read"
+          ],
+          "statements": {
+            "candidates": 1,
+            "state_lock": 1,
+            "league_lock": 1,
+            "state_check": 1,
+            "authorize": 1,
+            "pre": 1,
+            "drafting": 1,
+            "post": 1,
+            "in_season": 1,
+            "completed": 1,
+            "read": 1
+          },
+          "phase_rows": {
+            "pre": 1,
+            "drafting": 0,
+            "post": 0,
+            "in_season": 0,
+            "completed": 0
+          },
+          "row_updates": 1,
+          "touched_ids": [
+            1
+          ],
+          "changed_ids": [
+            1
+          ]
+        }
+      ],
+      "median_total_ms": 5.170082993572578,
+      "statement_examples": {
+        "candidates": {
+          "sql": "SELECT l.id FROM \"League\" l WHERE EXISTS (SELECT 1 FROM \"LeagueMember\" lm WHERE lm.\"leagueId\"=l.id AND lm.\"userId\"=%(reader_id)s)  ORDER BY l.id",
+          "parameters": {
+            "reader_id": 2
+          }
+        },
+        "state_lock": {
+          "sql": "SELECT \"leagueId\" FROM \"DraftState\" WHERE \"leagueId\"=%(id)s FOR UPDATE",
+          "parameters": {
+            "id": 1
+          }
+        },
+        "league_lock": {
+          "sql": "SELECT id FROM \"League\" WHERE id=%(id)s FOR UPDATE",
+          "parameters": {
+            "id": 1
+          }
+        },
+        "state_check": {
+          "sql": "SELECT \"leagueId\" FROM \"DraftState\" WHERE \"leagueId\"=%(id)s",
+          "parameters": {
+            "id": 1
+          }
+        },
+        "authorize": {
+          "sql": "SELECT l.id FROM \"League\" l WHERE l.id=%(id)s AND EXISTS (SELECT 1 FROM \"LeagueMember\" lm WHERE lm.\"leagueId\"=l.id AND lm.\"userId\"=%(reader_id)s)",
+          "parameters": {
+            "id": 1,
+            "reader_id": 2
+          }
+        },
+        "pre": {
+          "sql": "\n                UPDATE \"League\" l\n                SET status = 'Pre-Draft',\n                    \"updatedAt\" = now()\n                WHERE l.id IN (%(scope_ids_1)s) AND EXISTS (SELECT 1 FROM \"LeagueMember\" lm WHERE lm.\"leagueId\"=l.id AND lm.\"userId\"=%(reader_id)s) AND l.status NOT IN ('Pre-Draft', 'Completed')\n                  AND NOT EXISTS (\n                    SELECT 1\n                    FROM \"DraftState\" ds\n                    WHERE ds.\"leagueId\" = l.id\n                      AND ds.status IN ('live', 'paused', 'complete')\n                  )\n            ",
+          "parameters": {
+            "reader_id": 2,
+            "scope_ids_1": 1
+          }
+        },
+        "drafting": {
+          "sql": "\n                UPDATE \"League\" l\n                SET status = 'Drafting',\n                    \"updatedAt\" = now()\n                FROM \"DraftState\" ds\n                WHERE l.id IN (%(scope_ids_1)s) AND EXISTS (SELECT 1 FROM \"LeagueMember\" lm WHERE lm.\"leagueId\"=l.id AND lm.\"userId\"=%(reader_id)s) AND ds.\"leagueId\" = l.id\n                  AND ds.status IN ('live', 'paused')\n                  AND l.status <> 'Drafting'\n            ",
+          "parameters": {
+            "reader_id": 2,
+            "scope_ids_1": 1
+          }
+        },
+        "post": {
+          "sql": "\n                UPDATE \"League\" l\n                SET status = 'Post-Draft',\n                    \"updatedAt\" = now()\n                FROM \"League\" source\n                JOIN \"SportSeason\" ss\n                  ON ss.\"sportId\" = source.sport\n                 AND ss.\"seasonYear\" = source.\"seasonYear\"\n                LEFT JOIN \"DraftState\" ds ON ds.\"leagueId\" = source.id\n                WHERE l.id IN (%(scope_ids_1)s) AND EXISTS (SELECT 1 FROM \"LeagueMember\" lm WHERE lm.\"leagueId\"=l.id AND lm.\"userId\"=%(reader_id)s) AND source.id = l.id\n                  AND ds.status = 'complete'\n                  AND (now() AT TIME ZONE COALESCE(\n    NULLIF(l.settings #>> '{schedule,timezone}', ''),\n    NULLIF(l.settings #>> '{schedule,timeZone}', ''),\n    NULLIF(l.settings ->> 'timezone', ''),\n    NULLIF(l.settings ->> 'timeZone', ''), 'UTC'\n))::date < ss.\"seasonStart\"::date\n                  AND l.status <> 'Completed'\n                  AND l.status <> 'Post-Draft'\n            ",
+          "parameters": {
+            "reader_id": 2,
+            "scope_ids_1": 1
+          }
+        },
+        "in_season": {
+          "sql": "\n                UPDATE \"League\" l\n                SET status = 'In-Season',\n                    \"updatedAt\" = now()\n                FROM \"SportSeason\" ss\n                WHERE l.id IN (%(scope_ids_1)s) AND EXISTS (SELECT 1 FROM \"LeagueMember\" lm WHERE lm.\"leagueId\"=l.id AND lm.\"userId\"=%(reader_id)s) AND ss.\"sportId\" = l.sport\n                  AND ss.\"seasonYear\" = l.\"seasonYear\"\n                  AND (now() AT TIME ZONE COALESCE(\n    NULLIF(l.settings #>> '{schedule,timezone}', ''),\n    NULLIF(l.settings #>> '{schedule,timeZone}', ''),\n    NULLIF(l.settings ->> 'timezone', ''),\n    NULLIF(l.settings ->> 'timeZone', ''), 'UTC'\n))::date >= ss.\"seasonStart\"::date\n                  AND (now() AT TIME ZONE COALESCE(\n    NULLIF(l.settings #>> '{schedule,timezone}', ''),\n    NULLIF(l.settings #>> '{schedule,timeZone}', ''),\n    NULLIF(l.settings ->> 'timezone', ''),\n    NULLIF(l.settings ->> 'timeZone', ''), 'UTC'\n))::date <= ss.\"seasonEnd\"::date\n                  AND l.status NOT IN ('Drafting', 'In-Season', 'Completed')\n                  AND EXISTS (\n                    SELECT 1\n                    FROM \"DraftState\" ds\n                    WHERE ds.\"leagueId\" = l.id\n                      AND ds.status = 'complete'\n                  )\n            ",
+          "parameters": {
+            "reader_id": 2,
+            "scope_ids_1": 1
+          }
+        },
+        "completed": {
+          "sql": "\n                UPDATE \"League\" l\n                SET status = 'Completed',\n                    \"updatedAt\" = now()\n                FROM \"SportSeason\" ss\n                WHERE l.id IN (%(scope_ids_1)s) AND EXISTS (SELECT 1 FROM \"LeagueMember\" lm WHERE lm.\"leagueId\"=l.id AND lm.\"userId\"=%(reader_id)s) AND ss.\"sportId\" = l.sport\n                  AND ss.\"seasonYear\" = l.\"seasonYear\"\n                  AND (now() AT TIME ZONE COALESCE(\n    NULLIF(l.settings #>> '{schedule,timezone}', ''),\n    NULLIF(l.settings #>> '{schedule,timeZone}', ''),\n    NULLIF(l.settings ->> 'timezone', ''),\n    NULLIF(l.settings ->> 'timeZone', ''), 'UTC'\n))::date > ss.\"seasonEnd\"::date\n                  AND l.status <> 'Completed'\n            ",
+          "parameters": {
+            "reader_id": 2,
+            "scope_ids_1": 1
+          }
+        },
+        "read": {
+          "sql": "\n            SELECT\n            -- League fields\n            l.id                AS \"leagueId\",\n            l.\"createdAt\"       AS \"leagueCreatedAt\",\n            l.\"name\"            AS \"leagueName\",\n            l.\"numPlayers\"      AS \"numPlayers\",\n            l.status            AS \"status\",\n            l.\"updatedAt\"       AS \"updatedAt\",\n            l.\"draftDate\"       AS \"draftDate\",\n            l.\"tradeDeadline\"   AS \"tradeDeadline\",\n            l.\"freeAgentDeadline\" AS \"freeAgentDeadline\",\n            l.\"seasonYear\"      AS \"seasonYear\",\n            l.\"settings\"        AS \"settings\",\n\n            -- Commissioner info\n            cu.\"displayName\"    AS \"commissionerDisplayName\",\n            cu.\"id\"             AS \"commissionerId\",\n\n            -- Sport info\n            s.name              AS \"sport\",\n            s.\"maxPlayersToHaveMaxRounds\" AS \"maxPlayersToHaveMaxRounds\",\n\n            -- Member-specific fields for this user\n            lm.id               AS \"memberId\",\n            lm.\"teamName\"       AS \"teamName\",\n            lm.\"draftOrder\"     AS \"draftOrder\",\n            COALESCE(sp.\"seasonPoints\", lm.\"seasonPoints\", 0) AS \"seasonPoints\",\n\n            -- Current week info (nullable if no matching week)\n            w.id                AS \"currentWeekId\",\n            w.\"weekNumber\"      AS \"currentWeekNumber\",\n            w.\"startDate\"       AS \"currentWeekStartDate\",\n            w.\"endDate\"         AS \"currentWeekEndDate\"\n\n            FROM \"LeagueMember\" lm\n            JOIN \"League\"      l  ON l.id = lm.\"leagueId\"\n            JOIN \"Sport\"       s  ON s.id = l.\"sport\"\n            JOIN \"User\"        cu ON cu.id = l.commissioner\n            LEFT JOIN (\n                SELECT\n                    wts.\"leagueId\",\n                    wts.\"memberId\",\n                    SUM(wts.\"pointsAwarded\") AS \"seasonPoints\"\n                FROM \"WeeklyTeamScore\" wts\n                JOIN \"Week\" w\n                  ON w.id = wts.\"weekId\"\n                 AND w.\"weekNumber\" >= 0\n                GROUP BY wts.\"leagueId\", wts.\"memberId\"\n            ) sp\n            ON sp.\"leagueId\" = lm.\"leagueId\"\n            AND sp.\"memberId\" = lm.id\n\n            LEFT JOIN \"Week\"   w\n            ON w.\"leagueId\" = l.id\n            AND now() >= COALESCE(\n                w.\"startDate\",\n                w.\"endDate\" + interval '1 microsecond' - interval '7 days'\n            )\n            AND now() <= w.\"endDate\"\n\n            WHERE lm.\"userId\" = %(user_id)s AND l.id IN (%(scope_ids_1)s)\n         ORDER BY l.id, lm.\"draftOrder\"",
+          "parameters": {
+            "user_id": 2,
+            "scope_ids_1": 1
+          }
+        }
+      },
+      "invocations": 6
+    },
+    {
+      "contract": "authorized-scoped-v2",
+      "call": "mine",
+      "mode": "steady",
+      "leagues": 100,
+      "result_projection": {
+        "rows": 1,
+        "canonical_json_bytes": 190,
+        "sha256": "09ab0d4544134c33ef64867f50eef676b9421ec38a6c222f1a700d45e24d28cc"
+      },
+      "final_statuses": {
+        "rows": 100,
+        "canonical_json_bytes": 3083,
+        "sha256": "3b97943e5147ecc54669490f284fd8a6a9197fbdbda92a7388fee541938dfda0"
+      },
+      "samples": [
+        {
+          "total_ms": 4.43450000602752,
+          "sequence": [
+            "candidates",
+            "state_lock",
+            "league_lock",
+            "state_check",
+            "authorize",
+            "pre",
+            "drafting",
+            "post",
+            "in_season",
+            "completed",
+            "read"
+          ],
+          "statements": {
+            "candidates": 1,
+            "state_lock": 1,
+            "league_lock": 1,
+            "state_check": 1,
+            "authorize": 1,
+            "pre": 1,
+            "drafting": 1,
+            "post": 1,
+            "in_season": 1,
+            "completed": 1,
+            "read": 1
+          },
+          "phase_rows": {
+            "pre": 0,
+            "drafting": 0,
+            "post": 0,
+            "in_season": 0,
+            "completed": 0
+          },
+          "row_updates": 0,
+          "touched_ids": [],
+          "changed_ids": []
+        },
+        {
+          "total_ms": 4.744582998682745,
+          "sequence": [
+            "candidates",
+            "state_lock",
+            "league_lock",
+            "state_check",
+            "authorize",
+            "pre",
+            "drafting",
+            "post",
+            "in_season",
+            "completed",
+            "read"
+          ],
+          "statements": {
+            "candidates": 1,
+            "state_lock": 1,
+            "league_lock": 1,
+            "state_check": 1,
+            "authorize": 1,
+            "pre": 1,
+            "drafting": 1,
+            "post": 1,
+            "in_season": 1,
+            "completed": 1,
+            "read": 1
+          },
+          "phase_rows": {
+            "pre": 0,
+            "drafting": 0,
+            "post": 0,
+            "in_season": 0,
+            "completed": 0
+          },
+          "row_updates": 0,
+          "touched_ids": [],
+          "changed_ids": []
+        },
+        {
+          "total_ms": 4.291041987016797,
+          "sequence": [
+            "candidates",
+            "state_lock",
+            "league_lock",
+            "state_check",
+            "authorize",
+            "pre",
+            "drafting",
+            "post",
+            "in_season",
+            "completed",
+            "read"
+          ],
+          "statements": {
+            "candidates": 1,
+            "state_lock": 1,
+            "league_lock": 1,
+            "state_check": 1,
+            "authorize": 1,
+            "pre": 1,
+            "drafting": 1,
+            "post": 1,
+            "in_season": 1,
+            "completed": 1,
+            "read": 1
+          },
+          "phase_rows": {
+            "pre": 0,
+            "drafting": 0,
+            "post": 0,
+            "in_season": 0,
+            "completed": 0
+          },
+          "row_updates": 0,
+          "touched_ids": [],
+          "changed_ids": []
+        },
+        {
+          "total_ms": 5.473291996167973,
+          "sequence": [
+            "candidates",
+            "state_lock",
+            "league_lock",
+            "state_check",
+            "authorize",
+            "pre",
+            "drafting",
+            "post",
+            "in_season",
+            "completed",
+            "read"
+          ],
+          "statements": {
+            "candidates": 1,
+            "state_lock": 1,
+            "league_lock": 1,
+            "state_check": 1,
+            "authorize": 1,
+            "pre": 1,
+            "drafting": 1,
+            "post": 1,
+            "in_season": 1,
+            "completed": 1,
+            "read": 1
+          },
+          "phase_rows": {
+            "pre": 0,
+            "drafting": 0,
+            "post": 0,
+            "in_season": 0,
+            "completed": 0
+          },
+          "row_updates": 0,
+          "touched_ids": [],
+          "changed_ids": []
+        },
+        {
+          "total_ms": 4.932625000947155,
+          "sequence": [
+            "candidates",
+            "state_lock",
+            "league_lock",
+            "state_check",
+            "authorize",
+            "pre",
+            "drafting",
+            "post",
+            "in_season",
+            "completed",
+            "read"
+          ],
+          "statements": {
+            "candidates": 1,
+            "state_lock": 1,
+            "league_lock": 1,
+            "state_check": 1,
+            "authorize": 1,
+            "pre": 1,
+            "drafting": 1,
+            "post": 1,
+            "in_season": 1,
+            "completed": 1,
+            "read": 1
+          },
+          "phase_rows": {
+            "pre": 0,
+            "drafting": 0,
+            "post": 0,
+            "in_season": 0,
+            "completed": 0
+          },
+          "row_updates": 0,
+          "touched_ids": [],
+          "changed_ids": []
+        }
+      ],
+      "median_total_ms": 4.744582998682745,
+      "statement_examples": {
+        "candidates": {
+          "sql": "SELECT l.id FROM \"League\" l WHERE EXISTS (SELECT 1 FROM \"LeagueMember\" lm WHERE lm.\"leagueId\"=l.id AND lm.\"userId\"=%(reader_id)s)  ORDER BY l.id",
+          "parameters": {
+            "reader_id": 2
+          }
+        },
+        "state_lock": {
+          "sql": "SELECT \"leagueId\" FROM \"DraftState\" WHERE \"leagueId\"=%(id)s FOR UPDATE",
+          "parameters": {
+            "id": 1
+          }
+        },
+        "league_lock": {
+          "sql": "SELECT id FROM \"League\" WHERE id=%(id)s FOR UPDATE",
+          "parameters": {
+            "id": 1
+          }
+        },
+        "state_check": {
+          "sql": "SELECT \"leagueId\" FROM \"DraftState\" WHERE \"leagueId\"=%(id)s",
+          "parameters": {
+            "id": 1
+          }
+        },
+        "authorize": {
+          "sql": "SELECT l.id FROM \"League\" l WHERE l.id=%(id)s AND EXISTS (SELECT 1 FROM \"LeagueMember\" lm WHERE lm.\"leagueId\"=l.id AND lm.\"userId\"=%(reader_id)s)",
+          "parameters": {
+            "id": 1,
+            "reader_id": 2
+          }
+        },
+        "pre": {
+          "sql": "\n                UPDATE \"League\" l\n                SET status = 'Pre-Draft',\n                    \"updatedAt\" = now()\n                WHERE l.id IN (%(scope_ids_1)s) AND EXISTS (SELECT 1 FROM \"LeagueMember\" lm WHERE lm.\"leagueId\"=l.id AND lm.\"userId\"=%(reader_id)s) AND l.status NOT IN ('Pre-Draft', 'Completed')\n                  AND NOT EXISTS (\n                    SELECT 1\n                    FROM \"DraftState\" ds\n                    WHERE ds.\"leagueId\" = l.id\n                      AND ds.status IN ('live', 'paused', 'complete')\n                  )\n            ",
+          "parameters": {
+            "reader_id": 2,
+            "scope_ids_1": 1
+          }
+        },
+        "drafting": {
+          "sql": "\n                UPDATE \"League\" l\n                SET status = 'Drafting',\n                    \"updatedAt\" = now()\n                FROM \"DraftState\" ds\n                WHERE l.id IN (%(scope_ids_1)s) AND EXISTS (SELECT 1 FROM \"LeagueMember\" lm WHERE lm.\"leagueId\"=l.id AND lm.\"userId\"=%(reader_id)s) AND ds.\"leagueId\" = l.id\n                  AND ds.status IN ('live', 'paused')\n                  AND l.status <> 'Drafting'\n            ",
+          "parameters": {
+            "reader_id": 2,
+            "scope_ids_1": 1
+          }
+        },
+        "post": {
+          "sql": "\n                UPDATE \"League\" l\n                SET status = 'Post-Draft',\n                    \"updatedAt\" = now()\n                FROM \"League\" source\n                JOIN \"SportSeason\" ss\n                  ON ss.\"sportId\" = source.sport\n                 AND ss.\"seasonYear\" = source.\"seasonYear\"\n                LEFT JOIN \"DraftState\" ds ON ds.\"leagueId\" = source.id\n                WHERE l.id IN (%(scope_ids_1)s) AND EXISTS (SELECT 1 FROM \"LeagueMember\" lm WHERE lm.\"leagueId\"=l.id AND lm.\"userId\"=%(reader_id)s) AND source.id = l.id\n                  AND ds.status = 'complete'\n                  AND (now() AT TIME ZONE COALESCE(\n    NULLIF(l.settings #>> '{schedule,timezone}', ''),\n    NULLIF(l.settings #>> '{schedule,timeZone}', ''),\n    NULLIF(l.settings ->> 'timezone', ''),\n    NULLIF(l.settings ->> 'timeZone', ''), 'UTC'\n))::date < ss.\"seasonStart\"::date\n                  AND l.status <> 'Completed'\n                  AND l.status <> 'Post-Draft'\n            ",
+          "parameters": {
+            "reader_id": 2,
+            "scope_ids_1": 1
+          }
+        },
+        "in_season": {
+          "sql": "\n                UPDATE \"League\" l\n                SET status = 'In-Season',\n                    \"updatedAt\" = now()\n                FROM \"SportSeason\" ss\n                WHERE l.id IN (%(scope_ids_1)s) AND EXISTS (SELECT 1 FROM \"LeagueMember\" lm WHERE lm.\"leagueId\"=l.id AND lm.\"userId\"=%(reader_id)s) AND ss.\"sportId\" = l.sport\n                  AND ss.\"seasonYear\" = l.\"seasonYear\"\n                  AND (now() AT TIME ZONE COALESCE(\n    NULLIF(l.settings #>> '{schedule,timezone}', ''),\n    NULLIF(l.settings #>> '{schedule,timeZone}', ''),\n    NULLIF(l.settings ->> 'timezone', ''),\n    NULLIF(l.settings ->> 'timeZone', ''), 'UTC'\n))::date >= ss.\"seasonStart\"::date\n                  AND (now() AT TIME ZONE COALESCE(\n    NULLIF(l.settings #>> '{schedule,timezone}', ''),\n    NULLIF(l.settings #>> '{schedule,timeZone}', ''),\n    NULLIF(l.settings ->> 'timezone', ''),\n    NULLIF(l.settings ->> 'timeZone', ''), 'UTC'\n))::date <= ss.\"seasonEnd\"::date\n                  AND l.status NOT IN ('Drafting', 'In-Season', 'Completed')\n                  AND EXISTS (\n                    SELECT 1\n                    FROM \"DraftState\" ds\n                    WHERE ds.\"leagueId\" = l.id\n                      AND ds.status = 'complete'\n                  )\n            ",
+          "parameters": {
+            "reader_id": 2,
+            "scope_ids_1": 1
+          }
+        },
+        "completed": {
+          "sql": "\n                UPDATE \"League\" l\n                SET status = 'Completed',\n                    \"updatedAt\" = now()\n                FROM \"SportSeason\" ss\n                WHERE l.id IN (%(scope_ids_1)s) AND EXISTS (SELECT 1 FROM \"LeagueMember\" lm WHERE lm.\"leagueId\"=l.id AND lm.\"userId\"=%(reader_id)s) AND ss.\"sportId\" = l.sport\n                  AND ss.\"seasonYear\" = l.\"seasonYear\"\n                  AND (now() AT TIME ZONE COALESCE(\n    NULLIF(l.settings #>> '{schedule,timezone}', ''),\n    NULLIF(l.settings #>> '{schedule,timeZone}', ''),\n    NULLIF(l.settings ->> 'timezone', ''),\n    NULLIF(l.settings ->> 'timeZone', ''), 'UTC'\n))::date > ss.\"seasonEnd\"::date\n                  AND l.status <> 'Completed'\n            ",
+          "parameters": {
+            "reader_id": 2,
+            "scope_ids_1": 1
+          }
+        },
+        "read": {
+          "sql": "\n            SELECT\n            -- League fields\n            l.id                AS \"leagueId\",\n            l.\"createdAt\"       AS \"leagueCreatedAt\",\n            l.\"name\"            AS \"leagueName\",\n            l.\"numPlayers\"      AS \"numPlayers\",\n            l.status            AS \"status\",\n            l.\"updatedAt\"       AS \"updatedAt\",\n            l.\"draftDate\"       AS \"draftDate\",\n            l.\"tradeDeadline\"   AS \"tradeDeadline\",\n            l.\"freeAgentDeadline\" AS \"freeAgentDeadline\",\n            l.\"seasonYear\"      AS \"seasonYear\",\n            l.\"settings\"        AS \"settings\",\n\n            -- Commissioner info\n            cu.\"displayName\"    AS \"commissionerDisplayName\",\n            cu.\"id\"             AS \"commissionerId\",\n\n            -- Sport info\n            s.name              AS \"sport\",\n            s.\"maxPlayersToHaveMaxRounds\" AS \"maxPlayersToHaveMaxRounds\",\n\n            -- Member-specific fields for this user\n            lm.id               AS \"memberId\",\n            lm.\"teamName\"       AS \"teamName\",\n            lm.\"draftOrder\"     AS \"draftOrder\",\n            COALESCE(sp.\"seasonPoints\", lm.\"seasonPoints\", 0) AS \"seasonPoints\",\n\n            -- Current week info (nullable if no matching week)\n            w.id                AS \"currentWeekId\",\n            w.\"weekNumber\"      AS \"currentWeekNumber\",\n            w.\"startDate\"       AS \"currentWeekStartDate\",\n            w.\"endDate\"         AS \"currentWeekEndDate\"\n\n            FROM \"LeagueMember\" lm\n            JOIN \"League\"      l  ON l.id = lm.\"leagueId\"\n            JOIN \"Sport\"       s  ON s.id = l.\"sport\"\n            JOIN \"User\"        cu ON cu.id = l.commissioner\n            LEFT JOIN (\n                SELECT\n                    wts.\"leagueId\",\n                    wts.\"memberId\",\n                    SUM(wts.\"pointsAwarded\") AS \"seasonPoints\"\n                FROM \"WeeklyTeamScore\" wts\n                JOIN \"Week\" w\n                  ON w.id = wts.\"weekId\"\n                 AND w.\"weekNumber\" >= 0\n                GROUP BY wts.\"leagueId\", wts.\"memberId\"\n            ) sp\n            ON sp.\"leagueId\" = lm.\"leagueId\"\n            AND sp.\"memberId\" = lm.id\n\n            LEFT JOIN \"Week\"   w\n            ON w.\"leagueId\" = l.id\n            AND now() >= COALESCE(\n                w.\"startDate\",\n                w.\"endDate\" + interval '1 microsecond' - interval '7 days'\n            )\n            AND now() <= w.\"endDate\"\n\n            WHERE lm.\"userId\" = %(user_id)s AND l.id IN (%(scope_ids_1)s)\n         ORDER BY l.id, lm.\"draftOrder\"",
+          "parameters": {
+            "user_id": 2,
+            "scope_ids_1": 1
+          }
+        }
+      },
+      "invocations": 6
+    }
+  ],
+  "equivalence": {
+    "fixed_transaction_instant": "2026-11-16T21:01:50.892611+00:00",
+    "cases": [
+      {
+        "mode": "dirty",
+        "kind": "detail",
+        "target": 1,
+        "user": 2,
+        "stage": null,
+        "scope": [
+          1
+        ],
+        "sequence": [
+          "candidates",
+          "state_lock",
+          "league_lock",
+          "state_check",
+          "authorize",
+          "pre",
+          "drafting",
+          "post",
+          "in_season",
+          "completed",
+          "read"
+        ],
+        "phase_rows": [
+          {
+            "phase": "pre",
+            "rows": 1
+          },
+          {
+            "phase": "drafting",
+            "rows": 0
+          },
+          {
+            "phase": "post",
+            "rows": 0
+          },
+          {
+            "phase": "in_season",
+            "rows": 0
+          },
+          {
+            "phase": "completed",
+            "rows": 0
+          }
+        ],
+        "full_payload": {
+          "rows": 1,
+          "canonical_json_bytes": 503,
+          "sha256": "1556e2b5a0099c55ea3fceb045118595701d7048b814605a16ca0fb65f044ac6"
+        },
+        "touched_ids": [
+          1
+        ]
+      },
+      {
+        "mode": "dirty",
+        "kind": "detail",
+        "target": 2,
+        "user": 2,
+        "stage": null,
+        "scope": [
+          2
+        ],
+        "sequence": [
+          "candidates",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "pre",
+          "drafting",
+          "post",
+          "in_season",
+          "completed",
+          "read"
+        ],
+        "phase_rows": [
+          {
+            "phase": "pre",
+            "rows": 0
+          },
+          {
+            "phase": "drafting",
+            "rows": 1
+          },
+          {
+            "phase": "post",
+            "rows": 0
+          },
+          {
+            "phase": "in_season",
+            "rows": 0
+          },
+          {
+            "phase": "completed",
+            "rows": 0
+          }
+        ],
+        "full_payload": {
+          "rows": 1,
+          "canonical_json_bytes": 502,
+          "sha256": "55b8d61a66da76275d9036cf05dc33d899f895190395dc2a87e33950e726a447"
+        },
+        "touched_ids": [
+          2
+        ]
+      },
+      {
+        "mode": "dirty",
+        "kind": "detail",
+        "target": 3,
+        "user": 2,
+        "stage": null,
+        "scope": [
+          3
+        ],
+        "sequence": [
+          "candidates",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "pre",
+          "drafting",
+          "post",
+          "in_season",
+          "completed",
+          "read"
+        ],
+        "phase_rows": [
+          {
+            "phase": "pre",
+            "rows": 0
+          },
+          {
+            "phase": "drafting",
+            "rows": 1
+          },
+          {
+            "phase": "post",
+            "rows": 0
+          },
+          {
+            "phase": "in_season",
+            "rows": 0
+          },
+          {
+            "phase": "completed",
+            "rows": 0
+          }
+        ],
+        "full_payload": {
+          "rows": 1,
+          "canonical_json_bytes": 502,
+          "sha256": "0437e6be950d0fd7ad313fe46a640e8de6bb9c1e9d60c830b618b817d1b28d65"
+        },
+        "touched_ids": [
+          3
+        ]
+      },
+      {
+        "mode": "dirty",
+        "kind": "detail",
+        "target": 4,
+        "user": 2,
+        "stage": null,
+        "scope": [
+          4
+        ],
+        "sequence": [
+          "candidates",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "pre",
+          "drafting",
+          "post",
+          "in_season",
+          "completed",
+          "read"
+        ],
+        "phase_rows": [
+          {
+            "phase": "pre",
+            "rows": 0
+          },
+          {
+            "phase": "drafting",
+            "rows": 0
+          },
+          {
+            "phase": "post",
+            "rows": 1
+          },
+          {
+            "phase": "in_season",
+            "rows": 0
+          },
+          {
+            "phase": "completed",
+            "rows": 0
+          }
+        ],
+        "full_payload": {
+          "rows": 1,
+          "canonical_json_bytes": 504,
+          "sha256": "b2173ec623669bcfe570a583f2ee1763f0092de97b3262fdb5c392f9d9cd7207"
+        },
+        "touched_ids": [
+          4
+        ]
+      },
+      {
+        "mode": "dirty",
+        "kind": "detail",
+        "target": 5,
+        "user": 2,
+        "stage": null,
+        "scope": [
+          5
+        ],
+        "sequence": [
+          "candidates",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "pre",
+          "drafting",
+          "post",
+          "in_season",
+          "completed",
+          "read"
+        ],
+        "phase_rows": [
+          {
+            "phase": "pre",
+            "rows": 0
+          },
+          {
+            "phase": "drafting",
+            "rows": 0
+          },
+          {
+            "phase": "post",
+            "rows": 0
+          },
+          {
+            "phase": "in_season",
+            "rows": 1
+          },
+          {
+            "phase": "completed",
+            "rows": 0
+          }
+        ],
+        "full_payload": {
+          "rows": 1,
+          "canonical_json_bytes": 503,
+          "sha256": "b2710889e812934da7ae8d0457b55a1692621511a2f996119f28e7b6b18a539a"
+        },
+        "touched_ids": [
+          5
+        ]
+      },
+      {
+        "mode": "dirty",
+        "kind": "detail",
+        "target": 6,
+        "user": 2,
+        "stage": null,
+        "scope": [
+          6
+        ],
+        "sequence": [
+          "candidates",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "pre",
+          "drafting",
+          "post",
+          "in_season",
+          "completed",
+          "read"
+        ],
+        "phase_rows": [
+          {
+            "phase": "pre",
+            "rows": 0
+          },
+          {
+            "phase": "drafting",
+            "rows": 0
+          },
+          {
+            "phase": "post",
+            "rows": 0
+          },
+          {
+            "phase": "in_season",
+            "rows": 0
+          },
+          {
+            "phase": "completed",
+            "rows": 1
+          }
+        ],
+        "full_payload": {
+          "rows": 1,
+          "canonical_json_bytes": 503,
+          "sha256": "ae0ac2ce71cbfa912594e148c747e0a8fef30c03487b73fdb61eeec3afb90c7e"
+        },
+        "touched_ids": [
+          6
+        ]
+      },
+      {
+        "mode": "dirty",
+        "kind": "detail",
+        "target": 7,
+        "user": 2,
+        "stage": null,
+        "scope": [
+          7
+        ],
+        "sequence": [
+          "candidates",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "pre",
+          "drafting",
+          "post",
+          "in_season",
+          "completed",
+          "read"
+        ],
+        "phase_rows": [
+          {
+            "phase": "pre",
+            "rows": 0
+          },
+          {
+            "phase": "drafting",
+            "rows": 1
+          },
+          {
+            "phase": "post",
+            "rows": 0
+          },
+          {
+            "phase": "in_season",
+            "rows": 0
+          },
+          {
+            "phase": "completed",
+            "rows": 1
+          }
+        ],
+        "full_payload": {
+          "rows": 1,
+          "canonical_json_bytes": 503,
+          "sha256": "2148ddda83df4fab72304e0c0cbd8694be31c8b2ac7f2d8c6ec3805cba336684"
+        },
+        "touched_ids": [
+          7
+        ]
+      },
+      {
+        "mode": "dirty",
+        "kind": "detail",
+        "target": 8,
+        "user": 2,
+        "stage": null,
+        "scope": [
+          8
+        ],
+        "sequence": [
+          "candidates",
+          "state_lock",
+          "league_lock",
+          "state_check",
+          "authorize",
+          "pre",
+          "drafting",
+          "post",
+          "in_season",
+          "completed",
+          "read"
+        ],
+        "phase_rows": [
+          {
+            "phase": "pre",
+            "rows": 0
+          },
+          {
+            "phase": "drafting",
+            "rows": 0
+          },
+          {
+            "phase": "post",
+            "rows": 0
+          },
+          {
+            "phase": "in_season",
+            "rows": 0
+          },
+          {
+            "phase": "completed",
+            "rows": 0
+          }
+        ],
+        "full_payload": {
+          "rows": 1,
+          "canonical_json_bytes": 497,
+          "sha256": "4e6529e5f55524dea1041879e8419bcd2ed8679f70ac23a831ab7db8466aa51c"
+        },
+        "touched_ids": []
+      },
+      {
+        "mode": "dirty",
+        "kind": "detail",
+        "target": 9,
+        "user": 2,
+        "stage": null,
+        "scope": [
+          9
+        ],
+        "sequence": [
+          "candidates",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "pre",
+          "drafting",
+          "post",
+          "in_season",
+          "completed",
+          "read"
+        ],
+        "phase_rows": [
+          {
+            "phase": "pre",
+            "rows": 0
+          },
+          {
+            "phase": "drafting",
+            "rows": 0
+          },
+          {
+            "phase": "post",
+            "rows": 0
+          },
+          {
+            "phase": "in_season",
+            "rows": 0
+          },
+          {
+            "phase": "completed",
+            "rows": 0
+          }
+        ],
+        "full_payload": {
+          "rows": 1,
+          "canonical_json_bytes": 497,
+          "sha256": "0e737adc20a981573a40bbc524e173bfb4c25f47da2a72a75126573a4085105a"
+        },
+        "touched_ids": []
+      },
+      {
+        "mode": "dirty",
+        "kind": "detail",
+        "target": 10,
+        "user": 2,
+        "stage": null,
+        "scope": [
+          10
+        ],
+        "sequence": [
+          "candidates",
+          "state_lock",
+          "league_lock",
+          "state_check",
+          "authorize",
+          "pre",
+          "drafting",
+          "post",
+          "in_season",
+          "completed",
+          "read"
+        ],
+        "phase_rows": [
+          {
+            "phase": "pre",
+            "rows": 1
+          },
+          {
+            "phase": "drafting",
+            "rows": 0
+          },
+          {
+            "phase": "post",
+            "rows": 0
+          },
+          {
+            "phase": "in_season",
+            "rows": 0
+          },
+          {
+            "phase": "completed",
+            "rows": 0
+          }
+        ],
+        "full_payload": {
+          "rows": 1,
+          "canonical_json_bytes": 506,
+          "sha256": "66d5411fddb40a742cfb01384896e0a0f615d8118cd85afedba585c7c5bc6fdf"
+        },
+        "touched_ids": [
+          10
+        ]
+      },
+      {
+        "mode": "dirty",
+        "kind": "detail",
+        "target": 11,
+        "user": 1,
+        "stage": null,
+        "scope": [
+          11
+        ],
+        "sequence": [
+          "candidates",
+          "state_lock",
+          "league_lock",
+          "state_check",
+          "authorize",
+          "pre",
+          "drafting",
+          "post",
+          "in_season",
+          "completed",
+          "read"
+        ],
+        "phase_rows": [
+          {
+            "phase": "pre",
+            "rows": 1
+          },
+          {
+            "phase": "drafting",
+            "rows": 0
+          },
+          {
+            "phase": "post",
+            "rows": 0
+          },
+          {
+            "phase": "in_season",
+            "rows": 0
+          },
+          {
+            "phase": "completed",
+            "rows": 0
+          }
+        ],
+        "full_payload": {
+          "rows": 1,
+          "canonical_json_bytes": 506,
+          "sha256": "abc9dc475d78a3313ef96a4c80c62cc416114274bb06c1c92df1b067b59b2a71"
+        },
+        "touched_ids": [
+          11
+        ]
+      },
+      {
+        "mode": "dirty",
+        "kind": "detail",
+        "target": 1,
+        "user": 99999,
+        "stage": null,
+        "scope": [],
+        "sequence": [
+          "candidates"
+        ],
+        "phase_rows": [],
+        "full_payload": {
+          "rows": 0,
+          "canonical_json_bytes": 2,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "touched_ids": []
+      },
+      {
+        "mode": "dirty",
+        "kind": "detail",
+        "target": 9999,
+        "user": 2,
+        "stage": null,
+        "scope": [],
+        "sequence": [
+          "candidates"
+        ],
+        "phase_rows": [],
+        "full_payload": {
+          "rows": 0,
+          "canonical_json_bytes": 2,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "touched_ids": []
+      },
+      {
+        "mode": "dirty",
+        "kind": "mine",
+        "target": null,
+        "user": 2,
+        "stage": "all",
+        "scope": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ],
+        "sequence": [
+          "candidates",
+          "state_lock",
+          "league_lock",
+          "state_check",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "state_check",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "state_check",
+          "authorize",
+          "pre",
+          "drafting",
+          "post",
+          "in_season",
+          "completed",
+          "read"
+        ],
+        "phase_rows": [
+          {
+            "phase": "pre",
+            "rows": 2
+          },
+          {
+            "phase": "drafting",
+            "rows": 3
+          },
+          {
+            "phase": "post",
+            "rows": 1
+          },
+          {
+            "phase": "in_season",
+            "rows": 1
+          },
+          {
+            "phase": "completed",
+            "rows": 2
+          }
+        ],
+        "full_payload": {
+          "rows": 10,
+          "canonical_json_bytes": 6440,
+          "sha256": "e3080f87fea48a60099ea93818e2549c8e4d1b35fddd308c3d607564793aa30d"
+        },
+        "touched_ids": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          10
+        ]
+      },
+      {
+        "mode": "dirty",
+        "kind": "mine",
+        "target": null,
+        "user": 2,
+        "stage": "active",
+        "scope": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ],
+        "sequence": [
+          "candidates",
+          "state_lock",
+          "league_lock",
+          "state_check",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "state_check",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "state_check",
+          "authorize",
+          "pre",
+          "drafting",
+          "post",
+          "in_season",
+          "completed",
+          "read"
+        ],
+        "phase_rows": [
+          {
+            "phase": "pre",
+            "rows": 2
+          },
+          {
+            "phase": "drafting",
+            "rows": 3
+          },
+          {
+            "phase": "post",
+            "rows": 1
+          },
+          {
+            "phase": "in_season",
+            "rows": 1
+          },
+          {
+            "phase": "completed",
+            "rows": 2
+          }
+        ],
+        "full_payload": {
+          "rows": 7,
+          "canonical_json_bytes": 4511,
+          "sha256": "36c861e8cacd3b72124ffa513c043a71f25f7caa3a04ba3b77873155e715f3a9"
+        },
+        "touched_ids": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          10
+        ]
+      },
+      {
+        "mode": "dirty",
+        "kind": "mine",
+        "target": null,
+        "user": 2,
+        "stage": "completed",
+        "scope": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ],
+        "sequence": [
+          "candidates",
+          "state_lock",
+          "league_lock",
+          "state_check",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "state_check",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "state_check",
+          "authorize",
+          "pre",
+          "drafting",
+          "post",
+          "in_season",
+          "completed",
+          "read"
+        ],
+        "phase_rows": [
+          {
+            "phase": "pre",
+            "rows": 2
+          },
+          {
+            "phase": "drafting",
+            "rows": 3
+          },
+          {
+            "phase": "post",
+            "rows": 1
+          },
+          {
+            "phase": "in_season",
+            "rows": 1
+          },
+          {
+            "phase": "completed",
+            "rows": 2
+          }
+        ],
+        "full_payload": {
+          "rows": 3,
+          "canonical_json_bytes": 1930,
+          "sha256": "504a218bdf2429ac2fc4ee5cee2e176ad1e8b7a9845f966df7b838e5177da9cb"
+        },
+        "touched_ids": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          10
+        ]
+      },
+      {
+        "mode": "dirty",
+        "kind": "mine",
+        "target": null,
+        "user": 99999,
+        "stage": "all",
+        "scope": [],
+        "sequence": [
+          "candidates"
+        ],
+        "phase_rows": [],
+        "full_payload": {
+          "rows": 0,
+          "canonical_json_bytes": 2,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "touched_ids": []
+      },
+      {
+        "mode": "steady",
+        "kind": "detail",
+        "target": 1,
+        "user": 2,
+        "stage": null,
+        "scope": [
+          1
+        ],
+        "sequence": [
+          "candidates",
+          "state_lock",
+          "league_lock",
+          "state_check",
+          "authorize",
+          "pre",
+          "drafting",
+          "post",
+          "in_season",
+          "completed",
+          "read"
+        ],
+        "phase_rows": [
+          {
+            "phase": "pre",
+            "rows": 0
+          },
+          {
+            "phase": "drafting",
+            "rows": 0
+          },
+          {
+            "phase": "post",
+            "rows": 0
+          },
+          {
+            "phase": "in_season",
+            "rows": 0
+          },
+          {
+            "phase": "completed",
+            "rows": 0
+          }
+        ],
+        "full_payload": {
+          "rows": 1,
+          "canonical_json_bytes": 496,
+          "sha256": "a9025744a73b0b5cdb803b2ca9ba43f629f758d3df71ab2aec80bf3bc67a39d3"
+        },
+        "touched_ids": []
+      },
+      {
+        "mode": "steady",
+        "kind": "detail",
+        "target": 2,
+        "user": 2,
+        "stage": null,
+        "scope": [
+          2
+        ],
+        "sequence": [
+          "candidates",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "pre",
+          "drafting",
+          "post",
+          "in_season",
+          "completed",
+          "read"
+        ],
+        "phase_rows": [
+          {
+            "phase": "pre",
+            "rows": 0
+          },
+          {
+            "phase": "drafting",
+            "rows": 0
+          },
+          {
+            "phase": "post",
+            "rows": 0
+          },
+          {
+            "phase": "in_season",
+            "rows": 0
+          },
+          {
+            "phase": "completed",
+            "rows": 0
+          }
+        ],
+        "full_payload": {
+          "rows": 1,
+          "canonical_json_bytes": 495,
+          "sha256": "f4b1c9167c7d5e8516490750260bfc42971a1904c8979bbd95a5f233f8d70d91"
+        },
+        "touched_ids": []
+      },
+      {
+        "mode": "steady",
+        "kind": "detail",
+        "target": 3,
+        "user": 2,
+        "stage": null,
+        "scope": [
+          3
+        ],
+        "sequence": [
+          "candidates",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "pre",
+          "drafting",
+          "post",
+          "in_season",
+          "completed",
+          "read"
+        ],
+        "phase_rows": [
+          {
+            "phase": "pre",
+            "rows": 0
+          },
+          {
+            "phase": "drafting",
+            "rows": 0
+          },
+          {
+            "phase": "post",
+            "rows": 0
+          },
+          {
+            "phase": "in_season",
+            "rows": 0
+          },
+          {
+            "phase": "completed",
+            "rows": 0
+          }
+        ],
+        "full_payload": {
+          "rows": 1,
+          "canonical_json_bytes": 495,
+          "sha256": "956dc318b602f83f6163580a8e3829c4d2f25f5d859eba37045d04298513ad0f"
+        },
+        "touched_ids": []
+      },
+      {
+        "mode": "steady",
+        "kind": "detail",
+        "target": 4,
+        "user": 2,
+        "stage": null,
+        "scope": [
+          4
+        ],
+        "sequence": [
+          "candidates",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "pre",
+          "drafting",
+          "post",
+          "in_season",
+          "completed",
+          "read"
+        ],
+        "phase_rows": [
+          {
+            "phase": "pre",
+            "rows": 0
+          },
+          {
+            "phase": "drafting",
+            "rows": 0
+          },
+          {
+            "phase": "post",
+            "rows": 0
+          },
+          {
+            "phase": "in_season",
+            "rows": 0
+          },
+          {
+            "phase": "completed",
+            "rows": 0
+          }
+        ],
+        "full_payload": {
+          "rows": 1,
+          "canonical_json_bytes": 497,
+          "sha256": "24e08e432f198c5d187764dc03d25e79cdda4e0715cdc6a1e7d177e825b2aad3"
+        },
+        "touched_ids": []
+      },
+      {
+        "mode": "steady",
+        "kind": "detail",
+        "target": 5,
+        "user": 2,
+        "stage": null,
+        "scope": [
+          5
+        ],
+        "sequence": [
+          "candidates",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "pre",
+          "drafting",
+          "post",
+          "in_season",
+          "completed",
+          "read"
+        ],
+        "phase_rows": [
+          {
+            "phase": "pre",
+            "rows": 0
+          },
+          {
+            "phase": "drafting",
+            "rows": 0
+          },
+          {
+            "phase": "post",
+            "rows": 0
+          },
+          {
+            "phase": "in_season",
+            "rows": 0
+          },
+          {
+            "phase": "completed",
+            "rows": 0
+          }
+        ],
+        "full_payload": {
+          "rows": 1,
+          "canonical_json_bytes": 496,
+          "sha256": "9035a31e94038ae0379490e94b28b7a6e717b2d3d1cc127fa74da5c4178f6d05"
+        },
+        "touched_ids": []
+      },
+      {
+        "mode": "steady",
+        "kind": "detail",
+        "target": 6,
+        "user": 2,
+        "stage": null,
+        "scope": [
+          6
+        ],
+        "sequence": [
+          "candidates",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "pre",
+          "drafting",
+          "post",
+          "in_season",
+          "completed",
+          "read"
+        ],
+        "phase_rows": [
+          {
+            "phase": "pre",
+            "rows": 0
+          },
+          {
+            "phase": "drafting",
+            "rows": 0
+          },
+          {
+            "phase": "post",
+            "rows": 0
+          },
+          {
+            "phase": "in_season",
+            "rows": 0
+          },
+          {
+            "phase": "completed",
+            "rows": 0
+          }
+        ],
+        "full_payload": {
+          "rows": 1,
+          "canonical_json_bytes": 496,
+          "sha256": "3b69d4882f4d6a21318cd8ec48563533be1e5686fc6766b0ec27d701517a97ee"
+        },
+        "touched_ids": []
+      },
+      {
+        "mode": "steady",
+        "kind": "detail",
+        "target": 7,
+        "user": 2,
+        "stage": null,
+        "scope": [
+          7
+        ],
+        "sequence": [
+          "candidates",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "pre",
+          "drafting",
+          "post",
+          "in_season",
+          "completed",
+          "read"
+        ],
+        "phase_rows": [
+          {
+            "phase": "pre",
+            "rows": 0
+          },
+          {
+            "phase": "drafting",
+            "rows": 1
+          },
+          {
+            "phase": "post",
+            "rows": 0
+          },
+          {
+            "phase": "in_season",
+            "rows": 0
+          },
+          {
+            "phase": "completed",
+            "rows": 1
+          }
+        ],
+        "full_payload": {
+          "rows": 1,
+          "canonical_json_bytes": 503,
+          "sha256": "2148ddda83df4fab72304e0c0cbd8694be31c8b2ac7f2d8c6ec3805cba336684"
+        },
+        "touched_ids": [
+          7
+        ]
+      },
+      {
+        "mode": "steady",
+        "kind": "detail",
+        "target": 8,
+        "user": 2,
+        "stage": null,
+        "scope": [
+          8
+        ],
+        "sequence": [
+          "candidates",
+          "state_lock",
+          "league_lock",
+          "state_check",
+          "authorize",
+          "pre",
+          "drafting",
+          "post",
+          "in_season",
+          "completed",
+          "read"
+        ],
+        "phase_rows": [
+          {
+            "phase": "pre",
+            "rows": 0
+          },
+          {
+            "phase": "drafting",
+            "rows": 0
+          },
+          {
+            "phase": "post",
+            "rows": 0
+          },
+          {
+            "phase": "in_season",
+            "rows": 0
+          },
+          {
+            "phase": "completed",
+            "rows": 0
+          }
+        ],
+        "full_payload": {
+          "rows": 1,
+          "canonical_json_bytes": 497,
+          "sha256": "4e6529e5f55524dea1041879e8419bcd2ed8679f70ac23a831ab7db8466aa51c"
+        },
+        "touched_ids": []
+      },
+      {
+        "mode": "steady",
+        "kind": "detail",
+        "target": 9,
+        "user": 2,
+        "stage": null,
+        "scope": [
+          9
+        ],
+        "sequence": [
+          "candidates",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "pre",
+          "drafting",
+          "post",
+          "in_season",
+          "completed",
+          "read"
+        ],
+        "phase_rows": [
+          {
+            "phase": "pre",
+            "rows": 0
+          },
+          {
+            "phase": "drafting",
+            "rows": 0
+          },
+          {
+            "phase": "post",
+            "rows": 0
+          },
+          {
+            "phase": "in_season",
+            "rows": 0
+          },
+          {
+            "phase": "completed",
+            "rows": 0
+          }
+        ],
+        "full_payload": {
+          "rows": 1,
+          "canonical_json_bytes": 497,
+          "sha256": "0e737adc20a981573a40bbc524e173bfb4c25f47da2a72a75126573a4085105a"
+        },
+        "touched_ids": []
+      },
+      {
+        "mode": "steady",
+        "kind": "detail",
+        "target": 10,
+        "user": 2,
+        "stage": null,
+        "scope": [
+          10
+        ],
+        "sequence": [
+          "candidates",
+          "state_lock",
+          "league_lock",
+          "state_check",
+          "authorize",
+          "pre",
+          "drafting",
+          "post",
+          "in_season",
+          "completed",
+          "read"
+        ],
+        "phase_rows": [
+          {
+            "phase": "pre",
+            "rows": 0
+          },
+          {
+            "phase": "drafting",
+            "rows": 0
+          },
+          {
+            "phase": "post",
+            "rows": 0
+          },
+          {
+            "phase": "in_season",
+            "rows": 0
+          },
+          {
+            "phase": "completed",
+            "rows": 0
+          }
+        ],
+        "full_payload": {
+          "rows": 1,
+          "canonical_json_bytes": 499,
+          "sha256": "b9fff0383f2de7bf6202af1d3ad40d66072cbf184c732f1061fa554dc1f71ba9"
+        },
+        "touched_ids": []
+      },
+      {
+        "mode": "steady",
+        "kind": "detail",
+        "target": 11,
+        "user": 1,
+        "stage": null,
+        "scope": [
+          11
+        ],
+        "sequence": [
+          "candidates",
+          "state_lock",
+          "league_lock",
+          "state_check",
+          "authorize",
+          "pre",
+          "drafting",
+          "post",
+          "in_season",
+          "completed",
+          "read"
+        ],
+        "phase_rows": [
+          {
+            "phase": "pre",
+            "rows": 0
+          },
+          {
+            "phase": "drafting",
+            "rows": 0
+          },
+          {
+            "phase": "post",
+            "rows": 0
+          },
+          {
+            "phase": "in_season",
+            "rows": 0
+          },
+          {
+            "phase": "completed",
+            "rows": 0
+          }
+        ],
+        "full_payload": {
+          "rows": 1,
+          "canonical_json_bytes": 499,
+          "sha256": "4fb008208bfdc00ab6ed457fb7c12e402f8dbbc528a7db46647a3aacba098c4e"
+        },
+        "touched_ids": []
+      },
+      {
+        "mode": "steady",
+        "kind": "detail",
+        "target": 1,
+        "user": 99999,
+        "stage": null,
+        "scope": [],
+        "sequence": [
+          "candidates"
+        ],
+        "phase_rows": [],
+        "full_payload": {
+          "rows": 0,
+          "canonical_json_bytes": 2,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "touched_ids": []
+      },
+      {
+        "mode": "steady",
+        "kind": "detail",
+        "target": 9999,
+        "user": 2,
+        "stage": null,
+        "scope": [],
+        "sequence": [
+          "candidates"
+        ],
+        "phase_rows": [],
+        "full_payload": {
+          "rows": 0,
+          "canonical_json_bytes": 2,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "touched_ids": []
+      },
+      {
+        "mode": "steady",
+        "kind": "mine",
+        "target": null,
+        "user": 2,
+        "stage": "all",
+        "scope": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ],
+        "sequence": [
+          "candidates",
+          "state_lock",
+          "league_lock",
+          "state_check",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "state_check",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "state_check",
+          "authorize",
+          "pre",
+          "drafting",
+          "post",
+          "in_season",
+          "completed",
+          "read"
+        ],
+        "phase_rows": [
+          {
+            "phase": "pre",
+            "rows": 0
+          },
+          {
+            "phase": "drafting",
+            "rows": 1
+          },
+          {
+            "phase": "post",
+            "rows": 0
+          },
+          {
+            "phase": "in_season",
+            "rows": 0
+          },
+          {
+            "phase": "completed",
+            "rows": 1
+          }
+        ],
+        "full_payload": {
+          "rows": 10,
+          "canonical_json_bytes": 6391,
+          "sha256": "c9e828e4ca55ebeee4b76c6c362ce9359f7c00e95215c4ae3b72eb97c82dd8a3"
+        },
+        "touched_ids": [
+          7
+        ]
+      },
+      {
+        "mode": "steady",
+        "kind": "mine",
+        "target": null,
+        "user": 2,
+        "stage": "active",
+        "scope": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ],
+        "sequence": [
+          "candidates",
+          "state_lock",
+          "league_lock",
+          "state_check",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "state_check",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "state_check",
+          "authorize",
+          "pre",
+          "drafting",
+          "post",
+          "in_season",
+          "completed",
+          "read"
+        ],
+        "phase_rows": [
+          {
+            "phase": "pre",
+            "rows": 0
+          },
+          {
+            "phase": "drafting",
+            "rows": 1
+          },
+          {
+            "phase": "post",
+            "rows": 0
+          },
+          {
+            "phase": "in_season",
+            "rows": 0
+          },
+          {
+            "phase": "completed",
+            "rows": 1
+          }
+        ],
+        "full_payload": {
+          "rows": 7,
+          "canonical_json_bytes": 4469,
+          "sha256": "b21c8113514fccdcb88f81dd02fb0a2dc06208b6a177836f093d7d94ec4ba109"
+        },
+        "touched_ids": [
+          7
+        ]
+      },
+      {
+        "mode": "steady",
+        "kind": "mine",
+        "target": null,
+        "user": 2,
+        "stage": "completed",
+        "scope": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ],
+        "sequence": [
+          "candidates",
+          "state_lock",
+          "league_lock",
+          "state_check",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "state_check",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "authorize",
+          "state_lock",
+          "league_lock",
+          "state_check",
+          "authorize",
+          "pre",
+          "drafting",
+          "post",
+          "in_season",
+          "completed",
+          "read"
+        ],
+        "phase_rows": [
+          {
+            "phase": "pre",
+            "rows": 0
+          },
+          {
+            "phase": "drafting",
+            "rows": 1
+          },
+          {
+            "phase": "post",
+            "rows": 0
+          },
+          {
+            "phase": "in_season",
+            "rows": 0
+          },
+          {
+            "phase": "completed",
+            "rows": 1
+          }
+        ],
+        "full_payload": {
+          "rows": 3,
+          "canonical_json_bytes": 1923,
+          "sha256": "1bbb7db70be7946f873dfe64360a6dcbda55f190435acd02d4b517873c1640a6"
+        },
+        "touched_ids": [
+          7
+        ]
+      },
+      {
+        "mode": "steady",
+        "kind": "mine",
+        "target": null,
+        "user": 99999,
+        "stage": "all",
+        "scope": [],
+        "sequence": [
+          "candidates"
+        ],
+        "phase_rows": [],
+        "full_payload": {
+          "rows": 0,
+          "canonical_json_bytes": 2,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "touched_ids": []
+      }
+    ]
+  },
+  "rollback": [
+    {
+      "failure": "mark_pre_draft",
+      "rollback": true,
+      "retry": true
+    },
+    {
+      "failure": "mark_drafting",
+      "rollback": true,
+      "retry": true
+    },
+    {
+      "failure": "mark_post_draft",
+      "rollback": true,
+      "retry": true
+    },
+    {
+      "failure": "mark_in_season",
+      "rollback": true,
+      "retry": true
+    },
+    {
+      "failure": "mark_completed",
+      "rollback": true,
+      "retry": true
+    },
+    {
+      "failure": "read",
+      "rollback": true,
+      "retry": true
+    },
+    {
+      "failure": "commit",
+      "rollback": true,
+      "retry": true
+    }
+  ],
+  "interleavings": [
+    {
+      "scenario": "existing_start",
+      "attempts": 1,
+      "lock_wait_observed": true,
+      "result": {
+        "rows": 1,
+        "canonical_json_bytes": 502,
+        "sha256": "376a79bb4dbbe6a7995fe05206b12e78b0e93133e1199c6f7154db5e26bdeb08"
+      },
+      "scope_limit": "Actual control/member repository lock protocol; state/membership writes simulated, not full start/pick/removal workflow"
+    },
+    {
+      "scenario": "finalization",
+      "attempts": 1,
+      "lock_wait_observed": true,
+      "result": {
+        "rows": 1,
+        "canonical_json_bytes": 503,
+        "sha256": "5738ce2cbb9dbee8e59ff0bb1affcdfbb65af12e75568abb787076352fc4f07f"
+      },
+      "scope_limit": "Actual control/member repository lock protocol; state/membership writes simulated, not full start/pick/removal workflow"
+    },
+    {
+      "scenario": "first_start",
+      "attempts": 2,
+      "lock_wait_observed": true,
+      "result": {
+        "rows": 1,
+        "canonical_json_bytes": 502,
+        "sha256": "b79c0d2b80165212f9d21b5c0465b25fb41d56f21000d65757ea0252ee28a201"
+      },
+      "scope_limit": "Actual control/member repository lock protocol; state/membership writes simulated, not full start/pick/removal workflow"
+    },
+    {
+      "scenario": "removal",
+      "attempts": 1,
+      "lock_wait_observed": true,
+      "result": {
+        "rows": 0,
+        "canonical_json_bytes": 2,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "scope_limit": "Actual control/member repository lock protocol; state/membership writes simulated, not full start/pick/removal workflow"
+    },
+    {
+      "scenario": "join_after_discovery",
+      "attempts": 1,
+      "lock_wait_observed": true,
+      "result": {
+        "rows": 10,
+        "canonical_json_bytes": 6440,
+        "sha256": "b5835f9240ec365e30a0728162df6f2b0ac9a6da3a06a3b4469f9acd05be9543"
+      },
+      "scope_limit": "Actual control/member repository lock protocol; state/membership writes simulated, not full start/pick/removal workflow"
+    }
+  ],
+  "permission_lock": {
+    "checks": [
+      {
+        "permission_failure": true,
+        "rollback": true
+      },
+      {
+        "lock_timeout": true,
+        "rollback": true
+      }
+    ],
+    "role": "otm_mod020_1c5fd023e81f4631918c53fe28effbb5",
+    "role_removed": true
+  },
+  "error": "(psycopg2.errors.NotNullViolation) null value in column \"status\" of relation \"League\" violates not-null constraint\nDETAIL:  Failing row contains (4, 2026-11-16 21:01:50.062322+00, League 4, 1, 8, null, {\"timezone\": \"UTC\"}, 2026-11-16 06:30:00+00, 1, null, null, null, 2026, t).\n\n[SQL: UPDATE \"League\" SET status=%(status)s,settings=jsonb_build_object('timezone',%(zone)s) WHERE id=%(id)s]\n[parameters: {'status': None, 'zone': 'UTC', 'id': 4}]\n(Background on this error at: https://sqlalche.me/e/20/gkpj)",
+  "error_type": "IntegrityError",
+  "finished_at": "2026-11-16T21:01:51.784741+00:00"
+}

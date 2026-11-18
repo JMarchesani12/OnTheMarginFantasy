@@ -1,0 +1,40 @@
+{
+  "result": "FAILED",
+  "started_at": "2026-11-17T03:37:12.295074+00:00",
+  "provenance": {
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/scripts/modernization/compare_mod017_indexes.py": "d21c05010e39b0f8eee49512fd9ab3a9aa0634aeb5f4c7eb7ea6335c3b508a70",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/scripts/modernization/mod017_index_support.py": "51008ef2bd814c976155a989a5bd05f48fc5d498027626ade117bbf7edb4a828",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/db/baselines/20261029/001_schema.sql": "7fe1c17223dd2cf3ebbfdb9d2ca318d4f7ad24f9a6578309c40aad3cfb58a109",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/api/migrations/20261104_user_identity_unique.sql": "64631ad06193c79bded2e52849e0264b281468ea098e3dfd72d9def01f3dab88",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/api/migrations/20261104_week_score_identity.sql": "b6a040b0d2599e32e4d87d7c59c30aecbbaa22cca7d79c07d988279a36c2e244",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/api/migrations/20261104_ownership_integrity.sql": "fb3b6c5dd445a6e8da5dd67784d882032a698917e7ac1d9eebb1167120480116",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/scripts/modernization/measure_mod017.py": "1a7fcad698597ad9bfce62532813a27d6486e37fd3580ef24d861c2f034a1868",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/scripts/modernization/measure_mod017_h2h.py": "10aff16075de6dd20dc43368542d71f2a32070b073ad34d1965df63ef31beae2",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/scripts/modernization/measure_mod017_games.py": "e42d4a568b0fd0214fae7a94cf3c277ff2d4e98a0e791ca5b870a2d0d197945d",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/scripts/modernization/measure_mod017_lookup.py": "ffe0f59d69d4649ab8d030773e71f1169870b445e003360bea0bbe715c383111",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/scripts/modernization/measure_mod017_transactions.py": "21cb1761716f2a39cc3f59b44f875f8c5342503eb38ebfc8f6533595834d91ca",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/api/endpoints/schedule/read_repository.py": "bd0cc605a10cf04860898202c1a70c58dcca237c11158625ec28649fae94f615",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/api/endpoints/transaction/repository.py": "819e16d05fe56a68d4e56909f004910104242890e1712f7b9dfd450bcecbfd80",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/api/endpoints/transaction/workflow_repository.py": "dfc54e53c063eadb0823aa5c510b562ccd0b621d12a7465cb1c9c43d973c0769",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/api/endpoints/scoring/weekly_repository.py": "698d55af721f0ea7acbdc5e3e45b8f5cbbeb4066abc7cf6730cc20b61b25ce32",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/api/endpoints/league/reads/repository.py": "6c54a2e68621efeca925afec60e6b85cc66573fd3e015bfa25e4c6da63c8b058",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/api/utils/ownership_reads.py": "e5672a931d90b6ce42958e3787b72da0431954f6a9f5464c388105be0ce28ac8"
+  },
+  "databases": [
+    {
+      "name": "otm_mod017_9658801605d043a6915ae215ff101f77",
+      "cleanup": "removed"
+    }
+  ],
+  "cleanup": "no database created",
+  "tiers": [],
+  "requested_families": [
+    "ownership_game"
+  ],
+  "requested_sizes": [
+    100
+  ],
+  "scope": "Controlled warm local read comparisons; no production recommendation or rollout",
+  "error_type": "AssertionError",
+  "error": "Query output/cardinality/bytes changed during experiment"
+}

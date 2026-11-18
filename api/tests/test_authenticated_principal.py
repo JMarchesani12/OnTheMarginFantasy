@@ -1,4 +1,5 @@
 """MOD-001 identity boundary, using the existing guarded runner and fixture."""
+from http_error_assertions import assert_error_response
 import sqlite3
 import time
 import unittest
@@ -80,13 +81,13 @@ class AuthenticatedPrincipalTests(unittest.TestCase):
                         claims, SUPABASE_JWT_SECRET, algorithm='HS256')}
                 response = self.client.post('/principal/1', headers=headers)
                 self.assertEqual(response.status_code, 401)
-                self.assertEqual(response.json, {'error': 'missing_authenticated_subject'})
+                assert_error_response(self, response, {'error': 'missing_authenticated_subject'})
 
     def test_missing_application_identity_is_explicit(self):
         response = self.client.post('/principal/1', headers=self.headers(
             '00000000-0000-4000-8000-000000000099'))
         self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.json, {'error': 'application_identity_not_found'})
+        assert_error_response(self, response, {'error': 'application_identity_not_found'})
 
     def test_ambiguous_application_identity_is_explicit(self):
         # Production snapshot permits duplicate UUIDs; loosen only this disposable fixture.
@@ -96,7 +97,7 @@ class AuthenticatedPrincipalTests(unittest.TestCase):
         self.db.connection.commit()
         response = self.client.post('/principal/1', headers=self.headers())
         self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.json, {'error': 'application_identity_ambiguous'})
+        assert_error_response(self, response, {'error': 'application_identity_ambiguous'})
 
     def test_unverified_request_context_cannot_resolve(self):
         with self.app.test_request_context('/principal/1', json={'sub': ALICE}):

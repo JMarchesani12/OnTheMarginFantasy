@@ -1,0 +1,80 @@
+{
+  "date": "2026-11-13",
+  "result": "PASS_BOUNDED_TRANSACTION_BASELINE",
+  "scope": "Transaction list/open trade/weekly pending candidate synthetic measurements; MOD017 others remain open",
+  "artifact": "mod-017-transactions-753a49d7e8d84dd88ff3f0d04b4af13b.json",
+  "rawSha256": "1d1c1a7ee50a7a56bfdc13447c48d1ce26e589aa9df5709a5548e82316ebcd89",
+  "manifest": "mod-017-transactions-current-2026-11-13.json",
+  "previousSuccessfulArtifact": "mod-017-transactions-fb5613bdb3d14e5db8f2d0b59b38ea95.json",
+  "checks": {
+    "runnerTests": "10/10 PASS",
+    "nativeFinalTiers": "100/1000/5000 leagues PASS",
+    "caseConfigurations": "99/99 expectedcounts/5samples/baselinefingerprints/capturedSQLparams match",
+    "sourceProvenance": "all9 hashes match fixed current runner/inputs",
+    "productionCode": "unchanged",
+    "diff/newSourceWhitespace": "PASS"
+  },
+  "review": {
+    "model": "gpt-6-astra/high",
+    "critical": 0,
+    "important": 1,
+    "importantFixed": "Provenance-read stalePASS reproducedRED, RUNNING persisted before reads inside guarded try, full10unit and3native tiers rerunGREEN",
+    "minor": 1,
+    "deferredMinor": "Tier-failure unit mocks run_tier, leaving removed/still-present/verification-unavailable branches without direct injected failure coverage",
+    "independentChecks": "pre-fix9units,99counts/samples/medians/fingerprints,33baselinecaptures/provenance/reportmetrics verified",
+    "postFix": "author10units/fullnative99checks/provenance; no independent rereview claimed",
+    "declined": "Live containercleanup,production/RLS/roles/rollout/writecost/unmeasured density-cache-concurrency"
+  },
+  "rulings": [
+    {
+      "decision": "Use lowpending0.1%,singlearrays/uniquetimestamps/completedWeek synthetic distribution",
+      "reason": "Declared bounded workload with meaningful actualquerycase counts, no productiontraffic facts",
+      "costIfWrong": "Dense pending/backlog/tie/largearray behavior may differ"
+    },
+    {
+      "decision": "New runner hardens counts/status/provenance before connection; preserve original runner/artifacts",
+      "reason": "Reproducible newbatch without rewriting earlierverifiedsource",
+      "costIfWrong": "Old runner retains its documented reliability gaps"
+    },
+    {
+      "decision": "No query/JIT setting/index rollout change",
+      "reason": "Measurement authorization only; actualplans suggest focused followups, not production proof",
+      "costIfWrong": "No productionbenefit realized by this measurement task"
+    },
+    {
+      "decision": "Defer cleanup-verification failure-branch test minor",
+      "reason": "Current normal cleanup observed and unitbodycleanup separately guarded; source inspected",
+      "costIfWrong": "Future error-reporting branch regressions may lack direct detection"
+    },
+    {
+      "decision": "Leave work uncommitted/undeployed, retain ledger and prior artifacts",
+      "reason": "Established userworkflow",
+      "costIfWrong": "User owns committing and artifact retention"
+    }
+  ],
+  "cleanup": {
+    "allMod017DatabasesVerifiedZero": true,
+    "ownedContainer": "0a031103a6eecdb870a1ffdf96f0ca32e13888f61f494ea3882559217c374cfa",
+    "labelsVerified": {
+      "otm.synthetic": "true",
+      "otm.task": "mod017-transactions"
+    },
+    "persistentMounts": [],
+    "removed": true,
+    "remainingTaskContainers": 0,
+    "imageDigest": "sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929",
+    "dockerAndImageCacheRetained": true
+  },
+  "limits": [
+    "Low pending density0.1%,single-team arrays,unique timestamps; no dense/tie/large-array claim",
+    "Schema/RLS/role/physical-cache/write-cost limits from prior baseline remain",
+    "No SQL rewrite/pagination/index rollout; candidate indexes private only"
+  ],
+  "sourceSha256": {
+    "scripts/modernization/measure_mod017_transactions.py": "21cb1761716f2a39cc3f59b44f875f8c5342503eb38ebfc8f6533595834d91ca",
+    "scripts/modernization/tests/test_mod017_transactions.py": "21639f8376cdd537cc92dded92dde8d4ba56ae8411b7c4eebb2ff642a321f11c",
+    "docs/modernization/mod-017-transaction-baselines.md": "f86e72a13b07a7ccf0b84ef084ca6c158aee6ce0f940272ba62b3d50f3677784"
+  },
+  "uncommitted": true,
+  "deployed": false
+}

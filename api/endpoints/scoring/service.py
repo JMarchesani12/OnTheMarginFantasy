@@ -1,5 +1,6 @@
 """Scoring use cases and rules, independent of HTTP and configured startup."""
 import json
+from contextlib import nullcontext
 import datetime as dt
 from typing import Any, Dict, List, Optional
 from utils.authorization import league_read_access
@@ -8,6 +9,7 @@ from .rules import playoff_depth_bonus, conference_champion_bonus, conference_bo
 from actors import UserActor
 from .contracts import ScoringReadDenied
 from .repository import ScoringRepository
+from .weekly_context import _WeeklyRulesContext
 
 
 class ScoringReadService:
@@ -63,12 +65,12 @@ class ScoringService:
         self.repository = repository if repository is not None else ScoringRepository()
         self._scoring_read_service = ScoringReadService(db, self.repository)
 
-    def _get_league_settings(self, league_id: int) -> Dict[str, Any]:
+    def _get_league_settings(self, league_id: int, conn=None) -> Dict[str, Any]:
         """
         Return League.settings JSON (may include bonuses, transactions, schedule).
         """
-        with self.db.begin() as conn:
-            row = self.repository.league_settings(conn, league_id)
+        with (nullcontext(conn) if conn is not None else self.db.begin()) as read_conn:
+            row = self.repository.league_settings(read_conn, league_id)
         if not row:
             raise ScoringRejected(f'League {league_id} not found')
         settings = row[0]
@@ -76,54 +78,66 @@ class ScoringService:
             return json.loads(settings)
         return settings or {}
 
-    def _get_week_by_number(self, league_id: int, week_number: int) -> Dict[str, Any]:
-        with self.db.begin() as conn:
+    def _get_week_by_number(self, league_id: int, week_number: int, conn=None) -> Dict[str, Any]:
+        with (nullcontext(conn) if conn is not None else self.db.begin()) as conn:
             row = self.repository.week_metadata(conn, league_id, week_number)
         if not row:
             raise ScoringRejected(f'Week {week_number} not found for league {league_id}')
         return dict(row._mapping)
 
-    def _get_league_members(self, league_id: int) -> List[Dict[str, Any]]:
-        with self.db.begin() as conn:
+    def _get_league_members(self, league_id: int, conn=None) -> List[Dict[str, Any]]:
+        with (nullcontext(conn) if conn is not None else self.db.begin()) as conn:
             rows = self.repository.league_members(conn, league_id)
         return [dict(r._mapping) for r in rows]
 
     def _delete_existing_weekly_scores(self, conn, league_id: int, week_id: int) -> None:
         self.repository.delete_weekly_scores(conn, league_id, week_id)
 
-    def _get_sport_season_for_league(self, league_id: int) -> Dict[str, Any]:
+    def _get_sport_season_for_league(self, league_id: int, conn=None) -> Dict[str, Any]:
         """
         Look up the SportSeason row that matches League.sport + League.seasonYear.
         """
-        with self.db.begin() as conn:
-            row = self.repository.sport_season(conn, league_id)
+        with (nullcontext(conn) if conn is not None else self.db.begin()) as read_conn:
+            row = self.repository.sport_season(read_conn, league_id)
         if not row:
             raise ScoringRejected(f'SportSeason not found for league {league_id}')
         return dict(row._mapping)
 
-    def _get_member_owned_team_ids(self, league_id: int, member_id: int) -> List[int]:
+    def _get_member_owned_team_ids(self, league_id: int, member_id: int, conn=None) -> List[int]:
         """
         All SportTeam ids ever owned in this league by this member (any week).
         Used for season-level tiebreakers where we don't care about weekly windows.
         """
-        with self.db.begin() as conn:
-            rows = self.repository.owned_teams(conn, league_id, member_id)
+        with (nullcontext(conn) if conn is not None else self.db.begin()) as read_conn:
+            rows = self.repository.owned_teams(read_conn, league_id, member_id)
         return [int(r[0]) for r in rows]
 
-    def compute_member_point_diff_for_week(self, league_id: int, member_id: int, week_number: int) -> int:
+    def _create_weekly_rules_context(self, league_id, week_number, conn):
+        rules = self.schedule_model.resolve_member_game_rules_for_scoring(league_id, conn)
+        return _WeeklyRulesContext(league_id, week_number, conn, rules)
+
+    def _get_weekly_member_games(self, league_id, member_id, week_number, conn=None, *, scoring_context=None):
+        kwargs = {'conn': conn} if conn is not None else {}
+        if scoring_context is not None:
+            scoring_context.require_match(league_id, week_number, conn)
+            kwargs['resolved_rules'] = scoring_context.rules
+        return self.schedule_model.get_member_games_for_week(
+            league_id=league_id, member_id=member_id, week_number=week_number, **kwargs)
+
+    def compute_member_point_diff_for_week(self, league_id: int, member_id: int, week_number: int, conn=None, *, scoring_context=None) -> int:
         """
         Sum memberPointDiff across all games for this member in this week.
 
         Uses ScheduleReadService.get_member_games_for_week, which must return rows with:
           - memberPointDiff: int (0 for double-owned, +diff for owned side)
         """
-        games = self.schedule_model.get_member_games_for_week(league_id=league_id, member_id=member_id, week_number=week_number)
+        games = self._get_weekly_member_games(league_id, member_id, week_number, conn, scoring_context=scoring_context)
         total = 0
         for g in games:
             total += int(g['memberPointDiff'])
         return total
 
-    def compute_weekly_scores_for_job(self, league_id: int, week_number: int) -> Dict[str, Any]:
+    def compute_weekly_scores_for_job(self, league_id: int, week_number: int, conn=None) -> Dict[str, Any]:
         """
         Compute weekly scores for all members in a league for a given week:
 
@@ -138,36 +152,40 @@ class ScoringService:
         """
         if week_number < 0:
             raise ScoringRejected('Week number must be >= 0')
-        week = self._get_week_by_number(league_id, week_number)
+        week = self._get_week_by_number(league_id, week_number, **({'conn': conn} if conn is not None else {}))
         week_id = int(week['id'])
         split_final = week.get('finalPeriodEnd') and week['endDate'] < week['finalPeriodEnd'] - dt.timedelta(microseconds=1) or (week.get('finalPeriodStart') and week['startDate'] > week['finalPeriodStart'])
         if week.get('isFinalPeriod') and split_final:
             raise ScoringRejected('Rebuild weeks before scoring: final scoring period is split across weeks')
         if week.get('isFinalPeriod') and week['endDate'] >= dt.datetime.now(dt.timezone.utc):
             raise ScoringRejected('Cannot award points until the final scoring period ends')
-        members = self._get_league_members(league_id)
+        members = self._get_league_members(league_id, **({'conn': conn} if conn is not None else {}))
         if not members:
             raise ScoringRejected(f'No members found for league {league_id}')
+        scoring_context = self._create_weekly_rules_context(league_id, week_number, conn) if conn is not None else None
+        context_kwargs = {'scoring_context': scoring_context} if scoring_context is not None else {}
         member_scores: List[Dict[str, Any]] = []
         for m in members:
             member_id = int(m['id'])
-            pdiff = self.compute_member_point_diff_for_week(league_id=league_id, member_id=member_id, week_number=week_number)
+            pdiff = self.compute_member_point_diff_for_week(league_id=league_id, member_id=member_id, week_number=week_number, **({'conn': conn} if conn is not None else {}), **context_kwargs)
             member_scores.append({'memberId': member_id, 'teamName': m['teamName'], 'pointDifferential': pdiff})
         member_scores.sort(key=lambda x: (-x['pointDifferential'], int(x['memberId'])))
-        member_scores = self.apply_weekly_tiebreakers(league_id=league_id, week_number=week_number, members=member_scores)
+        member_scores = self.apply_weekly_tiebreakers(league_id=league_id, week_number=week_number, members=member_scores, **({'conn': conn} if conn is not None else {}), **context_kwargs)
         num_members = len(member_scores)
         for idx, ms in enumerate(member_scores):
             rank = idx + 1
             points_awarded = num_members - idx
             ms['rank'] = rank
             ms['pointsAwarded'] = points_awarded
-        with self.db.begin() as conn:
+        with (nullcontext(conn) if conn is not None else self.db.begin()) as conn:
+            if self.repository.lock_scoring_week(conn, league_id, week_id) is None:
+                raise ScoringRejected('Scoring week no longer exists')
             self._delete_existing_weekly_scores(conn, league_id, week_id)
             for ms in member_scores:
                 self.repository.insert_weekly_score(conn, league_id, week_id, ms['memberId'], ms['pointDifferential'], ms['rank'], ms['pointsAwarded'])
         return {'leagueId': league_id, 'weekNumber': week_number, 'weekId': week_id, 'scores': member_scores}
 
-    def apply_weekly_tiebreakers(self, league_id: int, week_number: int, members: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def apply_weekly_tiebreakers(self, league_id: int, week_number: int, members: List[Dict[str, Any]], conn=None, *, scoring_context=None) -> List[Dict[str, Any]]:
         """
         For each tie group (same pointDifferential), apply:
 
@@ -182,28 +200,30 @@ class ScoringService:
                 j += 1
             if j - i > 1:
                 tied_group = members[i:j]
-                resolved = self._resolve_weekly_ties(league_id, week_number, tied_group)
+                resolved = self._resolve_weekly_ties(league_id, week_number, tied_group, **({'conn': conn} if conn is not None else {}), **({'scoring_context': scoring_context} if scoring_context is not None else {}))
                 members[i:j] = resolved
             i = j
         return members
 
-    def _resolve_weekly_ties(self, league_id: int, week_number: int, group: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        result = self._tb_weekly_head_to_head(league_id, week_number, group)
+    def _resolve_weekly_ties(self, league_id: int, week_number: int, group: List[Dict[str, Any]], conn=None, *, scoring_context=None) -> List[Dict[str, Any]]:
+        result = self._tb_weekly_head_to_head(league_id, week_number, group, **({'conn': conn} if conn is not None else {}))
         if result is not None:
             return result
-        result = self._tb_weekly_biggest_single_margin(league_id, week_number, group)
+        result = self._tb_weekly_biggest_single_margin(league_id, week_number, group, **({'conn': conn} if conn is not None else {}), **({'scoring_context': scoring_context} if scoring_context is not None else {}))
         if result is not None:
             return result
         return group
 
-    def _tb_weekly_head_to_head(self, league_id: int, week_number: int, group: List[Dict[str, Any]]) -> List[Dict[str, Any]] | None:
+    def _tb_weekly_head_to_head(self, league_id: int, week_number: int, group: List[Dict[str, Any]], conn=None) -> List[Dict[str, Any]] | None:
         """
         For all tied members in group:
           - For each pair (A,B), get all head-to-head games in this week
           - Sum point differential for each member
           - Sort group by total head-to-head PD (desc)
 
-        Requires ScheduleReadService.get_head_to_head_games(
+        Supplied connections use one group statement with owner sets; no-conn
+        callers retain the pair API and its original transaction behavior.
+        Pair semantics are equivalent to ScheduleReadService.get_head_to_head_games(
             league_id, member_a_id, member_b_id, week_number
         ) returning rows with:
           - homeScore, awayScore
@@ -212,9 +232,27 @@ class ScoringService:
         """
         totals: Dict[int, int] = {int(m['memberId']): 0 for m in group}
         member_ids = list(totals.keys())
+        if len(member_ids) < 2:
+            return None
+        batch = None
+        if conn is not None:
+            rows = self.schedule_model.get_head_to_head_games_for_members(
+                league_id=league_id, member_ids=member_ids, week_number=week_number, conn=conn)
+            # A statement view local to this group, never a rules-context cache.
+            batch = [(row, set(row['homeMemberIds']), set(row['awayMemberIds'])) for row in rows]
         for i, a_id in enumerate(member_ids):
             for b_id in member_ids[i + 1:]:
-                games = self.schedule_model.get_head_to_head_games(league_id=league_id, member_a_id=a_id, member_b_id=b_id, week_number=week_number)
+                if batch is None:
+                    games = self.schedule_model.get_head_to_head_games(
+                        league_id=league_id, member_a_id=a_id, member_b_id=b_id, week_number=week_number)
+                else:
+                    games = (
+                        dict(homeScore=row['homeScore'], awayScore=row['awayScore'],
+                             homeOwnedByA=a_id in home, awayOwnedByA=a_id in away,
+                             homeOwnedByB=b_id in home, awayOwnedByB=b_id in away)
+                        for row, home, away in batch
+                        if (a_id in home and b_id in away) or (a_id in away and b_id in home)
+                    )
                 a_pd = 0
                 b_pd = 0
                 for g in games:
@@ -235,7 +273,7 @@ class ScoringService:
         sorted_group = sorted(group, key=lambda m: (-totals[int(m['memberId'])], int(m['memberId'])))
         return sorted_group
 
-    def _tb_weekly_biggest_single_margin(self, league_id: int, week_number: int, group: List[Dict[str, Any]]) -> List[Dict[str, Any]] | None:
+    def _tb_weekly_biggest_single_margin(self, league_id: int, week_number: int, group: List[Dict[str, Any]], conn=None, *, scoring_context=None) -> List[Dict[str, Any]] | None:
         """
         For each tied member:
           - Look at all their games that week
@@ -245,7 +283,7 @@ class ScoringService:
         margins: Dict[int, int] = {}
         for m in group:
             member_id = int(m['memberId'])
-            games = self.schedule_model.get_member_games_for_week(league_id=league_id, member_id=member_id, week_number=week_number)
+            games = self._get_weekly_member_games(league_id, member_id, week_number, conn, scoring_context=scoring_context)
             biggest = 0
             for g in games:
                 diff = int(g['memberPointDiff'])
@@ -257,7 +295,7 @@ class ScoringService:
         sorted_group = sorted(group, key=lambda m: (-margins[int(m['memberId'])], int(m['memberId'])))
         return sorted_group
 
-    def _compute_season_standings(self, league_id: int, *, reader_user_id: Optional[int]=None) -> Dict[str, Any]:
+    def _compute_season_standings(self, league_id: int, *, reader_user_id: Optional[int]=None, conn=None) -> Dict[str, Any]:
         """
         Aggregate WeeklyTeamScore + computed bonuses for a league:
 
@@ -267,10 +305,10 @@ class ScoringService:
         - Apply season tiebreakers within ties on totalPoints.
         """
         with league_read_access(self.db, league_id, reader_user_id):
-            with self.db.begin() as conn:
-                rows = list(self.repository.season_points(conn, league_id))
+            with (nullcontext(conn) if conn is not None else self.db.begin()) as read_conn:
+                rows = list(self.repository.season_points(read_conn, league_id))
             member_ids: List[int] = [int(r._mapping['memberId']) for r in rows]
-            bonus_points_by_member: Dict[int, float] = self._compute_bonus_points(league_id, member_ids)
+            bonus_points_by_member: Dict[int, float] = self._compute_bonus_points(league_id, member_ids, **({'conn': conn} if conn is not None else {}))
             members: List[Dict[str, Any]] = []
             for r in rows:
                 m = r._mapping
@@ -280,10 +318,10 @@ class ScoringService:
                 total = weekly + bonus
                 members.append({'memberId': member_id, 'teamName': m['teamName'], 'weeklyPoints': weekly, 'bonusPoints': bonus, 'totalPoints': total})
             members.sort(key=lambda x: (-x['totalPoints'], -x['weeklyPoints'], int(x['memberId'])))
-            members = self._apply_season_tiebreakers(league_id, members)
+            members = self._apply_season_tiebreakers(league_id, members, **({'conn': conn} if conn is not None else {}))
             return {'leagueId': league_id, 'members': members}
 
-    def _apply_season_tiebreakers(self, league_id: int, standings: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _apply_season_tiebreakers(self, league_id: int, standings: List[Dict[str, Any]], conn=None) -> List[Dict[str, Any]]:
         """
         For each tie group on totalPoints, apply:
 
@@ -300,59 +338,59 @@ class ScoringService:
                 j += 1
             if j - i > 1:
                 tied_group = standings[i:j]
-                resolved = self._resolve_season_ties(league_id, tied_group)
+                resolved = self._resolve_season_ties(league_id, tied_group, **({'conn': conn} if conn is not None else {}))
                 standings[i:j] = resolved
             i = j
         return standings
 
-    def _resolve_season_ties(self, league_id: int, group: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        result = self._tb_season_playoff_depth(league_id, group)
+    def _resolve_season_ties(self, league_id: int, group: List[Dict[str, Any]], conn=None) -> List[Dict[str, Any]]:
+        result = self._tb_season_playoff_depth(league_id, group, **({'conn': conn} if conn is not None else {}))
         if result is not None:
             return result
-        result = self._tb_season_num_segment_champs(league_id, group)
+        result = self._tb_season_num_segment_champs(league_id, group, **({'conn': conn} if conn is not None else {}))
         if result is not None:
             return result
-        result = self._tb_season_playoff_head_to_head(league_id, group)
+        result = self._tb_season_playoff_head_to_head(league_id, group, **({'conn': conn} if conn is not None else {}))
         if result is not None:
             return result
-        result = self._tb_season_segment_postseason_head_to_head(league_id, group)
+        result = self._tb_season_segment_postseason_head_to_head(league_id, group, **({'conn': conn} if conn is not None else {}))
         if result is not None:
             return result
-        result = self._tb_season_latest_non_tied_week(league_id, group)
+        result = self._tb_season_latest_non_tied_week(league_id, group, **({'conn': conn} if conn is not None else {}))
         if result is not None:
             return result
         return group
 
-    def _tb_season_playoff_depth(self, league_id: int, group: List[Dict[str, Any]]) -> List[Dict[str, Any]] | None:
+    def _tb_season_playoff_depth(self, league_id: int, group: List[Dict[str, Any]], conn=None) -> List[Dict[str, Any]] | None:
         """
         Tiebreaker 1: whoever has the team that goes the farthest
         in the primary postseason (e.g. main playoff bracket).
 
         Uses GameResult.roundOrder as 'depth' within those phases.
         """
-        season = self._get_sport_season_for_league(league_id)
+        season = self._get_sport_season_for_league(league_id, **({'conn': conn} if conn is not None else {}))
         sport_season_id = int(season['sportSeasonId'])
-        with self.db.begin() as conn:
-            phase_rows = self.repository.primary_phases(conn, sport_season_id, self.PRIMARY_POSTSEASON_PHASE_TYPES)
+        with (nullcontext(conn) if conn is not None else self.db.begin()) as read_conn:
+            phase_rows = self.repository.primary_phases(read_conn, sport_season_id, self.PRIMARY_POSTSEASON_PHASE_TYPES)
         if not phase_rows:
             return None
         nt_phase_ids = [int(r[0]) for r in phase_rows]
         depths: Dict[int, int] = {}
         for m in group:
             member_id = int(m['memberId'])
-            team_ids = self._get_member_owned_team_ids(league_id, member_id)
+            team_ids = self._get_member_owned_team_ids(league_id, member_id, **({'conn': conn} if conn is not None else {}))
             if not team_ids:
                 depths[member_id] = 0
                 continue
-            with self.db.begin() as conn:
-                row = self.repository.playoff_depth(conn, sport_season_id, nt_phase_ids, team_ids)
+            with (nullcontext(conn) if conn is not None else self.db.begin()) as read_conn:
+                row = self.repository.playoff_depth(read_conn, sport_season_id, nt_phase_ids, team_ids)
             depths[member_id] = int(row._mapping['max_round']) if row else 0
         if len(set(depths.values())) <= 1:
             return None
         sorted_group = sorted(group, key=lambda m: (-depths[int(m['memberId'])], int(m['memberId'])))
         return sorted_group
 
-    def _tb_season_num_segment_champs(self, league_id: int, group: List[Dict[str, Any]]) -> List[Dict[str, Any]] | None:
+    def _tb_season_num_segment_champs(self, league_id: int, group: List[Dict[str, Any]], conn=None) -> List[Dict[str, Any]] | None:
         """
         Tiebreaker 2: whichever member has the most champions
         in segment-level postseason tournaments (e.g. conference tournaments,
@@ -362,17 +400,17 @@ class ScoringService:
           - Find final game (max roundOrder)
           - Champion = winner of that game
         """
-        season = self._get_sport_season_for_league(league_id)
+        season = self._get_sport_season_for_league(league_id, **({'conn': conn} if conn is not None else {}))
         sport_season_id = int(season['sportSeasonId'])
-        with self.db.begin() as conn:
-            phase_rows = self.repository.segment_phases(conn, sport_season_id, self.SEGMENT_POSTSEASON_PHASE_TYPES)
+        with (nullcontext(conn) if conn is not None else self.db.begin()) as read_conn:
+            phase_rows = self.repository.segment_phases(read_conn, sport_season_id, self.SEGMENT_POSTSEASON_PHASE_TYPES)
         if not phase_rows:
             return None
         phase_ids = [int(r[0]) for r in phase_rows]
         champions: set[int] = set()
-        with self.db.begin() as conn:
+        with (nullcontext(conn) if conn is not None else self.db.begin()) as read_conn:
             for pid in phase_ids:
-                row = self.repository.segment_final(conn, sport_season_id, pid)
+                row = self.repository.segment_final(read_conn, sport_season_id, pid)
                 if not row:
                     continue
                 home_id, away_id, home_score, away_score = row
@@ -385,38 +423,38 @@ class ScoringService:
         champ_counts: Dict[int, int] = {}
         for m in group:
             member_id = int(m['memberId'])
-            team_ids = self._get_member_owned_team_ids(league_id, member_id)
+            team_ids = self._get_member_owned_team_ids(league_id, member_id, **({'conn': conn} if conn is not None else {}))
             champ_counts[member_id] = len(champions.intersection(set(team_ids)))
         if len(set(champ_counts.values())) <= 1:
             return None
         sorted_group = sorted(group, key=lambda m: (-champ_counts[int(m['memberId'])], int(m['memberId'])))
         return sorted_group
 
-    def _head_to_head_pd_in_phases(self, league_id: int, group: List[Dict[str, Any]], phase_types: List[str]) -> List[Dict[str, Any]] | None:
+    def _head_to_head_pd_in_phases(self, league_id: int, group: List[Dict[str, Any]], phase_types: List[str], conn=None) -> List[Dict[str, Any]] | None:
         """
         Generic helper:
           - For all tied members in group
           - Within SeasonPhase rows whose `type` is in `phase_types`
           - Compute total head-to-head point differential vs other group members.
         """
-        season = self._get_sport_season_for_league(league_id)
+        season = self._get_sport_season_for_league(league_id, **({'conn': conn} if conn is not None else {}))
         sport_season_id = int(season['sportSeasonId'])
-        with self.db.begin() as conn:
-            phase_rows = self.repository.head_to_head_phases(conn, sport_season_id, phase_types, phase_types == self.PRIMARY_POSTSEASON_PHASE_TYPES)
+        with (nullcontext(conn) if conn is not None else self.db.begin()) as read_conn:
+            phase_rows = self.repository.head_to_head_phases(read_conn, sport_season_id, phase_types, phase_types == self.PRIMARY_POSTSEASON_PHASE_TYPES)
         if not phase_rows:
             return None
         phase_ids = [int(r[0]) for r in phase_rows]
         member_team_ids: Dict[int, List[int]] = {}
         for m in group:
             mid = int(m['memberId'])
-            member_team_ids[mid] = self._get_member_owned_team_ids(league_id, mid)
+            member_team_ids[mid] = self._get_member_owned_team_ids(league_id, mid, **({'conn': conn} if conn is not None else {}))
         totals: Dict[int, int] = {int(m['memberId']): 0 for m in group}
         member_ids = list(totals.keys())
         all_team_ids = sorted({tid for tids in member_team_ids.values() for tid in tids})
         if not all_team_ids:
             return None
-        with self.db.begin() as conn:
-            rows = self.repository.head_to_head_games(conn, sport_season_id, phase_ids, all_team_ids)
+        with (nullcontext(conn) if conn is not None else self.db.begin()) as read_conn:
+            rows = self.repository.head_to_head_games(read_conn, sport_season_id, phase_ids, all_team_ids)
         for row in rows:
             home_id, away_id, home_score, away_score = row
             home_id = int(home_id)
@@ -435,20 +473,20 @@ class ScoringService:
         sorted_group = sorted(group, key=lambda m: (-totals[int(m['memberId'])], int(m['memberId'])))
         return sorted_group
 
-    def _tb_season_playoff_head_to_head(self, league_id: int, group: List[Dict[str, Any]]) -> List[Dict[str, Any]] | None:
+    def _tb_season_playoff_head_to_head(self, league_id: int, group: List[Dict[str, Any]], conn=None) -> List[Dict[str, Any]] | None:
         """
         Tiebreaker 3: head-to-head performance in primary postseason phases.
         """
-        return self._head_to_head_pd_in_phases(league_id, group, phase_types=self.PRIMARY_POSTSEASON_PHASE_TYPES)
+        return self._head_to_head_pd_in_phases(league_id, group, phase_types=self.PRIMARY_POSTSEASON_PHASE_TYPES, **({'conn': conn} if conn is not None else {}))
 
-    def _tb_season_segment_postseason_head_to_head(self, league_id: int, group: List[Dict[str, Any]]) -> List[Dict[str, Any]] | None:
+    def _tb_season_segment_postseason_head_to_head(self, league_id: int, group: List[Dict[str, Any]], conn=None) -> List[Dict[str, Any]] | None:
         """
         Tiebreaker 4: head-to-head performance in segment-level postseason phases
         (e.g. conference tournaments, division playoffs).
         """
-        return self._head_to_head_pd_in_phases(league_id, group, phase_types=self.SEGMENT_POSTSEASON_PHASE_TYPES)
+        return self._head_to_head_pd_in_phases(league_id, group, phase_types=self.SEGMENT_POSTSEASON_PHASE_TYPES, **({'conn': conn} if conn is not None else {}))
 
-    def _tb_season_latest_non_tied_week(self, league_id: int, group: List[Dict[str, Any]]) -> List[Dict[str, Any]] | None:
+    def _tb_season_latest_non_tied_week(self, league_id: int, group: List[Dict[str, Any]], conn=None) -> List[Dict[str, Any]] | None:
         """
         Tiebreaker 5: latest non-tied week score.
 
@@ -457,14 +495,14 @@ class ScoringService:
           - If any difference, sort by rank (1 is best) for that week.
         """
         member_ids = [int(m['memberId']) for m in group]
-        with self.db.begin() as conn:
-            weeks = self.repository.weeks_descending(conn, league_id)
+        with (nullcontext(conn) if conn is not None else self.db.begin()) as read_conn:
+            weeks = self.repository.weeks_descending(read_conn, league_id)
         if not weeks:
             return None
         for w in weeks:
             week_id = int(w._mapping['id'])
-            with self.db.begin() as conn:
-                rows = self.repository.weekly_ranks(conn, league_id, week_id, member_ids)
+            with (nullcontext(conn) if conn is not None else self.db.begin()) as read_conn:
+                rows = self.repository.weekly_ranks(read_conn, league_id, week_id, member_ids)
             if not rows:
                 continue
             ranks = {int(r._mapping['memberId']): int(r._mapping['rank']) for r in rows}
@@ -474,7 +512,7 @@ class ScoringService:
             return sorted_group
         return None
 
-    def _get_league_bonus_config(self, league_id: int) -> Dict[str, Dict[str, float]]:
+    def _get_league_bonus_config(self, league_id: int, conn=None) -> Dict[str, Dict[str, float]]:
         """
         Returns the bonuses config for a league.
 
@@ -485,11 +523,11 @@ class ScoringService:
           "playoffDepth":       { "first": 3.0 }
         }
         """
-        settings = self._get_league_settings(league_id)
+        settings = self._get_league_settings(league_id, **({'conn': conn} if conn is not None else {}))
         bonuses = settings.get('bonuses') or {}
         return bonuses
 
-    def _compute_bonus_points(self, league_id: int, member_ids: List[int]) -> Dict[int, float]:
+    def _compute_bonus_points(self, league_id: int, member_ids: List[int], conn=None) -> Dict[int, float]:
         """
         For the given league and list of member IDs, compute total bonus points
         according to League.settings.bonuses.
@@ -497,7 +535,7 @@ class ScoringService:
         Returns:
             { memberId: total_bonus_points }
         """
-        config = self._get_league_bonus_config(league_id)
+        config = self._get_league_bonus_config(league_id, **({'conn': conn} if conn is not None else {}))
         totals: Dict[int, float] = {mid: 0.0 for mid in member_ids}
         if not config:
             return totals
@@ -508,36 +546,36 @@ class ScoringService:
             handler = getattr(self, handler_name, None)
             if not handler:
                 continue
-            contrib: Dict[int, float] = handler(league_id, member_ids, bonus_cfg or {})
+            contrib: Dict[int, float] = handler(league_id, member_ids, bonus_cfg or {}, **({'conn': conn} if conn is not None else {}))
             for mid, pts in contrib.items():
                 if mid in totals:
                     totals[mid] = float(totals.get(mid, 0.0)) + float(pts)
         return totals
 
-    def _get_playoff_depth_by_member(self, league_id: int, member_ids: List[int]) -> Dict[int, int]:
+    def _get_playoff_depth_by_member(self, league_id: int, member_ids: List[int], conn=None) -> Dict[int, int]:
         """
         For each member, compute the deepest round reached in primary postseason
         phases by any of their teams.
         """
-        season = self._get_sport_season_for_league(league_id)
+        season = self._get_sport_season_for_league(league_id, **({'conn': conn} if conn is not None else {}))
         sport_season_id = int(season['sportSeasonId'])
-        with self.db.begin() as conn:
-            phase_rows = self.repository.primary_phases(conn, sport_season_id, self.PRIMARY_POSTSEASON_PHASE_TYPES)
+        with (nullcontext(conn) if conn is not None else self.db.begin()) as read_conn:
+            phase_rows = self.repository.primary_phases(read_conn, sport_season_id, self.PRIMARY_POSTSEASON_PHASE_TYPES)
         if not phase_rows:
             return {mid: 0 for mid in member_ids}
         phase_ids = [int(r[0]) for r in phase_rows]
         depths: Dict[int, int] = {mid: 0 for mid in member_ids}
         for mid in member_ids:
-            team_ids = self._get_member_owned_team_ids(league_id, mid)
+            team_ids = self._get_member_owned_team_ids(league_id, mid, **({'conn': conn} if conn is not None else {}))
             if not team_ids:
                 depths[mid] = 0
                 continue
-            with self.db.begin() as conn:
-                row = self.repository.playoff_depth(conn, sport_season_id, phase_ids, team_ids)
+            with (nullcontext(conn) if conn is not None else self.db.begin()) as read_conn:
+                row = self.repository.playoff_depth(read_conn, sport_season_id, phase_ids, team_ids)
             depths[mid] = int(row._mapping['max_round']) if row and row._mapping['max_round'] is not None else 0
         return depths
 
-    def _bonus_playoff_depth(self, league_id: int, member_ids: List[int], config: Dict[str, float]) -> Dict[int, float]:
+    def _bonus_playoff_depth(self, league_id: int, member_ids: List[int], config: Dict[str, float], conn=None) -> Dict[int, float]:
         """
         Bonus based on how deep a member's teams go in primary postseason.
 
@@ -546,30 +584,30 @@ class ScoringService:
 
         Only members with depth > 0 can receive points.
         """
-        depths = self._get_playoff_depth_by_member(league_id, member_ids)
+        depths = self._get_playoff_depth_by_member(league_id, member_ids, **({'conn': conn} if conn is not None else {}))
         return playoff_depth_bonus(depths, member_ids, config)
 
-    def _get_segment_champ_counts_by_member(self, league_id: int, member_ids: List[int]) -> Dict[int, int]:
+    def _get_segment_champ_counts_by_member(self, league_id: int, member_ids: List[int], conn=None) -> Dict[int, int]:
         """
         For each member, count how many segment-level tournaments
         (conference/division/segment playoffs) they won.
         """
-        season = self._get_sport_season_for_league(league_id)
+        season = self._get_sport_season_for_league(league_id, **({'conn': conn} if conn is not None else {}))
         sport_season_id = int(season['sportSeasonId'])
-        with self.db.begin() as conn:
-            phase_rows = self.repository.segment_phases(conn, sport_season_id, self.SEGMENT_POSTSEASON_PHASE_TYPES)
+        with (nullcontext(conn) if conn is not None else self.db.begin()) as read_conn:
+            phase_rows = self.repository.segment_phases(read_conn, sport_season_id, self.SEGMENT_POSTSEASON_PHASE_TYPES)
         if not phase_rows:
             return {mid: 0 for mid in member_ids}
         phase_ids = [int(r[0]) for r in phase_rows]
         champ_counts: Dict[int, int] = {mid: 0 for mid in member_ids}
         team_to_member: Dict[int, int] = {}
         for mid in member_ids:
-            team_ids = self._get_member_owned_team_ids(league_id, mid)
+            team_ids = self._get_member_owned_team_ids(league_id, mid, **({'conn': conn} if conn is not None else {}))
             for tid in team_ids:
                 team_to_member[int(tid)] = mid
-        with self.db.begin() as conn:
+        with (nullcontext(conn) if conn is not None else self.db.begin()) as read_conn:
             for pid in phase_ids:
-                row = self.repository.segment_final(conn, sport_season_id, pid)
+                row = self.repository.segment_final(read_conn, sport_season_id, pid)
                 if not row:
                     continue
                 home_id, away_id, home_score, away_score = row
@@ -590,38 +628,38 @@ class ScoringService:
                     champ_counts[mid] += 1
         return champ_counts
 
-    def _bonus_conference_champion(self, league_id: int, member_ids: List[int], config: Dict[str, float]) -> Dict[int, float]:
+    def _bonus_conference_champion(self, league_id: int, member_ids: List[int], config: Dict[str, float], conn=None) -> Dict[int, float]:
         """
         Bonus based on how many segment-level tournaments a member won.
 
         Config keys:
           - "first", "second", "third", "fourth", ... -> points
         """
-        champ_counts = self._get_segment_champ_counts_by_member(league_id, member_ids)
+        champ_counts = self._get_segment_champ_counts_by_member(league_id, member_ids, **({'conn': conn} if conn is not None else {}))
         return conference_champion_bonus(champ_counts, member_ids, config)
 
-    def _get_segment_pd_by_member(self, league_id: int, member_ids: List[int]) -> Dict[int, int]:
+    def _get_segment_pd_by_member(self, league_id: int, member_ids: List[int], conn=None) -> Dict[int, int]:
         """
         For each member, compute total point differential across all
         segment-level postseason games (ConferenceTournament / SegmentPlayoffs).
 
         PD = (points scored by their teams) - (points allowed).
         """
-        season = self._get_sport_season_for_league(league_id)
+        season = self._get_sport_season_for_league(league_id, **({'conn': conn} if conn is not None else {}))
         sport_season_id = int(season['sportSeasonId'])
-        with self.db.begin() as conn:
-            phase_rows = self.repository.segment_phases(conn, sport_season_id, self.SEGMENT_POSTSEASON_PHASE_TYPES)
+        with (nullcontext(conn) if conn is not None else self.db.begin()) as read_conn:
+            phase_rows = self.repository.segment_phases(read_conn, sport_season_id, self.SEGMENT_POSTSEASON_PHASE_TYPES)
         if not phase_rows:
             return {mid: 0 for mid in member_ids}
         phase_ids = [int(r[0]) for r in phase_rows]
         team_to_member: Dict[int, int] = {}
         for mid in member_ids:
-            team_ids = self._get_member_owned_team_ids(league_id, mid)
+            team_ids = self._get_member_owned_team_ids(league_id, mid, **({'conn': conn} if conn is not None else {}))
             for tid in team_ids:
                 team_to_member[int(tid)] = mid
         pd_totals: Dict[int, int] = {mid: 0 for mid in member_ids}
-        with self.db.begin() as conn:
-            rows = self.repository.segment_games(conn, sport_season_id, phase_ids)
+        with (nullcontext(conn) if conn is not None else self.db.begin()) as read_conn:
+            rows = self.repository.segment_games(read_conn, sport_season_id, phase_ids)
         for row in rows:
             home_id, away_id, home_score, away_score = row
             if home_id is None or away_id is None:
@@ -638,7 +676,7 @@ class ScoringService:
                 pd_totals[away_mid] += away_score - home_score
         return pd_totals
 
-    def _bonus_conference_bottom(self, league_id: int, member_ids: List[int], config: Dict[str, float]) -> Dict[int, float]:
+    def _bonus_conference_bottom(self, league_id: int, member_ids: List[int], config: Dict[str, float], conn=None) -> Dict[int, float]:
         """
         Negative bonus (penalty) for poor performance in segment-level tournaments.
 
@@ -647,7 +685,7 @@ class ScoringService:
 
         We rank members by total segment-tournament PD (worst = most negative).
         """
-        pd_totals = self._get_segment_pd_by_member(league_id, member_ids)
+        pd_totals = self._get_segment_pd_by_member(league_id, member_ids, **({'conn': conn} if conn is not None else {}))
         return conference_bottom_bonus(pd_totals, member_ids, config)
 
     def get_season_standings(self, actor, league_id):
@@ -663,5 +701,5 @@ class ScoringService:
         except PermissionError as exc:
             raise ScoringReadDenied('League not found') from exc
 
-    def get_season_standings_for_job(self, league_id):
-        return self._compute_season_standings(league_id)
+    def get_season_standings_for_job(self, league_id, conn=None):
+        return self._compute_season_standings(league_id, **({'conn': conn} if conn is not None else {}))

@@ -26,6 +26,7 @@ def listener_enabled():
 
 def start_web_listener(app, socketio, engine, *, starter=None, use_reloader=False):
     enabled = listener_enabled()
+    app.extensions['draft_listener_enabled'] = enabled
     if not enabled or (use_reloader and os.environ.get('WERKZEUG_RUN_MAIN') != 'true'):
         return
     if 'draft_notify_task' in app.extensions:
@@ -33,7 +34,9 @@ def start_web_listener(app, socketio, engine, *, starter=None, use_reloader=Fals
     if starter is None:
         from endpoints.draft.startDraftNotifyListener import start_draft_notify_listener
         starter = start_draft_notify_listener
-    app.extensions['draft_notify_task'] = starter(socketio, engine)
+    controller = starter(socketio, engine)
+    app.extensions['draft_notify_listener'] = controller
+    app.extensions['draft_notify_task'] = controller.task
 
 
 def create_web_app(*, engine=None, use_reloader=False):
@@ -49,3 +52,9 @@ def create_web_app(*, engine=None, use_reloader=False):
     app = create_app(engine=engine)
     start_web_listener(app, socketio, engine, use_reloader=use_reloader)
     return app
+
+
+def stop_web_listener(app):
+    if app is None: return
+    controller = app.extensions.get('draft_notify_listener')
+    if controller is not None: controller.stop()

@@ -1,0 +1,62 @@
+{
+  "date": "2026-11-11",
+  "baseCommit": "30a1675",
+  "scope": "MOD028B transaction mutation batch only",
+  "result": "PASS_BATCH",
+  "checks": {
+    "red": "8/8 initial failures",
+    "frontend": "221/221 PASS",
+    "build": "PASS",
+    "imports": "75files201edges zero unresolved/cycles",
+    "diff": "PASS"
+  },
+  "behavior": [
+    "5 mutation API failure branches plus5 mutation UI catches migrate",
+    "8 exact400 business mappings; fixed uncertainty for5xx/network",
+    "failed selections retained and controls reenabled, no auto retry/success invalidation",
+    "read paths/success/refresh/status/ownership/auth/payload behavior retained"
+  ],
+  "rulings": [
+    {
+      "decision": "Continue incremental policy with transaction writes only",
+      "reason": "Next cohesive5-helper batch, reads/draft/admin have distinct contracts",
+      "costIfWrong": "Legacy read/other consumer errors remain until later batches"
+    },
+    {
+      "decision": "Exact verified400 business mappings extend shared allowlist",
+      "reason": "Useful feedback without echoing dynamic/private text",
+      "costIfWrong": "Safe messages are shared globally; no per-endpoint allowlist context added"
+    }
+  ],
+  "limits": [
+    "Controlled hooks/API transport/nativeResponse, not browser/live proof",
+    "No backend/schema/dependency/auth/retry/timing/deployment changes",
+    "Other MOD028B consumers and earlier browser/AT followups remain open",
+    "Exact free-agent deadline map is parser capability, not actual add/drop-route feedback; route wraps reason in ignored details and users get generic safe400 feedback."
+  ],
+  "sourceSha256": {
+    "front-end/src/api/safeError.ts": "f544dc76463a1e1b882adbac9eb0065aa659153b835d24e0726084ed3307d829",
+    "front-end/src/api/transaction.ts": "1381f0c03794d1619197167713117409e56e53ca5a73bf27a39875b9462a4f01",
+    "front-end/src/screens/League/LeagueRosterPage.tsx": "1ed9f99a63835238dcead22ef7cb52822df6709cbac6b7bb685bf1af4bf30b6a",
+    "front-end/src/components/League/TradeRequestsPanel.tsx": "7cec37810ccb90326dfc451de23658b5b1979c597df3bfd2d08a958991abd8a3",
+    "front-end/tests/transactionSafeErrors.test.ts": "30259130cec3857db1881f294501f7d83169ebc39bcdcbb9d07ee9f1b27edc23"
+  },
+  "protectedMatchBase": {
+    "front-end/src/api/client.ts": true,
+    "front-end/src/api/authenticatedFetch.ts": true,
+    "front-end/src/api/leagues.ts": true,
+    "front-end/src/screens/CreateLeague/CreateLeague.tsx": true,
+    "front-end/src/screens/League/DiscoverLeaguePage.tsx": true,
+    "front-end/src/components/League/PendingTransactionsPanel.tsx": true
+  },
+  "parserCoreMatchBase": true,
+  "review": {
+    "model": "gpt-6-astra/high",
+    "critical": 0,
+    "important": 0,
+    "minor": 1,
+    "independentChecks": "targeted34/34 and diff PASS",
+    "deferredMinor": "Current add/drop route wraps deadline reason in details; direct deadline message mapping unreachable there. Tests lack actual wrapper fixture; generic safe400 feedback applies. No backend/detail parsing expansion.",
+    "declined": "Browser/live behavior, independent full build, other consumers"
+  }
+}

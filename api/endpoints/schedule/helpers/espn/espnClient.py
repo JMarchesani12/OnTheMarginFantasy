@@ -1,5 +1,5 @@
 import datetime as dt
-import traceback
+from operations import safe_event, run_id
 from zoneinfo import ZoneInfo
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -219,6 +219,5 @@ class ESPNClient:
                                   if value.get("id")],
             }
         except Exception:
-            print("extract_game_from_event FAILED for event.id =", event.get("id"))
-            traceback.print_exc()
+            safe_event('ingest','rejected',run_id(),category='unexpected')
             return None

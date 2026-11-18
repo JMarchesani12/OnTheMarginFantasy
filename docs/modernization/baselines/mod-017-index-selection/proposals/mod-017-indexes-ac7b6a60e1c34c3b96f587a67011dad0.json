@@ -1,0 +1,40 @@
+{
+  "result": "FAILED",
+  "started_at": "2026-11-17T03:45:11.577106+00:00",
+  "provenance": {
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/scripts/modernization/verify_mod017_index_proposals.py": "be7946ed9521409eae9b7d3802a948041a214e0abf3e3eaa16fbeebd75d21efe",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/scripts/modernization/mod017_index_support.py": "51008ef2bd814c976155a989a5bd05f48fc5d498027626ade117bbf7edb4a828",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/docs/modernization/proposals/mod-017-indexes/verify.sql": "1f17734adc31f0d00f4501c5576d1717123e17ad7fa21d4b60551ad3c6aea8f6",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/docs/modernization/proposals/mod-017-indexes/preflight.sql": "56337131cc59dc6da75232d635b04474baa8f4c048ca6326473ab15d3404c540",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/docs/modernization/proposals/mod-017-indexes/recovery.sql": "ecf8b02750ae6ebe8da03694081b67f24ea3b3dfb301d266811e07b4cc4c0788",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/docs/modernization/proposals/mod-017-indexes/create.sql": "11c72e7c125232a31788f625a5a5a5a6afbbd21788ecf9e86dab464eb879d1c0",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/db/baselines/20261029/001_schema.sql": "7fe1c17223dd2cf3ebbfdb9d2ca318d4f7ad24f9a6578309c40aad3cfb58a109",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/api/migrations/20261104_user_identity_unique.sql": "64631ad06193c79bded2e52849e0264b281468ea098e3dfd72d9def01f3dab88",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/api/migrations/20261104_week_score_identity.sql": "b6a040b0d2599e32e4d87d7c59c30aecbbaa22cca7d79c07d988279a36c2e244",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/api/migrations/20261104_ownership_integrity.sql": "fb3b6c5dd445a6e8da5dd67784d882032a698917e7ac1d9eebb1167120480116"
+  },
+  "databases": [
+    {
+      "name": "otm_mod017_bbda90e91eed4c3f930a161a69cdafa1",
+      "cleanup": "removed"
+    },
+    {
+      "name": "otm_mod017_3f555e1fcb3a4fa78d6295abe26da26d",
+      "cleanup": "removed"
+    }
+  ],
+  "cleanup": "no database created",
+  "tiers": [],
+  "cases": [
+    {
+      "name": "missing",
+      "returncode": 1,
+      "stdout": "[Mon Nov 16 2026 21:45:11 GMT-0600 (Central Standard Time)] ERROR Error: ENOENT: no such file or directory, open './config/app.yml'\n    at Object.readFileSync (node:fs:440:20)\n    at Object.readConfig (/Users/jeremymarchesani/.nvm/versions/node/v22.22.2/lib/node_modules/psql/node_modules/yaml-config/lib/yaml-config.js:57:25)\n    at Object.<anonymous> (/Users/jeremymarchesani/.nvm/versions/node/v22.22.2/lib/node_modules/psql/lib/config.js:2:23)\n    at Module._compile (node:internal/modules/cjs/loader:1705:14)\n    at Object..js (node:internal/modules/cjs/loader:1838:10)\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\n    at Module.require (node:internal/modules/cjs/loader:1463:12) {\n  errno: -2,\n  code: 'ENOENT',\n  syscall: 'open',\n  path: './config/app.yml'\n}\n",
+      "stderr": "Usage: ../../../../../../.nvm/versions/node/v22.22.2/bin/node ../../../../../../.nvm/versions/node/v22.22.2/bin/psql [query] [database]\n\nExamples:\n  ../../../../../../.nvm/versions/node/v22.22.2/bin/node ../../../../../../.nvm/versions/node/v22.22.2/bin/psql -g prod -g dev \"SELECT User FROM mysql.user\"    Lists all users from groups prod and dev.\n  ../../../../../../.nvm/versions/node/v22.22.2/bin/node ../../../../../../.nvm/versions/node/v22.22.2/bin/psql \"SELECT VERSION()\"                              Get MySQL version from all servers\n\n\nOptions:\n  -g, --group  Server group to execute the query on                   \n  -d, --diff   Diff-only: Display the rows that are on one server only\n\nNot enough non-option arguments: got 0, need at least 1\n",
+      "catalog_preserved": true,
+      "drift_preserved_both": false
+    }
+  ],
+  "error_type": "AssertionError",
+  "error": "create_verify_recover: unexpected psql exit 1: Usage: ../../../../../../.nvm/versions/node/v22.22.2/bin/node ../../../../../../.nvm/versions/node/v22.22.2/bin/psql [query] [database]\n\nExamples:\n  ../../../../../../.nvm/versions/node/v22.22.2/bin/node ../../../../../../.nvm/versions/node/v22.22.2/bin/psql -g prod -g dev \"SELECT User FROM mysql.user\"    Lists all users from groups prod and dev.\n  ../../../../../../.nvm/versions/node/v22.22.2/bin/node ../../../../../../.nvm/versions/node/v22.22.2/bin/psql \"SELECT VERSION()\"                              Get MySQL version from all servers\n\n\nOptions:\n  -g, --group  Server group to execute the query on                   \n  -d, --diff   Diff-only: Display the rows that are on one server only\n\nNot enough non-option arguments: got 0, need at least 1\n[Mon Nov 16 2026 21:45:12 GMT-0600 (Central Standard Time)] ERROR Error: ENOENT: no such file or directory, open './config/app.yml'\n    at Object.readFileSync (node:fs:440:20)\n    at Object.readConfig (/Users/jeremymarchesani/.nvm/versions/node/v22.22.2/lib/node_modules/psql/node_modules/yaml-config/lib/yaml-config.js:57:25)\n    at Object.<anonymous> (/Users/jeremymarchesani/.nvm/versions/node/v22.22.2/lib/node_modules/psql/lib/config.js:2:23)\n    at Module._compile (node:internal/modules/cjs/loader:1705:14)\n    at Object..js (node:internal/modules/cjs/loader:1838:10)\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\n    at Function._load (node:internal/modules/cjs/loader:1263:12)\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\n    at Module.require (node:internal/modules/cjs/loader:1463:12) {\n  errno: -2,\n  code: 'ENOENT',\n  syscall: 'open',\n  path: './config/app.yml'\n}\n"
+}

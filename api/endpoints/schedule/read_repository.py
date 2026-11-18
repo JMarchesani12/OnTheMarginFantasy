@@ -1,3 +1,4 @@
+from utils.conference_membership import conference_sql
 """Named schedule member-read SQL using the caller's connection."""
 from sqlalchemy import text
 
@@ -154,6 +155,38 @@ class ScheduleReadRepository:
             ORDER BY gr.date, gr."externalGameId";
         """), params)
 
+    def head_to_head_games_for_members(self, conn, params):
+        return conn.execute(text("""
+            WITH target_week AS (
+                SELECT w."startDate", w."endDate", l.sport AS "sportId",
+                       ss.id AS "sportSeasonId"
+                FROM "Week" w JOIN "League" l ON l.id=w."leagueId"
+                JOIN "SportSeason" ss ON ss."sportId"=l.sport AND ss."seasonYear"=l."seasonYear"
+                WHERE w."leagueId"=:leagueId AND w."weekNumber"=:weekNumber
+                LIMIT 1
+            ), active_owners AS (
+                SELECT DISTINCT "memberId", "sportTeamId"
+                FROM "LeagueTeamSlot"
+                WHERE "leagueId"=:leagueId AND "memberId"=ANY(:memberIds)
+                  AND "acquiredWeek"<=:weekNumber
+                  AND ("droppedWeek" IS NULL OR "droppedWeek">:weekNumber)
+            )
+            SELECT gr.id, gr."externalGameId", gr.date,
+                   gr."homeTeamId", gr."awayTeamId", gr."homeScore", gr."awayScore",
+                   ARRAY(SELECT o."memberId" FROM active_owners o
+                         WHERE o."sportTeamId"=gr."homeTeamId" ORDER BY o."memberId") AS "homeMemberIds",
+                   ARRAY(SELECT o."memberId" FROM active_owners o
+                         WHERE o."sportTeamId"=gr."awayTeamId" ORDER BY o."memberId") AS "awayMemberIds"
+            FROM "GameResult" gr CROSS JOIN target_week tw
+            WHERE gr.sport=tw."sportId" AND gr."sportSeasonId"=tw."sportSeasonId"
+              AND gr.date BETWEEN tw."startDate" AND tw."endDate"
+              AND EXISTS (
+                  SELECT 1 FROM active_owners h JOIN active_owners a ON h."memberId"<>a."memberId"
+                  WHERE h."sportTeamId"=gr."homeTeamId" AND a."sportTeamId"=gr."awayTeamId"
+              )
+            ORDER BY gr.date, gr."externalGameId"
+        """), params)
+
     def week(self, conn, params):
         return conn.execute(text("""
             SELECT
@@ -180,7 +213,7 @@ class ScheduleReadRepository:
         """), params)
 
     def owned_teams(self, conn, params):
-        return conn.execute(text("""
+        return conn.execute(text(conference_sql("""
             WITH member_teams AS (
                 SELECT lts."sportTeamId"
                 FROM "LeagueTeamSlot" lts
@@ -205,13 +238,14 @@ class ScheduleReadRepository:
             LEFT JOIN "ConferenceMembership" cm
             ON cm."sportTeamId" = st.id
             AND cm."sportId" = st."sportId"
+             AND cm."sportId" = (SELECT sport FROM "League" WHERE id=:leagueId)
             LEFT JOIN "SportConference" sc
             ON sc.id = cm."sportConferenceId"
             AND sc."sportId" = st."sportId"
             LEFT JOIN "Conference" c
             ON c.id = sc."conferenceId"
             ORDER BY st."displayName";
-        """), params)
+        """, '(SELECT "seasonYear" FROM "League" WHERE id=:leagueId)')), params)
 
     def week_window(self, conn, params):
         return conn.execute(text("""
@@ -233,7 +267,7 @@ class ScheduleReadRepository:
         """), params)
 
     def conference_games(self, conn, params):
-        return conn.execute(text("""
+        return conn.execute(text(conference_sql("""
             WITH sc AS (
                 SELECT id, "sportId", "conferenceId"
                 FROM "SportConference"
@@ -309,7 +343,7 @@ class ScheduleReadRepository:
               AND gr.date >= :weekStart
               AND gr.date <= :weekEnd
             ORDER BY gr.date, gr."externalGameId";
-        """), params)
+        """, ':seasonYear')), params)
 
     def team_owner_context(self, conn, params):
         return conn.execute(text("""
@@ -429,7 +463,7 @@ class ScheduleReadRepository:
         """), params)
 
     def search_teams(self, conn, params):
-        return conn.execute(text("""
+        return conn.execute(text(conference_sql("""
             SELECT
                 st.id AS "teamId",
                 st."displayName" AS "teamName",
@@ -458,4 +492,4 @@ class ScheduleReadRepository:
               ON u.id = lm."userId"
             WHERE st."sportId" = :sport
             ORDER BY st."displayName"
-        """), params)
+        """, ':seasonYear')), params)

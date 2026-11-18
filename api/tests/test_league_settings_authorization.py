@@ -2,6 +2,7 @@
 
 PostgreSQL UPDATE CTE/JSON projection is adapted; no live DB/locking claim.
 """
+from http_error_assertions import assert_error_response
 import json
 import os
 import re
@@ -131,7 +132,7 @@ class LeagueSettingsAuthorizationTests(unittest.TestCase):
                 })
                 self.assertEqual(self.league(target), before)
                 self.assertEqual(response.status_code, 403)
-                self.assertEqual(response.json, {'message': 'Only the commissioner can perform this action'})
+                assert_error_response(self, response, {'message': 'Only the commissioner can perform this action'})
 
     def test_commissioner_fields_body_query_and_headers_cannot_transfer_or_impersonate(self):
         response = self.client.patch('/api/league/10?actingUserId=2&leagueId=20',
@@ -164,14 +165,14 @@ class LeagueSettingsAuthorizationTests(unittest.TestCase):
         response = self.client.patch('/api/league/10',
             headers=self.headers('00000000-0000-4000-8000-000000000099'), json={'name': 'Forged'})
         self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.json, {'error': 'application_identity_not_found'})
+        assert_error_response(self, response, {'error': 'application_identity_not_found'})
         self.db.connection.execute('ALTER TABLE "User" RENAME TO original_user')
         self.db.connection.execute('CREATE TABLE "User" AS SELECT * FROM original_user')
         self.db.connection.execute('INSERT INTO "User" (id, uuid) VALUES (?, ?)', (4, ALICE))
         self.db.connection.commit()
         response = self.client.patch('/api/league/10', headers=self.headers(), json={'name': 'Forged'})
         self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.json, {'error': 'application_identity_ambiguous'})
+        assert_error_response(self, response, {'error': 'application_identity_ambiguous'})
         self.assertEqual(self.league(), before)
 
     def test_model_validation_and_missing_league_json_contracts_remain(self):
@@ -185,7 +186,7 @@ class LeagueSettingsAuthorizationTests(unittest.TestCase):
                 self.assertEqual(self.league(), before)
         missing = self.client.patch('/api/league/999', headers=self.headers(), json={'name': 'Missing'})
         self.assertEqual(missing.status_code, 400)
-        self.assertEqual(missing.json, {'message': 'League 999 not found'})
+        assert_error_response(self, missing, {'message': 'League 999 not found'})
 
     def test_non_object_payload_gets_json_400(self):
         before = self.league()
@@ -205,5 +206,5 @@ class LeagueSettingsAuthorizationTests(unittest.TestCase):
         with patch.object(self.db, 'execute', side_effect=fail_league_read):
             response = self.client.patch('/api/league/10', headers=self.headers(), json={'name': 'Failed'})
         self.assertEqual(response.status_code, 500)
-        self.assertEqual(response.json, {'message': 'Failed to update league'})
+        assert_error_response(self, response, {'message': 'Failed to update league'})
         self.assertEqual(self.league(), before)

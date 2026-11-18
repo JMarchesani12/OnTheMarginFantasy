@@ -1,0 +1,35 @@
+{
+  "date": "2026-11-09",
+  "result": "PASS existing extraction reconciled",
+  "scope": "MOD032 source/caller audit and fresh isolated regression run; no reimplementation",
+  "boundaries": {
+    "calendar": "ScheduleCalendarService + supplied-connection repository",
+    "reads": "ScheduleReadService + read repository; no provider construction",
+    "ingestion": "ScheduleIngestionService + repository + injected client factory; canonical job/season callers"
+  },
+  "checks": {
+    "fullBackend": "741/741 PASS via python3 api/tests/run_isolated.py",
+    "sourceCallers": "HTTP/scoring use reads; ingest/refresh/season setup use ingestion",
+    "runtimeImports": "no configured engine/provider execution in isolated runner"
+  },
+  "historicalNativeEvidence": [
+    "mod-038-schedule-complete-postgres-2026-11-02.json",
+    "mod-015-postgres-2026-11-05.json",
+    "mod-016-postgres-2026-11-06.json"
+  ],
+  "notRun": [
+    "fresh native/provider/hosted verification"
+  ],
+  "sha256": {
+    "api/endpoints/schedule/calendar_service.py": "62856988b03cf014a567b4ffb8ea256a1d540260b2d895bfdd967371126aed6d",
+    "api/endpoints/schedule/calendar_repository.py": "1d7cf9382251ca809e9412844f10916bca00ac156bf9b89921df71f35e3baf39",
+    "api/endpoints/schedule/read_service.py": "d71c97ceabbd3c607b428390cbd163d7dd19fc17fc0e6d09f4ad53b203190a6a",
+    "api/endpoints/schedule/read_repository.py": "129767bbd62009c1cea190f8687b73a5f25460aab7d8ddae13e403c80f63ee23",
+    "api/endpoints/schedule/ingestion_service.py": "5aeadfc48be85c00b848ce4b3d73894f96e6c15164311938db201ce3afd8aebe",
+    "api/endpoints/schedule/ingestion_repository.py": "5f1e7da6c32ee1ca50ae0138540b744d0ca5f216a75de3c2de276132b24c5d4f",
+    "api/endpoints/schedule/scheduleEndpoints.py": "7d753f539c65d6d9b9bbc4595b7e0a8dc37688f440c5d379ba95473049bc0f59",
+    "api/endpoints/schedule/routes.py": "37a88a340ca824ba181a1e19d878d30c8b5508a24c1e2a570ab59f809ed31491",
+    "api/tests/test_schedule_service_composition.py": "fda5bccca07709d327c0c956eb479dc219f9e4303bd8db9e2b161fad1aa9530f",
+    "api/tests/test_schedule_ingestion_service.py": "127cac5073bf149f6f6480d75aeb85a50ff30e0a2b63942871124728df6fb02b"
+  }
+}

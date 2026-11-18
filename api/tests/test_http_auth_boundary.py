@@ -1,4 +1,5 @@
 """Authentication failure contracts on a real Flask/JWT boundary, no engine."""
+from http_error_assertions import assert_error_response
 import time
 import unittest
 from uuid import UUID
@@ -85,7 +86,7 @@ class HttpAuthBoundaryTests(unittest.TestCase):
     def test_resource_denial_stays_legacy_404_and_cors_exposes_ids_on_early_denial(self):
         res = self.client.get('/api/hidden', headers=self.headers())
         self.assertEqual(res.status_code, 404)
-        self.assertEqual(res.json, {'message': 'Trade not found'})
+        assert_error_response(self, res, {'message': 'Trade not found'})
         self.assertEqual(res.headers['Cache-Control'], 'no-store')
         denied = self.client.post('/api/change', headers={'Origin': 'https://web.example.test'})
         self.assertEqual(denied.headers['Access-Control-Allow-Origin'], 'https://web.example.test')

@@ -1,4 +1,5 @@
 """Commissioner member removal: actual JWT/routes/model SQL, synthetic data."""
+from http_error_assertions import assert_error_response
 from endpoints.league.members.service import MemberService
 import os
 import time
@@ -119,7 +120,7 @@ class MemberRemovalAuthorizationTests(unittest.TestCase):
             with self.subTest(subject=subject):
                 response = self.client.delete('/api/league/10/members/13', headers=self.headers(subject), json={'actingUserId': 1})
                 self.assertEqual(response.status_code, 403)
-                self.assertEqual(response.json, {'error': 'actor_identity_mismatch'})
+                assert_error_response(self, response, {'error': 'actor_identity_mismatch'})
                 self.assertEqual(self.state(), before)
 
     def test_member_nonmember_and_foreign_commissioner_are_denied(self):
@@ -129,7 +130,7 @@ class MemberRemovalAuthorizationTests(unittest.TestCase):
                 response = self.client.delete(f'/api/league/{league_id}/members/{member_id}',
                     headers=self.headers(subject), json={'actingUserId': actor})
                 self.assertEqual(response.status_code, 403)
-                self.assertEqual(response.json, {'message': 'Only the commissioner can remove members'})
+                assert_error_response(self, response, {'message': 'Only the commissioner can remove members'})
                 self.assertEqual(self.state(), before)
 
     def test_foreign_member_missing_targets_and_commissioner_prohibition(self):
@@ -141,7 +142,7 @@ class MemberRemovalAuthorizationTests(unittest.TestCase):
                 response = self.client.delete(f'/api/league/{league_id}/members/{member_id}',
                     headers=self.headers(), json={'actingUserId': 1})
                 self.assertEqual(response.status_code, 400)
-                self.assertEqual(response.json, {'message': message})
+                assert_error_response(self, response, {'message': message})
                 self.assertEqual(self.state(), before)
 
     def test_body_query_and_header_cannot_redirect_target_or_actor(self):
@@ -167,7 +168,7 @@ class MemberRemovalAuthorizationTests(unittest.TestCase):
         self.db.connection.commit()
         response = self.client.delete('/api/league/10/members/12', headers=self.headers(), json={'actingUserId': 1})
         self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.json, {'error': 'application_identity_ambiguous'})
+        assert_error_response(self, response, {'error': 'application_identity_ambiguous'})
         self.assertEqual(self.state(), before)
 
     def test_invalid_object_actor_and_nonboolean_shift_get_json_400(self):
@@ -186,7 +187,7 @@ class MemberRemovalAuthorizationTests(unittest.TestCase):
         self.db.fail_after_delete = True
         response = self.client.delete('/api/league/10/members/12', headers=self.headers(), json={'actingUserId': 1})
         self.assertEqual(response.status_code, 500)
-        self.assertEqual(response.json, {'message': 'Failed to remove member'})
+        assert_error_response(self, response, {'message': 'Failed to remove member'})
         self.assertEqual(self.state(), before)
 
     def test_replay_cannot_shift_again_or_change_league_count(self):

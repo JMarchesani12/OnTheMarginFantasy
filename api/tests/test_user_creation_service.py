@@ -1,5 +1,6 @@
 """Bootstrap service contracts with real synthetic profile SQL, no HTTP context."""
 import unittest
+import sqlite3
 from contextlib import contextmanager
 from sqlalchemy.exc import IntegrityError
 from endpoints.user.service import UserService
@@ -102,3 +103,44 @@ class UserCreationServiceTests(unittest.TestCase):
             model.get_profile_by_uuid_for_job('missing')
         with self.assertRaises(ProfileNotFound):
             self.service.get_profile_by_uuid_for_job('missing')
+
+    def test_unique_race_rechecks_subject_after_rollback_and_returns_existing_conflict(self):
+        # A peer's committed row is hidden only from the first (stale) read.
+        self.db.connection.execute('INSERT INTO "User" (id,uuid,email,"displayName") VALUES (3,?,?,?)',
+                                   (NEW, 'new@example.test', 'Peer'))
+        self.db.connection.commit()
+        execute = self.db.execute
+        reads = []
+        class UniqueViolation(Exception):
+            pgcode = '23505'
+        def race(statement, params):
+            if 'SELECT id FROM "User"' in str(statement):
+                reads.append(True)
+                if len(reads) == 1:
+                    return execute(statement, dict(params, subject='missing'))
+            try:
+                return execute(statement, params)
+            except sqlite3.IntegrityError as exc:
+                raise IntegrityError(str(statement), params, UniqueViolation('private constraint details')) from exc
+        self.db.execute = race
+        with self.assertRaises(ProfileAlreadyExists):
+            self.service.create_profile(ProfileSubject(NEW, 'new@example.test'), 'Overwrite')
+        self.assertEqual(self.engine.begins, 2)
+        self.assertEqual(self.db.profile(3)['displayName'], 'Peer')
+        self.assertEqual(self.count(), 3)
+
+    def test_other_subject_email_collision_stays_rejected_after_unique_recheck(self):
+        execute = self.db.execute
+        class UniqueViolation(Exception):
+            pgcode = '23505'
+        def conflict(statement, params):
+            try:
+                return execute(statement, params)
+            except sqlite3.IntegrityError as exc:
+                raise IntegrityError(str(statement), params, UniqueViolation('private email collision')) from exc
+        self.db.execute = conflict
+        with self.assertRaises(ProfileCreationRejected):
+            self.service.create_profile(ProfileSubject(NEW, 'alice@example.test'), 'Overwrite')
+        self.assertEqual(self.engine.begins, 2)
+        self.assertEqual(self.db.profile(1)['displayName'], 'Alice')
+        self.assertEqual(self.count(), 2)

@@ -1,3 +1,6 @@
+from sqlalchemy.exc import IntegrityError
+from werkzeug.exceptions import HTTPException
+from sqlalchemy.exc import DataError
 # endpoints/schedule/scheduleEndpoints.py
 
 from flask import request, jsonify
@@ -43,9 +46,9 @@ class ScheduleEndpoints:
             return jsonify(payload), 200
         except ValueError as e:
             return jsonify({"message": str(e)}), 400
+        except (HTTPException, DataError, IntegrityError):
+            raise
         except Exception:
-            import traceback
-            traceback.print_exc()
             return jsonify({"message": "Failed to get member schedule"}), 500
 
     # POST /api/schedule/conferenceGamesByWeek
@@ -83,9 +86,9 @@ class ScheduleEndpoints:
             }), 200
         except ValueError as e:
             return jsonify({"message": str(e)}), 400
+        except (HTTPException, DataError, IntegrityError):
+            raise
         except Exception:
-            import traceback
-            traceback.print_exc()
             return jsonify({"message": "Failed to get conference games by week"}), 500
 
 
@@ -121,9 +124,9 @@ class ScheduleEndpoints:
             }), 200
         except ValueError as e:
             return jsonify({"message": str(e)}), 400
+        except (HTTPException, DataError, IntegrityError):
+            raise
         except Exception:
-            import traceback
-            traceback.print_exc()
             return jsonify({"message": "Failed to get team games by season"}), 500
 
     # POST /api/schedule/teamSearch
@@ -154,9 +157,9 @@ class ScheduleEndpoints:
             }), 200
         except ValueError as e:
             return jsonify({"message": str(e)}), 400
+        except (HTTPException, DataError, IntegrityError):
+            raise
         except Exception:
-            import traceback
-            traceback.print_exc()
             return jsonify({"message": "Failed to search teams"}), 500
         
     def createWeeksForLeague(self):

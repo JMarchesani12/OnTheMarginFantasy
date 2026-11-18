@@ -1345,3 +1345,917 @@ assessment with explicit authorization and existing cached Docker image.
   This does not authorize hosted execution or claim arbitrary historical schemas/
   production disaster restores. MOD-004 remains partial for Render/consumer mapping
   and an authorized, versioned privilege rollout path. MOD-009 stays complete.
+
+## Priority 4 continuation — 2026-11-03
+
+User selected the recommended explicit replay conflict and authorized continuing
+Priority 4 in the existing audit checkout. Baseline isolated backend: 594/594.
+
+MOD-025 now validates a nonempty exact permutation of current league members,
+rejecting duplicate/foreign/missing/malformed IDs before writes. Start validates
+member count and positions 1..numPlayers and requires Pre-Draft with absent or
+pristine schema-default pre state, no picks/turns. Live/paused/complete/unknown
+and progressed-pre states cannot restart. HTTP replay returns 409 with
+`draft_start_conflict`, with no broadcast or change to persisted picks, cursor,
+timers or turns. Pause/resume, actor authority and transaction ownership remain.
+Order also rejects later league lifecycle/unknown draft state.
+
+Independent review identified inverted League/state locks against final-pick
+finalization. A native regression reproduced PostgreSQL deadlock/OperationalError.
+Existing DraftState now locks before League. If state is absent, League serializes
+first commands; a nonlocking state recheck rejects a state created during the
+wait, avoiding a new state lock while League is held. Native lock-wait tests now
+pass for start/start, order/start, start/order, finalization/start and
+finalization/order. Finalization completes and the replay receives its intended
+conflict/denial. Native statement and deferred-commit failures roll back. Prior
+snapshot, finalization, controls and order native suites also pass; partial-order
+and restart expectations were updated to assert the intentional new behavior.
+[PostgreSQL report](evidence/mod-025-postgres-2026-11-03.json) contains source hashes.
+
+MOD-019 local slices: all Flask failures have structured error.code/message and
+requestId, matching X-Request-ID. Top-level message preserves current browser
+consumers. Legacy string error codes move to error.code. Only pre-execution auth
+middleware emits the reserved auth recovery code. Framework errors preserve
+headers such as Allow; IntegrityError maps to safe 409, DataError to 400;
+unexpected/caught 5xx are sanitized and discard extra fields. Target user/league/
+draft/roster adapters pass framework/driver failures to those handlers; malformed
+profile JSON and invalid profile/league scalar types deliberately return 400.
+Removed schedule-adapter traceback printing to prevent private exception logs.
+Existing HTTP authorization/rollback tests retain their checks and use a shared
+wire-envelope assertion for changed error shapes. Dedicated boundary tests
+independently pin code/status/message/header contracts and private-data exclusion.
+
+Resource budgets: body 262144 bytes, query string 8192 bytes, scoring weeks128,
+trade IDs256 per side, public search q128 characters, limit1..50, offset0..10000.
+These are documented operational ceilings, not measured/domain maximum claims.
+Known and terminated unknown-length body tests verify rejection and exact-boundary
+acceptance; the latter uses bounded one-byte lookahead. Oversized arrays and
+search inputs fail before domain work; no silent truncation/pagination introduced.
+Existing full draft/roster snapshots remain complete. See [HTTP documentation](../../api/README.md#http-errors-and-input-limits).
+
+Final commands: `python3 api/tests/run_isolated.py` **621/621**;
+`node --test --experimental-strip-types tests/*.test.ts` from front-end **64/64**;
+`npm run build` from front-end passes; `git diff --check` passes.
+`python3 scripts/modernization/verify_mod025.py` passes on a task-owned marked
+loopback PostgreSQL17.6 container from an already cached image, with no downloads
+or persistent volumes. The harness creates/drops only its own random database.
+No configured/hosted database, application/job/listener or provider ran.
+MOD-034 startup and MOD-028A auth recovery regressions retained.
+
+Limits: gateway quotas/trusted proxies/distributed rate enforcement remain open;
+no new rate infrastructure or hosted configuration changes. Synthetic PostgreSQL
+proves these local lock/rollback paths, not deployed RLS/topology. Admission
+serialization remains MOD-012. No production access, schema/dependency change,
+commit, merge, push or deployment; work remains reviewable on audit.
+
+Cleanup confirmed: task-owned PostgreSQL container stopped/auto-removed; its tmpfs storage discarded. All evidence source hashes match the final implementation.
+
+## Priority 5 MOD-006 linked-profile uniqueness — 2026-11-04
+
+User authorized starting Priority5 with the first ready task after dependency
+review. MOD-002 principal isolation and MOD-005 baseline are available in their
+recorded scopes. This work covers local MOD-006, not later Priority5 tasks or
+hosted rollout. Baseline backend621/621; final **623/623**. Frontend **64/64**
+and `npm run build` pass; `git diff --check` clean.
+
+Preserved nullable legacy/job UUIDs, unique email and auth FK/cascade policy.
+Prepared a named nondeferrable null-distinct `User_uuid_key UNIQUE(uuid)` migration
+with5-second lock and60-second statement timeouts. Aggregate preflight reports
+only total/null/duplicate-group/affected-row counts; no UUID/email/name output.
+Migration repeats duplicate checks under table lock and refuses dirty data
+without remapping/deleting/linking profiles. Replay checks constraint columns,
+nondeferrability, null-distinct semantics and valid/ready backing index. Both
+preflight/migration set row_security=off so filtered roles fail rather than
+report misleading readiness; this does not bypass RLS.
+
+UserService retains existing initial ambiguity/existence checks. PostgreSQL23505
+failures roll back before one fresh lookup of the verified subject; exactly one
+row maps to existing409, ambiguous rows deny, absent subject retains generic400.
+No identity lookup by email, automatic mutation retry or profile overwrite.
+Other constraint failures and trusted job behavior remain safe/compatible.
+Two isolated driver-aware regressions failed before implementation and pass
+with actual synthetic persistence/rollback; prior ambiguity/statement/commit
+rollback tests retained.
+
+[Native evidence](evidence/mod-006-postgres-2026-11-04.json) verifies real PostgreSQL
+baseline001 + kickoff + additive upgrade/replay, duplicate aggregate counts and
+atomic refusal, direct uniqueness, nullable legacy rows, email/FK rejections,
+actual concurrent insert lock waits for same-subject/same-email and different
+email (one created/one existing conflict), different-subject/same-email denial,
+and prior native creation/rollback contracts. NULLS NOT DISTINCT replay and
+RLS-filtered preflight tests reproduced their failures before fixes. Fresh
+independent reviewer found no material issue and independently ran623 tests.
+Optional explicit post23505 ambiguity/commit23505 branch fixtures remain a
+coverage refinement; initial ambiguity, deferred rollback and native23505 races
+are covered.
+
+The verifier accepts no configured DSN/.env, creates/drops only its own random
+DB on the marked task-owned loopback PostgreSQL17.6 instance from cached image,
+and removes its temporary RLS reader role. No full-provider or deployed-policy
+claim follows from this minimal auth fixture. Frozen baseline untouched; current
+intended schema and documented run order include the new migration. See the
+[rollout/remediation/recovery runbook](../../db/preflights/README.md).
+
+Hosted aggregate preflight and migration approval/installation remain mandatory
+before production uniqueness is guaranteed; neither was performed. No configured
+DB access, private rows, schema change on hosted systems, dependency download,
+application/job/listener launch, merge/push/commit or deployment. Work remains
+uncommitted on audit. MOD-008/010/011/012 remain separate.
+
+Cleanup verified: random test databases and temporary RLS reader removed by the harness; task-owned PostgreSQL container stopped/auto-removed with tmpfs storage discarded. Final evidence source hashes match.
+
+## MOD-006 authorized configured-database rollout — 2026-11-04
+
+Maintainer explicitly requested running the prepared SQL now. Connected only to
+the configured application database with credentials kept out of outputs. Ran
+the checked-in aggregate-only read-only preflight with row_security=off and
+statement timeout:14 total profiles,0 unlinked,0 duplicate groups/affected rows.
+Catalog confirmed nullable UUID and no existing named uniqueness constraint.
+Applied exactly `api/migrations/20261104_user_identity_unique.sql`, preserving
+its transaction, duplicate recheck and5s/60s lock/statement timeouts. Verified
+constraint columns/type, nondeferrability, validation, null-distinct semantics
+and valid/ready index; UUID remains nullable. Aggregate counts unchanged.
+[Rollout report](evidence/mod-006-rollout-2026-11-04.json) contains target hash,
+aggregate before/after, catalog booleans and migration checksum, no identities,
+connection URI or secrets. Result APPLIED_AND_VERIFIED. No other migrations,
+account linking/remediation, baseline replay or backend deployment performed.
+The previous outstanding hosted rollout is satisfied for this configured target.
+
+## MOD-011 PostgreSQL acceptance — 2026-11-04
+
+Verification-only: no product repair repeated. Initialized the real frozen001
+schema with documented minimal Auth/pg_trgm prerequisites, then kickoff and
+identity migrations on an owned marked disposable PostgreSQL17.6 database.
+Seeded synthetic commissioner/applicants/leagues/requests, retaining actual
+status CHECK, foreign keys and pending-request index. Exercised checked actor
+AdmissionService paths for PENDING→DENIED/CANCELLED and exact eight-field
+response, correct IDs/scope/message/resolver/time, repeat rejection, approved
+request rejection for its actual owner, wrong-league/foreign-owner/noncommissioner
+rejection with all request rows unchanged. Lowercase statuses fail with23514.
+Post-write fault and deferred23514 commit failure both preserve pending rows.
+
+Observed actual pg_stat_activity lock waits for deny→cancel and cancel→deny:
+first resolution commits once, second raises AdmissionRejected without replacing
+the committed result. Prior native listing/cancellation and creation/denial
+fixtures rerun, including same-command races, role checks and rollback coverage.
+[Evidence with source hashes](evidence/mod-011-postgres-2026-11-04.json).
+Independent reviewer found no material findings and confirmed evidence hashes.
+Full guarded backend623/623; diff check clean. This closes MOD-011's stale native
+acceptance gap, not MOD-012 admission capacity/initialization or deployed-policy
+acceptance. No hosted requests were created, denied or cancelled.
+
+Next MOD-008 source findings: calendar ensure checks existing weeks then inserts
+across separate transactions; scoring replacement uses one transaction but has
+no common period lock and natural-key uniqueness. Its separate design/preflight
+must preserve current week0/final-period behavior and avoid silent historical
+deduplication. No new MOD-008 schema/behavior implemented during this stage.
+
+Cleanup verified: owned random native-test database dropped; task-owned PostgreSQL container stopped/auto-removed and temporary storage discarded. All evidence source hashes match. Configured database retains the authorized MOD-006 constraint.
+
+## Priority 5 MOD-008 — 2026-11-04
+
+User authorized starting MOD-008. Baseline623 isolated tests retained; final
+**624/624**. Two concrete defects reproduced before implementation: football
+numbered insert failure retained week0, and a missing period could still replace
+committed scores. Calendar now keeps the fast existing read, plans unchanged
+UTC boundaries, then locks League, rechecks and writes all planned weeks in one
+transaction. Existing rows/standalone helper interfaces retained; pure date
+fixtures use the boundary API, actual calendar persistence/rollback tests remain.
+Scoring locks a scoped Week row in the existing replacement transaction before
+delete/insert; a missing row fails before scores mutate. Calculation/ranking is
+unchanged and upstream facts remain separate reads.
+
+Prepared aggregate-only fail-closed preflight for duplicate week/score keys,
+null keys and absent/cross-league score week/member references. Bounded migration
+locks Week→LeagueMember→WeeklyTeamScore and rechecks dirty state. Added natural
+unique keys and independent composite same-league score FKs with parent unique
+keys, retaining original single-column FKs and cascades. Replay checks table,
+ordered columns, type, validation/nondeferrability, unique index readiness/null
+semantics and FK target/action/match policy. No history cleanup/remapping.
+
+[Native report](evidence/mod-008-postgres-2026-11-04.json) proves actual baseline
+plus kickoff/User/period migrations, upgrade/replay, separate dirty duplicate and
+cross-league refusal without row/partial-key changes, wrong-key/FK-action drift
+rejection, direct23505/23503, member cascade, whole-plan statement/deferred-commit
+rollback and retry. Real pg_stat_activity waits observed for concurrent fresh
+ensures and score replacement with no previous scores and with previous scores;
+both callers converge to identical canonical sets. Prior calendar/scoring native
+checks rerun, including DST/week0/final-period/tiebreak and score rollback.
+Old extraction fixture expecting a separately committed week0 now verifies full
+initialization rollback. Independent reviewer found no material findings.
+
+Following the maintainer-authorized Priority5 rollout workflow, read-only aggregate
+configured-database preflight found176 weeks,340 scores and zero duplicate/null/
+cross-league counts. Applied exactly the reviewed period/score migration with
+5s lock/60s statement bounds. Read-only catalog verification confirms all six
+constraints; counts unchanged after installation. [Rollout report](evidence/mod-008-rollout-2026-11-04.json)
+contains target fingerprint, aggregate before/after, constraint booleans and SQL
+checksum, with no private rows/credentials. No hosted jobs, week rebuilds, score
+computation, row cleanup or additional application actions occurred. Current
+schema snapshot/run order updated, frozen baseline/checksums unchanged.
+
+Frontend64/64 and production build pass; diff check clean. Native source hashes
+and installed migration checksum match. Backend changes remain uncommitted on
+audit and are not deployed: new database constraints protect identities, while
+atomic initialization/waiting replacements require the new backend code.
+Limits: existing partial calendar history is not rebuilt, read-only planning can
+precede concurrent calendar administration, upstream scoring facts/membership
+are not one snapshot, full hosted RLS/topology and job orchestration are not
+proved. MOD-010/012/013/015 retain their separate responsibilities. See the
+[rollout/recovery runbook](../../db/preflights/MOD-008.md).
+
+Cleanup verified: owned random native-test databases dropped; disposable PostgreSQL container stopped/auto-removed with temporary storage discarded. Final native source hashes and configured migration checksum match.
+
+## Priority 5 MOD-010 ownership concurrency — 2026-11-04
+
+User authorized continuing Priority5. Baseline624/624; final **630/630** backend,
+frontend **64/64** and production build pass, diff clean. Three isolated failures
+first reproduced queued free-agent application taking an owned team, completing
+an unowned drop and exceeding conference caps. Native pending-add reproduction
+accepted both competing requests before fix; afterward one waits and rejects.
+
+A stable v1 SHA256-derived signed64 per-league pg_advisory_xact_lock precedes
+DraftState/Transaction row locks for all first-party public ownership/reservation
+writers. A transaction application reads only a league hint before the mutex,
+then row-locks and rejects changed league/type/status. Existing trade replay and
+authority behavior retained. FA effective-week routing/swap/member/pending checks
+now share the supplied transaction; strict ConnectionOwner regression verifies
+one begin/no extra connect. Apply revalidates all drops before closing them,
+then actual add availability and conference counts after drops on the same
+connection. Exceptions preserve slots and pending status. No automatic retries.
+
+[Native report](evidence/mod-010-postgres-2026-11-04.json) uses actual baseline plus
+current additive migrations. Covers13 observed application races: same-team pending
+reservation plus manual/live/timeout versus free-agent apply, different pending
+trades, different-team cap competition and independent league requests, each with
+and without database guards. Conflicting commands wait and reject, independent
+leagues proceed without the mutex wait. Deterministic team selection is injected
+only for the timeout candidate; actual timeout insertion/state/transaction path
+runs. Tests assert exactly one valid owner, unchanged rejected replay/history
+and statement/deferred-commit rollback. A direct SQL race outside application
+mutex observes the exclusion wait and23P01. Strict diagnostics do not classify
+arbitrary database failures/deadlocks as expected application rejections.
+Prior full draft/transaction native contracts rerun successfully.
+
+Prepared aggregate-only ownership preflight and bounded migration. Interval CHECK
+allows acquired>=0 and end>=start; same-league member FK references MOD-008 parent
+key with cascade; GiST exclusion prevents same-league/team overlapping int8range
+intervals. Standard platform btree_gist enables scalar GiST equality. Native proof
+includes zero-length duplicates, adjacent transfers, week0 and future intervals;
+an earlier open-ended manual write cannot overwrite a valid future reservation.
+Dirty/shape drift refuses atomically; no historical repair. Sport mismatches are
+inventoried, not enforced by a new cross-table sport constraint.
+
+Independent reviewer found no material bug, missing public writer or lock
+inversion. Private insert/repository helpers require the outer command's supplied
+connection/mutex. Existing control/response/veto row-lock paths never request the
+ownership mutex. Conference semantics remain current source policy; no season-rule
+or scheduler change was inferred from the concurrency work.
+
+Configured read-only aggregate preflight found1059 slots,10 valid empty intervals,
+zero negative/reversed/overlap/member-league/sport mismatches. Following authorized
+rollout workflow, applied the reviewed migration with5s lock/60s statement bounds:
+btree_gist1.7 now in public; interval/FK/exclusion definitions, index readiness,
+operators, range bounds and nondeferrability verified. Counts unchanged after.
+[Rollout report](evidence/mod-010-rollout-2026-11-04.json) contains only target hash,
+aggregate counts/catalog flags, extension metadata and migration checksum.
+No configured ownership commands, private-row exports, draft/job execution,
+remediation or history writes. No new package downloads/infrastructure service.
+Current schema/run order updated; frozen baseline/checksums untouched.
+
+Limits: requested-week pending policy remains; future queued commands can become
+invalid and remain pending on safe rejection. MOD-013 owns dependency/retry/timing
+recovery, including no-week-ready behavior. Full game/ownership/membership/calendar
+snapshots and deployed RLS/provider behavior are not claimed. SQL guards protect
+intervals immediately, but reservation/cap serialization requires deploying all
+updated application/job writers. Those backend changes remain uncommitted on
+audit, not deployed. See [runbook](../../db/preflights/MOD-010.md). MOD-012 remains
+as the next Priority5 task.
+
+Final MOD-010 authorization check reproduced a foreign-member request reaching a contended ownership mutex before denial; moved the initial owned-member check ahead of that mutex and verified404/no state change. Mutex still precedes command row locks and guarded insertion still rechecks authority. Current source-snapshot initialization passes with platform btree_gist prerequisite; final backend630/630.
+
+Cleanup verified: owned random native databases removed; task-owned PostgreSQL container stopped/auto-removed with temporary storage discarded. Native/current-schema source hashes and installed migration checksum match final files.
+
+## MOD-012 — 2026-11-04
+
+`python3 api/tests/run_isolated.py`: **632/632 PASS**; frontend
+`node --test --experimental-strip-types tests/*.test.ts`: **64/64 PASS**;
+`npm run build` and `git diff --check` pass. Native owned, marked loopback
+PostgreSQL verifier passes on frozen schema plus current migrations, including
+request reuse, checked/supplied same/distinct approval lock waits and uncapped
+count/order/round checks, stale count correction, real calendar supplied visibility,
+planning/statement/deferred-commit rollback/retry and prior native suites.
+[Hashed evidence](evidence/mod-012-postgres-2026-11-04.json). Independent review
+found no blocking issues; count-policy documentation corrected. Synthetic resources
+removed. No new migration, configured league mutation or application deployment.
+
+## Priority 6 MOD-013 — 2026-11-05
+
+Approved predecessor-close timing implemented with no new schema. Failure-first
+supplied score/trade/free-agent tests initially failed for missing `conn` support;
+new caller-owned paths preserve rollback without nested acquisition/commit. Native
+ACCEPT during weekly closure initially succeeded after the pending snapshot;
+trade actions now acquire v1 ownership mutex before row locks, wait, then reject
+acceptance into the closed/locked period. Score completion also locks its own week.
+Initial/gapped calendar and failure/retry regressions were observed RED → GREEN.
+
+Final `python3 api/tests/run_isolated.py`: **649/649 PASS**, exit0.
+Frontend `node --test --experimental-strip-types tests/*.test.ts`: **64/64 PASS**;
+`npm run build` and `git diff --check` pass. Native
+`python3 scripts/modernization/verify_mod013.py`: PASS on fresh marked owned
+loopback PostgreSQL using frozen schema plus kickoff/identity/week/ownership
+migrations. Actual schedule/scoring calculations and trade/free-agent commands;
+strict supplied connection guard; catch-up/no-new-score retry; first/missing/
+wrong-league/scored target boundaries and week0; score/mark/lock/ownership statement
+faults and deferred score/mark/application commit rollback; partial-command progress;
+same-league workers, independent leagues, ACCEPT and free-agent submission versus
+closure under observed lock waits. Previous full MOD010 ownership, MOD008 keys/
+calendar/scoring and complete scoring suites rerun successfully without overwriting
+historical evidence. [Current hashes/evidence](evidence/mod-013-postgres-2026-11-05.json)
+match current sources. Independent final review found no actionable issues and
+independently passed33 focused tests. Owned random test DBs and container removed.
+No configured job/data mutation, migration, scheduler, dependency, merge/push or
+application deployment. Changes left uncommitted in the audit checkout. MOD-014
+season finalization remains next; manual historical safeguards remain MOD-016.
+
+## Priority 6 MOD-014 — 2026-11-05
+
+Failure-first supplied standings rejected conn; orchestration tests failed for the
+missing finalization service and old cron's missing outcome. Implemented supplied
+season reads, atomic readiness/standings/status/flag service, safe CLI outside Flask.
+Native previous scoring tests exposed a closed read connection forwarded on the
+standalone path; active-scope regression observed RED → GREEN after separating
+caller conn from local read_conn variables. Independent review's P2 discovery-error
+report finding fixed with acquisition/query/commit and CLI discovery/startup tests
+RED → GREEN; no SQL/payload appears on stdout/stderr and CLI exits1 on failure.
+
+Final isolated backend **663/663 PASS**, frontend **64/64 PASS**, production build
+and diff checks pass. Owned marked full-schema PostgreSQL plus kickoff/identity/week/
+ownership migrations verifies real bonus/all season-tiebreak supplied reads, exact
+scope/no score or roster writes, inclusive end-day and lifecycle/readiness guards,
+empty/missing/future/pending boundaries, statement/deferred league/season commit
+rollback/retry, detected concurrent matching-league insertion refusal, competing
+finalizer replay, independent seasons and weekly/application mutex waits. Prior
+MOD013 weekly and complete-scoring native suites pass without rewriting historical
+evidence. [Hashed evidence](evidence/mod-014-postgres-2026-11-05.json) matches current
+sources. Reviewer independently passed12 focused tests before final reporting fix;
+post-fix full663-test suite passes. No other material review findings.
+
+No configured job, new migration, dependency, scheduler, merge/push or deployment.
+Owned random DBs/container removed; current checkout uncommitted. Marker validates
+the scoped league set and does not prevent future admin/provider/history changes.
+
+## Priority 6 MOD-015 — 2026-11-05
+
+Failure-first tests reproduced duplicate roster rows, unmapped manual/live/trade
+acceptance, invalid ingestion references and Independent UI fallback. Effective
+membership picks exact season, then current only if exact absent; invalid exact
+sport/reference suppresses fallback and other years cannot override. No independent
+bucket or uncapped missing configuration. Role/status/history/resource contracts
+retain their existing checks; minimal synthetic schemas/candidates were explicitly
+upgraded rather than adding production fallbacks for incomplete fixtures.
+
+Independent review found P1 timeout retained-roster bypass and P2 missing league-
+sport predicates in member roster/schedule-owned/draft history reads. Actual timeout
+and three-family projection regressions observed RED → GREEN in one fix pass;
+PostgreSQL proves no cursor/turn/pick/slot mutation on refusal and retained null-
+metadata cross-sport history. No other material findings or deferred minors.
+
+Final backend `python3 api/tests/run_isolated.py`: **672/672 PASS**. Frontend
+`node --test --experimental-strip-types tests/*.test.ts`: **64/64 PASS**, production
+build and `git diff --check` pass. `verify_mod015.py` passes on fresh marked owned
+PostgreSQL with frozen schema/current kickoff/identity/week/ownership migrations:
+actual query/cardinality/count/cap/command families, mapped-only auto, missing/
+wrong-sport write rollback, game season/phase/team reference checks and valid nulls,
+clean/dirty membership/coverage/game/phase/tournament preflight. Previous ownership,
+draft allocation/snapshot/finalization/control/order, transaction, calendar/member/
+view/ingestion and roster suites pass; historical reports remain untouched.
+[Source/test hashes and evidence](evidence/mod-015-postgres-2026-11-05.json).
+
+No migration authored/applied, configured target preflight, guessed conference
+assignment, history repair, dependency/scheduler/job/provider run or deployment.
+[Preflight/constraint proposal](../../db/preflights/MOD-015.md) separates application
+checks from remaining direct-SQL/parent metadata guarantees. Owned random DBs and
+container removed; checkout uncommitted; frozen baseline unchanged.
+
+## Priority 6 MOD-016 — 2026-11-06
+
+Failure-first preview/guards/atomic apply/CLI tests initially failed for missing
+maintenance service and preview composition. Actual SQL on strict supplied-conn
+SQLite now proves no preview writes, exact year/IDs, every observable history and
+active/finalized guard, reference impacts/totals, retained IDs, foreign reference
+refusal, scoring rollback/retry/isolation and safe CLI defaults/exit/error reporting.
+
+Independent review found P2 League-before-DraftState inversion against draft controls
+and omitted currentMemberId. Pristine-field test and valid-draft native lock race
+observed RED; fixed in one pass with DraftState-before-League and nonlocking refusal
+when a state appears while waiting. Existing/no-state start and order races GREEN;
+non-null pre-state pointer refuses writes. No other material findings or deferred
+minors. Reviewer independently passed14 maintenance tests before the fix.
+
+Final backend **687/687**, frontend **64/64**, production build and diff checks PASS.
+Owned marked current full-schema PostgreSQL verifies actual calendar/scoring on
+supplied connections, preview invariance, historical ownership/completed trade/
+postseason period impacts and exact stored totals/reference invariance when refused,
+football week0, foreign-reference cascade protection, calendar insert/update/delete/
+score/flag statement faults and deferred commit restoration/retry. Supported weekly,
+manual draft, pending transaction, existing/first draft start, order, finalization
+and foreign-key insertion races show real waits and fresh eligibility checks.
+Previous calendar, weekly, season-finalization and complete-scoring native suites
+pass without changing historical reports. [Hashed evidence](evidence/mod-016-postgres-2026-11-06.json)
+contains current source/test hashes.
+
+No new migration, snapshots/remapping, historical rescore input approval, configured
+maintenance/job/provider run, dependency/scheduler change or deployment. Owned random
+databases/container removed; audit checkout uncommitted; frozen baseline unchanged.
+
+## MOD-023 — committed draft publication and reconnect convergence — 2026-11-06
+
+Approved [design](../superpowers/specs/2026-11-06-mod-023-design.md) and
+[implementation plan](../superpowers/plans/2026-11-06-mod-023.md). New transaction-local
+notifications cover nonterminal live picks, controls/order, timeout skip rotation,
+last-turn clock extension, and direct/implicit finalization. Existing manual/auto
+pick wakeups remain; duplicate wakeups are permitted. Failure to notify rolls back
+the mutation. No schema/revision/outbox or event shape change.
+
+Server-held SID credentials and the current unique User/member binding are checked
+on joins and separately before every private delivery. Initial join uses the
+member-scoped snapshot service. HTTP and database-listener delivery share the
+same per-recipient boundary; registration/engine mismatch fails closed. Revoked,
+expired, missing/ambiguous identities or lookup failures are evicted with generic
+errors. Own leave/disconnect works after revocation. Tokens never enter payloads.
+The boundary authorizes new emissions; it cannot recall already delivered data.
+The supported single-process Socket.IO topology is unchanged.
+
+Browser socket events trigger one serialized, abortable HTTP reader. Every connect
+rejoins, event bursts coalesce, and disposed/disconnected/denied generations cannot
+apply late successes. Page command responses no longer apply draft state, and
+storage does not restore picks over authoritative state. Null/empty snapshots clear
+state and picks. The page keeps one subscription per league/token/endpoint; member
+metadata/callback changes refresh without rebuilding it. All hooks now execute
+before the league-loading return. Available-team refresh joins the same request
+lifecycle. API origin/auth refresh and mutation retry behavior remain unchanged.
+
+Verification uses actual Flask-SocketIO test clients with signed synthetic JWTs
+(no network server), the production TypeScript controller with controlled socket/
+HTTP dependencies, and a marked task-owned PostgreSQL17.6 container on loopback.
+Native LISTEN sees no uncommitted event; all eight newly covered control/worker
+branches restore rows and emit nothing on post-notify and deferred-commit failure.
+Native no-op/replay silence, member snapshots after worker transitions and previous
+snapshot/control/order/finalization/complete-pick suites pass. The prior native
+complete-pick harness now expects current live/skip publication; frozen historical
+reports are untouched. [Source-hashed native evidence](evidence/mod-023-postgres-2026-11-06.json).
+
+No real browser end-to-end run, configured application/listener/worker/provider,
+production SQL, dependency, deployment, commit or push. Delivery converges on a
+valid reconnect or later refresh signal, without durable replay during an outage.
+Listener reconnection/DSN parity/operational health remain MOD-024.
+
+Independent whole-change review found expiry during DB lookup, swallowed roster
+errors, stale route/account league context, and late command error/loading writes.
+All were reproduced RED and fixed in one pass: credentials are verified after DB
+I/O; roster failures preserve HTTP status and reach the refresh controller; route/
+account identity scopes authoritative member metadata; captured controllers guard
+late command UI changes. No deferred findings. Added actual page-module hook/JSX
+harness regressions with substituted transport (not a browser DOM/E2E claim),
+including navigation without cached state, account member changes, combined-reader
+failure propagation and overlapping command completion across token generations.
+
+Final checks: backend **704/704**, frontend **74/74**, TypeScript/production build,
+native MOD-023 + prior draft and MOD-010 ownership race suites, and whitespace diff
+check PASS. Source hashes refreshed after fixes. Owned random database and the
+MOD-023 container removed. Changes remain uncommitted and undeployed.
+
+## Priority 6 MOD-024 — operational recovery — 2026-11-06
+
+Approved [design](../superpowers/specs/2026-11-06-mod-024-design.md) and
+[plan](../superpowers/plans/2026-11-06-mod-024.md). The dedicated listener now uses
+engine-derived connection parameters, privately rejects mismatched legacy targets,
+reconnects with capped backoff, probes idle transport, retries bounded/coalesced
+league work and resynchronizes subscribed rooms after reconnect. MOD023 authorization
+and stop checks guard every delivery. Resource ownership and cooperative shutdown
+are explicit; no pooled LISTEN session is returned to application traffic.
+
+/health is unchanged; public cached/no-store /ready follows the user-approved503
+policy for required unhealthy listeners and200 for intentional disablement. Its
+fixed503 body is explicitly tagged to avoid normal REST error-body replacement;
+all existing error-envelope tests remain green. Dev/Gunicorn cleanup hooks and
+standalone timeout signal/stop behavior are covered without serving configured apps.
+
+Four standard cron adapters use stable per-command session advisory gates. Same
+command contention skips before domain/provider work; exception/disconnect/interrupted
+setup/unlock cleanup releases or invalidates physical sessions. Gate checks never
+reconnect and continue unlocked. Domain transaction/ownership locks, weekly/season
+atomicity, formulas and date policies remain unchanged. Safe allowlisted correlated
+events use stderr; weekly/final JSON stdout remains compatible. Ingestion partial
+failures return nonzero, and nested provider parser errors no longer print data or
+tracebacks. Broad bootstrap/checkpoint logging remains outside this card.
+
+[Native evidence](evidence/mod-024-postgres-2026-11-06.json) exercises the production
+controller in controlled steps with actual PostgreSQL LISTEN delivery, backend
+termination, reconnect/current snapshot refresh, removed-member revocation and
+owned-session closure. Real session-lock contention/release/loss and busy adapter
+no-work behavior pass. Prior MOD023 notification rollback, all draft slices and
+ownership native suites pass. Native tests wait for actual socket readiness and
+advance the injected clock through the idle-probe deadline; they do not claim
+instant failure detection from psycopg2.poll alone. No real listener/worker process,
+configured DSN/job/provider call or hosted operation was launched.
+
+Pre-review full checks: backend728/728, frontend74/74, production build and diff
+whitespace PASS. [Operations handoff](mod-024-operations.md) distinguishes source
+commands/cadence hints from unknown hosted schedules, roles, revision and restart
+policy. The intentionally suspended service is preserved. No schema/dependency,
+production SQL, environment change, deployment, commit or push.
+
+Independent final review reproduced three Important gaps: dev eventlet starvation,
+overflow repeatedly restarting a failing room prefix, and ignored hostaddr target
+overrides. A fourth finding—missing busy-job JSON stdout—was treated as Important
+for machine-consumer compatibility. All four reproduced RED and passed after one
+fix pass. Dev now patches before lazy runtime imports (definition imports remain
+inert); an actual eventlet scheduling child test with fake I/O confirms another
+socket task runs while the listener is active. Rotating reconnect resync makes
+progress past persistently failing early rooms with bounded pending storage.
+Hostaddr/service selectors participate in private target comparison. Busy scoring
+jobs retain their one-report JSON stdout contract. No deferred minor findings.
+
+Final backend **732/732**; final frontend/build/native results recorded after the
+review fix pass. Hosted runtime inspection remains excluded and necessary before
+rollout. Arbitrary injected engine creator hooks/connect_args remain outside the
+supported URL-configured factory contract; custom non-URL SSL/auth behavior needs
+an explicit listener adapter. These limitations are recorded in the operations
+handoff rather than inferred from synthetic tests.
+
+Final frontend **74/74**, production TypeScript/build, native MOD024 + all prior
+MOD023/draft/ownership suites, current source/test hash comparison and whitespace
+diff check PASS after review fixes. Owned random databases and MOD024 container
+removed. Changes remain uncommitted/undeployed. Priority6 application work is
+complete; no Priority7 implementation or hosted rollout was started.
+
+## Priority 7 MOD-039 — first integer-parser pilot — 2026-11-07
+
+User selected and approved the small backend pilot. The
+[inventory/design](../superpowers/specs/2026-11-07-mod-039-integer-parser-design.md)
+records identical local draft parsing and deliberate non-extractions: admission
+actor messages, distinct read/member/ownership access rules, frontend freshness
+and MOD033 domain rules retain their owners. Existing roster/transaction/scoring/
+league/socket field/list helpers already shared the same scalar implementation.
+
+`integer_value(value, field)` now exposes that pure existing implementation;
+`integer_field`/`integer_list_field` retain their signatures/ceilings and delegate
+to it. Draft pick and control paths import it instead of defining duplicates.
+Required-field checks, Python integer-string forms/ranges, default week0 versus
+explicit null, actor mismatch and order-permutation/domain behavior are unchanged.
+No hidden I/O, identity derivation, transaction, SQL, commit or notification changes.
+
+Actual signed-JWT/HTTP/domain characterization6/6 passed before extraction. Public
+scalar/wrapper/consumer-wiring3 tests failed on the missing API/import, then passed
+with the extraction. Full guarded isolated backend **741/741** and whitespace checks
+PASS. [Source-hashed evidence](evidence/mod-039-integer-parser-2026-11-07.json) records
+commands/scope. No frontend/build/native/configured DB/provider/runtime checks were
+rerun or implied for this pure Python boundary extraction. No schema/dependency/
+deploy/commit/push. This is the first bounded backend pilot; further MOD039 helpers
+or frontend batches remain separate scopes.
+
+Fresh independent whole-pilot review found no Critical/Important/Minor findings and
+no declined judgments; reviewer independently ran all9 new tests and diff checks.
+Changes remain uncommitted in the audit checkout.
+
+## Priority 7 MOD-039 — frontend settings normalization — 2026-11-07
+
+The [continuation inventory/design](../superpowers/specs/2026-11-07-mod-039-settings-normalization-design.md)
+identified an exact active duplicate: Manage League's nested normalizeLeagueSettings
+and the existing leagueMapping export. The component now imports the shared function;
+no shared-helper implementation, local mapper, effect, form, fetch, default or save
+behavior changed. The earlier uncommitted integer-parser pilot remains intact;
+all its source/test hashes still match its recorded evidence.
+
+Deliberate non-extractions: whole Manage/shared mappers differ in current-week
+metadata, Home logs unexpected league-list payloads while shared parsing is silent,
+backend settings readers have different JSON/error/connection rules, actor parsing
+retains caller-specific diagnostics, API feedback/auth and ownership rules have
+separate card ownership. Duplicate placeholder ESPN/NCAA example parsers have no
+active external consumers found in this inventory and are not live-consumer work.
+No broad utility rewrite, schema validation or context freshness policy is implied.
+
+Tests execute the actual component parser/mapper declarations through TypeScript
+AST/transpilation and the real shared module; no mapper algorithm is copied into
+tests. Three characterization cases pass before extraction, covering falsy/raw and
+JSON primitive values, identity, malformed settings fallbacks and the distinct
+current-week policy. Actual shared-import binding fails with empty calls before
+extraction and passes after. Focused4/4, full frontend78/78, production TypeScript/
+build and whitespace checks PASS. [Source hashes/evidence](evidence/mod-039-settings-normalization-2026-11-07.json).
+No browser DOM/end-to-end, backend/native/configured runtime/DB/provider run is
+claimed for this frontend-only batch. No dependency/deploy/commit/push.
+
+Fresh independent frontend-pilot review found no Critical/Important/Minor issues
+or declined judgments; reviewer independently ran focused4/4. Changes remain
+uncommitted alongside the intact first backend pilot.
+
+## Priority 7 MOD-040 / MOD-030 — Bonuses Editor ownership — 2026-11-07
+
+Approved [design/import map](../superpowers/specs/2026-11-07-mod-040-bonuses-editor-move-design.md)
+and [plan](../superpowers/plans/2026-11-07-mod-040-bonuses-editor-move.md). Shared editor
+moved from screens/CreateLeague to components/League with byte-identical contents.
+Create League and Manage League each changed exactly one import path, verified
+against captured pre-move consumer bytes (which already included MOD039). Exported
+component/templates/types, props/callbacks/local IDs, payload assembly and CSS bytes
+are unchanged. No paired CSS existed or moved; both screens retain their imports.
+No facade remains at the former internal module path; both source consumers migrate
+together. Historical audit/provenance documents retain their original-path evidence.
+
+The new read-only TypeScript AST graph verifier resolves static/type import/export
+and literal lazy imports under front-end/src; package/alias/computed imports, CSS/
+assets and package internals are excluded. Before/after:65 TS/TSX files and178
+literal-relative edges, zero unresolved paths or cycles. The after graph identifies
+exactly Create League and Manage League as canonical editor consumers. Full frontend
+**78/78**, TypeScript/production build and whitespace checks PASS. Source byte/hash
+proof and graph maps are in [evidence](evidence/mod-040-bonuses-editor-move-2026-11-07.json).
+
+No mirrored component unit tests were added, consistent with MOD030's mechanical
+scope. No browser visual/DOM/E2E, backend/native/configured runtime/provider checks
+are claimed. Earlier backend MOD039 hashes remain unchanged, and the frontend
+settings-parser pilot is preserved apart from this expected bonus import rewrite.
+No schema/dependency/route/style/behavior/deployment/commit/push. MOD030 and this
+bounded MOD040 frontend ownership pilot complete; separate content extraction
+cards retain their own scope rather than being implicitly included.
+
+Fresh independent review confirmed byte/snapshot/import/style preservation and
+reran the graph scan; no Critical/Important findings. One Minor is deferred: the
+verifier handles type-only import declarations, but does not inspect inline
+TypeScript import("...").Type expressions (ImportTypeNode). An actual AST scan
+confirmed zero such expressions in current src, so this does not invalidate the
+move result. That syntax is explicitly excluded from the graph guarantee until a
+separate verifier enhancement. Prior MOD039 behavior was not re-reviewed; preservation
+was checked against the captured baseline. Browser rendering and backend/native/
+provider/deployment behavior received no new verification, per approved scope.
+Current source/test hashes and final whitespace check PASS; changes uncommitted.
+
+## Priority 7 MOD-031B — draft-order presentation — 2026-11-07
+
+Approved [design](../superpowers/specs/2026-11-07-mod-031b-draft-order-editor-design.md)
+and [plan](../superpowers/plans/2026-11-07-mod-031b-draft-order-editor.md). Stateless
+DraftOrderEditor now owns the existing draft-order subtree and forwards typed
+callbacks. Parent retains commissioner/Pre-Draft visibility, all member/order/drag
+state and reconciliation, shuffle/reorder/removal guards/dialogs/API calls, saving,
+settings and messages. Original member count controls randomize/list conditions;
+ordered row arrays are not substituted for it. Drag-over prevents default before
+forwarding the target ID; member identity/IDs and self-removal UI remain unchanged.
+No hooks, fetches, dialogs, API imports, styles or auth boundary are introduced in
+the child. Buttons for Save and Save and Start Draft remain outside the component.
+
+Before extraction, controlled real-parent React/hook/JSX/transport characterization
+passed5/5: role/status matrix, loading/error/empty/order/name/self states, actual
+randomize/drag/save sequence, remove confirmation/API/reload and error behavior.
+Child3 tests failed for the missing component, then passed. Direct child fixtures
+cover callback identities/ordering and mismatched original member count versus
+ordered-array lengths. Tests execute production parent handlers and child markup,
+not a copied ordering algorithm. No browser DOM/E2E execution is claimed.
+
+Captured baseline comparison confirms parent bytes outside the new import and
+replaced subtree are unchanged (including prior MOD039/MOD030 work); child markup
+matches after approved prop-binding/indent changes; both stylesheets are byte-identical.
+Full frontend **86/86**, TypeScript/production build, import graph66files/180edges/
+zero unresolved/zero cycles and whitespace checks PASS. Graph's documented inline
+ImportTypeNode exclusion remains unchanged. [Source-hashed evidence](evidence/mod-031b-draft-order-editor-2026-11-07.json).
+Fresh independent review independently passed focused8/8 and the source/style
+comparison, with no Critical/Important/Minor findings.
+
+Review scope decisions: preserve the existing Save and Start Draft action, which
+currently saves without starting; implementing it needs a separate behavior review.
+Preserve pointer-only ordering; keyboard controls remain MOD027G. Users therefore
+retain those existing limitations; this extraction does not claim to repair them.
+No backend/native/configured runtime/provider/deployment checks, dependencies,
+schema/API changes, commit or push. Changes remain uncommitted.
+
+## Priority 7 MOD-031A — clock stage — 2026-11-07
+
+Approved [clock design](../superpowers/specs/2026-11-07-mod-031a-draft-clock-design.md)
+and [plan](../superpowers/plans/2026-11-07-mod-031a-draft-clock.md). useDraftClock owns
+the existing lazy time/offset state, interval cleanup, null/invalid handling,
+remaining-seconds floor/clamp and m:ss label. Page keeps expiry/status interpretation
+and supplies authoritative server samples through a stable callback. No eager tick,
+new offset reset, visibility policy or realtime change. The hook is unconditional
+before the missing-league return; socket/controller construction/dependencies and
+all earlier uncommitted pilots are preserved.
+
+Actual page clock2 characterized before extraction; hook3 tests failed on the
+missing module then passed. Shared test-only harness now controls Date/timers and
+loads the real hook; all5 existing page lifecycle tests remain intact. Focused10/10,
+full frontend91/91, TypeScript/build and import graph67files/181edges/zero unresolved/
+zero cycles PASS. [Source-hashed evidence](evidence/mod-031a-draft-clock-2026-11-07.json).
+Fresh independent review found no issues and independently ran focused10 and graph.
+
+Scope decisions: browser/DOM/StrictMode/hidden-tab scheduling are not established
+by the controlled harness; no browser or configured backend/provider verification
+is claimed. Existing non-live stale samples and cross-scope retained offsets remain
+as approved clock policy; this refactor does not repair them. Connection extraction
+and previous pilots are outside this stage's review. No schema/dependency, commit,
+push or deployment. Only clock stage is complete; MOD031A connection stage and other
+remaining Priority7 work still require their own scoped execution.
+
+## Priority 7 MOD-031A — connection stage — 2026-11-09
+
+Approved [design](../superpowers/specs/2026-11-07-mod-031a-draft-connection-design.md)
+and [plan](../superpowers/plans/2026-11-09-mod-031a-draft-connection.md). useDraftConnection
+owns socket/controller setup/latest callbacks/ref/cleanup and member-metadata
+refresh. Page supplies its explicit sequential state/available loader with the
+same league/AbortSignal/error behavior. The returned ref contains the actual
+controller, preserving old command identity guards. Callback updates do not create
+new subscriptions; token/league/account/endpoint epochs dispose old work. Missing
+inputs clear without subscribing. createDraftRealtime and useDraftClock are
+byte-identical to stage baselines; page command/clear handlers are unchanged.
+
+Real hook/controller with fake-socket tests4 RED→GREEN; parent lifecycle6/clock2
+plus hook4 focused12/12, full frontend96/96, TypeScript/build, graph68files/182edges/
+zero unresolved/zero cycles and diff checks PASS. Fresh independent scoped review
+ran focused12 and found no issues. [Source-hashed evidence](evidence/mod-031a-draft-connection-2026-11-09.json).
+Scope decisions: earlier pilots/clock correctness were not re-reviewed, only
+baseline preservation checked; browser/DOM/StrictMode scheduling remains unverified
+by controlled tests. No configured backend/provider/native/deployment check implied.
+MOD031A's two extraction stages are now complete; broader Priority7 remains open.
+
+## Priority 7 MOD-032 — existing schedule extraction reconciled — 2026-11-09
+
+No new schedule product code was needed. Existing calendar/read/ingestion services,
+repositories and caller wiring already implement the card's ownership separation.
+Ingestion alone owns provider client creation and accepts an injected factory;
+HTTP/scoring compose reads without provider construction. Season/job consumers use
+canonical ingestion operations and supplied metadata connections. The legacy facade
+had already been retired in the earlier approved source migration; no new removal
+or restoration occurs here. [Current source/caller evidence](evidence/mod-032-reconciliation-2026-11-09.json).
+
+A fresh guarded full backend741/741 run passes, including existing schedule SQL/
+composition/provider-fixture/checkpoint/import-isolation regressions. Prior native
+schedule2026-11-02 and seasonal/calendar2026-11-05/06 reports remain historical and
+are linked without claiming a new native run. This closes the stale MOD032 status,
+not provider dedup/retry performance work (MOD022) or a new ingestion redesign.
+Remaining substantive Priority7 cards are MOD029 context/freshness and MOD033 domain
+ownership/conference-cap consolidation. All current work remains uncommitted.
+
+
+### 2026-11-09 — MOD-029 paired Detail/Roster context pilot
+
+- Shared resolver retains list/find/fallback order and mapper defaults; fallback establishes read-only provenance. The shared hook rejects malformed routes, mismatched responses and obsolete route/account/retry generations. Seeds no longer grant context. Error Retry starts a new generation.
+- Narrow MOD-026 prerequisite: current-user profile outcomes bind to the authenticated subject and latest request, withholding stale/failed/unresolved numeric identity. Supabase UUID path and refresh interface retained; broader session/provisioning ownership remains open.
+- Ready-context children reset resource/form state on URL/account changes; guarded/abortable reads and command completions protect member, roster, score and nested transaction work. Partner data masks synchronously on partner changes. Roster data/selections and command/reload scope also bind to the effective week, including cutoff before a render and failed new-week reads. Week calculation, week-ID fallback, transaction payloads and league-scoped tab preference retained.
+- RED→GREEN evidence: actual-provider stale identity/refresh ordering; missing resolver/hook/scope modules; seeded actionable UI, fallback membership, obsolete mutations/panels, partner first-render leakage, optional API read signals and retry; final reviewer cross-week selection/mutation regression reproduced before fixing. Actual code is executed by a controlled React-hook/transport harness, not copied domain algorithms.
+- Final validation: frontend **123/123** (27 new scoped tests), production build PASS, source graph **71 files / 188 relative edges / zero unresolved imports or cycles**, tracked diff and new-source whitespace checks PASS. Full backend/native DB tests not rerun for this frontend-only change; earlier 741-test backend result remains historical.
+- Requests: before source characterization, Detail member entry lists once; seeded Roster skipped resolution, cold Roster listed once. After actual paired-page fixture calls, both seeded/cold entries list once; absence adds one fallback, failed list adds none. Detail fixture adds one members/one scores read; Roster add/drop fixture adds one owned/available/members/pending read each. No timing, production deduplication or performance reduction claim.
+- Fresh final reviewer: Critical0, Important1 fixed with failing cutoff/read-failure and delayed-completion regressions, Minor1 deferred. Deferred Minor: a pending trade proposal's completion can clear a newer partner selection within the same league/week (existing behavior, submitted transaction unchanged).
+- Limits: no browser/DOM/StrictMode or real authenticated-session scheduling validation, hosted/provider/DB/deployment execution, other-screen migration, or broad MOD-026 provisioning/session resolution. Earlier audit pilots preserved. Changes remain uncommitted and undeployed. [Detailed evidence](evidence/mod-029-league-context-2026-11-09.json).
+
+
+### 2026-11-09 — MOD-033A conference-cap policy prerequisite
+
+- Approved policy: **0 allows no teams, positive integers are inclusive limits, and negative/missing/invalid values are configuration errors**. Pure `require_conference_cap` has no imports, I/O, engine ownership or unlimited/default sentinel. Existing required conference mappings validate only teams/active rosters involved; unrelated invalid conferences are not globally scanned.
+- Live/manual drafting no longer bypasses nonpositive caps. Auto-pick skips valid zero/full buckets, preserves no-eligible-team behavior, and propagates encountered invalid cap errors without state advance. Existing ordinary positive cap messages/count semantics preserved.
+- Free-agent planning/application and trade validation use explicit valid caps; missing trade limits no longer default to999. Queued failure leaves status/history pending and rolled back. Zero drop-only reductions can leave a roster still over cap; no retroactive team removal. Stored cap changes within a supplied application transaction after slot closure also roll back on validation failure.
+- Reporting uses left joins over effective season/sport membership and returns all active count groups for validation before filtering in the service. Negative/NULL/missing/invalid-season/cross-sport mappings cannot disappear via inner joins or HAVING. Valid zero/positive violation-list shape and end-exclusive/future history results remain intact.
+- RED→GREEN: live/manual zero bypass, invalid auto exhaustion, missing trade999 fallback, invalid cap category/HTTP ValueError boundary, and invalid roster report omission reproduced. Scoped **23/23**, draft regression **96/96**, full credential-free backend **764/764** PASS. Fresh independent reviewer reran scoped23/full764 and diff checks; Critical0/Important0/Minor0. Touched Python syntax, pure helper dependency check, whitespace and preserved MOD-029 source/test hashes PASS.
+- Native limitation: Docker daemon availability check failed because local daemon is stopped; no new PostgreSQL execution, row-lock/RLS/runtime SQL claim, service startup, configured database inspection, migrations, data repair, provider/job execution or deployment. Atomicity against simultaneous administrative cap edits remains the existing behavior; no cap-configuration locking protocol introduced. Earlier audit/frontend work excluded from review and preserved.
+- Changes remain uncommitted. **MOD-033 shared ownership/count read extraction is still pending**, separate from this correctness prerequisite. [Evidence](evidence/mod-033a-conference-cap-policy-2026-11-09.json), [plan](../superpowers/plans/2026-11-09-mod-033a-conference-cap-policy.md).
+
+
+### 2026-11-09 — MOD-033 shared ownership-read pilot / Priority 7 closeout
+
+- Six existing repository methods now delegate to `utils/ownership_reads.py`: draft live/manual existence and scalar conference count, free-agent league/member existence and grouped conference counts. Fixed active-week SQL and existing effective conference resolver are shared; helpers execute once on supplied connections and return unconsumed results. Services keep authorization/cap validation, locks, writes and timing.
+- Before-edit characterization passed9 cases, then explicit NULL-member behavior was observed green on original queries. After extraction all10 characterization cases match: league/member/team/week0 boundaries, acquired/dropped/empty/future history, season/default/future/null selection, invalid/missing/cross-sport mapping, DISTINCT versus row duplicates, orphan-league and empty result semantics. Existing service guards reject invalid mapped rosters; raw read behavior is not a new access grant.
+- Three delegation tests RED missing module→GREEN pin six raw-result/connection/exception adapters and fixed bound data. Four service integration tests prove live/manual week defaults, one owned connection, free-agent before/after-drop visibility, and rollback/pending status after injected count-read failure. **Scoped17/17, MOD033A23/23, full backend781/781 PASS**. Eight protected service/cap/mutex/trade-repository files and67 other repository methods are byte-identical to baseline. MOD029 source/test hashes unchanged.
+- Fresh independent final review: Critical0/Important0/Minor0; independently reran scoped17/cap23 and exact source/method comparisons. Full781 suite was author-run. Native extension occurred later after the user started Docker; it was author-run without product-source changes.
+- Fresh PostgreSQL17.6: exact10 characterization assertions PASS using native production SQL (only fixture setup identifiers quoted), plus existing draft allocation/timeout/all-repository coverage/observed contention, transaction workflows/all-repository coverage/observed contention, and MOD015 seasonal membership/cap/reference/history checks PASS. New guarded `verify_mod033.py` accepts no DSN, requires the synthetic-only server marker and uses a UUID database; no configured DB/app/jobs/provider startup. UUID DB removal verified count0, tmpfs loopback-only task container removed. Docker image remains normal local cache. [Native evidence](evidence/mod-033-ownership-reads-postgres-2026-11-09.json).
+- Decisions: omitted-member sentinel preserves constrained explicit NULL, while omission means league-wide read. No cache/query reduction/performance claim; one execute per replaced call. Prior MOD033A reporting, auto/trade-specific migration and `_apply_trade`/`apply_trade` retirement remain outside this extraction. No new cap-edit concurrency, hosted role/RLS or query-plan guarantee.
+- This completes Priority7's accepted pilots/decomposition scopes: MOD039, MOD040/MOD030, MOD029, MOD031A/B, reconciled MOD032 and MOD033 (with MOD033A). Broader migrations/cleanup, recorded minors and operational rollout limits remain documented follow-ups. All changes remain uncommitted/undeployed. [Evidence/decisions](evidence/mod-033-ownership-reads-2026-11-09.json).
+
+
+### 2026-11-10 — MOD-026 profile/session ownership
+
+- CurrentUserProvider now owns application profile reads/provisioning through existing authenticated self-profile/create APIs. AuthProvider owns session publication/sign-in/sign-out and no longer queries/provisions profiles or modifies pending signup storage. Direct browser User-table reads and created-marker authority removed from this flow; backend/auth API contracts and schema unchanged.
+- Auth accepted events and lookup results synchronously publish opaque subject/credential epochs and captured validity checks. Source values are captured scalars, including when an SDK session object is reused. CurrentUserProvider checks source continuity before provisioning/publication/storage effects, preserving A→B→A even if React batches intermediate transitions. Same-subject token renewal preserves ready profile/form; pending/failed credential changes get bounded replacement work.
+- Per attempt: one GET; only confirmed404 permits one create; create409 permits one canonical reread. Denied/network/ambiguous mutations never automatically replay. HTTP200 empty/malformed body is an error, not absence. Captured explicit token/signal remain consistent; profile UUID/positive-safe numeric ID validated. Newest deliberate refresh supersedes older work, failures reject callers, and automatic effects consume rejection. Aborted requests are not coalesced during effect cleanup/setup replay.
+- Signup pending data supplies a name hint only when normalized email matches the signed-in session. Existing profile not renamed; mismatched/newer hints retained, matching unchanged records clear only after current canonical confirmation; metadata/verified-email-prefix fallback retained. Backend verified claims remain identity/email authority. Abort does not roll back dispatched creation.
+- Narrow Home/Settings integration: profile loading/error/Retry visible; private league resources tagged/masked on identity transition, obsolete reads aborted and ignored, public search remains usable. Settings keyed account form preserves input on write/refresh failure, rejects obsolete completion/refresh, and announces success only after matching successful refresh. List-fetch feedback/stage retry redesign is still MOD027A; sibling transaction refresh/accessibility/error parsing remain separate work.
+- Tests: baseline123/123; final **150/150**, production build PASS, import graph **73 files/194 relative edges/zero unresolved imports or cycles**, diff/new-source whitespace PASS. All original API cases retained; only three ownership-dependent bootstrap cases ported from AuthProvider to CurrentUserProvider. Original MOD029 profile race assertions retained with API transport. A corrected test filename collision is recorded in evidence; truncated intermediate suites are not completion evidence.
+- RED→GREEN coverage includes stale session lookup, forbidden direct table access, missing bounded helper/signal/status propagation, Home old private state (replayed on committed baseline), Settings input/stale completions, invalid HTTP200 body, provider publication gap and aborted-attempt effect replay. Fresh reviewer found one Important source-to-render continuity issue; five no-intervening-render actual-module regressions reproduced then fixed it (logout404, batched A→logout→A, token renewal, visibility lookup and mutable session reuse). Final150/build/import checks PASS; no independent post-fix rerun/review claimed and no deferred Minor findings.
+- Runtime limits: actual modules execute with controlled hook/SDK/API/storage substitutes; effect replay is a modeled schedule, not real React StrictMode/browser proof. No installed real DOM/browser renderer was used, no provider/network/configured DB/hosting changes or verification performed. Backend self-read/creation/uniqueness evidence remains historical. Existing OTP concurrency/rejection behavior and other screens' mutation coordination stay outside scope. apiFetch/authenticatedFetch and prior league/draft controllers/hooks are byte-identical; no backend source changed.
+- Changes are uncommitted/undeployed. Priority8 has started; **MOD026 is complete within this scope**, while MOD027A is the next account-dependent feedback task. [Evidence/decisions](evidence/mod-026-profile-ownership-2026-11-10.json), [plan](../superpowers/plans/2026-11-10-mod-026-profile-ownership.md).
+
+
+### 2026-11-10 — MOD-027A own-league feedback
+
+- Home's primary league list now distinguishes pending, successfully empty, ready cards and failed requests. Active/Completed/All have distinct empty messages; failure uses fixed safe wording with explicit Retry. Retry enters pending and requests the current account/stage. ProfileStatus continues to own profile-not-ready feedback.
+- Selection identity includes profile generation, numeric user ID and stage; render-time masking hides old cards/errors before effects. Request disposal, AbortSignal, current source identity and selection guards reject obsolete completions, including stage round trips and same-identity profile refresh. Retry attempts have distinct display state.
+- Primary reads accept the existing array and {leagues: array} containers and preserve stage filtering; invalid containers become visible failures rather than false emptiness. Discovery membership reads/normalization, public search, sports, overview, API transport and backend remain unchanged.
+- Seven actual-Home regression tests first failed against committed behavior, then passed; targeted Home/profile-consumer12/12 and full frontend **157/157**, production build PASS, import graph **73 files/194 relative edges/zero unresolved or cycles**, diff check PASS. No package or schema changes; no backend/native/provider checks rerun.
+- Tests run actual Home through the existing controlled hooks/request harness; this does not establish real browser/React concurrent rendering behavior. No live services, credentials, Docker or hosting changes. Final review and source hashes: [evidence](evidence/mod-027a-own-league-feedback-2026-11-10.json). Work remains uncommitted/undeployed; MOD-027B–G and other Priority8 cards remain separate.
+- Fresh read-only final review: Critical0/Important0/Minor1; independently reran frontend157/157, imports and diff checks. Deferred minor: no direct pending-after-unmount, retry-before-stage-navigation or saved-obsolete-retry-handler regression. Source guards support these paths; no demonstrated defect. Reviewer did not inspect final audit docs or independently run production build; those checks are author-owned. Comprehensive row validation, discovery failure policy and browser/live-runtime assessment remain outside the reviewed scope.
+
+
+### 2026-11-10 — MOD-027B coordinated roster refresh
+
+- Page-owned revision invalidates own roster/availability, selected partner roster and mounted open/pending panels after successful add/drop, proposal, accept/reject, cancel and veto/unveto. Unmounted trade panel fetches on entry; no remount, global cache, optimistic team transfer or metadata/member reload. Tabs, partner, filters and unrelated selections remain local.
+- Separate submission/read state distinguishes confirmed write from follow-up failure; Retry roster/partner reads never resubmits a mutation. Each panel retains its manual read refresh. Roster/partner readiness binds to latest revision/week; open trades clear action readiness during failed/replaced reads. Current-source cutoff/context checks reject obsolete completions and actions. A week replacement clears obsolete submission state without old completion clearing new work.
+- Successful writes clear matching submitted selections only; new partner selection survives delayed proposal completion and reconciles against fresh reads. Mutation response projected IDs are ignored as ownership authority. Pending acceptance is shown from pending reads while week-based ownership remains unchanged until authoritative reads change.
+- Nineteen new actual-page/panel integration tests; initial8 behavior failures, stale-open-action/week-mask/submission-lock RED→GREEN regressions. Full frontend **176/176**, production build PASS, import graph **73 files/194 edges/zero unresolved or cycles**, diff PASS. Existing scope/cutoff assertions retained; standalone panel fixture callback made stable to model production context identity. Controlled hooks/transport are not real browser/concurrent-render proof. No backend/provider/database/runtime execution.
+- Final review, source hashes, fixture corrections and limits: [evidence](evidence/mod-027b-roster-refresh-2026-11-10.json). Prior uncommitted MOD-027A preserved. Work remains uncommitted/undeployed; MOD-027C–G and other Priority8 cards remain separate.
+- Fresh read-only final review: Critical0/Important2/Minor0. Both Important races independently reproduced then fixed in one author pass: pending read cutoff deadlock (captured-context dependency/replacement read) and concurrent object reconciliation retaining submitted selections (user-edit versions plus submitted IDs). Three author regressions RED→GREEN, including preservation of a genuinely newer same-ID draft; final176/build/import/diff PASS. Reviewer independently ran19 targeted pre-fix tests and inline repros; no post-fix independent review/rerun claimed. No deferred Minor findings. Existing deadline memoization, backend semantics, earlier Home work and broader accessibility/performance retain their separate boundaries; author verifies final audit docs.
+
+
+### 2026-11-10 — MOD-027C team-search loading reset
+
+- One production line resets loading in TeamLookupPage's existing short-query/no-league branch; debounce, cancellation, ranking, APIs and league resolution untouched. User authorized combined design/implementation without another approval pause.
+- Six actual-component regressions fail before fix and pass afterward: empty, one-character and whitespace queries after held searches, late success/rejection cannot override newer loading/results/error. Seventh test verifies debounce cancellation and scheduled-work cleanup. Full frontend183/183, production build and import graph73/194 PASS; diff PASS. No browser/live-provider/backend verification claimed; no context/navigation redesign.
+- Prior MOD027A/B preserved, all work uncommitted/undeployed. [Evidence](evidence/mod-027c-team-search-2026-11-10.json).
+- Fresh read-only review found no material issue; deferred minor coverage: unmount test checks scheduled debounce rather than dispatched request completion. Reviewer inspected source/tests only, with no independent rerun. Broader context/navigation, prior027A/B and browser/live services remain outside this bounded fix.
+
+
+### 2026-11-10 — MOD-027D URL-backed discovery
+
+- Strict positive-safe URL ID resolves through existing authenticated ?view=preview projection; navigation seed ignored as authority. Preview response identity/fields validated before form/member reads. Invalid URL, pending, unavailable404, denied401/403 and generic failed reads have bounded visible states; read Retry never submits a join. Back always goes /leagues. Existing public-read/discoverability/authentication policy unchanged.
+- Resolver/form key includes route and profile identity; useRequestScope plus abort/cancellation guards reject old preview/member/join work. Join payload/validation retained; failed join keeps input. Optional signal added only to member-preview helper. No full-league read, backend/schema/dependency changes or live service use.
+- Seven new actual-component/API tests RED→GREEN; frontend190/190, production build, imports73/194, diff PASS. Controlled hooks/transport only, not browser/live-provider proof. One author edit-boundary syntax error caught by tests/build was corrected before final passing checks; no baseline tests removed.
+- All prior027A–C preserved, work uncommitted/undeployed. [Evidence](evidence/mod-027d-discover-url-2026-11-10.json). Remaining MOD027E–G separate.
+- Fresh review: Critical0/Important0/Minor1; independently targeted7/7 and scoped diff PASS. Deferred minor: direct profile-wait/unmount/member-abort/no-status rejection and exact404/403 feedback assertions missing; source supports paths without demonstrated defect. Browser/live-auth/backend integration and preceding027A–C outside independent review; full suite/build/import are author-run.
+
+
+### 2026-11-10 — MOD-027E create labels and error descriptions
+
+- Create fields now have matching stable id/htmlFor, including both veto labels and conditional count. Shared BonusesEditor add control has a visible associated label while available; when exhausted its heading is not a dangling label. Dynamic placement labels/IDs include local bonus/placement identities; contextual accessible names reference bonus title and placement without including tooltip prose. Optional prefix supports caller separation if multiple editors are rendered. Existing pages each render one editor.
+- Existing field-validation errors associate to matching controls via aria-invalid/describedby; form-level errors describe the form, sport-load error describes its select. No validation rules, payloads, events, button types or submission flow changed. Shared editor effects apply in Manage too; no API/schema/dependency/CSS changes.
+- Three actual-form/editor regressions RED→GREEN: visible label targets unique throughout dynamic additions/exhaustion/conditional removal, existing validation and unchanged successful-submit payload, sport-load error association. Full frontend193/193, production build, imports73/194 and diff PASS. Native label-click focus and keyboard submission rely on browser HTML semantics and were not exercised in a real browser; controlled harness only.
+- Earlier027A–D preserved, all changes uncommitted/undeployed. [Evidence](evidence/mod-027e-create-labels-2026-11-10.json).
+- Fresh review: Critical0/Important0/Minor1; independently3/3 targeted and scoped diff PASS. Deferred minor: contextual bonus aria-labelledby references lack direct assertion; source inspected. Native focus/keyboard, earlier cards and broader validation remain outside review; full suite/build/import author-run.
+
+
+### 2026-11-11 — MOD-027F native draft-completion dialog
+
+- User-approved in-place Close/Escape replaces Close navigation. Actual dialog showModal supplies native modal containment/background isolation; named title initially focused, existing card/content retained, ::backdrop/open-only flex styling avoids forcing closed dialogs visible. Completion presentation binds to route/account scope and does not reopen an already-dismissed completion on repeated snapshots.
+- Focus lifecycle captures previous element, restores only connected/visible/enabled/nonhidden/noninert targets on explicit dismissal, otherwise focuses Draft Center league heading. Cleanup/reset/context replacement closes without explicit restoration into obsolete context. No timers, global modal framework, API/controller/timing/payload changes.
+- Six hook lifecycle cases RED before hook existed; two actual page cases RED replayed on committed page, then GREEN with actual hook loader and controlled ref objects. Full frontend201/201, production build PASS, import graph74files/195edges/zero unresolved or cycles, diff PASS. Existing draft regressions retained.
+- Controlled DOM/dialog doubles verify lifecycle calls and wiring, not native Tab/Shift-Tab containment/inert behavior/title announcement or actual focus restoration. Playwright/Puppeteer/react-test-renderer/jsdom unavailable; no dependencies installed, browser/live-provider/backend checks not claimed. Native browser/assistive-technology acceptance remains open.
+- Base fb06280 (user committed027A–E); changes uncommitted/undeployed. [Evidence](evidence/mod-027f-draft-dialog-2026-11-11.json). MOD027G remains separate.
+- Fresh review: Critical0/Important0/Minor1; independently targeted8/8 and diff PASS. Deferred minor: hook context-replacement test does not reopen an active run before changing scope (the intermediate closed state is not rendered); source lifecycle and page scope masking were reviewed, with cleanup/replay separately covered. Native browser behavior remains explicitly unverified.
+
+
+### 2026-11-11 — MOD-027G keyboard order / MOD-027 application closeout
+
+- Native Move up/down buttons have member-specific names and first/last boundary disabling. Adjacent moves update existing parent ordered IDs/ranks under commissioner/Pre-Draft gates; existing save API/payload, drag, randomize and removal retained. Empty/single lists have no enabled move; invalid/removed members cannot corrupt permutation.
+- Editor owns only focus/announcement presentation. After a move, focus returns to the moved member's requested enabled button or opposite enabled boundary button; removed pending targets cannot pull focus. Polite status announces position. Existing Save-and-Start remains the documented save-only behavior.
+- Four actual editor/parent regressions; first two RED before implementation, final full205/205, production build, imports74/195 and diff PASS. Existing editor tests retained with new control text and static hook stubs; actual effect/ref lifecycle tested independently with controlled post-ref effect scheduling. Synthetic saved ordered member data initializes reloaded editor; no database persistence claim.
+- MOD027A–G application implementations complete within recorded scopes. Native browser keyboard/focus/AT checks remain open, particularly dialog Tab/Shift-Tab/inert/title announcement. Earlier coverage minors remain in each card's evidence; no broad end-to-end/live runtime claim. No dependency/API/schema/backend/deployment change. Prior027F changes preserved; both remain uncommitted/undeployed. [Evidence](evidence/mod-027g-keyboard-order-2026-11-11.json). MOD028B is next separately.
+- Fresh review: Critical0/Important0/Minor1; independently targeted keyboard/editor/manage12/12 PASS. Deferred minor: no direct downward-boundary/non-boundary/no-focus-on-unrelated-reorder/pending-unmount focus assertions; source reviewed without defect. Native keyboard/React DOM/AT and prior027F acceptance remain outside review; full suite/build/import author-run.
+
+
+### 2026-11-11 — MOD-028B safe create/join pilot
+
+- Shared parser consumes one error body, recognizes structured and legacy shapes, whitelists status-consistent codes and exact400 business messages; status owns denial/5xx semantics. HTML/plaintext/empty/malformed/unknown/private detail fields are discarded. Numeric HTTP status retained; untrusted network/SDK/lookalike exceptions cannot become display authority through the UI formatter.5xx/unknown transport failures explicitly say completion could not be confirmed and to check status before resubmitting.
+- Only createLeague/requestToJoinLeague HTTP failures and Create/Discover mutation catches migrated. Create no longer logs raw mutation exception or asks users to check backend logs. Existing input/validation/success/payload/context behavior remains; no automatic retry, request clone, SDK refresh, auth transport/backend/schema/dependency change. MOD028A stays protected. Other consumers remain open under MOD028B.
+- Eight new parser/actual-API+form tests RED→GREEN; full frontend213/213, production build, import graph75files/198edges/zero unresolved or cycles, diff PASS. Cases cover message/error/envelope, status mismatch, knowncode/unknowns, HTML/plaintext/empty/malformed/read errors, server/network uncertainty and retained input/re-enabled forms with one write per submit. Existing tests preserved; profile API VM loader now loads actual helper dependency (three intermediate fixture failures resolved without assertion changes). One initial400 test expectation corrected: valid400 allowlisted field text remains useful even if its unknown/inconsistent machinecode is ignored.
+- Controlled hooks/transport/Response tests do not prove browser/live-provider behavior. No live service/configured DB/backend checks rerun. Base51b365c (user committed rest of MOD027); all new work uncommitted/undeployed. [Evidence](evidence/mod-028b-safe-create-join-2026-11-11.json).
+- Fresh final review: Critical0/Important0/Minor1; independently targeted helper/form/profileAPI23/23 and diff PASS. Deferred minor:405/other4xx fallback and positive internal_error retention lack direct cases; source inspected without defect. Browser/live-provider and broader consumers outside review; full suite/build/import author-run.
+
+
+### 2026-11-11 — MOD-028B transaction mutation batch
+
+- Five mutation helper failures (add/drop, proposal, respond, cancel, veto) now use the shared safe parser; their two roster and three trade-panel catches use only trusted safe messages. Exact400 mappings cover verified free-agent deadline, locked week, resolved/noncancellable trade, participant/proposer/receiver restrictions and disabled veto. Dynamic roster/team/config details stay suppressed; status precedence and parser core unchanged.
+-5xx/network failures say completion could not be confirmed and direct explicit read refresh before deliberate resubmission. Failure retains selection/re-enables controls and does not signal successful resource invalidation. Success coordinator, pending versus applied ownership, cutoff/context guards, payloads and auth retry policy unchanged. Transaction reads remain legacy in this bounded batch, as do draft/admin/profile consumers.
+- Eight new actual-API/page/panel regressions RED→GREEN; final frontend221/221, production build, imports75files/201edges/zero unresolved or cycles and diff PASS. Tests cover all actions (including accept/reject), known/HTML/empty/server/network failures, one write/no success reads on rejection, retained selections, payloads and status precedence. Existing create/join and transaction scope/refresh suites green. No browser/live provider/backend/database verification claimed.
+- Base30a1675 (user committed create/join pilot); changes uncommitted/undeployed. [Evidence](evidence/mod-028b-transaction-errors-2026-11-11.json).
+- Fresh review: Critical0/Important0/Minor1; independently targeted34/34 and diff PASS. Deferred minor: add/drop wraps its deadline reason in details behind “Free agency move rejected”; details remain intentionally ignored, so actual route uses generic safe400 feedback. The exact deadline mapping is parser capability only, not live-route-specific proof; a realistic wrapper fixture remains a test followup. No backend/error-detail parsing expansion. Browser/live behavior and other consumers outside review; full build author-run.
+
+
+### 2026-11-11 — MOD-028B completion / MOD-028 application closeout
+
+- All45 exported application HTTP helpers across leagues18/draft8/roster2/transaction7/user4/sport1/scoring1/schedule4 use shared safeResponse and safeJson. Read/write fallbacks differ; existing create/join/transaction uncertainty preserved. Non-OK HTTP metadata is typed/safe, network and success-decode diagnostics suppressed, cancellation keeps fixed AbortError name/text. No refetch/clone/retry/auth transport change.
+- Confirmed profile404 remains null; create409 remains canonical-reread eligible, denied reads do not provision, draft401/403/404 status denial retained. Actual success transport/shape equivalence compares all45 helpers against committed30a1675 with same URL/method/body/headers/AbortSignal/data. Unknown/public error strings and malformed success JSON never bypass shared safety.
+- Remaining application HTTP UI catches now trust only shared safe errors, with read retry or uncertain-write fallback. Existing context/cutoff/current-request/finally/input behavior retained. Raw exception logging removed from affected read paths. Supabase SDK-authF002 messages/flows are deliberately separate; MOD028A authenticatedFetch/client and realtime controller unchanged. Existing profile lifecycle errors remain client-owned.
+- Phase-aware Manage save feedback was the final review's Important finding: settings may commit before order/read failure. Four genuine parsed downstream400/503 cases reproduced RED then fixed in one pass; now reports what saved and directs checking current state. Settings' pre-existing saved-but-profile-refresh-failed distinction remains. No implication of rollback or automatic resubmission.
+- Final frontend235/235 (14 new completion tests, plus earlier transaction8), production build PASS, imports75files/219edges/zero unresolved or cycles and diff PASS. Catalog error cases exercise500/network/malformed-success for every helper; additional profile/draft statuses, cancellation, actual admin/draft/panel UI and partial-save cases. Existing assertions retained, with raw synthetic-error display expectations changed to safe feedback plus private-text exclusion. Fixture fixes: browserURL injected, undefined optional init compared as null; legacy VM loaders load actual shared helper, draft refresh count compared to baseline rather than zero. These fixture errors are not product regressions.
+- Fresh review: Critical0/Important1 fixed/Minor1 deferred. Independent22 targeted tests and diff PASS on pre-fix code; final235/build/import author-verified, no post-fix re-review claimed. Deferred minor: draft page's locally generated membership denial now falls back to generic read/retry text. Browser/live/backend/runtime verification and out-of-scope SDK-auth were not performed. Earlier per-card/batch minor limitations remain recorded.
+- MOD028A+B application implementation complete in recorded scope. Base30a1675 plus preserved transaction batch; all changes uncommitted/undeployed. [Evidence/inventory/decisions](evidence/mod-028b-completion-2026-11-11.json). Broader performance work remains separate.
+
+
+### 2026-11-11 — MOD017 isolated own-league / point-ownership baselines
+
+- Standalone guarded runner captures actual SQL/params from repositories, uses fixed marked loopback only/no DSN/configured app/job/provider, derives full schema001 plus exactMOD006/008/010 and synthetic auth prerequisite, owns a UUID database per tier. No application/production query/frontend/deployment schema changed.
+- Fixture100/1000/5000 leagues:800/8000/40000 members,1300/13000/65000 weeks,9600/96000/480000 aggregate scores,16000/160000/800000 history slots. Corrected original design's fourfold score rows because actual unique member/week schema aggregates four team contributions in the value; disclosed before measurement. No integrity relaxation.
+- Five isolated safety/capture/equivalence/fixture tests PASS; first native run caught JSON literal mistaken for a SQLAlchemy bind, reproduced RED and fixed to JSON construction, then all native tiers PASS.102 case/config results all expected rows/five samples/baseline-equivalent fingerprints. Record EXPLAIN JSON, bound params, warm execute/fetch timings, payload-size proxy, catalogs/settings/index sizes/build times. No cold-cache/end-to-end or production claims.
+- Largest tier ownership member query16.459ms→0.423ms median execute/fetch with team-cover candidate; server EXPLAIN16.237ms→0.006ms and8245→4 hit blocks. Candidate39.2MiB/about24.4% baseline total slot relation size; write/WAL/vacuum/concurrency cost unmeasured. Member-first alternative also improves point cases; no recommendation to add both. Own sparse-user34.406ms→33.368ms reverse-member index alone, global aggregate remains material. DraftPick same-key overlap differs uniqueness/constraint ownership, no index dropped.
+- Raw [plans](evidence/mod-017-query-baselines-2026-11-11.json) and [report](mod-017-query-baselines.md) retain provenance/limits. Access/RLS002 and unrelated later migrations not applied, no fullSupabase/deployed-role equivalence. Other matrix queries and optimization/paging/lifecycle/scoring changes remain separate.
+- Fresh final review: Critical0/Important0/Minor2; unit5 and all102 artifact cases/provenance/report comparisons independently verified. Deferred failure-artifact and built-in expected-count assertions remain runner-hardening followups. Author verified database count0, ownership labels/no persistent mounts, removed exact taskcontainer and verified taskcontainer count0; Docker/image cache retained. No native rerun needed after review because production/runner code unchanged. [Closeout/decisions](evidence/mod-017-query-baselines-summary-2026-11-11.json). Work uncommitted/undeployed.
+
+
+### 2026-11-13 — MOD017 transaction reads
+
+- New runner reuses previous guarded schema/seed/measurement helpers without modifying them; captures actual authorized list/open/weekly candidate SQL.100/1000/5000 leagues yield10000/100000/500000 transactions and0.1%pending; single-team arrays, unique per-league timestamps and all-week scoring-complete state are explicit limits. No app/provider/job/DSN/deployment access.
+- Every measured result enforces expected count and five samples; baseline fingerprints compare index variants. Unique artifact/current-run manifest recordsRUNNING before connection/provenance andFAILED on failure, preserving old successful artifacts and per-ownedUUID cleanup status. New source-provenance failure regression reproduced review findingRED thenGREEN; combined10 isolated testsPASS. Initial fixture/capture/failure tests4RED before newmodule, thenGREEN.
+- First native run:99results/3tiersPASS, allcounts/samples/fingerprints/sourceSQL independently checked and report arithmetic supported by fresh reviewer. ReviewerCritical0/Important1 fixed/Minor1 deferred: tier-failure unit mocksrun_tier, so it does not exercise removed/present/unavailable cleanup-verification branches. Prior cleanup guard tests and actual normal-run cleanup remain valid, not injected-native-failure proof. A second full native run follows material reporting fix so final artifact matches fixed runner; no independent post-fix rereview claimed.
+- No production API/frontend/schema/query changes. Prior own-league/ownership runner/evidence preserved. Warm synthetic client/server metrics do not prove production latency, coldcache, role/RLS, write/WAL/vacuum/concurrency, densepending or tied/large-array behavior. Report/runtime cleanup final evidence linked at closeout. Changes uncommitted/undeployed.
+- Fixed-run native artifact is mod-017-transactions-753a49d7e8d84dd88ff3f0d04b4af13b.json:3tiers/99checksPASS,all9provenance hashes match current code, cleanupverified per-ownedDB. Author verified allMOD017databasecount0, labels/no persistent mounts, removed exact taskcontainer and confirmed remainingtaskcontainers0; Docker/imagecache retained. Combined10units/diff/newsourcewhitespacePASS, no post-fix independent review claimed. [Closeout](evidence/mod-017-transactions-summary-2026-11-13.json).
+
+
+### 2026-11-13 — MOD017 game/schedule reads
+
+- Audit-only continuation, per user deferral of performance implementation until audit end. New runner captures actual member/conference/team schedule SQL; schema001+006/008/010 plus exacttimeTBD migration in owned UUID fixtures only. Old runners/artifacts and all production API/frontend/DB source unchanged.
+- Four new missing-module RED tests thencombined14PASS. Independent fixture arithmetic covers one sport/512teams/20,50,100seasons/current fraction5,2,1%, one seasonal conference move and anchor game;10k/100k/500kgames. Native3tiers/108caseconfigs pass expectedcounts, SQL/params, fullordered fingerprints/bytes and5samples.
+- Largest team-season median26.759→16.126ms with season/date candidate; conference1 current283.847→277.597ms, member16.146→16.122ms. Conference2 repeated ownership scans dominate after GameResult filtering drops20.571→0.660ms. No combined index/query/tuning/paging change; storage/write/production/role/RLS/cache/skew effects remain unmeasured. [Report](mod-017-game-baselines.md).
+- Fresh reviewCritical0/Important0, two deferred test-strength gaps (direct wrong-sample and inclusive-boundary assertions). Independently14units,10hashes,all108records and report arithmetic verified; no native rerun needed after review. Author databasecount0,label/nopersistentmountchecks, exactownedcontainer removal and taskcontainercount0 verified. Docker/cache retained. [Closeout](evidence/mod-017-games-summary-2026-11-13.json). Uncommitted/undeployed; MOD017other families remain open.

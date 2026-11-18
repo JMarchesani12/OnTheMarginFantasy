@@ -1,0 +1,9 @@
+# MOD015 membership/game database constraints
+
+User approved preparation on2026-11-17: ConferenceMembership.sportId required, existing delete behavior preserved, dirty data refuses rather than repairing. Live aggregate preflight reports nine zero counts; current catalog is captured. No target rollout authorized for this migration.
+
+Add four parent UNIQUE keys: SportTeam(id,sportId), SportConference(id,sportId), SportSeason(id,sportId), SeasonPhase(id,sportSeasonId). Add membership team/sport and conference/sport FKs; game season/sport, phase/season, home-team/sport and away-team/sport FKs. Keep existing constraints/indexes. MATCH SIMPLE preserves nullable game teams/phase. Phase deletion must SET NULL only seasonPhaseId, never the mandatory sportSeasonId. Preserve home NO ACTION, away CASCADE, season CASCADE and membership NO ACTION. Preserve existing membership sport default1; removing a default is outside approved policy. No data rewrite, independent buckets or guessed mappings.
+
+One explicit transaction with row_security off, bounded lock/statement timeouts, deterministic locks on affected parents/children, data/legacy-delete-definition guards, exact replay validation and validated constraints. Dirty/orphan/null/mismatched references, same-name drift, invalid parent keys or changed legacy semantics refuse atomically. Parent keys and FK definitions must be catalog-verified, not name-only IF NOT EXISTS.
+
+Alternatives: application validation alone leaves direct SQL/parent updates uncovered; automatic repairs/default guessing violate user policy. Bounded additive database constraints with native upgrade/replay/refusal/delete tests are selected. Parent-key indexes are integrity infrastructure, not speculative MOD017 performance candidates. Mapping coverage for every team/season, LeagueTeamSlot sport agreement and tournament/conference links remain application/preflight boundaries beyond these six FKs.

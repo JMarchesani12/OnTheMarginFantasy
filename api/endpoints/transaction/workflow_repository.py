@@ -1,3 +1,5 @@
+from utils.conference_membership import conference_sql
+from utils import ownership_reads
 """Named workflow queries, scoped role SQL and shared entitlement query routing."""
 from sqlalchemy import text
 from utils.authorization import require_owned_league_member
@@ -172,30 +174,13 @@ class TransactionWorkflowRepository:
                 """), params)
 
     def team_owned(self, conn, params):
-        return conn.execute(text("""
-            SELECT 1
-            FROM "LeagueTeamSlot"
-            WHERE "leagueId" = :league_id
-            AND "sportTeamId" = :team_id
-            AND "acquiredWeek" <= :week_number
-            AND ("droppedWeek" IS NULL OR "droppedWeek" > :week_number)
-            LIMIT 1
-        """), params)
+        return ownership_reads.team_ownership_rows(conn, params['league_id'], params['team_id'], params['week_number'])
 
     def member_team_owned(self, conn, params):
-        return conn.execute(text("""
-            SELECT 1
-            FROM "LeagueTeamSlot"
-            WHERE "leagueId" = :league_id
-            AND "memberId" = :member_id
-            AND "sportTeamId" = :team_id
-            AND "acquiredWeek" <= :week_number
-            AND ("droppedWeek" IS NULL OR "droppedWeek" > :week_number)
-            LIMIT 1
-        """), params)
+        return ownership_reads.team_ownership_rows(conn, params['league_id'], params['team_id'], params['week_number'], member_id=params['member_id'])
 
     def team_conference_info(self, conn, params):
-        return conn.execute(text("""
+        return conn.execute(text(conference_sql("""
                 SELECT
                 cm."sportTeamId"       AS "sportTeamId",
                 cm."sportConferenceId" AS "sportConferenceId",
@@ -204,22 +189,10 @@ class TransactionWorkflowRepository:
                 JOIN "SportConference" sc
                 ON sc.id = cm."sportConferenceId"
                 WHERE cm."sportTeamId" = ANY(:team_ids)
-            """), params)
+            """, '(SELECT "seasonYear" FROM "League" WHERE id=:league_id)')), params)
 
     def member_conference_counts(self, conn, params):
-        return conn.execute(text("""
-                SELECT
-                cm."sportConferenceId" AS "sportConferenceId",
-                COUNT(*)              AS "cnt"
-                FROM "LeagueTeamSlot" lts
-                JOIN "ConferenceMembership" cm
-                ON cm."sportTeamId" = lts."sportTeamId"
-                WHERE lts."leagueId" = :league_id
-                AND lts."memberId" = :member_id
-                AND lts."acquiredWeek" <= :week_number
-                AND (lts."droppedWeek" IS NULL OR lts."droppedWeek" > :week_number)
-                GROUP BY cm."sportConferenceId"
-            """), params)
+        return ownership_reads.grouped_conference_count_rows(conn, params['league_id'], params['member_id'], params['week_number'])
 
     def member_roster_ids(self, conn, params):
         return conn.execute(text("""
@@ -244,17 +217,19 @@ class TransactionWorkflowRepository:
             ), params)
 
     def roster_violations(self, conn, params):
+        # Return all groups: service validates configuration before filtering violations.
         return conn.execute(text(
-            """
+            conference_sql("""
             SELECT
               lts."memberId"           AS "memberId",
               cm."sportConferenceId"   AS "sportConferenceId",
               sc."maxTeamsPerOwner"    AS "maxTeamsPerOwner",
               COUNT(*)                 AS "count"
             FROM "LeagueTeamSlot" lts
-            JOIN "ConferenceMembership" cm
+            LEFT JOIN "ConferenceMembership" cm
               ON cm."sportTeamId" = lts."sportTeamId"
-            JOIN "SportConference" sc
+             AND cm."sportId" = (SELECT sport FROM "League" WHERE id=:league_id)
+            LEFT JOIN "SportConference" sc
               ON sc.id = cm."sportConferenceId"
             WHERE lts."leagueId" = :league_id
               AND lts."acquiredWeek" <= :week_number
@@ -263,8 +238,7 @@ class TransactionWorkflowRepository:
               lts."memberId",
               cm."sportConferenceId",
               sc."maxTeamsPerOwner"
-            HAVING COUNT(*) > sc."maxTeamsPerOwner"
-            """
+            """, '(SELECT "seasonYear" FROM "League" WHERE id=:league_id)')
         ), params)
 
     def open_trades(self, conn, params):

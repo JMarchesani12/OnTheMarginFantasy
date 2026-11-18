@@ -1,0 +1,5632 @@
+{
+  "date": "2026-11-15",
+  "run_id": "4a99952f31194cf198dd75ad106becc2",
+  "started_at": "2026-11-16T03:26:55.553407+00:00",
+  "result": "PASS",
+  "scope": "Synthetic ingestion orchestration/canned-provider measurements only; optimization deferred",
+  "tiers": [
+    {
+      "league_count": 1,
+      "fixture": {
+        "anchor": "2026-11-16T03:26:55.663369+00:00",
+        "counts": {
+          "League": 100,
+          "LeagueMember": 800,
+          "Week": 1300,
+          "WeeklyTeamScore": 9600,
+          "LeagueTeamSlot": 16000
+        },
+        "user_count": 701,
+        "hot_user_memberships": 100,
+        "sparse_user_memberships": 1,
+        "current_week": 13,
+        "scored_weeks": 12,
+        "teams_contributing_to_score_value": 4,
+        "active_leagues": 67,
+        "completed_leagues": 33
+      },
+      "settings": {
+        "server_version": "17.6 (Debian 17.6-2.pgdg13+1)",
+        "shared_buffers": "128MB",
+        "work_mem": "4MB",
+        "statement_timeout": "2min",
+        "lock_timeout": "5s"
+      },
+      "measurements": [
+        {
+          "path": "league",
+          "scenario": "overlap",
+          "league_count": 1,
+          "expected_counts": {
+            "sql": 40,
+            "fetches": 2,
+            "upserts": 4
+          },
+          "expected_roles": {
+            "api": 1,
+            "team_lookup": 8,
+            "phases": 4,
+            "fallback": 4,
+            "season_ref": 4,
+            "phase_ref": 4,
+            "team_ref": 8,
+            "upsert": 4,
+            "league": 1,
+            "season_context": 1,
+            "subdivision": 1
+          },
+          "result": {
+            "rows": 3,
+            "canonical_json_bytes": 892,
+            "sha256": "50db2fba4735baba0e3e9f73ea9ba7110218e23d5af9fdf5bb54535a51cc854d"
+          },
+          "samples": [
+            {
+              "service_ms": 26.49316599854501,
+              "sql_count": 40,
+              "fetches": 2,
+              "upserts": 4,
+              "roles": {
+                "league": 1,
+                "api": 1,
+                "season_context": 1,
+                "subdivision": 1,
+                "team_lookup": 8,
+                "phases": 4,
+                "fallback": 4,
+                "season_ref": 4,
+                "phase_ref": 4,
+                "team_ref": 8,
+                "upsert": 4
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 24.209707997215446,
+              "sql_count": 40,
+              "fetches": 2,
+              "upserts": 4,
+              "roles": {
+                "league": 1,
+                "api": 1,
+                "season_context": 1,
+                "subdivision": 1,
+                "team_lookup": 8,
+                "phases": 4,
+                "fallback": 4,
+                "season_ref": 4,
+                "phase_ref": 4,
+                "team_ref": 8,
+                "upsert": 4
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 25.706957996590063,
+              "sql_count": 40,
+              "fetches": 2,
+              "upserts": 4,
+              "roles": {
+                "league": 1,
+                "api": 1,
+                "season_context": 1,
+                "subdivision": 1,
+                "team_lookup": 8,
+                "phases": 4,
+                "fallback": 4,
+                "season_ref": 4,
+                "phase_ref": 4,
+                "team_ref": 8,
+                "upsert": 4
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 24.06291700026486,
+              "sql_count": 40,
+              "fetches": 2,
+              "upserts": 4,
+              "roles": {
+                "league": 1,
+                "api": 1,
+                "season_context": 1,
+                "subdivision": 1,
+                "team_lookup": 8,
+                "phases": 4,
+                "fallback": 4,
+                "season_ref": 4,
+                "phase_ref": 4,
+                "team_ref": 8,
+                "upsert": 4
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 24.903624995204154,
+              "sql_count": 40,
+              "fetches": 2,
+              "upserts": 4,
+              "roles": {
+                "league": 1,
+                "api": 1,
+                "season_context": 1,
+                "subdivision": 1,
+                "team_lookup": 8,
+                "phases": 4,
+                "fallback": 4,
+                "season_ref": 4,
+                "phase_ref": 4,
+                "team_ref": 8,
+                "upsert": 4
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            }
+          ],
+          "median_service_ms": 24.903624995204154,
+          "statement_examples": {
+            "league": {
+              "sql": "\n            SELECT id, \"sport\", \"seasonYear\", settings\n            FROM \"League\"\n            WHERE id = %(leagueId)s\n        ",
+              "parameters": {
+                "leagueId": 1
+              }
+            },
+            "api": {
+              "sql": "SELECT \"api-keyword\", \"apiGroupIds\", \"baseUrlName\" FROM \"Sport\" WHERE id = %(sportId)s",
+              "parameters": {
+                "sportId": 1
+              }
+            },
+            "season_context": {
+              "sql": "\n            SELECT\n                ss.id AS \"sportSeasonId\",\n                ss.\"sportId\",\n                ss.\"seasonYear\",\n                ss.\"seasonStart\",\n                ss.\"seasonEnd\",\n                ss.\"scheduleBootstrapped\",\n                ss.\"scheduleBootstrappedAt\",\n                l.settings\n            FROM \"League\" l\n            JOIN \"SportSeason\" ss\n              ON ss.\"sportId\" = l.\"sport\"\n             AND ss.\"seasonYear\" = l.\"seasonYear\"\n            WHERE l.id = %(leagueId)s\n            LIMIT 1\n        ",
+              "parameters": {
+                "leagueId": 1
+              }
+            },
+            "subdivision": {
+              "sql": "\n                    SELECT\n                        id AS \"sportSeasonSubdivisionId\",\n                        code AS \"subdivisionCode\",\n                        name AS \"subdivisionName\",\n                        \"regularSeasonStart\",\n                        \"regularSeasonEnd\",\n                        \"postseasonStart\",\n                        \"postseasonEnd\"\n                    FROM \"SportSeasonSubdivision\"\n                    WHERE \"sportSeasonId\" = %(sportSeasonId)s\n                    ORDER BY code\n                ",
+              "parameters": {
+                "sportSeasonId": 2026
+              }
+            },
+            "team_lookup": {
+              "sql": "\n            SELECT id\n            FROM \"SportTeam\"\n            WHERE \"sportId\" = %(sportId)s\n              AND \"externalId\" = %(externalId)s\n            LIMIT 1\n        ",
+              "parameters": {
+                "sportId": 1,
+                "externalId": "1"
+              }
+            },
+            "phases": {
+              "sql": "\n                SELECT sp.*, td.\"sportConferenceId\"\n                FROM \"SeasonPhase\" sp\n                LEFT JOIN \"TournamentDefinition\" td ON td.id=sp.\"tournamentId\"\n                WHERE sp.\"sportSeasonId\"=%(season)s\n            ",
+              "parameters": {
+                "season": 2026
+              }
+            },
+            "fallback": {
+              "sql": "\n            SELECT sp.id\n            FROM \"SeasonPhase\" sp\n            WHERE sp.\"sportSeasonId\" = %(sportSeasonId)s\n            AND %(eventDate)s >= sp.\"startDate\"\n            AND %(eventDate)s <  sp.\"endDate\"\n            ORDER BY sp.\"priority\" ASC, sp.\"startDate\" DESC, sp.id DESC\n            LIMIT 1;\n        ",
+              "parameters": {
+                "sportSeasonId": 2026,
+                "eventDate": "2026-11-15 18:00:00+00:00"
+              }
+            },
+            "season_ref": {
+              "sql": "SELECT id FROM \"SportSeason\" WHERE id=%(sportSeasonId)s AND \"sportId\"=%(sport)s FOR SHARE",
+              "parameters": {
+                "sportSeasonId": 2026,
+                "sport": 1
+              }
+            },
+            "phase_ref": {
+              "sql": "SELECT id FROM \"SeasonPhase\" WHERE id=%(seasonPhaseId)s AND \"sportSeasonId\"=%(sportSeasonId)s FOR SHARE",
+              "parameters": {
+                "seasonPhaseId": 1,
+                "sportSeasonId": 2026
+              }
+            },
+            "team_ref": {
+              "sql": "SELECT id FROM \"SportTeam\" WHERE id=%(teamId)s AND \"sportId\"=%(sport)s FOR SHARE",
+              "parameters": {
+                "teamId": 1,
+                "sport": 1
+              }
+            },
+            "upsert": {
+              "sql": "\n            INSERT INTO \"GameResult\" (\n                sport,\n                \"sportSeasonId\",\n                \"seasonPhaseId\",\n                \"externalGameId\",\n                date,\n                \"timeTBD\",\n                \"homeTeamId\",\n                \"awayTeamId\",\n                \"homeScore\",\n                \"awayScore\",\n                \"homeTeamExternalId\",\n                \"awayTeamExternalId\",\n                \"homeTeamName\",\n                \"awayTeamName\",\n                \"broadcast\"\n            )\n            VALUES (\n                %(sport)s,\n                %(sportSeasonId)s,\n                %(seasonPhaseId)s,\n                %(externalGameId)s,\n                %(date)s,\n                %(timeTBD)s,\n                %(homeTeamId)s,\n                %(awayTeamId)s,\n                %(homeScore)s,\n                %(awayScore)s,\n                %(homeTeamExternalId)s,\n                %(awayTeamExternalId)s,\n                %(homeTeamName)s,\n                %(awayTeamName)s,\n                %(broadcast)s\n            )\n            ON CONFLICT (sport, \"sportSeasonId\", \"externalGameId\")\n            DO UPDATE SET\n                \"seasonPhaseId\" = EXCLUDED.\"seasonPhaseId\",\n                date = EXCLUDED.date,\n                \"timeTBD\" = EXCLUDED.\"timeTBD\",\n                \"homeTeamId\" = EXCLUDED.\"homeTeamId\",\n                \"awayTeamId\" = EXCLUDED.\"awayTeamId\",\n                \"homeScore\" = EXCLUDED.\"homeScore\",\n                \"awayScore\" = EXCLUDED.\"awayScore\",\n                \"homeTeamExternalId\" = EXCLUDED.\"homeTeamExternalId\",\n                \"awayTeamExternalId\" = EXCLUDED.\"awayTeamExternalId\",\n                \"homeTeamName\" = EXCLUDED.\"homeTeamName\",\n                \"awayTeamName\" = EXCLUDED.\"awayTeamName\",\n                \"broadcast\" = EXCLUDED.\"broadcast\"\n            RETURNING id;\n        ",
+              "parameters": {
+                "sport": 1,
+                "sportSeasonId": 2026,
+                "seasonPhaseId": 1,
+                "externalGameId": "A",
+                "date": "2026-11-15 18:00:00+00:00",
+                "timeTBD": false,
+                "homeTeamId": 1,
+                "awayTeamId": 2,
+                "homeScore": 80,
+                "awayScore": 70,
+                "homeTeamExternalId": "1",
+                "awayTeamExternalId": "2",
+                "homeTeamName": "Team 1",
+                "awayTeamName": "Team 2",
+                "broadcast": "Audit"
+              }
+            }
+          },
+          "invocations": 6,
+          "correction_ids_preserved": null
+        },
+        {
+          "path": "league",
+          "scenario": "correction",
+          "league_count": 1,
+          "expected_counts": {
+            "sql": 80,
+            "fetches": 4,
+            "upserts": 8
+          },
+          "expected_roles": {
+            "api": 2,
+            "team_lookup": 16,
+            "phases": 8,
+            "fallback": 8,
+            "season_ref": 8,
+            "phase_ref": 8,
+            "team_ref": 16,
+            "upsert": 8,
+            "league": 2,
+            "season_context": 2,
+            "subdivision": 2
+          },
+          "result": {
+            "rows": 3,
+            "canonical_json_bytes": 897,
+            "sha256": "7ec1808181b3ee3e4213dc5177d055c255eff45782cf9a8a37c284bfd84fa1e0"
+          },
+          "samples": [
+            {
+              "service_ms": 47.301791004429106,
+              "sql_count": 80,
+              "fetches": 4,
+              "upserts": 8,
+              "roles": {
+                "league": 2,
+                "api": 2,
+                "season_context": 2,
+                "subdivision": 2,
+                "team_lookup": 16,
+                "phases": 8,
+                "fallback": 8,
+                "season_ref": 8,
+                "phase_ref": 8,
+                "team_ref": 16,
+                "upsert": 8
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 47.4288749974221,
+              "sql_count": 80,
+              "fetches": 4,
+              "upserts": 8,
+              "roles": {
+                "league": 2,
+                "api": 2,
+                "season_context": 2,
+                "subdivision": 2,
+                "team_lookup": 16,
+                "phases": 8,
+                "fallback": 8,
+                "season_ref": 8,
+                "phase_ref": 8,
+                "team_ref": 16,
+                "upsert": 8
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 47.46237499784911,
+              "sql_count": 80,
+              "fetches": 4,
+              "upserts": 8,
+              "roles": {
+                "league": 2,
+                "api": 2,
+                "season_context": 2,
+                "subdivision": 2,
+                "team_lookup": 16,
+                "phases": 8,
+                "fallback": 8,
+                "season_ref": 8,
+                "phase_ref": 8,
+                "team_ref": 16,
+                "upsert": 8
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 44.94495799735887,
+              "sql_count": 80,
+              "fetches": 4,
+              "upserts": 8,
+              "roles": {
+                "league": 2,
+                "api": 2,
+                "season_context": 2,
+                "subdivision": 2,
+                "team_lookup": 16,
+                "phases": 8,
+                "fallback": 8,
+                "season_ref": 8,
+                "phase_ref": 8,
+                "team_ref": 16,
+                "upsert": 8
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 38.48854199895868,
+              "sql_count": 80,
+              "fetches": 4,
+              "upserts": 8,
+              "roles": {
+                "league": 2,
+                "api": 2,
+                "season_context": 2,
+                "subdivision": 2,
+                "team_lookup": 16,
+                "phases": 8,
+                "fallback": 8,
+                "season_ref": 8,
+                "phase_ref": 8,
+                "team_ref": 16,
+                "upsert": 8
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            }
+          ],
+          "median_service_ms": 47.301791004429106,
+          "statement_examples": {
+            "league": {
+              "sql": "\n            SELECT id, \"sport\", \"seasonYear\", settings\n            FROM \"League\"\n            WHERE id = %(leagueId)s\n        ",
+              "parameters": {
+                "leagueId": 1
+              }
+            },
+            "api": {
+              "sql": "SELECT \"api-keyword\", \"apiGroupIds\", \"baseUrlName\" FROM \"Sport\" WHERE id = %(sportId)s",
+              "parameters": {
+                "sportId": 1
+              }
+            },
+            "season_context": {
+              "sql": "\n            SELECT\n                ss.id AS \"sportSeasonId\",\n                ss.\"sportId\",\n                ss.\"seasonYear\",\n                ss.\"seasonStart\",\n                ss.\"seasonEnd\",\n                ss.\"scheduleBootstrapped\",\n                ss.\"scheduleBootstrappedAt\",\n                l.settings\n            FROM \"League\" l\n            JOIN \"SportSeason\" ss\n              ON ss.\"sportId\" = l.\"sport\"\n             AND ss.\"seasonYear\" = l.\"seasonYear\"\n            WHERE l.id = %(leagueId)s\n            LIMIT 1\n        ",
+              "parameters": {
+                "leagueId": 1
+              }
+            },
+            "subdivision": {
+              "sql": "\n                    SELECT\n                        id AS \"sportSeasonSubdivisionId\",\n                        code AS \"subdivisionCode\",\n                        name AS \"subdivisionName\",\n                        \"regularSeasonStart\",\n                        \"regularSeasonEnd\",\n                        \"postseasonStart\",\n                        \"postseasonEnd\"\n                    FROM \"SportSeasonSubdivision\"\n                    WHERE \"sportSeasonId\" = %(sportSeasonId)s\n                    ORDER BY code\n                ",
+              "parameters": {
+                "sportSeasonId": 2026
+              }
+            },
+            "team_lookup": {
+              "sql": "\n            SELECT id\n            FROM \"SportTeam\"\n            WHERE \"sportId\" = %(sportId)s\n              AND \"externalId\" = %(externalId)s\n            LIMIT 1\n        ",
+              "parameters": {
+                "sportId": 1,
+                "externalId": "1"
+              }
+            },
+            "phases": {
+              "sql": "\n                SELECT sp.*, td.\"sportConferenceId\"\n                FROM \"SeasonPhase\" sp\n                LEFT JOIN \"TournamentDefinition\" td ON td.id=sp.\"tournamentId\"\n                WHERE sp.\"sportSeasonId\"=%(season)s\n            ",
+              "parameters": {
+                "season": 2026
+              }
+            },
+            "fallback": {
+              "sql": "\n            SELECT sp.id\n            FROM \"SeasonPhase\" sp\n            WHERE sp.\"sportSeasonId\" = %(sportSeasonId)s\n            AND %(eventDate)s >= sp.\"startDate\"\n            AND %(eventDate)s <  sp.\"endDate\"\n            ORDER BY sp.\"priority\" ASC, sp.\"startDate\" DESC, sp.id DESC\n            LIMIT 1;\n        ",
+              "parameters": {
+                "sportSeasonId": 2026,
+                "eventDate": "2026-11-15 18:00:00+00:00"
+              }
+            },
+            "season_ref": {
+              "sql": "SELECT id FROM \"SportSeason\" WHERE id=%(sportSeasonId)s AND \"sportId\"=%(sport)s FOR SHARE",
+              "parameters": {
+                "sportSeasonId": 2026,
+                "sport": 1
+              }
+            },
+            "phase_ref": {
+              "sql": "SELECT id FROM \"SeasonPhase\" WHERE id=%(seasonPhaseId)s AND \"sportSeasonId\"=%(sportSeasonId)s FOR SHARE",
+              "parameters": {
+                "seasonPhaseId": 1,
+                "sportSeasonId": 2026
+              }
+            },
+            "team_ref": {
+              "sql": "SELECT id FROM \"SportTeam\" WHERE id=%(teamId)s AND \"sportId\"=%(sport)s FOR SHARE",
+              "parameters": {
+                "teamId": 1,
+                "sport": 1
+              }
+            },
+            "upsert": {
+              "sql": "\n            INSERT INTO \"GameResult\" (\n                sport,\n                \"sportSeasonId\",\n                \"seasonPhaseId\",\n                \"externalGameId\",\n                date,\n                \"timeTBD\",\n                \"homeTeamId\",\n                \"awayTeamId\",\n                \"homeScore\",\n                \"awayScore\",\n                \"homeTeamExternalId\",\n                \"awayTeamExternalId\",\n                \"homeTeamName\",\n                \"awayTeamName\",\n                \"broadcast\"\n            )\n            VALUES (\n                %(sport)s,\n                %(sportSeasonId)s,\n                %(seasonPhaseId)s,\n                %(externalGameId)s,\n                %(date)s,\n                %(timeTBD)s,\n                %(homeTeamId)s,\n                %(awayTeamId)s,\n                %(homeScore)s,\n                %(awayScore)s,\n                %(homeTeamExternalId)s,\n                %(awayTeamExternalId)s,\n                %(homeTeamName)s,\n                %(awayTeamName)s,\n                %(broadcast)s\n            )\n            ON CONFLICT (sport, \"sportSeasonId\", \"externalGameId\")\n            DO UPDATE SET\n                \"seasonPhaseId\" = EXCLUDED.\"seasonPhaseId\",\n                date = EXCLUDED.date,\n                \"timeTBD\" = EXCLUDED.\"timeTBD\",\n                \"homeTeamId\" = EXCLUDED.\"homeTeamId\",\n                \"awayTeamId\" = EXCLUDED.\"awayTeamId\",\n                \"homeScore\" = EXCLUDED.\"homeScore\",\n                \"awayScore\" = EXCLUDED.\"awayScore\",\n                \"homeTeamExternalId\" = EXCLUDED.\"homeTeamExternalId\",\n                \"awayTeamExternalId\" = EXCLUDED.\"awayTeamExternalId\",\n                \"homeTeamName\" = EXCLUDED.\"homeTeamName\",\n                \"awayTeamName\" = EXCLUDED.\"awayTeamName\",\n                \"broadcast\" = EXCLUDED.\"broadcast\"\n            RETURNING id;\n        ",
+              "parameters": {
+                "sport": 1,
+                "sportSeasonId": 2026,
+                "seasonPhaseId": 1,
+                "externalGameId": "A",
+                "date": "2026-11-15 18:00:00+00:00",
+                "timeTBD": false,
+                "homeTeamId": 1,
+                "awayTeamId": 2,
+                "homeScore": 80,
+                "awayScore": 70,
+                "homeTeamExternalId": "1",
+                "awayTeamExternalId": "2",
+                "homeTeamName": "Team 1",
+                "awayTeamName": "Team 2",
+                "broadcast": "Audit"
+              }
+            }
+          },
+          "invocations": 6,
+          "correction_ids_preserved": true
+        },
+        {
+          "path": "season",
+          "scenario": "overlap",
+          "league_count": 1,
+          "expected_counts": {
+            "sql": 29,
+            "fetches": 2,
+            "upserts": 3
+          },
+          "expected_roles": {
+            "api": 1,
+            "team_lookup": 6,
+            "phases": 3,
+            "fallback": 3,
+            "season_ref": 3,
+            "phase_ref": 3,
+            "team_ref": 6,
+            "upsert": 3,
+            "season": 1
+          },
+          "result": {
+            "rows": 3,
+            "canonical_json_bytes": 892,
+            "sha256": "50db2fba4735baba0e3e9f73ea9ba7110218e23d5af9fdf5bb54535a51cc854d"
+          },
+          "samples": [
+            {
+              "service_ms": 15.899292004178278,
+              "sql_count": 29,
+              "fetches": 2,
+              "upserts": 3,
+              "roles": {
+                "season": 1,
+                "api": 1,
+                "team_lookup": 6,
+                "phases": 3,
+                "fallback": 3,
+                "season_ref": 3,
+                "phase_ref": 3,
+                "team_ref": 6,
+                "upsert": 3
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 23.364083004707936,
+              "sql_count": 29,
+              "fetches": 2,
+              "upserts": 3,
+              "roles": {
+                "season": 1,
+                "api": 1,
+                "team_lookup": 6,
+                "phases": 3,
+                "fallback": 3,
+                "season_ref": 3,
+                "phase_ref": 3,
+                "team_ref": 6,
+                "upsert": 3
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 19.42037499975413,
+              "sql_count": 29,
+              "fetches": 2,
+              "upserts": 3,
+              "roles": {
+                "season": 1,
+                "api": 1,
+                "team_lookup": 6,
+                "phases": 3,
+                "fallback": 3,
+                "season_ref": 3,
+                "phase_ref": 3,
+                "team_ref": 6,
+                "upsert": 3
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 13.81841700640507,
+              "sql_count": 29,
+              "fetches": 2,
+              "upserts": 3,
+              "roles": {
+                "season": 1,
+                "api": 1,
+                "team_lookup": 6,
+                "phases": 3,
+                "fallback": 3,
+                "season_ref": 3,
+                "phase_ref": 3,
+                "team_ref": 6,
+                "upsert": 3
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 14.218333999451715,
+              "sql_count": 29,
+              "fetches": 2,
+              "upserts": 3,
+              "roles": {
+                "season": 1,
+                "api": 1,
+                "team_lookup": 6,
+                "phases": 3,
+                "fallback": 3,
+                "season_ref": 3,
+                "phase_ref": 3,
+                "team_ref": 6,
+                "upsert": 3
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            }
+          ],
+          "median_service_ms": 15.899292004178278,
+          "statement_examples": {
+            "season": {
+              "sql": "\n                    SELECT id, \"sportId\"\n                    FROM \"SportSeason\"\n                    WHERE id = %(id)s\n                ",
+              "parameters": {
+                "id": 2026
+              }
+            },
+            "api": {
+              "sql": "SELECT \"api-keyword\", \"apiGroupIds\", \"baseUrlName\" FROM \"Sport\" WHERE id = %(sportId)s",
+              "parameters": {
+                "sportId": 1
+              }
+            },
+            "team_lookup": {
+              "sql": "\n            SELECT id\n            FROM \"SportTeam\"\n            WHERE \"sportId\" = %(sportId)s\n              AND \"externalId\" = %(externalId)s\n            LIMIT 1\n        ",
+              "parameters": {
+                "sportId": 1,
+                "externalId": "1"
+              }
+            },
+            "phases": {
+              "sql": "\n                SELECT sp.*, td.\"sportConferenceId\"\n                FROM \"SeasonPhase\" sp\n                LEFT JOIN \"TournamentDefinition\" td ON td.id=sp.\"tournamentId\"\n                WHERE sp.\"sportSeasonId\"=%(season)s\n            ",
+              "parameters": {
+                "season": 2026
+              }
+            },
+            "fallback": {
+              "sql": "\n            SELECT sp.id\n            FROM \"SeasonPhase\" sp\n            WHERE sp.\"sportSeasonId\" = %(sportSeasonId)s\n            AND %(eventDate)s >= sp.\"startDate\"\n            AND %(eventDate)s <  sp.\"endDate\"\n            ORDER BY sp.\"priority\" ASC, sp.\"startDate\" DESC, sp.id DESC\n            LIMIT 1;\n        ",
+              "parameters": {
+                "sportSeasonId": 2026,
+                "eventDate": "2026-11-15 18:00:00+00:00"
+              }
+            },
+            "season_ref": {
+              "sql": "SELECT id FROM \"SportSeason\" WHERE id=%(sportSeasonId)s AND \"sportId\"=%(sport)s FOR SHARE",
+              "parameters": {
+                "sportSeasonId": 2026,
+                "sport": 1
+              }
+            },
+            "phase_ref": {
+              "sql": "SELECT id FROM \"SeasonPhase\" WHERE id=%(seasonPhaseId)s AND \"sportSeasonId\"=%(sportSeasonId)s FOR SHARE",
+              "parameters": {
+                "seasonPhaseId": 1,
+                "sportSeasonId": 2026
+              }
+            },
+            "team_ref": {
+              "sql": "SELECT id FROM \"SportTeam\" WHERE id=%(teamId)s AND \"sportId\"=%(sport)s FOR SHARE",
+              "parameters": {
+                "teamId": 1,
+                "sport": 1
+              }
+            },
+            "upsert": {
+              "sql": "\n            INSERT INTO \"GameResult\" (\n                sport,\n                \"sportSeasonId\",\n                \"seasonPhaseId\",\n                \"externalGameId\",\n                date,\n                \"timeTBD\",\n                \"homeTeamId\",\n                \"awayTeamId\",\n                \"homeScore\",\n                \"awayScore\",\n                \"homeTeamExternalId\",\n                \"awayTeamExternalId\",\n                \"homeTeamName\",\n                \"awayTeamName\",\n                \"broadcast\"\n            )\n            VALUES (\n                %(sport)s,\n                %(sportSeasonId)s,\n                %(seasonPhaseId)s,\n                %(externalGameId)s,\n                %(date)s,\n                %(timeTBD)s,\n                %(homeTeamId)s,\n                %(awayTeamId)s,\n                %(homeScore)s,\n                %(awayScore)s,\n                %(homeTeamExternalId)s,\n                %(awayTeamExternalId)s,\n                %(homeTeamName)s,\n                %(awayTeamName)s,\n                %(broadcast)s\n            )\n            ON CONFLICT (sport, \"sportSeasonId\", \"externalGameId\")\n            DO UPDATE SET\n                \"seasonPhaseId\" = EXCLUDED.\"seasonPhaseId\",\n                date = EXCLUDED.date,\n                \"timeTBD\" = EXCLUDED.\"timeTBD\",\n                \"homeTeamId\" = EXCLUDED.\"homeTeamId\",\n                \"awayTeamId\" = EXCLUDED.\"awayTeamId\",\n                \"homeScore\" = EXCLUDED.\"homeScore\",\n                \"awayScore\" = EXCLUDED.\"awayScore\",\n                \"homeTeamExternalId\" = EXCLUDED.\"homeTeamExternalId\",\n                \"awayTeamExternalId\" = EXCLUDED.\"awayTeamExternalId\",\n                \"homeTeamName\" = EXCLUDED.\"homeTeamName\",\n                \"awayTeamName\" = EXCLUDED.\"awayTeamName\",\n                \"broadcast\" = EXCLUDED.\"broadcast\"\n            RETURNING id;\n        ",
+              "parameters": {
+                "sport": 1,
+                "sportSeasonId": 2026,
+                "seasonPhaseId": 1,
+                "externalGameId": "A",
+                "date": "2026-11-15 18:00:00+00:00",
+                "timeTBD": false,
+                "homeTeamId": 1,
+                "awayTeamId": 2,
+                "homeScore": 80,
+                "awayScore": 70,
+                "homeTeamExternalId": "1",
+                "awayTeamExternalId": "2",
+                "homeTeamName": "Team 1",
+                "awayTeamName": "Team 2",
+                "broadcast": "Audit"
+              }
+            }
+          },
+          "invocations": 6,
+          "correction_ids_preserved": null
+        },
+        {
+          "path": "season",
+          "scenario": "correction",
+          "league_count": 1,
+          "expected_counts": {
+            "sql": 58,
+            "fetches": 4,
+            "upserts": 6
+          },
+          "expected_roles": {
+            "api": 2,
+            "team_lookup": 12,
+            "phases": 6,
+            "fallback": 6,
+            "season_ref": 6,
+            "phase_ref": 6,
+            "team_ref": 12,
+            "upsert": 6,
+            "season": 2
+          },
+          "result": {
+            "rows": 3,
+            "canonical_json_bytes": 897,
+            "sha256": "7ec1808181b3ee3e4213dc5177d055c255eff45782cf9a8a37c284bfd84fa1e0"
+          },
+          "samples": [
+            {
+              "service_ms": 27.116459001263138,
+              "sql_count": 58,
+              "fetches": 4,
+              "upserts": 6,
+              "roles": {
+                "season": 2,
+                "api": 2,
+                "team_lookup": 12,
+                "phases": 6,
+                "fallback": 6,
+                "season_ref": 6,
+                "phase_ref": 6,
+                "team_ref": 12,
+                "upsert": 6
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 27.29283399094129,
+              "sql_count": 58,
+              "fetches": 4,
+              "upserts": 6,
+              "roles": {
+                "season": 2,
+                "api": 2,
+                "team_lookup": 12,
+                "phases": 6,
+                "fallback": 6,
+                "season_ref": 6,
+                "phase_ref": 6,
+                "team_ref": 12,
+                "upsert": 6
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 26.94679200067185,
+              "sql_count": 58,
+              "fetches": 4,
+              "upserts": 6,
+              "roles": {
+                "season": 2,
+                "api": 2,
+                "team_lookup": 12,
+                "phases": 6,
+                "fallback": 6,
+                "season_ref": 6,
+                "phase_ref": 6,
+                "team_ref": 12,
+                "upsert": 6
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 27.614833001280203,
+              "sql_count": 58,
+              "fetches": 4,
+              "upserts": 6,
+              "roles": {
+                "season": 2,
+                "api": 2,
+                "team_lookup": 12,
+                "phases": 6,
+                "fallback": 6,
+                "season_ref": 6,
+                "phase_ref": 6,
+                "team_ref": 12,
+                "upsert": 6
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 27.50258300511632,
+              "sql_count": 58,
+              "fetches": 4,
+              "upserts": 6,
+              "roles": {
+                "season": 2,
+                "api": 2,
+                "team_lookup": 12,
+                "phases": 6,
+                "fallback": 6,
+                "season_ref": 6,
+                "phase_ref": 6,
+                "team_ref": 12,
+                "upsert": 6
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            }
+          ],
+          "median_service_ms": 27.29283399094129,
+          "statement_examples": {
+            "season": {
+              "sql": "\n                    SELECT id, \"sportId\"\n                    FROM \"SportSeason\"\n                    WHERE id = %(id)s\n                ",
+              "parameters": {
+                "id": 2026
+              }
+            },
+            "api": {
+              "sql": "SELECT \"api-keyword\", \"apiGroupIds\", \"baseUrlName\" FROM \"Sport\" WHERE id = %(sportId)s",
+              "parameters": {
+                "sportId": 1
+              }
+            },
+            "team_lookup": {
+              "sql": "\n            SELECT id\n            FROM \"SportTeam\"\n            WHERE \"sportId\" = %(sportId)s\n              AND \"externalId\" = %(externalId)s\n            LIMIT 1\n        ",
+              "parameters": {
+                "sportId": 1,
+                "externalId": "1"
+              }
+            },
+            "phases": {
+              "sql": "\n                SELECT sp.*, td.\"sportConferenceId\"\n                FROM \"SeasonPhase\" sp\n                LEFT JOIN \"TournamentDefinition\" td ON td.id=sp.\"tournamentId\"\n                WHERE sp.\"sportSeasonId\"=%(season)s\n            ",
+              "parameters": {
+                "season": 2026
+              }
+            },
+            "fallback": {
+              "sql": "\n            SELECT sp.id\n            FROM \"SeasonPhase\" sp\n            WHERE sp.\"sportSeasonId\" = %(sportSeasonId)s\n            AND %(eventDate)s >= sp.\"startDate\"\n            AND %(eventDate)s <  sp.\"endDate\"\n            ORDER BY sp.\"priority\" ASC, sp.\"startDate\" DESC, sp.id DESC\n            LIMIT 1;\n        ",
+              "parameters": {
+                "sportSeasonId": 2026,
+                "eventDate": "2026-11-15 18:00:00+00:00"
+              }
+            },
+            "season_ref": {
+              "sql": "SELECT id FROM \"SportSeason\" WHERE id=%(sportSeasonId)s AND \"sportId\"=%(sport)s FOR SHARE",
+              "parameters": {
+                "sportSeasonId": 2026,
+                "sport": 1
+              }
+            },
+            "phase_ref": {
+              "sql": "SELECT id FROM \"SeasonPhase\" WHERE id=%(seasonPhaseId)s AND \"sportSeasonId\"=%(sportSeasonId)s FOR SHARE",
+              "parameters": {
+                "seasonPhaseId": 1,
+                "sportSeasonId": 2026
+              }
+            },
+            "team_ref": {
+              "sql": "SELECT id FROM \"SportTeam\" WHERE id=%(teamId)s AND \"sportId\"=%(sport)s FOR SHARE",
+              "parameters": {
+                "teamId": 1,
+                "sport": 1
+              }
+            },
+            "upsert": {
+              "sql": "\n            INSERT INTO \"GameResult\" (\n                sport,\n                \"sportSeasonId\",\n                \"seasonPhaseId\",\n                \"externalGameId\",\n                date,\n                \"timeTBD\",\n                \"homeTeamId\",\n                \"awayTeamId\",\n                \"homeScore\",\n                \"awayScore\",\n                \"homeTeamExternalId\",\n                \"awayTeamExternalId\",\n                \"homeTeamName\",\n                \"awayTeamName\",\n                \"broadcast\"\n            )\n            VALUES (\n                %(sport)s,\n                %(sportSeasonId)s,\n                %(seasonPhaseId)s,\n                %(externalGameId)s,\n                %(date)s,\n                %(timeTBD)s,\n                %(homeTeamId)s,\n                %(awayTeamId)s,\n                %(homeScore)s,\n                %(awayScore)s,\n                %(homeTeamExternalId)s,\n                %(awayTeamExternalId)s,\n                %(homeTeamName)s,\n                %(awayTeamName)s,\n                %(broadcast)s\n            )\n            ON CONFLICT (sport, \"sportSeasonId\", \"externalGameId\")\n            DO UPDATE SET\n                \"seasonPhaseId\" = EXCLUDED.\"seasonPhaseId\",\n                date = EXCLUDED.date,\n                \"timeTBD\" = EXCLUDED.\"timeTBD\",\n                \"homeTeamId\" = EXCLUDED.\"homeTeamId\",\n                \"awayTeamId\" = EXCLUDED.\"awayTeamId\",\n                \"homeScore\" = EXCLUDED.\"homeScore\",\n                \"awayScore\" = EXCLUDED.\"awayScore\",\n                \"homeTeamExternalId\" = EXCLUDED.\"homeTeamExternalId\",\n                \"awayTeamExternalId\" = EXCLUDED.\"awayTeamExternalId\",\n                \"homeTeamName\" = EXCLUDED.\"homeTeamName\",\n                \"awayTeamName\" = EXCLUDED.\"awayTeamName\",\n                \"broadcast\" = EXCLUDED.\"broadcast\"\n            RETURNING id;\n        ",
+              "parameters": {
+                "sport": 1,
+                "sportSeasonId": 2026,
+                "seasonPhaseId": 1,
+                "externalGameId": "A",
+                "date": "2026-11-15 18:00:00+00:00",
+                "timeTBD": false,
+                "homeTeamId": 1,
+                "awayTeamId": 2,
+                "homeScore": 80,
+                "awayScore": 70,
+                "homeTeamExternalId": "1",
+                "awayTeamExternalId": "2",
+                "homeTeamName": "Team 1",
+                "awayTeamName": "Team 2",
+                "broadcast": "Audit"
+              }
+            }
+          },
+          "invocations": 6,
+          "correction_ids_preserved": true
+        }
+      ],
+      "failure_probes": []
+    },
+    {
+      "league_count": 4,
+      "fixture": {
+        "anchor": "2026-11-16T03:26:56.852998+00:00",
+        "counts": {
+          "League": 100,
+          "LeagueMember": 800,
+          "Week": 1300,
+          "WeeklyTeamScore": 9600,
+          "LeagueTeamSlot": 16000
+        },
+        "user_count": 701,
+        "hot_user_memberships": 100,
+        "sparse_user_memberships": 1,
+        "current_week": 13,
+        "scored_weeks": 12,
+        "teams_contributing_to_score_value": 4,
+        "active_leagues": 67,
+        "completed_leagues": 33
+      },
+      "settings": {
+        "server_version": "17.6 (Debian 17.6-2.pgdg13+1)",
+        "shared_buffers": "128MB",
+        "work_mem": "4MB",
+        "statement_timeout": "2min",
+        "lock_timeout": "5s"
+      },
+      "measurements": [
+        {
+          "path": "league",
+          "scenario": "overlap",
+          "league_count": 4,
+          "expected_counts": {
+            "sql": 160,
+            "fetches": 8,
+            "upserts": 16
+          },
+          "expected_roles": {
+            "api": 4,
+            "team_lookup": 32,
+            "phases": 16,
+            "fallback": 16,
+            "season_ref": 16,
+            "phase_ref": 16,
+            "team_ref": 32,
+            "upsert": 16,
+            "league": 4,
+            "season_context": 4,
+            "subdivision": 4
+          },
+          "result": {
+            "rows": 3,
+            "canonical_json_bytes": 892,
+            "sha256": "50db2fba4735baba0e3e9f73ea9ba7110218e23d5af9fdf5bb54535a51cc854d"
+          },
+          "samples": [
+            {
+              "service_ms": 93.17495900177164,
+              "sql_count": 160,
+              "fetches": 8,
+              "upserts": 16,
+              "roles": {
+                "league": 4,
+                "api": 4,
+                "season_context": 4,
+                "subdivision": 4,
+                "team_lookup": 32,
+                "phases": 16,
+                "fallback": 16,
+                "season_ref": 16,
+                "phase_ref": 16,
+                "team_ref": 32,
+                "upsert": 16
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 87.75062499626074,
+              "sql_count": 160,
+              "fetches": 8,
+              "upserts": 16,
+              "roles": {
+                "league": 4,
+                "api": 4,
+                "season_context": 4,
+                "subdivision": 4,
+                "team_lookup": 32,
+                "phases": 16,
+                "fallback": 16,
+                "season_ref": 16,
+                "phase_ref": 16,
+                "team_ref": 32,
+                "upsert": 16
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 84.61041600094177,
+              "sql_count": 160,
+              "fetches": 8,
+              "upserts": 16,
+              "roles": {
+                "league": 4,
+                "api": 4,
+                "season_context": 4,
+                "subdivision": 4,
+                "team_lookup": 32,
+                "phases": 16,
+                "fallback": 16,
+                "season_ref": 16,
+                "phase_ref": 16,
+                "team_ref": 32,
+                "upsert": 16
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 83.2103749999078,
+              "sql_count": 160,
+              "fetches": 8,
+              "upserts": 16,
+              "roles": {
+                "league": 4,
+                "api": 4,
+                "season_context": 4,
+                "subdivision": 4,
+                "team_lookup": 32,
+                "phases": 16,
+                "fallback": 16,
+                "season_ref": 16,
+                "phase_ref": 16,
+                "team_ref": 32,
+                "upsert": 16
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 82.18070899602026,
+              "sql_count": 160,
+              "fetches": 8,
+              "upserts": 16,
+              "roles": {
+                "league": 4,
+                "api": 4,
+                "season_context": 4,
+                "subdivision": 4,
+                "team_lookup": 32,
+                "phases": 16,
+                "fallback": 16,
+                "season_ref": 16,
+                "phase_ref": 16,
+                "team_ref": 32,
+                "upsert": 16
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            }
+          ],
+          "median_service_ms": 84.61041600094177,
+          "statement_examples": {
+            "league": {
+              "sql": "\n            SELECT id, \"sport\", \"seasonYear\", settings\n            FROM \"League\"\n            WHERE id = %(leagueId)s\n        ",
+              "parameters": {
+                "leagueId": 1
+              }
+            },
+            "api": {
+              "sql": "SELECT \"api-keyword\", \"apiGroupIds\", \"baseUrlName\" FROM \"Sport\" WHERE id = %(sportId)s",
+              "parameters": {
+                "sportId": 1
+              }
+            },
+            "season_context": {
+              "sql": "\n            SELECT\n                ss.id AS \"sportSeasonId\",\n                ss.\"sportId\",\n                ss.\"seasonYear\",\n                ss.\"seasonStart\",\n                ss.\"seasonEnd\",\n                ss.\"scheduleBootstrapped\",\n                ss.\"scheduleBootstrappedAt\",\n                l.settings\n            FROM \"League\" l\n            JOIN \"SportSeason\" ss\n              ON ss.\"sportId\" = l.\"sport\"\n             AND ss.\"seasonYear\" = l.\"seasonYear\"\n            WHERE l.id = %(leagueId)s\n            LIMIT 1\n        ",
+              "parameters": {
+                "leagueId": 1
+              }
+            },
+            "subdivision": {
+              "sql": "\n                    SELECT\n                        id AS \"sportSeasonSubdivisionId\",\n                        code AS \"subdivisionCode\",\n                        name AS \"subdivisionName\",\n                        \"regularSeasonStart\",\n                        \"regularSeasonEnd\",\n                        \"postseasonStart\",\n                        \"postseasonEnd\"\n                    FROM \"SportSeasonSubdivision\"\n                    WHERE \"sportSeasonId\" = %(sportSeasonId)s\n                    ORDER BY code\n                ",
+              "parameters": {
+                "sportSeasonId": 2026
+              }
+            },
+            "team_lookup": {
+              "sql": "\n            SELECT id\n            FROM \"SportTeam\"\n            WHERE \"sportId\" = %(sportId)s\n              AND \"externalId\" = %(externalId)s\n            LIMIT 1\n        ",
+              "parameters": {
+                "sportId": 1,
+                "externalId": "1"
+              }
+            },
+            "phases": {
+              "sql": "\n                SELECT sp.*, td.\"sportConferenceId\"\n                FROM \"SeasonPhase\" sp\n                LEFT JOIN \"TournamentDefinition\" td ON td.id=sp.\"tournamentId\"\n                WHERE sp.\"sportSeasonId\"=%(season)s\n            ",
+              "parameters": {
+                "season": 2026
+              }
+            },
+            "fallback": {
+              "sql": "\n            SELECT sp.id\n            FROM \"SeasonPhase\" sp\n            WHERE sp.\"sportSeasonId\" = %(sportSeasonId)s\n            AND %(eventDate)s >= sp.\"startDate\"\n            AND %(eventDate)s <  sp.\"endDate\"\n            ORDER BY sp.\"priority\" ASC, sp.\"startDate\" DESC, sp.id DESC\n            LIMIT 1;\n        ",
+              "parameters": {
+                "sportSeasonId": 2026,
+                "eventDate": "2026-11-15 18:00:00+00:00"
+              }
+            },
+            "season_ref": {
+              "sql": "SELECT id FROM \"SportSeason\" WHERE id=%(sportSeasonId)s AND \"sportId\"=%(sport)s FOR SHARE",
+              "parameters": {
+                "sportSeasonId": 2026,
+                "sport": 1
+              }
+            },
+            "phase_ref": {
+              "sql": "SELECT id FROM \"SeasonPhase\" WHERE id=%(seasonPhaseId)s AND \"sportSeasonId\"=%(sportSeasonId)s FOR SHARE",
+              "parameters": {
+                "seasonPhaseId": 1,
+                "sportSeasonId": 2026
+              }
+            },
+            "team_ref": {
+              "sql": "SELECT id FROM \"SportTeam\" WHERE id=%(teamId)s AND \"sportId\"=%(sport)s FOR SHARE",
+              "parameters": {
+                "teamId": 1,
+                "sport": 1
+              }
+            },
+            "upsert": {
+              "sql": "\n            INSERT INTO \"GameResult\" (\n                sport,\n                \"sportSeasonId\",\n                \"seasonPhaseId\",\n                \"externalGameId\",\n                date,\n                \"timeTBD\",\n                \"homeTeamId\",\n                \"awayTeamId\",\n                \"homeScore\",\n                \"awayScore\",\n                \"homeTeamExternalId\",\n                \"awayTeamExternalId\",\n                \"homeTeamName\",\n                \"awayTeamName\",\n                \"broadcast\"\n            )\n            VALUES (\n                %(sport)s,\n                %(sportSeasonId)s,\n                %(seasonPhaseId)s,\n                %(externalGameId)s,\n                %(date)s,\n                %(timeTBD)s,\n                %(homeTeamId)s,\n                %(awayTeamId)s,\n                %(homeScore)s,\n                %(awayScore)s,\n                %(homeTeamExternalId)s,\n                %(awayTeamExternalId)s,\n                %(homeTeamName)s,\n                %(awayTeamName)s,\n                %(broadcast)s\n            )\n            ON CONFLICT (sport, \"sportSeasonId\", \"externalGameId\")\n            DO UPDATE SET\n                \"seasonPhaseId\" = EXCLUDED.\"seasonPhaseId\",\n                date = EXCLUDED.date,\n                \"timeTBD\" = EXCLUDED.\"timeTBD\",\n                \"homeTeamId\" = EXCLUDED.\"homeTeamId\",\n                \"awayTeamId\" = EXCLUDED.\"awayTeamId\",\n                \"homeScore\" = EXCLUDED.\"homeScore\",\n                \"awayScore\" = EXCLUDED.\"awayScore\",\n                \"homeTeamExternalId\" = EXCLUDED.\"homeTeamExternalId\",\n                \"awayTeamExternalId\" = EXCLUDED.\"awayTeamExternalId\",\n                \"homeTeamName\" = EXCLUDED.\"homeTeamName\",\n                \"awayTeamName\" = EXCLUDED.\"awayTeamName\",\n                \"broadcast\" = EXCLUDED.\"broadcast\"\n            RETURNING id;\n        ",
+              "parameters": {
+                "sport": 1,
+                "sportSeasonId": 2026,
+                "seasonPhaseId": 1,
+                "externalGameId": "A",
+                "date": "2026-11-15 18:00:00+00:00",
+                "timeTBD": false,
+                "homeTeamId": 1,
+                "awayTeamId": 2,
+                "homeScore": 80,
+                "awayScore": 70,
+                "homeTeamExternalId": "1",
+                "awayTeamExternalId": "2",
+                "homeTeamName": "Team 1",
+                "awayTeamName": "Team 2",
+                "broadcast": "Audit"
+              }
+            }
+          },
+          "invocations": 6,
+          "correction_ids_preserved": null
+        },
+        {
+          "path": "league",
+          "scenario": "correction",
+          "league_count": 4,
+          "expected_counts": {
+            "sql": 320,
+            "fetches": 16,
+            "upserts": 32
+          },
+          "expected_roles": {
+            "api": 8,
+            "team_lookup": 64,
+            "phases": 32,
+            "fallback": 32,
+            "season_ref": 32,
+            "phase_ref": 32,
+            "team_ref": 64,
+            "upsert": 32,
+            "league": 8,
+            "season_context": 8,
+            "subdivision": 8
+          },
+          "result": {
+            "rows": 3,
+            "canonical_json_bytes": 897,
+            "sha256": "7ec1808181b3ee3e4213dc5177d055c255eff45782cf9a8a37c284bfd84fa1e0"
+          },
+          "samples": [
+            {
+              "service_ms": 170.2367910038447,
+              "sql_count": 320,
+              "fetches": 16,
+              "upserts": 32,
+              "roles": {
+                "league": 8,
+                "api": 8,
+                "season_context": 8,
+                "subdivision": 8,
+                "team_lookup": 64,
+                "phases": 32,
+                "fallback": 32,
+                "season_ref": 32,
+                "phase_ref": 32,
+                "team_ref": 64,
+                "upsert": 32
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 164.7010410015355,
+              "sql_count": 320,
+              "fetches": 16,
+              "upserts": 32,
+              "roles": {
+                "league": 8,
+                "api": 8,
+                "season_context": 8,
+                "subdivision": 8,
+                "team_lookup": 64,
+                "phases": 32,
+                "fallback": 32,
+                "season_ref": 32,
+                "phase_ref": 32,
+                "team_ref": 64,
+                "upsert": 32
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 168.57483299827436,
+              "sql_count": 320,
+              "fetches": 16,
+              "upserts": 32,
+              "roles": {
+                "league": 8,
+                "api": 8,
+                "season_context": 8,
+                "subdivision": 8,
+                "team_lookup": 64,
+                "phases": 32,
+                "fallback": 32,
+                "season_ref": 32,
+                "phase_ref": 32,
+                "team_ref": 64,
+                "upsert": 32
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 169.0630009979941,
+              "sql_count": 320,
+              "fetches": 16,
+              "upserts": 32,
+              "roles": {
+                "league": 8,
+                "api": 8,
+                "season_context": 8,
+                "subdivision": 8,
+                "team_lookup": 64,
+                "phases": 32,
+                "fallback": 32,
+                "season_ref": 32,
+                "phase_ref": 32,
+                "team_ref": 64,
+                "upsert": 32
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 154.86787499685306,
+              "sql_count": 320,
+              "fetches": 16,
+              "upserts": 32,
+              "roles": {
+                "league": 8,
+                "api": 8,
+                "season_context": 8,
+                "subdivision": 8,
+                "team_lookup": 64,
+                "phases": 32,
+                "fallback": 32,
+                "season_ref": 32,
+                "phase_ref": 32,
+                "team_ref": 64,
+                "upsert": 32
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            }
+          ],
+          "median_service_ms": 168.57483299827436,
+          "statement_examples": {
+            "league": {
+              "sql": "\n            SELECT id, \"sport\", \"seasonYear\", settings\n            FROM \"League\"\n            WHERE id = %(leagueId)s\n        ",
+              "parameters": {
+                "leagueId": 1
+              }
+            },
+            "api": {
+              "sql": "SELECT \"api-keyword\", \"apiGroupIds\", \"baseUrlName\" FROM \"Sport\" WHERE id = %(sportId)s",
+              "parameters": {
+                "sportId": 1
+              }
+            },
+            "season_context": {
+              "sql": "\n            SELECT\n                ss.id AS \"sportSeasonId\",\n                ss.\"sportId\",\n                ss.\"seasonYear\",\n                ss.\"seasonStart\",\n                ss.\"seasonEnd\",\n                ss.\"scheduleBootstrapped\",\n                ss.\"scheduleBootstrappedAt\",\n                l.settings\n            FROM \"League\" l\n            JOIN \"SportSeason\" ss\n              ON ss.\"sportId\" = l.\"sport\"\n             AND ss.\"seasonYear\" = l.\"seasonYear\"\n            WHERE l.id = %(leagueId)s\n            LIMIT 1\n        ",
+              "parameters": {
+                "leagueId": 1
+              }
+            },
+            "subdivision": {
+              "sql": "\n                    SELECT\n                        id AS \"sportSeasonSubdivisionId\",\n                        code AS \"subdivisionCode\",\n                        name AS \"subdivisionName\",\n                        \"regularSeasonStart\",\n                        \"regularSeasonEnd\",\n                        \"postseasonStart\",\n                        \"postseasonEnd\"\n                    FROM \"SportSeasonSubdivision\"\n                    WHERE \"sportSeasonId\" = %(sportSeasonId)s\n                    ORDER BY code\n                ",
+              "parameters": {
+                "sportSeasonId": 2026
+              }
+            },
+            "team_lookup": {
+              "sql": "\n            SELECT id\n            FROM \"SportTeam\"\n            WHERE \"sportId\" = %(sportId)s\n              AND \"externalId\" = %(externalId)s\n            LIMIT 1\n        ",
+              "parameters": {
+                "sportId": 1,
+                "externalId": "1"
+              }
+            },
+            "phases": {
+              "sql": "\n                SELECT sp.*, td.\"sportConferenceId\"\n                FROM \"SeasonPhase\" sp\n                LEFT JOIN \"TournamentDefinition\" td ON td.id=sp.\"tournamentId\"\n                WHERE sp.\"sportSeasonId\"=%(season)s\n            ",
+              "parameters": {
+                "season": 2026
+              }
+            },
+            "fallback": {
+              "sql": "\n            SELECT sp.id\n            FROM \"SeasonPhase\" sp\n            WHERE sp.\"sportSeasonId\" = %(sportSeasonId)s\n            AND %(eventDate)s >= sp.\"startDate\"\n            AND %(eventDate)s <  sp.\"endDate\"\n            ORDER BY sp.\"priority\" ASC, sp.\"startDate\" DESC, sp.id DESC\n            LIMIT 1;\n        ",
+              "parameters": {
+                "sportSeasonId": 2026,
+                "eventDate": "2026-11-15 18:00:00+00:00"
+              }
+            },
+            "season_ref": {
+              "sql": "SELECT id FROM \"SportSeason\" WHERE id=%(sportSeasonId)s AND \"sportId\"=%(sport)s FOR SHARE",
+              "parameters": {
+                "sportSeasonId": 2026,
+                "sport": 1
+              }
+            },
+            "phase_ref": {
+              "sql": "SELECT id FROM \"SeasonPhase\" WHERE id=%(seasonPhaseId)s AND \"sportSeasonId\"=%(sportSeasonId)s FOR SHARE",
+              "parameters": {
+                "seasonPhaseId": 1,
+                "sportSeasonId": 2026
+              }
+            },
+            "team_ref": {
+              "sql": "SELECT id FROM \"SportTeam\" WHERE id=%(teamId)s AND \"sportId\"=%(sport)s FOR SHARE",
+              "parameters": {
+                "teamId": 1,
+                "sport": 1
+              }
+            },
+            "upsert": {
+              "sql": "\n            INSERT INTO \"GameResult\" (\n                sport,\n                \"sportSeasonId\",\n                \"seasonPhaseId\",\n                \"externalGameId\",\n                date,\n                \"timeTBD\",\n                \"homeTeamId\",\n                \"awayTeamId\",\n                \"homeScore\",\n                \"awayScore\",\n                \"homeTeamExternalId\",\n                \"awayTeamExternalId\",\n                \"homeTeamName\",\n                \"awayTeamName\",\n                \"broadcast\"\n            )\n            VALUES (\n                %(sport)s,\n                %(sportSeasonId)s,\n                %(seasonPhaseId)s,\n                %(externalGameId)s,\n                %(date)s,\n                %(timeTBD)s,\n                %(homeTeamId)s,\n                %(awayTeamId)s,\n                %(homeScore)s,\n                %(awayScore)s,\n                %(homeTeamExternalId)s,\n                %(awayTeamExternalId)s,\n                %(homeTeamName)s,\n                %(awayTeamName)s,\n                %(broadcast)s\n            )\n            ON CONFLICT (sport, \"sportSeasonId\", \"externalGameId\")\n            DO UPDATE SET\n                \"seasonPhaseId\" = EXCLUDED.\"seasonPhaseId\",\n                date = EXCLUDED.date,\n                \"timeTBD\" = EXCLUDED.\"timeTBD\",\n                \"homeTeamId\" = EXCLUDED.\"homeTeamId\",\n                \"awayTeamId\" = EXCLUDED.\"awayTeamId\",\n                \"homeScore\" = EXCLUDED.\"homeScore\",\n                \"awayScore\" = EXCLUDED.\"awayScore\",\n                \"homeTeamExternalId\" = EXCLUDED.\"homeTeamExternalId\",\n                \"awayTeamExternalId\" = EXCLUDED.\"awayTeamExternalId\",\n                \"homeTeamName\" = EXCLUDED.\"homeTeamName\",\n                \"awayTeamName\" = EXCLUDED.\"awayTeamName\",\n                \"broadcast\" = EXCLUDED.\"broadcast\"\n            RETURNING id;\n        ",
+              "parameters": {
+                "sport": 1,
+                "sportSeasonId": 2026,
+                "seasonPhaseId": 1,
+                "externalGameId": "A",
+                "date": "2026-11-15 18:00:00+00:00",
+                "timeTBD": false,
+                "homeTeamId": 1,
+                "awayTeamId": 2,
+                "homeScore": 80,
+                "awayScore": 70,
+                "homeTeamExternalId": "1",
+                "awayTeamExternalId": "2",
+                "homeTeamName": "Team 1",
+                "awayTeamName": "Team 2",
+                "broadcast": "Audit"
+              }
+            }
+          },
+          "invocations": 6,
+          "correction_ids_preserved": true
+        },
+        {
+          "path": "season",
+          "scenario": "overlap",
+          "league_count": 4,
+          "expected_counts": {
+            "sql": 29,
+            "fetches": 2,
+            "upserts": 3
+          },
+          "expected_roles": {
+            "api": 1,
+            "team_lookup": 6,
+            "phases": 3,
+            "fallback": 3,
+            "season_ref": 3,
+            "phase_ref": 3,
+            "team_ref": 6,
+            "upsert": 3,
+            "season": 1
+          },
+          "result": {
+            "rows": 3,
+            "canonical_json_bytes": 892,
+            "sha256": "50db2fba4735baba0e3e9f73ea9ba7110218e23d5af9fdf5bb54535a51cc854d"
+          },
+          "samples": [
+            {
+              "service_ms": 13.952582994534168,
+              "sql_count": 29,
+              "fetches": 2,
+              "upserts": 3,
+              "roles": {
+                "season": 1,
+                "api": 1,
+                "team_lookup": 6,
+                "phases": 3,
+                "fallback": 3,
+                "season_ref": 3,
+                "phase_ref": 3,
+                "team_ref": 6,
+                "upsert": 3
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 13.691250002011657,
+              "sql_count": 29,
+              "fetches": 2,
+              "upserts": 3,
+              "roles": {
+                "season": 1,
+                "api": 1,
+                "team_lookup": 6,
+                "phases": 3,
+                "fallback": 3,
+                "season_ref": 3,
+                "phase_ref": 3,
+                "team_ref": 6,
+                "upsert": 3
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 13.770458004728425,
+              "sql_count": 29,
+              "fetches": 2,
+              "upserts": 3,
+              "roles": {
+                "season": 1,
+                "api": 1,
+                "team_lookup": 6,
+                "phases": 3,
+                "fallback": 3,
+                "season_ref": 3,
+                "phase_ref": 3,
+                "team_ref": 6,
+                "upsert": 3
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 13.462333001371007,
+              "sql_count": 29,
+              "fetches": 2,
+              "upserts": 3,
+              "roles": {
+                "season": 1,
+                "api": 1,
+                "team_lookup": 6,
+                "phases": 3,
+                "fallback": 3,
+                "season_ref": 3,
+                "phase_ref": 3,
+                "team_ref": 6,
+                "upsert": 3
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 14.280124996730592,
+              "sql_count": 29,
+              "fetches": 2,
+              "upserts": 3,
+              "roles": {
+                "season": 1,
+                "api": 1,
+                "team_lookup": 6,
+                "phases": 3,
+                "fallback": 3,
+                "season_ref": 3,
+                "phase_ref": 3,
+                "team_ref": 6,
+                "upsert": 3
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            }
+          ],
+          "median_service_ms": 13.770458004728425,
+          "statement_examples": {
+            "season": {
+              "sql": "\n                    SELECT id, \"sportId\"\n                    FROM \"SportSeason\"\n                    WHERE id = %(id)s\n                ",
+              "parameters": {
+                "id": 2026
+              }
+            },
+            "api": {
+              "sql": "SELECT \"api-keyword\", \"apiGroupIds\", \"baseUrlName\" FROM \"Sport\" WHERE id = %(sportId)s",
+              "parameters": {
+                "sportId": 1
+              }
+            },
+            "team_lookup": {
+              "sql": "\n            SELECT id\n            FROM \"SportTeam\"\n            WHERE \"sportId\" = %(sportId)s\n              AND \"externalId\" = %(externalId)s\n            LIMIT 1\n        ",
+              "parameters": {
+                "sportId": 1,
+                "externalId": "1"
+              }
+            },
+            "phases": {
+              "sql": "\n                SELECT sp.*, td.\"sportConferenceId\"\n                FROM \"SeasonPhase\" sp\n                LEFT JOIN \"TournamentDefinition\" td ON td.id=sp.\"tournamentId\"\n                WHERE sp.\"sportSeasonId\"=%(season)s\n            ",
+              "parameters": {
+                "season": 2026
+              }
+            },
+            "fallback": {
+              "sql": "\n            SELECT sp.id\n            FROM \"SeasonPhase\" sp\n            WHERE sp.\"sportSeasonId\" = %(sportSeasonId)s\n            AND %(eventDate)s >= sp.\"startDate\"\n            AND %(eventDate)s <  sp.\"endDate\"\n            ORDER BY sp.\"priority\" ASC, sp.\"startDate\" DESC, sp.id DESC\n            LIMIT 1;\n        ",
+              "parameters": {
+                "sportSeasonId": 2026,
+                "eventDate": "2026-11-15 18:00:00+00:00"
+              }
+            },
+            "season_ref": {
+              "sql": "SELECT id FROM \"SportSeason\" WHERE id=%(sportSeasonId)s AND \"sportId\"=%(sport)s FOR SHARE",
+              "parameters": {
+                "sportSeasonId": 2026,
+                "sport": 1
+              }
+            },
+            "phase_ref": {
+              "sql": "SELECT id FROM \"SeasonPhase\" WHERE id=%(seasonPhaseId)s AND \"sportSeasonId\"=%(sportSeasonId)s FOR SHARE",
+              "parameters": {
+                "seasonPhaseId": 1,
+                "sportSeasonId": 2026
+              }
+            },
+            "team_ref": {
+              "sql": "SELECT id FROM \"SportTeam\" WHERE id=%(teamId)s AND \"sportId\"=%(sport)s FOR SHARE",
+              "parameters": {
+                "teamId": 1,
+                "sport": 1
+              }
+            },
+            "upsert": {
+              "sql": "\n            INSERT INTO \"GameResult\" (\n                sport,\n                \"sportSeasonId\",\n                \"seasonPhaseId\",\n                \"externalGameId\",\n                date,\n                \"timeTBD\",\n                \"homeTeamId\",\n                \"awayTeamId\",\n                \"homeScore\",\n                \"awayScore\",\n                \"homeTeamExternalId\",\n                \"awayTeamExternalId\",\n                \"homeTeamName\",\n                \"awayTeamName\",\n                \"broadcast\"\n            )\n            VALUES (\n                %(sport)s,\n                %(sportSeasonId)s,\n                %(seasonPhaseId)s,\n                %(externalGameId)s,\n                %(date)s,\n                %(timeTBD)s,\n                %(homeTeamId)s,\n                %(awayTeamId)s,\n                %(homeScore)s,\n                %(awayScore)s,\n                %(homeTeamExternalId)s,\n                %(awayTeamExternalId)s,\n                %(homeTeamName)s,\n                %(awayTeamName)s,\n                %(broadcast)s\n            )\n            ON CONFLICT (sport, \"sportSeasonId\", \"externalGameId\")\n            DO UPDATE SET\n                \"seasonPhaseId\" = EXCLUDED.\"seasonPhaseId\",\n                date = EXCLUDED.date,\n                \"timeTBD\" = EXCLUDED.\"timeTBD\",\n                \"homeTeamId\" = EXCLUDED.\"homeTeamId\",\n                \"awayTeamId\" = EXCLUDED.\"awayTeamId\",\n                \"homeScore\" = EXCLUDED.\"homeScore\",\n                \"awayScore\" = EXCLUDED.\"awayScore\",\n                \"homeTeamExternalId\" = EXCLUDED.\"homeTeamExternalId\",\n                \"awayTeamExternalId\" = EXCLUDED.\"awayTeamExternalId\",\n                \"homeTeamName\" = EXCLUDED.\"homeTeamName\",\n                \"awayTeamName\" = EXCLUDED.\"awayTeamName\",\n                \"broadcast\" = EXCLUDED.\"broadcast\"\n            RETURNING id;\n        ",
+              "parameters": {
+                "sport": 1,
+                "sportSeasonId": 2026,
+                "seasonPhaseId": 1,
+                "externalGameId": "A",
+                "date": "2026-11-15 18:00:00+00:00",
+                "timeTBD": false,
+                "homeTeamId": 1,
+                "awayTeamId": 2,
+                "homeScore": 80,
+                "awayScore": 70,
+                "homeTeamExternalId": "1",
+                "awayTeamExternalId": "2",
+                "homeTeamName": "Team 1",
+                "awayTeamName": "Team 2",
+                "broadcast": "Audit"
+              }
+            }
+          },
+          "invocations": 6,
+          "correction_ids_preserved": null
+        },
+        {
+          "path": "season",
+          "scenario": "correction",
+          "league_count": 4,
+          "expected_counts": {
+            "sql": 58,
+            "fetches": 4,
+            "upserts": 6
+          },
+          "expected_roles": {
+            "api": 2,
+            "team_lookup": 12,
+            "phases": 6,
+            "fallback": 6,
+            "season_ref": 6,
+            "phase_ref": 6,
+            "team_ref": 12,
+            "upsert": 6,
+            "season": 2
+          },
+          "result": {
+            "rows": 3,
+            "canonical_json_bytes": 897,
+            "sha256": "7ec1808181b3ee3e4213dc5177d055c255eff45782cf9a8a37c284bfd84fa1e0"
+          },
+          "samples": [
+            {
+              "service_ms": 30.089500003668945,
+              "sql_count": 58,
+              "fetches": 4,
+              "upserts": 6,
+              "roles": {
+                "season": 2,
+                "api": 2,
+                "team_lookup": 12,
+                "phases": 6,
+                "fallback": 6,
+                "season_ref": 6,
+                "phase_ref": 6,
+                "team_ref": 12,
+                "upsert": 6
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 28.99837400036631,
+              "sql_count": 58,
+              "fetches": 4,
+              "upserts": 6,
+              "roles": {
+                "season": 2,
+                "api": 2,
+                "team_lookup": 12,
+                "phases": 6,
+                "fallback": 6,
+                "season_ref": 6,
+                "phase_ref": 6,
+                "team_ref": 12,
+                "upsert": 6
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 28.890166999190114,
+              "sql_count": 58,
+              "fetches": 4,
+              "upserts": 6,
+              "roles": {
+                "season": 2,
+                "api": 2,
+                "team_lookup": 12,
+                "phases": 6,
+                "fallback": 6,
+                "season_ref": 6,
+                "phase_ref": 6,
+                "team_ref": 12,
+                "upsert": 6
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 29.72720799880335,
+              "sql_count": 58,
+              "fetches": 4,
+              "upserts": 6,
+              "roles": {
+                "season": 2,
+                "api": 2,
+                "team_lookup": 12,
+                "phases": 6,
+                "fallback": 6,
+                "season_ref": 6,
+                "phase_ref": 6,
+                "team_ref": 12,
+                "upsert": 6
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 27.48174999578623,
+              "sql_count": 58,
+              "fetches": 4,
+              "upserts": 6,
+              "roles": {
+                "season": 2,
+                "api": 2,
+                "team_lookup": 12,
+                "phases": 6,
+                "fallback": 6,
+                "season_ref": 6,
+                "phase_ref": 6,
+                "team_ref": 12,
+                "upsert": 6
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            }
+          ],
+          "median_service_ms": 28.99837400036631,
+          "statement_examples": {
+            "season": {
+              "sql": "\n                    SELECT id, \"sportId\"\n                    FROM \"SportSeason\"\n                    WHERE id = %(id)s\n                ",
+              "parameters": {
+                "id": 2026
+              }
+            },
+            "api": {
+              "sql": "SELECT \"api-keyword\", \"apiGroupIds\", \"baseUrlName\" FROM \"Sport\" WHERE id = %(sportId)s",
+              "parameters": {
+                "sportId": 1
+              }
+            },
+            "team_lookup": {
+              "sql": "\n            SELECT id\n            FROM \"SportTeam\"\n            WHERE \"sportId\" = %(sportId)s\n              AND \"externalId\" = %(externalId)s\n            LIMIT 1\n        ",
+              "parameters": {
+                "sportId": 1,
+                "externalId": "1"
+              }
+            },
+            "phases": {
+              "sql": "\n                SELECT sp.*, td.\"sportConferenceId\"\n                FROM \"SeasonPhase\" sp\n                LEFT JOIN \"TournamentDefinition\" td ON td.id=sp.\"tournamentId\"\n                WHERE sp.\"sportSeasonId\"=%(season)s\n            ",
+              "parameters": {
+                "season": 2026
+              }
+            },
+            "fallback": {
+              "sql": "\n            SELECT sp.id\n            FROM \"SeasonPhase\" sp\n            WHERE sp.\"sportSeasonId\" = %(sportSeasonId)s\n            AND %(eventDate)s >= sp.\"startDate\"\n            AND %(eventDate)s <  sp.\"endDate\"\n            ORDER BY sp.\"priority\" ASC, sp.\"startDate\" DESC, sp.id DESC\n            LIMIT 1;\n        ",
+              "parameters": {
+                "sportSeasonId": 2026,
+                "eventDate": "2026-11-15 18:00:00+00:00"
+              }
+            },
+            "season_ref": {
+              "sql": "SELECT id FROM \"SportSeason\" WHERE id=%(sportSeasonId)s AND \"sportId\"=%(sport)s FOR SHARE",
+              "parameters": {
+                "sportSeasonId": 2026,
+                "sport": 1
+              }
+            },
+            "phase_ref": {
+              "sql": "SELECT id FROM \"SeasonPhase\" WHERE id=%(seasonPhaseId)s AND \"sportSeasonId\"=%(sportSeasonId)s FOR SHARE",
+              "parameters": {
+                "seasonPhaseId": 1,
+                "sportSeasonId": 2026
+              }
+            },
+            "team_ref": {
+              "sql": "SELECT id FROM \"SportTeam\" WHERE id=%(teamId)s AND \"sportId\"=%(sport)s FOR SHARE",
+              "parameters": {
+                "teamId": 1,
+                "sport": 1
+              }
+            },
+            "upsert": {
+              "sql": "\n            INSERT INTO \"GameResult\" (\n                sport,\n                \"sportSeasonId\",\n                \"seasonPhaseId\",\n                \"externalGameId\",\n                date,\n                \"timeTBD\",\n                \"homeTeamId\",\n                \"awayTeamId\",\n                \"homeScore\",\n                \"awayScore\",\n                \"homeTeamExternalId\",\n                \"awayTeamExternalId\",\n                \"homeTeamName\",\n                \"awayTeamName\",\n                \"broadcast\"\n            )\n            VALUES (\n                %(sport)s,\n                %(sportSeasonId)s,\n                %(seasonPhaseId)s,\n                %(externalGameId)s,\n                %(date)s,\n                %(timeTBD)s,\n                %(homeTeamId)s,\n                %(awayTeamId)s,\n                %(homeScore)s,\n                %(awayScore)s,\n                %(homeTeamExternalId)s,\n                %(awayTeamExternalId)s,\n                %(homeTeamName)s,\n                %(awayTeamName)s,\n                %(broadcast)s\n            )\n            ON CONFLICT (sport, \"sportSeasonId\", \"externalGameId\")\n            DO UPDATE SET\n                \"seasonPhaseId\" = EXCLUDED.\"seasonPhaseId\",\n                date = EXCLUDED.date,\n                \"timeTBD\" = EXCLUDED.\"timeTBD\",\n                \"homeTeamId\" = EXCLUDED.\"homeTeamId\",\n                \"awayTeamId\" = EXCLUDED.\"awayTeamId\",\n                \"homeScore\" = EXCLUDED.\"homeScore\",\n                \"awayScore\" = EXCLUDED.\"awayScore\",\n                \"homeTeamExternalId\" = EXCLUDED.\"homeTeamExternalId\",\n                \"awayTeamExternalId\" = EXCLUDED.\"awayTeamExternalId\",\n                \"homeTeamName\" = EXCLUDED.\"homeTeamName\",\n                \"awayTeamName\" = EXCLUDED.\"awayTeamName\",\n                \"broadcast\" = EXCLUDED.\"broadcast\"\n            RETURNING id;\n        ",
+              "parameters": {
+                "sport": 1,
+                "sportSeasonId": 2026,
+                "seasonPhaseId": 1,
+                "externalGameId": "A",
+                "date": "2026-11-15 18:00:00+00:00",
+                "timeTBD": false,
+                "homeTeamId": 1,
+                "awayTeamId": 2,
+                "homeScore": 80,
+                "awayScore": 70,
+                "homeTeamExternalId": "1",
+                "awayTeamExternalId": "2",
+                "homeTeamName": "Team 1",
+                "awayTeamName": "Team 2",
+                "broadcast": "Audit"
+              }
+            }
+          },
+          "invocations": 6,
+          "correction_ids_preserved": true
+        }
+      ],
+      "failure_probes": []
+    },
+    {
+      "league_count": 16,
+      "fixture": {
+        "anchor": "2026-11-16T03:26:59.142549+00:00",
+        "counts": {
+          "League": 100,
+          "LeagueMember": 800,
+          "Week": 1300,
+          "WeeklyTeamScore": 9600,
+          "LeagueTeamSlot": 16000
+        },
+        "user_count": 701,
+        "hot_user_memberships": 100,
+        "sparse_user_memberships": 1,
+        "current_week": 13,
+        "scored_weeks": 12,
+        "teams_contributing_to_score_value": 4,
+        "active_leagues": 67,
+        "completed_leagues": 33
+      },
+      "settings": {
+        "server_version": "17.6 (Debian 17.6-2.pgdg13+1)",
+        "shared_buffers": "128MB",
+        "work_mem": "4MB",
+        "statement_timeout": "2min",
+        "lock_timeout": "5s"
+      },
+      "measurements": [
+        {
+          "path": "league",
+          "scenario": "overlap",
+          "league_count": 16,
+          "expected_counts": {
+            "sql": 640,
+            "fetches": 32,
+            "upserts": 64
+          },
+          "expected_roles": {
+            "api": 16,
+            "team_lookup": 128,
+            "phases": 64,
+            "fallback": 64,
+            "season_ref": 64,
+            "phase_ref": 64,
+            "team_ref": 128,
+            "upsert": 64,
+            "league": 16,
+            "season_context": 16,
+            "subdivision": 16
+          },
+          "result": {
+            "rows": 3,
+            "canonical_json_bytes": 892,
+            "sha256": "50db2fba4735baba0e3e9f73ea9ba7110218e23d5af9fdf5bb54535a51cc854d"
+          },
+          "samples": [
+            {
+              "service_ms": 300.6238329980988,
+              "sql_count": 640,
+              "fetches": 32,
+              "upserts": 64,
+              "roles": {
+                "league": 16,
+                "api": 16,
+                "season_context": 16,
+                "subdivision": 16,
+                "team_lookup": 128,
+                "phases": 64,
+                "fallback": 64,
+                "season_ref": 64,
+                "phase_ref": 64,
+                "team_ref": 128,
+                "upsert": 64
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 308.74916699394817,
+              "sql_count": 640,
+              "fetches": 32,
+              "upserts": 64,
+              "roles": {
+                "league": 16,
+                "api": 16,
+                "season_context": 16,
+                "subdivision": 16,
+                "team_lookup": 128,
+                "phases": 64,
+                "fallback": 64,
+                "season_ref": 64,
+                "phase_ref": 64,
+                "team_ref": 128,
+                "upsert": 64
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 301.26679200475337,
+              "sql_count": 640,
+              "fetches": 32,
+              "upserts": 64,
+              "roles": {
+                "league": 16,
+                "api": 16,
+                "season_context": 16,
+                "subdivision": 16,
+                "team_lookup": 128,
+                "phases": 64,
+                "fallback": 64,
+                "season_ref": 64,
+                "phase_ref": 64,
+                "team_ref": 128,
+                "upsert": 64
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 307.972124996013,
+              "sql_count": 640,
+              "fetches": 32,
+              "upserts": 64,
+              "roles": {
+                "league": 16,
+                "api": 16,
+                "season_context": 16,
+                "subdivision": 16,
+                "team_lookup": 128,
+                "phases": 64,
+                "fallback": 64,
+                "season_ref": 64,
+                "phase_ref": 64,
+                "team_ref": 128,
+                "upsert": 64
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 293.8044999973499,
+              "sql_count": 640,
+              "fetches": 32,
+              "upserts": 64,
+              "roles": {
+                "league": 16,
+                "api": 16,
+                "season_context": 16,
+                "subdivision": 16,
+                "team_lookup": 128,
+                "phases": 64,
+                "fallback": 64,
+                "season_ref": 64,
+                "phase_ref": 64,
+                "team_ref": 128,
+                "upsert": 64
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            }
+          ],
+          "median_service_ms": 301.26679200475337,
+          "statement_examples": {
+            "league": {
+              "sql": "\n            SELECT id, \"sport\", \"seasonYear\", settings\n            FROM \"League\"\n            WHERE id = %(leagueId)s\n        ",
+              "parameters": {
+                "leagueId": 1
+              }
+            },
+            "api": {
+              "sql": "SELECT \"api-keyword\", \"apiGroupIds\", \"baseUrlName\" FROM \"Sport\" WHERE id = %(sportId)s",
+              "parameters": {
+                "sportId": 1
+              }
+            },
+            "season_context": {
+              "sql": "\n            SELECT\n                ss.id AS \"sportSeasonId\",\n                ss.\"sportId\",\n                ss.\"seasonYear\",\n                ss.\"seasonStart\",\n                ss.\"seasonEnd\",\n                ss.\"scheduleBootstrapped\",\n                ss.\"scheduleBootstrappedAt\",\n                l.settings\n            FROM \"League\" l\n            JOIN \"SportSeason\" ss\n              ON ss.\"sportId\" = l.\"sport\"\n             AND ss.\"seasonYear\" = l.\"seasonYear\"\n            WHERE l.id = %(leagueId)s\n            LIMIT 1\n        ",
+              "parameters": {
+                "leagueId": 1
+              }
+            },
+            "subdivision": {
+              "sql": "\n                    SELECT\n                        id AS \"sportSeasonSubdivisionId\",\n                        code AS \"subdivisionCode\",\n                        name AS \"subdivisionName\",\n                        \"regularSeasonStart\",\n                        \"regularSeasonEnd\",\n                        \"postseasonStart\",\n                        \"postseasonEnd\"\n                    FROM \"SportSeasonSubdivision\"\n                    WHERE \"sportSeasonId\" = %(sportSeasonId)s\n                    ORDER BY code\n                ",
+              "parameters": {
+                "sportSeasonId": 2026
+              }
+            },
+            "team_lookup": {
+              "sql": "\n            SELECT id\n            FROM \"SportTeam\"\n            WHERE \"sportId\" = %(sportId)s\n              AND \"externalId\" = %(externalId)s\n            LIMIT 1\n        ",
+              "parameters": {
+                "sportId": 1,
+                "externalId": "1"
+              }
+            },
+            "phases": {
+              "sql": "\n                SELECT sp.*, td.\"sportConferenceId\"\n                FROM \"SeasonPhase\" sp\n                LEFT JOIN \"TournamentDefinition\" td ON td.id=sp.\"tournamentId\"\n                WHERE sp.\"sportSeasonId\"=%(season)s\n            ",
+              "parameters": {
+                "season": 2026
+              }
+            },
+            "fallback": {
+              "sql": "\n            SELECT sp.id\n            FROM \"SeasonPhase\" sp\n            WHERE sp.\"sportSeasonId\" = %(sportSeasonId)s\n            AND %(eventDate)s >= sp.\"startDate\"\n            AND %(eventDate)s <  sp.\"endDate\"\n            ORDER BY sp.\"priority\" ASC, sp.\"startDate\" DESC, sp.id DESC\n            LIMIT 1;\n        ",
+              "parameters": {
+                "sportSeasonId": 2026,
+                "eventDate": "2026-11-15 18:00:00+00:00"
+              }
+            },
+            "season_ref": {
+              "sql": "SELECT id FROM \"SportSeason\" WHERE id=%(sportSeasonId)s AND \"sportId\"=%(sport)s FOR SHARE",
+              "parameters": {
+                "sportSeasonId": 2026,
+                "sport": 1
+              }
+            },
+            "phase_ref": {
+              "sql": "SELECT id FROM \"SeasonPhase\" WHERE id=%(seasonPhaseId)s AND \"sportSeasonId\"=%(sportSeasonId)s FOR SHARE",
+              "parameters": {
+                "seasonPhaseId": 1,
+                "sportSeasonId": 2026
+              }
+            },
+            "team_ref": {
+              "sql": "SELECT id FROM \"SportTeam\" WHERE id=%(teamId)s AND \"sportId\"=%(sport)s FOR SHARE",
+              "parameters": {
+                "teamId": 1,
+                "sport": 1
+              }
+            },
+            "upsert": {
+              "sql": "\n            INSERT INTO \"GameResult\" (\n                sport,\n                \"sportSeasonId\",\n                \"seasonPhaseId\",\n                \"externalGameId\",\n                date,\n                \"timeTBD\",\n                \"homeTeamId\",\n                \"awayTeamId\",\n                \"homeScore\",\n                \"awayScore\",\n                \"homeTeamExternalId\",\n                \"awayTeamExternalId\",\n                \"homeTeamName\",\n                \"awayTeamName\",\n                \"broadcast\"\n            )\n            VALUES (\n                %(sport)s,\n                %(sportSeasonId)s,\n                %(seasonPhaseId)s,\n                %(externalGameId)s,\n                %(date)s,\n                %(timeTBD)s,\n                %(homeTeamId)s,\n                %(awayTeamId)s,\n                %(homeScore)s,\n                %(awayScore)s,\n                %(homeTeamExternalId)s,\n                %(awayTeamExternalId)s,\n                %(homeTeamName)s,\n                %(awayTeamName)s,\n                %(broadcast)s\n            )\n            ON CONFLICT (sport, \"sportSeasonId\", \"externalGameId\")\n            DO UPDATE SET\n                \"seasonPhaseId\" = EXCLUDED.\"seasonPhaseId\",\n                date = EXCLUDED.date,\n                \"timeTBD\" = EXCLUDED.\"timeTBD\",\n                \"homeTeamId\" = EXCLUDED.\"homeTeamId\",\n                \"awayTeamId\" = EXCLUDED.\"awayTeamId\",\n                \"homeScore\" = EXCLUDED.\"homeScore\",\n                \"awayScore\" = EXCLUDED.\"awayScore\",\n                \"homeTeamExternalId\" = EXCLUDED.\"homeTeamExternalId\",\n                \"awayTeamExternalId\" = EXCLUDED.\"awayTeamExternalId\",\n                \"homeTeamName\" = EXCLUDED.\"homeTeamName\",\n                \"awayTeamName\" = EXCLUDED.\"awayTeamName\",\n                \"broadcast\" = EXCLUDED.\"broadcast\"\n            RETURNING id;\n        ",
+              "parameters": {
+                "sport": 1,
+                "sportSeasonId": 2026,
+                "seasonPhaseId": 1,
+                "externalGameId": "A",
+                "date": "2026-11-15 18:00:00+00:00",
+                "timeTBD": false,
+                "homeTeamId": 1,
+                "awayTeamId": 2,
+                "homeScore": 80,
+                "awayScore": 70,
+                "homeTeamExternalId": "1",
+                "awayTeamExternalId": "2",
+                "homeTeamName": "Team 1",
+                "awayTeamName": "Team 2",
+                "broadcast": "Audit"
+              }
+            }
+          },
+          "invocations": 6,
+          "correction_ids_preserved": null
+        },
+        {
+          "path": "league",
+          "scenario": "correction",
+          "league_count": 16,
+          "expected_counts": {
+            "sql": 1280,
+            "fetches": 64,
+            "upserts": 128
+          },
+          "expected_roles": {
+            "api": 32,
+            "team_lookup": 256,
+            "phases": 128,
+            "fallback": 128,
+            "season_ref": 128,
+            "phase_ref": 128,
+            "team_ref": 256,
+            "upsert": 128,
+            "league": 32,
+            "season_context": 32,
+            "subdivision": 32
+          },
+          "result": {
+            "rows": 3,
+            "canonical_json_bytes": 897,
+            "sha256": "7ec1808181b3ee3e4213dc5177d055c255eff45782cf9a8a37c284bfd84fa1e0"
+          },
+          "samples": [
+            {
+              "service_ms": 615.0737920033862,
+              "sql_count": 1280,
+              "fetches": 64,
+              "upserts": 128,
+              "roles": {
+                "league": 32,
+                "api": 32,
+                "season_context": 32,
+                "subdivision": 32,
+                "team_lookup": 256,
+                "phases": 128,
+                "fallback": 128,
+                "season_ref": 128,
+                "phase_ref": 128,
+                "team_ref": 256,
+                "upsert": 128
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 616.2448750037584,
+              "sql_count": 1280,
+              "fetches": 64,
+              "upserts": 128,
+              "roles": {
+                "league": 32,
+                "api": 32,
+                "season_context": 32,
+                "subdivision": 32,
+                "team_lookup": 256,
+                "phases": 128,
+                "fallback": 128,
+                "season_ref": 128,
+                "phase_ref": 128,
+                "team_ref": 256,
+                "upsert": 128
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 663.92666700267,
+              "sql_count": 1280,
+              "fetches": 64,
+              "upserts": 128,
+              "roles": {
+                "league": 32,
+                "api": 32,
+                "season_context": 32,
+                "subdivision": 32,
+                "team_lookup": 256,
+                "phases": 128,
+                "fallback": 128,
+                "season_ref": 128,
+                "phase_ref": 128,
+                "team_ref": 256,
+                "upsert": 128
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 614.9164590024156,
+              "sql_count": 1280,
+              "fetches": 64,
+              "upserts": 128,
+              "roles": {
+                "league": 32,
+                "api": 32,
+                "season_context": 32,
+                "subdivision": 32,
+                "team_lookup": 256,
+                "phases": 128,
+                "fallback": 128,
+                "season_ref": 128,
+                "phase_ref": 128,
+                "team_ref": 256,
+                "upsert": 128
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 609.5141659970977,
+              "sql_count": 1280,
+              "fetches": 64,
+              "upserts": 128,
+              "roles": {
+                "league": 32,
+                "api": 32,
+                "season_context": 32,
+                "subdivision": 32,
+                "team_lookup": 256,
+                "phases": 128,
+                "fallback": 128,
+                "season_ref": 128,
+                "phase_ref": 128,
+                "team_ref": 256,
+                "upsert": 128
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            }
+          ],
+          "median_service_ms": 615.0737920033862,
+          "statement_examples": {
+            "league": {
+              "sql": "\n            SELECT id, \"sport\", \"seasonYear\", settings\n            FROM \"League\"\n            WHERE id = %(leagueId)s\n        ",
+              "parameters": {
+                "leagueId": 1
+              }
+            },
+            "api": {
+              "sql": "SELECT \"api-keyword\", \"apiGroupIds\", \"baseUrlName\" FROM \"Sport\" WHERE id = %(sportId)s",
+              "parameters": {
+                "sportId": 1
+              }
+            },
+            "season_context": {
+              "sql": "\n            SELECT\n                ss.id AS \"sportSeasonId\",\n                ss.\"sportId\",\n                ss.\"seasonYear\",\n                ss.\"seasonStart\",\n                ss.\"seasonEnd\",\n                ss.\"scheduleBootstrapped\",\n                ss.\"scheduleBootstrappedAt\",\n                l.settings\n            FROM \"League\" l\n            JOIN \"SportSeason\" ss\n              ON ss.\"sportId\" = l.\"sport\"\n             AND ss.\"seasonYear\" = l.\"seasonYear\"\n            WHERE l.id = %(leagueId)s\n            LIMIT 1\n        ",
+              "parameters": {
+                "leagueId": 1
+              }
+            },
+            "subdivision": {
+              "sql": "\n                    SELECT\n                        id AS \"sportSeasonSubdivisionId\",\n                        code AS \"subdivisionCode\",\n                        name AS \"subdivisionName\",\n                        \"regularSeasonStart\",\n                        \"regularSeasonEnd\",\n                        \"postseasonStart\",\n                        \"postseasonEnd\"\n                    FROM \"SportSeasonSubdivision\"\n                    WHERE \"sportSeasonId\" = %(sportSeasonId)s\n                    ORDER BY code\n                ",
+              "parameters": {
+                "sportSeasonId": 2026
+              }
+            },
+            "team_lookup": {
+              "sql": "\n            SELECT id\n            FROM \"SportTeam\"\n            WHERE \"sportId\" = %(sportId)s\n              AND \"externalId\" = %(externalId)s\n            LIMIT 1\n        ",
+              "parameters": {
+                "sportId": 1,
+                "externalId": "1"
+              }
+            },
+            "phases": {
+              "sql": "\n                SELECT sp.*, td.\"sportConferenceId\"\n                FROM \"SeasonPhase\" sp\n                LEFT JOIN \"TournamentDefinition\" td ON td.id=sp.\"tournamentId\"\n                WHERE sp.\"sportSeasonId\"=%(season)s\n            ",
+              "parameters": {
+                "season": 2026
+              }
+            },
+            "fallback": {
+              "sql": "\n            SELECT sp.id\n            FROM \"SeasonPhase\" sp\n            WHERE sp.\"sportSeasonId\" = %(sportSeasonId)s\n            AND %(eventDate)s >= sp.\"startDate\"\n            AND %(eventDate)s <  sp.\"endDate\"\n            ORDER BY sp.\"priority\" ASC, sp.\"startDate\" DESC, sp.id DESC\n            LIMIT 1;\n        ",
+              "parameters": {
+                "sportSeasonId": 2026,
+                "eventDate": "2026-11-15 18:00:00+00:00"
+              }
+            },
+            "season_ref": {
+              "sql": "SELECT id FROM \"SportSeason\" WHERE id=%(sportSeasonId)s AND \"sportId\"=%(sport)s FOR SHARE",
+              "parameters": {
+                "sportSeasonId": 2026,
+                "sport": 1
+              }
+            },
+            "phase_ref": {
+              "sql": "SELECT id FROM \"SeasonPhase\" WHERE id=%(seasonPhaseId)s AND \"sportSeasonId\"=%(sportSeasonId)s FOR SHARE",
+              "parameters": {
+                "seasonPhaseId": 1,
+                "sportSeasonId": 2026
+              }
+            },
+            "team_ref": {
+              "sql": "SELECT id FROM \"SportTeam\" WHERE id=%(teamId)s AND \"sportId\"=%(sport)s FOR SHARE",
+              "parameters": {
+                "teamId": 1,
+                "sport": 1
+              }
+            },
+            "upsert": {
+              "sql": "\n            INSERT INTO \"GameResult\" (\n                sport,\n                \"sportSeasonId\",\n                \"seasonPhaseId\",\n                \"externalGameId\",\n                date,\n                \"timeTBD\",\n                \"homeTeamId\",\n                \"awayTeamId\",\n                \"homeScore\",\n                \"awayScore\",\n                \"homeTeamExternalId\",\n                \"awayTeamExternalId\",\n                \"homeTeamName\",\n                \"awayTeamName\",\n                \"broadcast\"\n            )\n            VALUES (\n                %(sport)s,\n                %(sportSeasonId)s,\n                %(seasonPhaseId)s,\n                %(externalGameId)s,\n                %(date)s,\n                %(timeTBD)s,\n                %(homeTeamId)s,\n                %(awayTeamId)s,\n                %(homeScore)s,\n                %(awayScore)s,\n                %(homeTeamExternalId)s,\n                %(awayTeamExternalId)s,\n                %(homeTeamName)s,\n                %(awayTeamName)s,\n                %(broadcast)s\n            )\n            ON CONFLICT (sport, \"sportSeasonId\", \"externalGameId\")\n            DO UPDATE SET\n                \"seasonPhaseId\" = EXCLUDED.\"seasonPhaseId\",\n                date = EXCLUDED.date,\n                \"timeTBD\" = EXCLUDED.\"timeTBD\",\n                \"homeTeamId\" = EXCLUDED.\"homeTeamId\",\n                \"awayTeamId\" = EXCLUDED.\"awayTeamId\",\n                \"homeScore\" = EXCLUDED.\"homeScore\",\n                \"awayScore\" = EXCLUDED.\"awayScore\",\n                \"homeTeamExternalId\" = EXCLUDED.\"homeTeamExternalId\",\n                \"awayTeamExternalId\" = EXCLUDED.\"awayTeamExternalId\",\n                \"homeTeamName\" = EXCLUDED.\"homeTeamName\",\n                \"awayTeamName\" = EXCLUDED.\"awayTeamName\",\n                \"broadcast\" = EXCLUDED.\"broadcast\"\n            RETURNING id;\n        ",
+              "parameters": {
+                "sport": 1,
+                "sportSeasonId": 2026,
+                "seasonPhaseId": 1,
+                "externalGameId": "A",
+                "date": "2026-11-15 18:00:00+00:00",
+                "timeTBD": false,
+                "homeTeamId": 1,
+                "awayTeamId": 2,
+                "homeScore": 80,
+                "awayScore": 70,
+                "homeTeamExternalId": "1",
+                "awayTeamExternalId": "2",
+                "homeTeamName": "Team 1",
+                "awayTeamName": "Team 2",
+                "broadcast": "Audit"
+              }
+            }
+          },
+          "invocations": 6,
+          "correction_ids_preserved": true
+        },
+        {
+          "path": "season",
+          "scenario": "overlap",
+          "league_count": 16,
+          "expected_counts": {
+            "sql": 29,
+            "fetches": 2,
+            "upserts": 3
+          },
+          "expected_roles": {
+            "api": 1,
+            "team_lookup": 6,
+            "phases": 3,
+            "fallback": 3,
+            "season_ref": 3,
+            "phase_ref": 3,
+            "team_ref": 6,
+            "upsert": 3,
+            "season": 1
+          },
+          "result": {
+            "rows": 3,
+            "canonical_json_bytes": 892,
+            "sha256": "50db2fba4735baba0e3e9f73ea9ba7110218e23d5af9fdf5bb54535a51cc854d"
+          },
+          "samples": [
+            {
+              "service_ms": 14.112666998698842,
+              "sql_count": 29,
+              "fetches": 2,
+              "upserts": 3,
+              "roles": {
+                "season": 1,
+                "api": 1,
+                "team_lookup": 6,
+                "phases": 3,
+                "fallback": 3,
+                "season_ref": 3,
+                "phase_ref": 3,
+                "team_ref": 6,
+                "upsert": 3
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 14.17037499777507,
+              "sql_count": 29,
+              "fetches": 2,
+              "upserts": 3,
+              "roles": {
+                "season": 1,
+                "api": 1,
+                "team_lookup": 6,
+                "phases": 3,
+                "fallback": 3,
+                "season_ref": 3,
+                "phase_ref": 3,
+                "team_ref": 6,
+                "upsert": 3
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 14.258499999414198,
+              "sql_count": 29,
+              "fetches": 2,
+              "upserts": 3,
+              "roles": {
+                "season": 1,
+                "api": 1,
+                "team_lookup": 6,
+                "phases": 3,
+                "fallback": 3,
+                "season_ref": 3,
+                "phase_ref": 3,
+                "team_ref": 6,
+                "upsert": 3
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 14.652291996753775,
+              "sql_count": 29,
+              "fetches": 2,
+              "upserts": 3,
+              "roles": {
+                "season": 1,
+                "api": 1,
+                "team_lookup": 6,
+                "phases": 3,
+                "fallback": 3,
+                "season_ref": 3,
+                "phase_ref": 3,
+                "team_ref": 6,
+                "upsert": 3
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 14.196124997397419,
+              "sql_count": 29,
+              "fetches": 2,
+              "upserts": 3,
+              "roles": {
+                "season": 1,
+                "api": 1,
+                "team_lookup": 6,
+                "phases": 3,
+                "fallback": 3,
+                "season_ref": 3,
+                "phase_ref": 3,
+                "team_ref": 6,
+                "upsert": 3
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            }
+          ],
+          "median_service_ms": 14.196124997397419,
+          "statement_examples": {
+            "season": {
+              "sql": "\n                    SELECT id, \"sportId\"\n                    FROM \"SportSeason\"\n                    WHERE id = %(id)s\n                ",
+              "parameters": {
+                "id": 2026
+              }
+            },
+            "api": {
+              "sql": "SELECT \"api-keyword\", \"apiGroupIds\", \"baseUrlName\" FROM \"Sport\" WHERE id = %(sportId)s",
+              "parameters": {
+                "sportId": 1
+              }
+            },
+            "team_lookup": {
+              "sql": "\n            SELECT id\n            FROM \"SportTeam\"\n            WHERE \"sportId\" = %(sportId)s\n              AND \"externalId\" = %(externalId)s\n            LIMIT 1\n        ",
+              "parameters": {
+                "sportId": 1,
+                "externalId": "1"
+              }
+            },
+            "phases": {
+              "sql": "\n                SELECT sp.*, td.\"sportConferenceId\"\n                FROM \"SeasonPhase\" sp\n                LEFT JOIN \"TournamentDefinition\" td ON td.id=sp.\"tournamentId\"\n                WHERE sp.\"sportSeasonId\"=%(season)s\n            ",
+              "parameters": {
+                "season": 2026
+              }
+            },
+            "fallback": {
+              "sql": "\n            SELECT sp.id\n            FROM \"SeasonPhase\" sp\n            WHERE sp.\"sportSeasonId\" = %(sportSeasonId)s\n            AND %(eventDate)s >= sp.\"startDate\"\n            AND %(eventDate)s <  sp.\"endDate\"\n            ORDER BY sp.\"priority\" ASC, sp.\"startDate\" DESC, sp.id DESC\n            LIMIT 1;\n        ",
+              "parameters": {
+                "sportSeasonId": 2026,
+                "eventDate": "2026-11-15 18:00:00+00:00"
+              }
+            },
+            "season_ref": {
+              "sql": "SELECT id FROM \"SportSeason\" WHERE id=%(sportSeasonId)s AND \"sportId\"=%(sport)s FOR SHARE",
+              "parameters": {
+                "sportSeasonId": 2026,
+                "sport": 1
+              }
+            },
+            "phase_ref": {
+              "sql": "SELECT id FROM \"SeasonPhase\" WHERE id=%(seasonPhaseId)s AND \"sportSeasonId\"=%(sportSeasonId)s FOR SHARE",
+              "parameters": {
+                "seasonPhaseId": 1,
+                "sportSeasonId": 2026
+              }
+            },
+            "team_ref": {
+              "sql": "SELECT id FROM \"SportTeam\" WHERE id=%(teamId)s AND \"sportId\"=%(sport)s FOR SHARE",
+              "parameters": {
+                "teamId": 1,
+                "sport": 1
+              }
+            },
+            "upsert": {
+              "sql": "\n            INSERT INTO \"GameResult\" (\n                sport,\n                \"sportSeasonId\",\n                \"seasonPhaseId\",\n                \"externalGameId\",\n                date,\n                \"timeTBD\",\n                \"homeTeamId\",\n                \"awayTeamId\",\n                \"homeScore\",\n                \"awayScore\",\n                \"homeTeamExternalId\",\n                \"awayTeamExternalId\",\n                \"homeTeamName\",\n                \"awayTeamName\",\n                \"broadcast\"\n            )\n            VALUES (\n                %(sport)s,\n                %(sportSeasonId)s,\n                %(seasonPhaseId)s,\n                %(externalGameId)s,\n                %(date)s,\n                %(timeTBD)s,\n                %(homeTeamId)s,\n                %(awayTeamId)s,\n                %(homeScore)s,\n                %(awayScore)s,\n                %(homeTeamExternalId)s,\n                %(awayTeamExternalId)s,\n                %(homeTeamName)s,\n                %(awayTeamName)s,\n                %(broadcast)s\n            )\n            ON CONFLICT (sport, \"sportSeasonId\", \"externalGameId\")\n            DO UPDATE SET\n                \"seasonPhaseId\" = EXCLUDED.\"seasonPhaseId\",\n                date = EXCLUDED.date,\n                \"timeTBD\" = EXCLUDED.\"timeTBD\",\n                \"homeTeamId\" = EXCLUDED.\"homeTeamId\",\n                \"awayTeamId\" = EXCLUDED.\"awayTeamId\",\n                \"homeScore\" = EXCLUDED.\"homeScore\",\n                \"awayScore\" = EXCLUDED.\"awayScore\",\n                \"homeTeamExternalId\" = EXCLUDED.\"homeTeamExternalId\",\n                \"awayTeamExternalId\" = EXCLUDED.\"awayTeamExternalId\",\n                \"homeTeamName\" = EXCLUDED.\"homeTeamName\",\n                \"awayTeamName\" = EXCLUDED.\"awayTeamName\",\n                \"broadcast\" = EXCLUDED.\"broadcast\"\n            RETURNING id;\n        ",
+              "parameters": {
+                "sport": 1,
+                "sportSeasonId": 2026,
+                "seasonPhaseId": 1,
+                "externalGameId": "A",
+                "date": "2026-11-15 18:00:00+00:00",
+                "timeTBD": false,
+                "homeTeamId": 1,
+                "awayTeamId": 2,
+                "homeScore": 80,
+                "awayScore": 70,
+                "homeTeamExternalId": "1",
+                "awayTeamExternalId": "2",
+                "homeTeamName": "Team 1",
+                "awayTeamName": "Team 2",
+                "broadcast": "Audit"
+              }
+            }
+          },
+          "invocations": 6,
+          "correction_ids_preserved": null
+        },
+        {
+          "path": "season",
+          "scenario": "correction",
+          "league_count": 16,
+          "expected_counts": {
+            "sql": 58,
+            "fetches": 4,
+            "upserts": 6
+          },
+          "expected_roles": {
+            "api": 2,
+            "team_lookup": 12,
+            "phases": 6,
+            "fallback": 6,
+            "season_ref": 6,
+            "phase_ref": 6,
+            "team_ref": 12,
+            "upsert": 6,
+            "season": 2
+          },
+          "result": {
+            "rows": 3,
+            "canonical_json_bytes": 897,
+            "sha256": "7ec1808181b3ee3e4213dc5177d055c255eff45782cf9a8a37c284bfd84fa1e0"
+          },
+          "samples": [
+            {
+              "service_ms": 28.76875000220025,
+              "sql_count": 58,
+              "fetches": 4,
+              "upserts": 6,
+              "roles": {
+                "season": 2,
+                "api": 2,
+                "team_lookup": 12,
+                "phases": 6,
+                "fallback": 6,
+                "season_ref": 6,
+                "phase_ref": 6,
+                "team_ref": 12,
+                "upsert": 6
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 28.57850000145845,
+              "sql_count": 58,
+              "fetches": 4,
+              "upserts": 6,
+              "roles": {
+                "season": 2,
+                "api": 2,
+                "team_lookup": 12,
+                "phases": 6,
+                "fallback": 6,
+                "season_ref": 6,
+                "phase_ref": 6,
+                "team_ref": 12,
+                "upsert": 6
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 27.597665997745935,
+              "sql_count": 58,
+              "fetches": 4,
+              "upserts": 6,
+              "roles": {
+                "season": 2,
+                "api": 2,
+                "team_lookup": 12,
+                "phases": 6,
+                "fallback": 6,
+                "season_ref": 6,
+                "phase_ref": 6,
+                "team_ref": 12,
+                "upsert": 6
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 28.64637499442324,
+              "sql_count": 58,
+              "fetches": 4,
+              "upserts": 6,
+              "roles": {
+                "season": 2,
+                "api": 2,
+                "team_lookup": 12,
+                "phases": 6,
+                "fallback": 6,
+                "season_ref": 6,
+                "phase_ref": 6,
+                "team_ref": 12,
+                "upsert": 6
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            },
+            {
+              "service_ms": 28.713208987028338,
+              "sql_count": 58,
+              "fetches": 4,
+              "upserts": 6,
+              "roles": {
+                "season": 2,
+                "api": 2,
+                "team_lookup": 12,
+                "phases": 6,
+                "fallback": 6,
+                "season_ref": 6,
+                "phase_ref": 6,
+                "team_ref": 12,
+                "upsert": 6
+              },
+              "provider_calls": [
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ],
+                [
+                  "20261115",
+                  10
+                ],
+                [
+                  "20261115",
+                  20
+                ]
+              ]
+            }
+          ],
+          "median_service_ms": 28.64637499442324,
+          "statement_examples": {
+            "season": {
+              "sql": "\n                    SELECT id, \"sportId\"\n                    FROM \"SportSeason\"\n                    WHERE id = %(id)s\n                ",
+              "parameters": {
+                "id": 2026
+              }
+            },
+            "api": {
+              "sql": "SELECT \"api-keyword\", \"apiGroupIds\", \"baseUrlName\" FROM \"Sport\" WHERE id = %(sportId)s",
+              "parameters": {
+                "sportId": 1
+              }
+            },
+            "team_lookup": {
+              "sql": "\n            SELECT id\n            FROM \"SportTeam\"\n            WHERE \"sportId\" = %(sportId)s\n              AND \"externalId\" = %(externalId)s\n            LIMIT 1\n        ",
+              "parameters": {
+                "sportId": 1,
+                "externalId": "1"
+              }
+            },
+            "phases": {
+              "sql": "\n                SELECT sp.*, td.\"sportConferenceId\"\n                FROM \"SeasonPhase\" sp\n                LEFT JOIN \"TournamentDefinition\" td ON td.id=sp.\"tournamentId\"\n                WHERE sp.\"sportSeasonId\"=%(season)s\n            ",
+              "parameters": {
+                "season": 2026
+              }
+            },
+            "fallback": {
+              "sql": "\n            SELECT sp.id\n            FROM \"SeasonPhase\" sp\n            WHERE sp.\"sportSeasonId\" = %(sportSeasonId)s\n            AND %(eventDate)s >= sp.\"startDate\"\n            AND %(eventDate)s <  sp.\"endDate\"\n            ORDER BY sp.\"priority\" ASC, sp.\"startDate\" DESC, sp.id DESC\n            LIMIT 1;\n        ",
+              "parameters": {
+                "sportSeasonId": 2026,
+                "eventDate": "2026-11-15 18:00:00+00:00"
+              }
+            },
+            "season_ref": {
+              "sql": "SELECT id FROM \"SportSeason\" WHERE id=%(sportSeasonId)s AND \"sportId\"=%(sport)s FOR SHARE",
+              "parameters": {
+                "sportSeasonId": 2026,
+                "sport": 1
+              }
+            },
+            "phase_ref": {
+              "sql": "SELECT id FROM \"SeasonPhase\" WHERE id=%(seasonPhaseId)s AND \"sportSeasonId\"=%(sportSeasonId)s FOR SHARE",
+              "parameters": {
+                "seasonPhaseId": 1,
+                "sportSeasonId": 2026
+              }
+            },
+            "team_ref": {
+              "sql": "SELECT id FROM \"SportTeam\" WHERE id=%(teamId)s AND \"sportId\"=%(sport)s FOR SHARE",
+              "parameters": {
+                "teamId": 1,
+                "sport": 1
+              }
+            },
+            "upsert": {
+              "sql": "\n            INSERT INTO \"GameResult\" (\n                sport,\n                \"sportSeasonId\",\n                \"seasonPhaseId\",\n                \"externalGameId\",\n                date,\n                \"timeTBD\",\n                \"homeTeamId\",\n                \"awayTeamId\",\n                \"homeScore\",\n                \"awayScore\",\n                \"homeTeamExternalId\",\n                \"awayTeamExternalId\",\n                \"homeTeamName\",\n                \"awayTeamName\",\n                \"broadcast\"\n            )\n            VALUES (\n                %(sport)s,\n                %(sportSeasonId)s,\n                %(seasonPhaseId)s,\n                %(externalGameId)s,\n                %(date)s,\n                %(timeTBD)s,\n                %(homeTeamId)s,\n                %(awayTeamId)s,\n                %(homeScore)s,\n                %(awayScore)s,\n                %(homeTeamExternalId)s,\n                %(awayTeamExternalId)s,\n                %(homeTeamName)s,\n                %(awayTeamName)s,\n                %(broadcast)s\n            )\n            ON CONFLICT (sport, \"sportSeasonId\", \"externalGameId\")\n            DO UPDATE SET\n                \"seasonPhaseId\" = EXCLUDED.\"seasonPhaseId\",\n                date = EXCLUDED.date,\n                \"timeTBD\" = EXCLUDED.\"timeTBD\",\n                \"homeTeamId\" = EXCLUDED.\"homeTeamId\",\n                \"awayTeamId\" = EXCLUDED.\"awayTeamId\",\n                \"homeScore\" = EXCLUDED.\"homeScore\",\n                \"awayScore\" = EXCLUDED.\"awayScore\",\n                \"homeTeamExternalId\" = EXCLUDED.\"homeTeamExternalId\",\n                \"awayTeamExternalId\" = EXCLUDED.\"awayTeamExternalId\",\n                \"homeTeamName\" = EXCLUDED.\"homeTeamName\",\n                \"awayTeamName\" = EXCLUDED.\"awayTeamName\",\n                \"broadcast\" = EXCLUDED.\"broadcast\"\n            RETURNING id;\n        ",
+              "parameters": {
+                "sport": 1,
+                "sportSeasonId": 2026,
+                "seasonPhaseId": 1,
+                "externalGameId": "A",
+                "date": "2026-11-15 18:00:00+00:00",
+                "timeTBD": false,
+                "homeTeamId": 1,
+                "awayTeamId": 2,
+                "homeScore": 80,
+                "awayScore": 70,
+                "homeTeamExternalId": "1",
+                "awayTeamExternalId": "2",
+                "homeTeamName": "Team 1",
+                "awayTeamName": "Team 2",
+                "broadcast": "Audit"
+              }
+            }
+          },
+          "invocations": 6,
+          "correction_ids_preserved": true
+        }
+      ],
+      "failure_probes": [
+        {
+          "path": "league",
+          "error_type": "OSError",
+          "partial_rows": 2,
+          "final_rows": 3,
+          "expected_counts": {
+            "sql": 102,
+            "fetches": 6,
+            "upserts": 10
+          },
+          "actual_counts": {
+            "sql": 102,
+            "fetches": 6,
+            "upserts": 10
+          },
+          "partial_result": {
+            "rows": 2,
+            "canonical_json_bytes": 595,
+            "sha256": "a8c0c9c5cd7440114535ce894268015e7565713bb6b78b1e67b8ebb7bf7ea8bb"
+          },
+          "final_result": {
+            "rows": 3,
+            "canonical_json_bytes": 892,
+            "sha256": "50db2fba4735baba0e3e9f73ea9ba7110218e23d5af9fdf5bb54535a51cc854d"
+          },
+          "automatic_retry": false
+        },
+        {
+          "path": "season",
+          "error_type": "RuntimeError",
+          "partial_rows": 2,
+          "final_rows": 3,
+          "expected_counts": {
+            "sql": 49,
+            "fetches": 4,
+            "upserts": 5
+          },
+          "actual_counts": {
+            "sql": 49,
+            "fetches": 4,
+            "upserts": 5
+          },
+          "partial_result": {
+            "rows": 2,
+            "canonical_json_bytes": 595,
+            "sha256": "a8c0c9c5cd7440114535ce894268015e7565713bb6b78b1e67b8ebb7bf7ea8bb"
+          },
+          "final_result": {
+            "rows": 3,
+            "canonical_json_bytes": 892,
+            "sha256": "50db2fba4735baba0e3e9f73ea9ba7110218e23d5af9fdf5bb54535a51cc854d"
+          },
+          "automatic_retry": false
+        }
+      ]
+    }
+  ],
+  "databases": [
+    {
+      "name": "otm_mod017_cd9700a92ecd4369ac4011349f90adad",
+      "cleanup": "removed"
+    },
+    {
+      "name": "otm_mod017_a5a5693139764a78bf9cc94af7fd8369",
+      "cleanup": "removed"
+    },
+    {
+      "name": "otm_mod017_443701c334f44cbab4b0a37b303d9143",
+      "cleanup": "removed"
+    }
+  ],
+  "cleanup": "verified",
+  "provenance": {
+    "db/baselines/20261029/001_schema.sql": "7fe1c17223dd2cf3ebbfdb9d2ca318d4f7ad24f9a6578309c40aad3cfb58a109",
+    "api/migrations/20261104_user_identity_unique.sql": "64631ad06193c79bded2e52849e0264b281468ea098e3dfd72d9def01f3dab88",
+    "api/migrations/20261104_week_score_identity.sql": "b6a040b0d2599e32e4d87d7c59c30aecbbaa22cca7d79c07d988279a36c2e244",
+    "api/migrations/20261104_ownership_integrity.sql": "fb3b6c5dd445a6e8da5dd67784d882032a698917e7ac1d9eebb1167120480116",
+    "api/migrations/20261030_game_kickoff_tbd.sql": "4fa4d40cf16cf0600a37aec2f915e31efe024c294fe5c5a047d32ad599cf33d4",
+    "scripts/modernization/measure_mod017.py": "1a7fcad698597ad9bfce62532813a27d6486e37fd3580ef24d861c2f034a1868",
+    "scripts/modernization/measure_mod017_transactions.py": "21cb1761716f2a39cc3f59b44f875f8c5342503eb38ebfc8f6533595834d91ca",
+    "scripts/modernization/measure_mod022_ingestion.py": "81ddfd46c228777a2315577579718800c18ad8631339d8df0918cac577be2d96",
+    "api/endpoints/schedule/ingestion_service.py": "5aeadfc48be85c00b848ce4b3d73894f96e6c15164311938db201ce3afd8aebe",
+    "api/endpoints/schedule/ingestion_repository.py": "5f1e7da6c32ee1ca50ae0138540b744d0ca5f216a75de3c2de276132b24c5d4f",
+    "api/endpoints/schedule/calendar_service.py": "62856988b03cf014a567b4ffb8ea256a1d540260b2d895bfdd967371126aed6d",
+    "api/endpoints/schedule/calendar_repository.py": "1d7cf9382251ca809e9412844f10916bca00ac156bf9b89921df71f35e3baf39",
+    "api/endpoints/schedule/helpers/espn/espnClient.py": "cda9a3fa6fdd63c101e3ba2cf3ad3dc9d71594076033c0f12522757181dff10a",
+    "api/rules/tournamentRules.py": "d2f100bed2f52bbf0a5b14354d717979d89065e46d34e7158775327cb2ffdd85",
+    "api/utils/conference_membership.py": "d82e7ee6ac076214f110d02b7f3f1f0bf2444a32428f663cff360e86990ea63f",
+    "api/cronJobs/cronIngestScoreboard.py": "2f1fe60b10b771a23b856277a286cd9370c81e7185d775b2c85485e17bc325fb"
+  },
+  "limits": [
+    "Canned transport only,actual parser/service/SQL; no external HTTP/cron/checkpoints",
+    "Same sport/year/date,identical cross-group duplicates; conflicting payload precedence unmeasured",
+    "Real committed upserts in owned synthetic DBs,not production/network/provider/retry-policy performance"
+  ],
+  "finished_at": "2026-11-16T03:27:05.546618+00:00"
+}

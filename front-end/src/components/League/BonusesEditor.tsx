@@ -18,6 +18,7 @@ export interface BonusWithLocalId {
 }
 
 interface BonusesEditorProps {
+  idPrefix?: string;
   value: BonusWithLocalId[];
   onChange: (next: BonusWithLocalId[]) => void;
 }
@@ -69,6 +70,7 @@ export const BONUS_TEMPLATES: BonusTemplate[] = [
 export const BonusesEditor: React.FC<BonusesEditorProps> = ({
   value,
   onChange,
+  idPrefix = "league-bonuses",
 }) => {
   const selectedKeys = new Set(value.map((b) => b.bonusKey));
   const availableTemplates = BONUS_TEMPLATES.filter(
@@ -125,13 +127,13 @@ export const BonusesEditor: React.FC<BonusesEditorProps> = ({
 
   return (
     <div className="cl-field-group">
-      <label className="cl-field-label">
-        Bonuses / Penalties
-      </label>
+      {availableTemplates.length > 0 ? (
+        <label className="cl-field-label" htmlFor={`${idPrefix}-add`}>Bonuses / Penalties</label>
+      ) : <div className="cl-field-label">Bonuses / Penalties</div>}
 
       {availableTemplates.length > 0 && (
         <div className="cl-bonus-add-row">
-          <select defaultValue="" onChange={handleAdd}>
+          <select id={`${idPrefix}-add`} defaultValue="" onChange={handleAdd}>
             <option value="" disabled>
               Add bonus / penalty…
             </option>
@@ -148,7 +150,7 @@ export const BonusesEditor: React.FC<BonusesEditorProps> = ({
         <div key={bonus.id} className="cl-bonus-card">
           <div className="cl-bonus-header">
             <div className="cl-bonus-title">
-              {bonus.label}
+              <span id={`${idPrefix}-${bonus.id}-title`}>{bonus.label}</span>
 
               {bonus.hint && (
                 <span className="cl-tooltip">
@@ -171,8 +173,10 @@ export const BonusesEditor: React.FC<BonusesEditorProps> = ({
           <div className="cl-bonus-placements">
             {bonus.placements.map((p) => (
               <div key={p.id} className="cl-placement-row">
-                <div className="cl-placement-label">{p.label}</div>
+                <label className="cl-placement-label" id={`${idPrefix}-${bonus.id}-${p.id}-label`} htmlFor={`${idPrefix}-${bonus.id}-${p.id}`}>{p.label}</label>
                 <input
+                  id={`${idPrefix}-${bonus.id}-${p.id}`}
+                  aria-labelledby={`${idPrefix}-${bonus.id}-title ${idPrefix}-${bonus.id}-${p.id}-label`}
                   type="number"
                   step="0.5"
                   value={p.points}

@@ -85,10 +85,48 @@ This only tracks dates processed by the updated script. Work from a run started 
 
 ## Existing leagues
 
-Season setup changes global metadata, not existing Week rows. New leagues use the new merged final period. Existing leagues must deliberately rebuild periods and rescore after reclassifying their games; split final periods are rejected by the scorer. The existing rebuild utility now shares ScheduleModel's week builder and requires an explicit season year:
+Season setup changes global metadata, not existing Week rows. New leagues use the
+shared calendar planner, including the merged basketball final period. Split final
+periods are rejected by the scorer. MOD-016 makes the existing maintenance command
+**preview-only by default**; run from `api`:
 
 ```sh
 PYTHONPATH=. python3 scripts/rebuild_weeks_and_rescore.py --season-year 2026 --league-id 123
 ```
 
-This utility changes weeks and deletes/recomputes scores for the selected league. Review ownership acquiredWeek/droppedWeek values, transactions linked to old weeks, and lock state before using it for an active league: changing week numbering is not an ownership/transaction migration. Omitting `--league-id` targets every league in the requested season. No database migration, season ingestion, or league rebuild was executed as part of this code change.
+The report shows proposed periods, before/after boundaries, retained IDs, history
+counts, ownership endpoint/transaction impacts and current stored score totals.
+Preview does not delete/recompute scores or change flags/references. Omitting
+`--league-id` previews all leagues whose actual seasonYear matches the requested
+year. Unknown/mismatched explicit IDs are reported; other seasons are not changed.
+
+For an **unused Pre-Draft league only**, explicitly enable atomic repair:
+
+```sh
+PYTHONPATH=. python3 scripts/rebuild_weeks_and_rescore.py --season-year 2026 --league-id 123 --apply
+```
+
+Apply rechecks eligibility under season/ownership/draft-state/league/week locks.
+Any draft pick, ownership interval, transaction (including cancelled/completed or
+foreign-league references to selected weeks), stored score, locked/scored period,
+non-pristine draft state or finalized season blocks writes. History blocks even
+same-boundary rescoring. Existing week IDs are retained for kept numbers; obsolete
+unused periods are removed only when unreferenced. Calendar edits, any new scoring
+and flags commit together per league; failure restores the whole league, other
+leagues continue. A retry re-evaluates current state. After a successful apply that
+created scores/locks, another apply is refused rather than rewriting that history.
+
+There is no force/history bypass, pending-application step, transaction/ownership
+renumbering, season-finalized reset or snapshot mechanism. Historical final-period
+repairs and historical rescoring need a separate approved remap/input policy;
+preview reports cannot authorize those operations. Current tiers/game facts and
+existing pinned rule version are used only for permitted unused repairs. Correct
+the underlying configuration/error through an approved workflow and preview again.
+Do not erase history or reset flags to make a league appear unused.
+
+CLI emits safe JSON and exits nonzero for failures, invalid explicit scope, or a
+blocked apply. A useful preview of blocked historical data exits zero. Multiple
+selected leagues are independent transactions, so inspect the complete report for
+partial success. No configured maintenance, ingestion, migration or history rewrite
+was executed to verify this change. [Design](../../docs/superpowers/specs/2026-11-06-mod-016-design.md),
+[evidence](../../docs/modernization/evidence/mod-016-postgres-2026-11-06.json).

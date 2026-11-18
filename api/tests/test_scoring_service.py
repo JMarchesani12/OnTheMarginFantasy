@@ -23,7 +23,7 @@ class RemainingScoringServiceTests(unittest.TestCase):
     def setUp(self):
         self.db=ReadDatabase()
         self.addCleanup(self.db.connection.close)
-        self.db.connection.executescript('''CREATE TABLE WeeklyTeamScore (
+        self.db.connection.executescript('''CREATE TABLE "Week" (id INTEGER, "leagueId" INTEGER); INSERT INTO "Week" VALUES (100,33);CREATE TABLE WeeklyTeamScore (
             leagueId INTEGER,weekId INTEGER,memberId INTEGER,pointDifferential INTEGER,rank INTEGER,pointsAwarded INTEGER);
             INSERT INTO WeeklyTeamScore VALUES (33,100,1,99,1,2),(33,100,2,88,2,1),
                 (44,100,1,77,1,1),(33,200,1,66,1,1);''')

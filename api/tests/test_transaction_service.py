@@ -118,3 +118,16 @@ class TradeApplicationServiceTests(unittest.TestCase):
         with self.assertRaisesRegex(TradeRejected, 'deadline'):
             self.service.apply_trade_for_job(1)
         self.assertEqual(self.state()['LeagueTeamSlot'], before['LeagueTeamSlot'])
+
+class SuppliedTradeApplicationTests(unittest.TestCase):
+    setUp = TradeApplicationServiceTests.setUp
+
+    def test_supplied_trade_rolls_back_with_caller_without_acquisition(self):
+        before=self.state()
+        with self.assertRaisesRegex(RuntimeError,'caller failure'):
+            with self.engine.begin() as conn:
+                self.service.apply_trade_for_job(1,conn=conn)
+                self.assertEqual(self.state()['Transaction'][0]['status'],'COMPLETED')
+                raise RuntimeError('caller failure')
+        self.assertEqual(self.state(),before)
+        self.assertEqual((self.engine.begins,self.engine.connects),(1,0))

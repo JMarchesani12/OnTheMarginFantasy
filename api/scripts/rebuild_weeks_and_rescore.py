@@ -1,236 +1,53 @@
-import os
+"""Preview-first unused-calendar maintenance CLI; historical repairs are refused."""
 import argparse
-import datetime as dt
-
-from sqlalchemy import text
-
+import json
 from endpoints.schedule.read_service import ScheduleReadService
+from endpoints.schedule.maintenance_service import CalendarMaintenanceService
 from endpoints.scoring.service import ScoringService
 
 
-GET_ALL_LEAGUES = text("""
-    SELECT id
-    FROM "League"
-    ORDER BY id
-""")
-
-GET_LEAGUES_WITHOUT_SPORTSEASON = text("""
-    SELECT l.id, l."sport", l."seasonYear"
-    FROM "League" l
-    LEFT JOIN "SportSeason" ss
-      ON ss."sportId" = l."sport"
-     AND ss."seasonYear" = :seasonYear
-    WHERE ss.id IS NULL
-    ORDER BY l.id
-""")
-
-GET_EXISTING_WEEKS = text("""
-    SELECT id, "weekNumber"
-    FROM "Week"
-    WHERE "leagueId" = :leagueId
-    ORDER BY "weekNumber" ASC
-""")
-
-UPDATE_WEEK = text("""
-    UPDATE "Week"
-    SET "startDate" = :startDate,
-        "endDate" = :endDate
-    WHERE "leagueId" = :leagueId
-      AND "weekNumber" = :weekNumber
-    RETURNING id
-""")
-
-INSERT_WEEK = text("""
-    INSERT INTO "Week"
-        ("leagueId", "weekNumber", "startDate", "endDate", "isLocked", "scoringComplete")
-    VALUES
-        (:leagueId, :weekNumber, :startDate, :endDate, false, false)
-    RETURNING id
-""")
-
-DELETE_WEEKLY_SCORES = text("""
-    DELETE FROM "WeeklyTeamScore"
-    WHERE "leagueId" = :leagueId
-""")
-
-DELETE_EXTRA_WEEKLY_SCORES = text("""
-    DELETE FROM "WeeklyTeamScore"
-    WHERE "leagueId" = :leagueId
-      AND "weekId" IN (
-          SELECT id
-          FROM "Week"
-          WHERE "leagueId" = :leagueId
-            AND "weekNumber" = ANY(:weekNumbers)
-      )
-""")
-
-DELETE_EXTRA_WEEKS = text("""
-    DELETE FROM "Week"
-    WHERE "leagueId" = :leagueId
-      AND "weekNumber" = ANY(:weekNumbers)
-""")
-
-RESET_SCORING_COMPLETE = text("""
-    UPDATE "Week"
-    SET "scoringComplete" = FALSE
-    WHERE "leagueId" = :leagueId
-""")
-
-GET_ENDED_WEEKS = text("""
-    SELECT id, "weekNumber"
-    FROM "Week"
-    WHERE "leagueId" = :leagueId
-      AND "weekNumber" >= 0
-      AND "endDate" IS NOT NULL
-      AND "endDate" < :now
-    ORDER BY "weekNumber" ASC
-""")
-
-MARK_WEEK_SCORED = text("""
-    UPDATE "Week"
-       SET "scoringComplete" = TRUE
-     WHERE id = :week_id
-""")
-
-LOCK_NEXT_WEEK = text("""
-    UPDATE "Week"
-       SET "isLocked" = TRUE
-     WHERE "leagueId" = :league_id
-       AND "weekNumber" = :next_week_number
-""")
+def _compute_week_boundaries(schedule_model, league_id, season_year, conn=None):
+    """Compatibility helper: same planner and season check as calendar generation."""
+    supplied = {'conn':conn} if conn is not None else {}
+    season = schedule_model.season_for_job(league_id,**supplied)
+    if int(season['seasonYear']) != season_year:
+        raise ValueError('League does not belong to requested season')
+    return schedule_model.boundaries_for_job(league_id,**supplied)
 
 
-def _compute_week_boundaries(
-    schedule_model: ScheduleReadService,
-    league_id: int,
-    season_year: int,
-):
-    season = schedule_model.season_for_job(league_id)
-    if int(season["seasonYear"]) != season_year:
-        raise ValueError(
-            f"League {league_id} belongs to seasonYear={season['seasonYear']}, "
-            f"not requested seasonYear={season_year}"
-        )
-    return schedule_model.boundaries_for_job(league_id)
+def build_maintenance(engine):
+    schedule = ScheduleReadService(engine)
+    return CalendarMaintenanceService(engine,schedule,ScoringService(engine,schedule))
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Deliberately rebuild league weeks and rescore ended periods.")
-    parser.add_argument("--season-year", type=int, required=True)
-    parser.add_argument("--league-id", type=int, action="append", help="Limit to specific league IDs")
-    args = parser.parse_args()
-    from runtime import configured_engine
-    engine = configured_engine()
-    season_year = args.season_year
-    schedule_model = ScheduleReadService(engine)
-    scoring_model = ScoringService(engine, schedule_model)
-
-    with engine.begin() as conn:
-        league_rows = conn.execute(GET_ALL_LEAGUES).fetchall()
-        missing_rows = conn.execute(
-            GET_LEAGUES_WITHOUT_SPORTSEASON,
-            {"seasonYear": season_year},
-        ).fetchall()
-
-    league_ids = [int(r[0]) for r in league_rows if not args.league_id or int(r[0]) in args.league_id]
-    if not league_ids:
-        print("No leagues found.")
-        return
-    if missing_rows:
-        missing = [dict(r._mapping) for r in missing_rows]
-        print(f"Leagues missing SportSeason {season_year} match (will skip): {missing}")
-
-    now = dt.datetime.now(dt.timezone.utc)
-
-    for league_id in league_ids:
-        print(f"Rebuilding weeks and rescoring league {league_id}")
-
-        try:
-            week_boundaries = _compute_week_boundaries(
-                schedule_model,
-                league_id,
-                season_year=season_year,
-            )
-        except ValueError as exc:
-            print(f"  Skipping league {league_id}: {exc}")
-            continue
-
-        with engine.begin() as conn:
-            existing = conn.execute(GET_EXISTING_WEEKS, {"leagueId": league_id}).fetchall()
-            existing_numbers = {int(r._mapping["weekNumber"]) for r in existing}
-
-            for week_number, start_dt, end_dt in week_boundaries:
-                updated = conn.execute(
-                    UPDATE_WEEK,
-                    {
-                        "leagueId": league_id,
-                        "weekNumber": week_number,
-                        "startDate": start_dt,
-                        "endDate": end_dt,
-                    },
-                ).fetchone()
-
-                if not updated:
-                    conn.execute(
-                        INSERT_WEEK,
-                        {
-                            "leagueId": league_id,
-                            "weekNumber": week_number,
-                            "startDate": start_dt,
-                            "endDate": end_dt,
-                        },
-                    )
-
-            computed_numbers = {wn for wn, _, _ in week_boundaries}
-            extra_numbers = sorted(existing_numbers - computed_numbers)
-            if extra_numbers:
-                print(f"  Removing extra weeks for league {league_id}: {extra_numbers}")
-                conn.execute(
-                    DELETE_EXTRA_WEEKLY_SCORES,
-                    {"leagueId": league_id, "weekNumbers": extra_numbers},
-                )
-                conn.execute(
-                    DELETE_EXTRA_WEEKS,
-                    {"leagueId": league_id, "weekNumbers": extra_numbers},
-                )
-
-        with engine.begin() as conn:
-            conn.execute(DELETE_WEEKLY_SCORES, {"leagueId": league_id})
-            conn.execute(RESET_SCORING_COMPLETE, {"leagueId": league_id})
-
-        with engine.begin() as conn:
-            weeks_to_score = conn.execute(
-                GET_ENDED_WEEKS,
-                {"leagueId": league_id, "now": now},
-            ).fetchall()
-
-        failed = False
-        for row in weeks_to_score:
-            week_number = int(row._mapping["weekNumber"])
-            week_id = int(row._mapping["id"])
-
-            try:
-                scoring_model.compute_weekly_scores_for_job(
-                    league_id=league_id,
-                    week_number=week_number,
-                )
-            except Exception as e:
-                print(f"  ERROR scoring league {league_id} week {week_number}: {e}")
-                failed = True
-                break
-
-            with engine.begin() as conn:
-                conn.execute(MARK_WEEK_SCORED, {"week_id": week_id})
-                conn.execute(
-                    LOCK_NEXT_WEEK,
-                    {"league_id": league_id, "next_week_number": week_number + 1},
-                )
-
-        if failed:
-            print(f"  Aborted scoring for league {league_id} after error.")
-        else:
-            print(f"  Finished scoring league {league_id}")
+def _positive_int(value):
+    parsed = int(value)
+    if parsed<=0:raise argparse.ArgumentTypeError('must be a positive integer')
+    return parsed
 
 
-if __name__ == "__main__":
-    main()
+def main(argv=None, engine=None):
+    parser = argparse.ArgumentParser(description='Preview calendar repairs; --apply permits unused Pre-Draft leagues only.',allow_abbrev=False)
+    parser.add_argument('--season-year',type=_positive_int,required=True)
+    parser.add_argument('--league-id',type=_positive_int,action='append',help='Repeat to select explicit league IDs in that season')
+    parser.add_argument('--apply',action='store_true',help='Apply eligible unused repairs atomically; no history bypass')
+    args = parser.parse_args(argv)
+    try:
+        if engine is None:
+            from runtime import configured_engine
+            engine = configured_engine()
+        report = build_maintenance(engine).run(args.season_year,args.league_id,apply=args.apply)
+    except Exception as exc:
+        report = {'mode':'apply' if args.apply else 'preview','leagues':[],'scopeErrors':[],
+                  'failures':[{'leagueId':None,'stage':'startup','category':type(exc).__name__}]}
+    print(json.dumps(report,sort_keys=True))
+    return report
+
+
+def exit_code(report):
+    return int(bool(report['failures'] or report['scopeErrors'] or
+                    (report['mode']=='apply' and any(row['outcome']=='blocked' for row in report['leagues']))))
+
+
+if __name__ == '__main__':
+    raise SystemExit(exit_code(main()))

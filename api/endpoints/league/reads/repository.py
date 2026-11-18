@@ -1,5 +1,6 @@
+from utils.conference_membership import conference_sql
 """League read SQL; callers supply connections and explicit reader scope."""
-from sqlalchemy import text
+from sqlalchemy import text, bindparam
 from utils.authorization import league_read_scope
 
 
@@ -36,7 +37,7 @@ class LeagueReadRepository:
         return dict(row._mapping) if row else None
 
     def season_conferences(self, conn, sport_id, season_year):
-        rows = conn.execute(text("""
+        rows = conn.execute(text(conference_sql("""
                 SELECT
                   sc.id AS "sportConferenceId",
                   sc."conferenceId" AS "conferenceId",
@@ -55,7 +56,7 @@ class LeagueReadRepository:
                 ) t ON t."sportConferenceId" = sc.id
                 WHERE sc."sportId" = :sportId
                 ORDER BY c.name;
-            """), {'sportId': sport_id, 'seasonYear': season_year}).fetchall()
+            """, ':seasonYear')), {'sportId': sport_id, 'seasonYear': season_year}).fetchall()
         return [dict(row._mapping) for row in rows]
 
     def access_metadata(self, conn, league_id, user_id):
@@ -109,7 +110,7 @@ class LeagueReadRepository:
             WHERE l."isDiscoverable" = true
             AND l.name ILIKE :pattern
             {sport_clause}
-            ORDER BY similarity(l.name, :q) DESC, l.name ASC
+            ORDER BY similarity(l.name, :q) DESC, l.name ASC, l.id ASC
             LIMIT :limit OFFSET :offset
         """)
         rows = conn.execute(sql, params).mappings().all()
@@ -143,8 +144,17 @@ class LeagueReadRepository:
         ).fetchone()
         return dict(league._mapping) if league else None
 
-    def own_leagues(self, conn, user_id, stage):
-        base_sql = """
+    def own_leagues(self, conn, user_id, stage, league_ids=None):
+        if league_ids is not None and not league_ids:
+            return []
+        score_scope = ''
+        if stage == 'active':
+            score_scope += " AND score_league.status <> 'Completed'"
+        elif stage == 'completed':
+            score_scope += " AND score_league.status = 'Completed'"
+        if league_ids is not None:
+            score_scope += ' AND score_league.id IN :scope_ids'
+        base_sql = f"""
             SELECT
             -- League fields
             l.id                AS "leagueId",
@@ -192,6 +202,14 @@ class LeagueReadRepository:
                 JOIN "Week" w
                   ON w.id = wts."weekId"
                  AND w."weekNumber" >= 0
+                WHERE EXISTS (
+                    SELECT 1 FROM "LeagueMember" score_member
+                    JOIN "League" score_league ON score_league.id = score_member."leagueId"
+                    WHERE score_member."userId" = :user_id
+                      AND score_member.id = wts."memberId"
+                      AND score_member."leagueId" = wts."leagueId"
+                      {score_scope}
+                )
                 GROUP BY wts."leagueId", wts."memberId"
             ) sp
             ON sp."leagueId" = lm."leagueId"
@@ -215,8 +233,14 @@ class LeagueReadRepository:
 
         base_sql += ' ORDER BY l.id, lm."draftOrder"'
 
+        params = {'user_id': user_id}
+        if league_ids is not None:
+            base_sql = base_sql.replace('WHERE lm."userId" = :user_id', 'WHERE lm."userId" = :user_id AND l.id IN :scope_ids')
+            params['scope_ids'] = list(league_ids)
         sql = text(base_sql)
-        result = conn.execute(sql, {'user_id': user_id})
+        if league_ids is not None:
+            sql = sql.bindparams(bindparam('scope_ids', expanding=True))
+        result = conn.execute(sql, params)
         return [dict(row._mapping) for row in result]
 
     def member_rows(self, conn, league_id, reader_user_id=None):

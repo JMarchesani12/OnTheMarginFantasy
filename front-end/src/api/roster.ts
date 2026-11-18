@@ -1,11 +1,13 @@
-// src/api/schedule.ts
+import { safeResponse, safeJson, READ_ERROR } from "./safeError";
+// src/api/roster.ts
 import type { OwnedTeam } from "../types/schedule";
 import { apiFetch, API_BASE_URL } from "./client";
 
 export async function getMemberTeams(
   memberId: number,
   weekNumber: number,
-  leagueId: number
+  leagueId: number,
+  signal?: AbortSignal
 ): Promise<OwnedTeam[]> {
   const payload = {
     "leagueId": leagueId,
@@ -13,39 +15,34 @@ export async function getMemberTeams(
     "memberId": memberId,
   };
 
-  const res = await apiFetch(`${API_BASE_URL}/api/roster/memberTeams`, {
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/roster/memberTeams`, {
+    signal,
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
-  });
+  }), READ_ERROR);
 
-  if (!res.ok) {
-    throw new Error(`Failed to get member teams: ${res.status}`);
-  }
-
-  const data = (await res.json()) as OwnedTeam[];
+  const data = (await safeJson(res, READ_ERROR)) as OwnedTeam[];
   return data;
 }
 
 export async function getAvailableTeams(
   weekNumber: number,
-  leagueId: number
+  leagueId: number,
+  signal?: AbortSignal
 ): Promise<OwnedTeam[]> {
   const payload = {
     "leagueId": leagueId,
     "weekNumber": weekNumber,
   };
 
-  const res = await apiFetch(`${API_BASE_URL}/api/roster/availableTeams`, {
+  const res = await safeResponse(apiFetch(`${API_BASE_URL}/api/roster/availableTeams`, {
+    signal,
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
-  });
+  }), READ_ERROR);
 
-  if (!res.ok) {
-    throw new Error(`Failed to get available teams: ${res.status}`);
-  }
-
-  const data = (await res.json()) as OwnedTeam[];
+  const data = (await safeJson(res, READ_ERROR)) as OwnedTeam[];
   return data;
 }

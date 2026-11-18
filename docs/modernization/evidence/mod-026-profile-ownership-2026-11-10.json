@@ -1,0 +1,116 @@
+{
+  "date": "2026-11-10",
+  "result": "PASS",
+  "scope": "MOD026 single API-backed profile owner, synchronous session continuity and narrow Home/Settings integration",
+  "baseCommit": "6c8fcd4",
+  "checks": {
+    "baselineFrontend": "123/123 PASS",
+    "finalFrontend": "150/150 PASS (27 net new; original API cases retained, 3 ownership tests ported)",
+    "productionBuild": "PASS",
+    "importGraph": {
+      "result": "PASS",
+      "files": 73,
+      "literalRelativeEdges": 194,
+      "unresolved": [],
+      "cycles": [],
+      "canonicalEditorConsumers": [
+        "front-end/src/screens/CreateLeague/CreateLeague.tsx",
+        "front-end/src/screens/League/ManageLeaguePage.tsx"
+      ],
+      "exclusions": [
+        "package/alias imports",
+        "computed imports",
+        "CSS/assets",
+        "package internals"
+      ]
+    },
+    "diffAndNewSourceWhitespace": "PASS",
+    "backend": "unchanged; not rerun",
+    "apiFetchAndPrecedingDomainBoundaries": "protected source byte-identical"
+  },
+  "behavior": {
+    "session": "accepted auth/lookup source updates identity and credential epochs synchronously, independent of React batching; obsolete lookup/unmount rejected",
+    "profile": "one GET per automatic attempt; confirmed404 permits one create;409 permits one reread; explicit captured token/signal and UUID/safe numeric-ID validation",
+    "credentials": "token-only renewal preserves ready same-subject profile, pending/failed credential changes start bounded replacement, no SDK refresh or mutation replay for explicit bootstrap",
+    "hints": "matching email supplies name hint only; metadata/email-prefix fallback; current unchanged raw hint cleanup only; local created markers ignored",
+    "refresh": "latest explicit refresh supersedes older; failures reject awaiting callers and render feedback; effect promises consume rejection",
+    "consumers": "Home private arrays mask by identity before effects, public discovery preserved; keyed Settings form preserves failure input and scopes save/refresh completion"
+  },
+  "regressions": [
+    "initial/visibility old A after B/logout and lookup ordering",
+    "profile A-B-A, failed/empty/newest refresh, cancelled or late create",
+    "404/create and409 canonical/empty/denied outcomes; ambiguous mutation failure no replay",
+    "mismatched/malformed/newer signup hints and mismatched UUID/numeric ID",
+    "HTTP200 empty response cannot trigger create",
+    "same-token coalescing, token renewal readiness and effect cleanup/setup replay",
+    "source callback logout/batched A-logout-A/visibility/token change before React render, including mutable SDK session object",
+    "Home private resources and public membership filter; Settings write/refresh failures, success, account/logout obsolete completion"
+  ],
+  "independentReview": {
+    "model": "gpt-6-astra high, fresh context",
+    "critical": 0,
+    "important": "Auth continuity updated only during render; independently reproduced stale create after accepted logout and missed batched A\u2192B\u2192A",
+    "minor": 0,
+    "resolution": "5 new actual-module no-render regressions RED\u2192GREEN; synchronous source epoch/predicate bridge and captured source scalars; final150 suite/build green",
+    "independentlyRun": [
+      "read-only actual-module reproduction",
+      "diff check",
+      "source/SDK inspection"
+    ],
+    "notClaimed": "No independent post-fix review or full-suite rerun by reviewer"
+  },
+  "decisions": [
+    {
+      "decision": "Port 3 legacy AuthProvider provisioning tests to CurrentUserProvider, preserving lookup/denial/credential checks and retaining other14 original API tests",
+      "reason": "Approved ownership transfer; created-marker writes intentionally removed",
+      "costIfWrong": "AuthProvider no longer provisions by design"
+    },
+    {
+      "decision": "Correct test filename collision by restoring original suite and placing new tests in profileBootstrapApi.test.ts",
+      "reason": "Preserve all original coverage; intermediate truncated-suite results are not completion evidence",
+      "costIfWrong": "None of the overwritten-suite results are relied on"
+    },
+    {
+      "decision": "Expose opaque synchronous auth subject/credential continuity to the profile owner",
+      "reason": "Batched source transitions cannot be reconstructed from rendered subject alone",
+      "costIfWrong": "Internal mocks/consumers of new capabilities must honor the continuity contract"
+    },
+    {
+      "decision": "Keep runtime/provider/backend verification and OTP/other-screen/feedback/error-parser/performance redesign outside scope",
+      "reason": "Approved credential-free, bounded ownership task",
+      "costIfWrong": "Live runtime and separate-card behaviors remain unverified or pending"
+    }
+  ],
+  "notRun": [
+    "real browser/DOM/React concurrent scheduling",
+    "real Supabase SDK/provider network",
+    "configured backend/database/roles/uniqueness runtime",
+    "hosted deployment or migration"
+  ],
+  "protectedSha256": {
+    "front-end/src/api/client.ts": "d7a0d596b0e8b9beb68ba55d20c1bf766ed656c4ab6654a19cd327d98289e6f5",
+    "front-end/src/api/authenticatedFetch.ts": "27150549d19b8ffbcbbc33f636fa978fd6bbd73d152ccb2a375bbab37dd79955",
+    "front-end/src/lib/draftRealtime.ts": "751af40fc4a3818ce7415a6394e91ec22e610be5e9585fbcf4e53aa74ba98f0f",
+    "front-end/src/hooks/useLeagueContext.ts": "8b3668adaa96a73513741010cd0184d9c37af63906e588a1ee789d0b40b983db",
+    "front-end/src/hooks/useDraftConnection.ts": "18b70a5f9c48a800f7e7510404764afcca38b054fa0c2531eb728fa73fb1ee1e",
+    "front-end/src/hooks/useDraftClock.ts": "ae7837cd962492c16fdfc0e38f6d2c733ace0a4bb415b152799790d9623b8aae",
+    "front-end/src/components/League/DraftOrderEditor.tsx": "2ccb57bc17ff157b511cd0c5016a6167b6c4dfadc002c42dafd2af62c48e21bb"
+  },
+  "sha256": {
+    "front-end/src/context/AuthContext.tsx": "c99a36fe6dbd2e98e75e740ecc4ddcf1a5b724bbf700f8e28eebd9554cfae104",
+    "front-end/src/context/currentUserContext.tsx": "fb2c8c59885853668feee5dd0b84d274f5bff43ce389494f693f199cf810ece3",
+    "front-end/src/api/user.ts": "25e08e9e6ef22d244f04744f1356a6e7dfcebf5ff94d4e54d3e6e1447794b0db",
+    "front-end/src/lib/profileBootstrap.ts": "ce9fdf8f7dea5d2256e56d97681e8f0e76477654b15158aa04dce728c41073e8",
+    "front-end/src/components/Profile/ProfileStatus.tsx": "ad15890c3f9777d4741781ab142115168998bf3135da4f32078950e8a8c39bfe",
+    "front-end/src/screens/Home/Home.tsx": "28398bc6522d61b3d601f18ef38f368483d4dda811d1255f95edc8f9066e6410",
+    "front-end/src/screens/Settings/SettingsPage.tsx": "29c0a76cc028065bdd67c68e90e5c404efa41d5df7077c44ca21606384ce4fea",
+    "front-end/tests/authSessionOrdering.test.ts": "07d55f3ff00edd6ae88a052aa669dd0355d9d9fb39b6f89fe70dc36342d84fde",
+    "front-end/tests/currentUserIdentity.test.ts": "e79117291932fbaa306fa2ba2f0ecec91858bacb0c7dc4364b4d51c3ca94ab8d",
+    "front-end/tests/profileBootstrap.test.ts": "0a51a858f3dbe54791d2d90a30b86a31ca63689bbadce8954d7a8d12d162b43a",
+    "front-end/tests/profileBootstrapApi.test.ts": "73c8d317445a7f68f248428862f8efe48faa38e5038db1e9324e3216f94516d6",
+    "front-end/tests/profileConsumers.test.ts": "5a483725b9efbdb99b719e11d77dfda376d944c01628fbd4d56fa9c36a4c9aad",
+    "front-end/tests/profileSessionContinuity.test.ts": "533fcd5adecb129fbd940dd588561667eecca5da5561acfebba6b3c164bb4afb",
+    "front-end/tests/profileApi.test.ts": "88d0ef259591d53bf41eda537739a0733a9cc63a8a0c501923de861d877d1bfc",
+    "front-end/tests/helpers/leagueContextHarness.ts": "bdc41fefb19b618aeac6a0d6f29dd1babc03d6385a3a1c8bf60eb8f0609b9b1f"
+  }
+}

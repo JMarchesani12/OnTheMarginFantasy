@@ -1,80 +1,50 @@
-from flask_socketio import disconnect, join_room, emit, leave_room
 from flask import request
 from socketioInstance import socketio
-from endpoints.draft.pick_service import DraftPickService
 from endpoints.draft.snapshot_service import DraftSnapshotService
-from supabaseAuth import verify_supabase_token
-from utils.jsonSafe import jsonSafe
+from .realtime import DraftSocketAccess, league_id_from, verified_claims
 
-def register_draft_socket_handlers(engine):
-    membership = DraftPickService(engine)
+
+def register_draft_socket_handlers(engine, socket_server=None):
+    server = socket_server if socket_server is not None else socketio
+    access = DraftSocketAccess(engine, server)
+    server.draft_access = access
     snapshots = DraftSnapshotService(engine)
 
-    @socketio.on("connect")
+    @server.on('connect')
     def on_connect(auth):
-        token = None
-        if isinstance(auth, dict):
-            token = auth.get("token") or auth.get("access_token")
-        if token and token.startswith("Bearer "):
-            token = token.split(" ", 1)[1]
-
-        if not token:
-            return False  # tells Socket.IO to reject the connection
-
-        claims = verify_supabase_token(token)
-        if not claims:
-            return False
-
-        socketio.server.save_session(request.sid, {"user": claims})
-
-    @socketio.on("draft:join")
-    def on_join(payload):
-        sess = socketio.server.get_session(request.sid)
-        user = sess.get("user")
-        if not user:
-            emit("draft:error", {"message": "Unauthorized"})
-            return
-
+        token = (auth.get('token') or auth.get('access_token')) if isinstance(auth, dict) else None
+        if isinstance(token, str) and token.startswith('Bearer '):
+            token = token.split(' ', 1)[1]
         try:
-            league_id_raw = payload.get("leagueId") if isinstance(payload, dict) else None
-            if league_id_raw is None:
-                emit("draft:error", {"message": "leagueId is required"})
-                return
-            league_id = int(league_id_raw)
+            verified_claims(token)
+        except Exception:
+            return False
+        access.tokens[request.sid] = token
 
-            # ✅ Authorization: user must be a league member
-            supabase_sub = user["sub"]
-            if not membership.is_supabase_user_in_league(league_id, supabase_sub):
-                emit("draft:error", {"message": "Forbidden: not a member of this league"})
-                return
+    @server.on('disconnect')
+    def on_disconnect(reason=None):
+        access.tokens.pop(request.sid, None)
 
-            room = f"draft:{league_id}"
-            join_room(room)
+    @server.on('draft:join')
+    def on_join(payload):
+        try:
+            league_id = league_id_from(payload)
+        except ValueError:
+            server.emit('draft:error', {'message': 'Invalid leagueId'}, to=request.sid)
+            return
+        try:
+            user_id = access.reader(request.sid, league_id)
+            snapshot = snapshots.snapshot_for_reader_id(league_id, user_id)
+            server.server.enter_room(request.sid, f'draft:{league_id}', namespace='/')
+            access.deliver(request.sid, league_id, 'draft:snapshot', {'snapshot': snapshot})
+        except Exception:
+            access.deny(request.sid, league_id)
 
-            snapshot = snapshots.snapshot_for_job(league_id)
-            emit("draft:snapshot", {"snapshot": jsonSafe(snapshot)})
-
-        except Exception as e:
-            emit("draft:error", {"message": str(e)})
-
-
-    @socketio.on("draft:leave")
+    @server.on('draft:leave')
     def on_leave(payload):
-        sess = socketio.server.get_session(request.sid)
-        user = sess.get("user")
-        if not user:
-            emit("draft:error", {"message": "Unauthorized"})
+        try:
+            league_id = league_id_from(payload)
+        except ValueError:
+            server.emit('draft:error', {'message': 'Invalid leagueId'}, to=request.sid)
             return
-
-        league_id_raw = payload.get("leagueId") if isinstance(payload, dict) else None
-        if league_id_raw is None:
-            emit("draft:error", {"message": "leagueId is required"})
-            return
-        league_id = int(league_id_raw)
-        supabase_sub = user["sub"]
-        if not membership.is_supabase_user_in_league(league_id, supabase_sub):
-            emit("draft:error", {"message": "Forbidden"})
-            return
-
-        room = f"draft:{league_id}"
-        leave_room(room)
+        server.server.leave_room(request.sid, f'draft:{league_id}', namespace='/')

@@ -1,4 +1,5 @@
 """Final MOD-003C HTTP read/write boundary; synthetic SQL/JWT only."""
+from http_error_assertions import assert_error_response
 import os
 import unittest
 from unittest.mock import patch
@@ -35,7 +36,7 @@ class ScoringAuthorizationTests(unittest.TestCase):
         self.db,self.headers=self.fixture.db,self.fixture.headers
         self.db.connection.executescript('''
             ALTER TABLE League ADD COLUMN isDiscoverable BOOLEAN DEFAULT true;
-            INSERT INTO League VALUES (30,1,'{}',NULL,true);
+            INSERT INTO League (id,commissioner,settings,freeAgentDeadline,isDiscoverable) VALUES (30,1,'{}',NULL,true);
             ALTER TABLE LeagueMember ADD COLUMN teamName TEXT DEFAULT 'Synthetic';
             INSERT INTO "User" (id,uuid) VALUES (3,'nonmember');
             ALTER TABLE Week ADD COLUMN startDate TEXT DEFAULT '2026-10-01';
@@ -115,7 +116,7 @@ class ScoringAuthorizationTests(unittest.TestCase):
             self.db.before_query=revoke
             response=self.read(kind,subject=fixture.BOB)
             self.assertEqual(response.status_code,404)
-            self.assertEqual(response.json,{'message':'League not found'})
+            assert_error_response(self, response, {'message':'League not found'})
             self.db.connection.execute("INSERT INTO LeagueMember VALUES (12,10,2,'Synthetic')")
             self.db.connection.commit()
 
@@ -154,7 +155,7 @@ class DisabledOperationalHttpTests(unittest.TestCase):
                 for body in ({},[],{'trustedJob':True,'actingUserId':1,'userId':1}):
                     response=client.post(path,headers=self.headers(subject),json=body)
                     self.assertEqual(response.status_code,410)
-                    self.assertEqual(response.json,{'error':error})
+                    assert_error_response(self, response, {'error':error})
             response=client.post(path,headers=self.headers(),data='{broken',content_type='application/json')
             self.assertEqual(response.status_code,410)
         self.score.assert_not_called()

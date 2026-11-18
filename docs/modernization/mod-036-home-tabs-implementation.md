@@ -1,0 +1,11 @@
+# Home tab accessibility — 2026-11-16
+
+Home now uses manual tab activation: Left/Right wrap focus, Home/End focus the first/last tab, and native button Enter/Space/click select it. One roving tab stop follows focus. Stable tab/panel IDs connect aria-controls and aria-labelledby. Both panel shells exist, but inactive content is unmounted and the hidden shell has display:none protected against author CSS. Home's requests, freshness, Retry, stage selection and six-row search paging remain unchanged.
+
+Focused tests failed first on missing tabIndex/key handling, then passed alongside existing Home feedback tests (9 total). Full frontend suite:237/237. TypeScript build and import check (75 files/219 edges) pass. Measurement/acceptance helper tests:8/8.
+
+[Native keyboard evidence](evidence/mod-036-home-tabs-7fe75999b9d241738d18275a3f37460f.json) records actual Home/React in fresh headless Chrome with synthetic API/context replacements, loopback-only page requests, no JS exceptions and source hashes. Verified arrows/wrap/Home/End without selection, retained focused buttons after activation, Enter/Space, pointer selection, Tab exit into the search input, stable relationships, computed hidden display, and exactly one exposed accessible tabpanel. Owned Chrome PID43331 exited, loopback server closed and temporary profile removed. No configured auth/app/provider/profile accessed.
+
+The native runner now calls the intended versioned contract rather than expecting the old keyboard gap. Historical raw audit artifacts are unchanged. Keyboard-only acceptance does not rerun or claim precise render timings, full assistive-technology/mobile acceptance, production behavior, or performance improvements.
+
+No commits or deployment. The tier-cache fix remains separate. Fresh scoped review found no critical/important issues; independently reran focused9/full237/acceptance1 and verified all35 source hashes. Deferred minor: native entry/re-entry uses programmatic focus and activation checks assert resulting selection, so keyboard entry/re-entry and exactly one activation event are not directly counted. Native Tab exit and successful Enter/Space/pointer selection are covered. Full AT/mobile/production and render performance remain unclaimed; author observed native execution/cleanup, reviewer inspected its matching artifact.

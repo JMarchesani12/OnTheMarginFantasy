@@ -4,6 +4,10 @@ from sqlalchemy import text
 
 class ScheduleCalendarRepository:
 
+    def lock_league(self, conn, league_id):
+        return conn.execute(text('SELECT id FROM "League" WHERE id=:leagueId FOR UPDATE'),
+                            {'leagueId': league_id}).fetchone()
+
     def league(self, conn, params):
         return conn.execute(text("""
             SELECT id, "sport", "seasonYear", settings

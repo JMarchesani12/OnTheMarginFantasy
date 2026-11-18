@@ -56,14 +56,14 @@ class TransactionReadAuthorizationTests(unittest.TestCase):
         self.headers,self.state=self.fixture.headers,self.fixture.state
         self.db.connection.executescript('''
             ALTER TABLE League ADD COLUMN isDiscoverable BOOLEAN DEFAULT true;
-            INSERT INTO League VALUES (30,1,'{}',NULL,true);
+            INSERT INTO League (id,commissioner,settings,freeAgentDeadline,isDiscoverable) VALUES (30,1,'{}',NULL,true);
             ALTER TABLE LeagueMember ADD COLUMN teamName TEXT;
             UPDATE LeagueMember SET teamName='Alice' WHERE userId=1;
             UPDATE LeagueMember SET teamName='Bob' WHERE userId=2;
             INSERT INTO "User" (id,uuid,displayName) VALUES (3,'voter','Voter'),(4,'nonmember','Nonmember');
             INSERT INTO LeagueMember VALUES (13,10,3,'Voter');
-            CREATE TABLE SportTeam (id INTEGER,displayName TEXT);
-            INSERT INTO SportTeam VALUES (101,'Alpha'),(102,'Bravo'),(103,'Charlie');
+            ALTER TABLE SportTeam ADD COLUMN displayName TEXT;
+            UPDATE SportTeam SET displayName=CASE id WHEN 101 THEN 'Alpha' WHEN 102 THEN 'Bravo' ELSE 'Charlie' END;
             CREATE TABLE TransactionVote (transactionId INTEGER,leagueMemberId INTEGER,veto BOOLEAN);
             INSERT INTO TransactionVote VALUES (1,13,true);
             ALTER TABLE "Transaction" ADD COLUMN createdAt TEXT DEFAULT '2026-10-29T12:00:00';

@@ -1,0 +1,79 @@
+{
+  "date": "2026-11-15",
+  "result": "PASS_BOUNDED_HEAD_TO_HEAD_BASELINE",
+  "artifact": "mod-017-h2h-a8b3bd51fbe74c3091a1cde8f18eb514.json",
+  "rawSha256": "5da9d06e416510186652a601f438eecece3b758cea328f76446c0f4c8b495dc2",
+  "checks": {
+    "units": "24/24 PASS",
+    "nativeTiers": [
+      100,
+      1000,
+      5000
+    ],
+    "sqlCases": 132,
+    "serviceCases": 132,
+    "provenanceHashes": 13,
+    "completeExpectedSignatures": true,
+    "productionCodeChanged": false,
+    "diff/newSourceWhitespace": "PASS"
+  },
+  "review": {
+    "model": "gpt-6-astra/high",
+    "critical": 0,
+    "important": 0,
+    "minor": 0,
+    "independent": "24 units,full reconstructed132SQL/132service fields/order/intervals,13hashes/rawSHA,captures/samples/statistics/report/index/build figures",
+    "declined": [
+      "Livecleanup remains author-observed",
+      "HistoricalRED remains recorded author execution, current GREEN/preserved failure corroborate",
+      "Production/RLS/concurrency/writecost/rollout/full scoring/ingestion outside scope"
+    ]
+  },
+  "cleanup": {
+    "databaseCountZero": true,
+    "ownedContainer": "0c85442a8fd1e0167dd5e9ac9e3c8788236b8528a33a859998958d0164a01454",
+    "labelsVerified": {
+      "otm.synthetic": "true",
+      "otm.task": "mod017-h2h"
+    },
+    "persistentMounts": [],
+    "containerRemoved": true,
+    "remainingH2HContainers": 0,
+    "dockerAndImageCacheRetained": true
+  },
+  "implementationDeferred": true,
+  "uncommitted": true,
+  "deployed": false,
+  "rulings": [
+    {
+      "decision": "Audit measurements only; no actual optimization until audit completion",
+      "reason": "User explicitly reconfirmed sequencing",
+      "costIfWrong": "Production speedups deferred; later design/rollout still needed"
+    },
+    {
+      "decision": "Bound to actual head-to-head SQL and supplied-connection mapping service",
+      "reason": "Continue combined design/implementation in a reviewable batch",
+      "costIfWrong": "Full scoring/ingestion remains unmeasured"
+    },
+    {
+      "decision": "Disclose updated-fixture dead tuples/free space without adding VACUUM/tuning",
+      "reason": "Preserve measured artifact/layout and distinguish prior benchmarks",
+      "costIfWrong": "Absolute storage/timing differs from production and prior baseline"
+    },
+    {
+      "decision": "Accept recorded historicalRED and direct author cleanup observations",
+      "reason": "Reviewer read-only/no native services; author observed zeroDBs and exactcontainer removal",
+      "costIfWrong": "Historical reproduction or leftover isolated synthetic resource uncertainty"
+    },
+    {
+      "decision": "Keep audit branch/files/ledger uncommitted, no merge/push/deploy",
+      "reason": "Established user-owned commit workflow",
+      "costIfWrong": "User must commit work; Docker/cache retained"
+    }
+  ],
+  "sourceSha256": {
+    "scripts/modernization/measure_mod017_h2h.py": "10aff16075de6dd20dc43368542d71f2a32070b073ad34d1965df63ef31beae2",
+    "scripts/modernization/tests/test_mod017_h2h.py": "3cc993e164d97515abcc9cea5c117331a3280c9ab02fb0c4ef9f707fb49caa1c",
+    "docs/modernization/mod-017-head-to-head-baselines.md": "d99aab6893ed29a1950e65a5ad38d344e5233caef1ed575b6602afc0802d128e"
+  }
+}

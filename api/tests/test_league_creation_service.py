@@ -1,4 +1,4 @@
-"""League creation policy/atomic inserts and post-commit initialization boundary."""
+"""League creation policy/atomic inserts and same-transaction initialization boundary."""
 import copy
 import unittest
 from actors import UserActor
@@ -18,8 +18,9 @@ class LeagueCreationServiceTests(unittest.TestCase):
     def rows(self,table):
         return [dict(r) for r in self.db.connection.execute(f'SELECT * FROM "{table}" ORDER BY id')]
 
-    def initialized(self,league_id):
-        self.assertFalse(self.db.connection.in_transaction)
+    def initialized(self,league_id,conn=None):
+        self.assertTrue(self.db.connection.in_transaction)
+        self.assertIs(conn, self.db)
         self.assertEqual(self.rows('League')[0]['id'],league_id)
         self.assertEqual(len(self.rows('LeagueMember')),1)
         self.calls.append(league_id)
@@ -38,6 +39,7 @@ class LeagueCreationServiceTests(unittest.TestCase):
         result=self.service.create(self.actor,payload,self.initialized)
         self.assertEqual(payload,before);self.assertEqual(self.engine.begins,1)
         self.assertEqual(result['commissioner'],1)
+        self.assertEqual(result['numPlayers'],1)
         self.assertEqual(result['settings'],{'ruleSetVersion':'v1','timezone':'UTC'})
         self.assertEqual(self.calls,[result['id']])
         member=self.rows('LeagueMember')[0]
@@ -65,14 +67,16 @@ class LeagueCreationServiceTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):self.service.create(self.actor,self.payload(),self.initialized)
         self.assertEqual(self.rows('League'),[]);self.assertEqual(self.rows('LeagueMember'),[]);self.assertEqual(self.calls,[])
 
-    def test_initializer_failure_propagates_after_committed_creation(self):
+    def test_initializer_failure_rolls_back_creation_and_retry_converges(self):
         self.assertTrue(hasattr(self.service,'create'), 'actor creation operation missing')
-        def fail(league_id):
-            self.initialized(league_id)
+        def fail(league_id,conn=None):
+            self.initialized(league_id,conn=conn)
             raise RuntimeError('synthetic scheduling failure')
         with self.assertRaises(RuntimeError):self.service.create(self.actor,self.payload(),fail)
-        self.assertEqual(len(self.rows('League')),1);self.assertEqual(len(self.rows('LeagueMember')),1)
+        self.assertEqual(self.rows('League'),[]);self.assertEqual(self.rows('LeagueMember'),[])
         self.assertEqual(len(self.calls),1)
+        self.service.create(self.actor,self.payload(),self.initialized)
+        self.assertEqual(len(self.rows('League')),1);self.assertEqual(len(self.rows('LeagueMember')),1)
 
     def test_trusted_creator_and_deferred_schedule_access(self):
         model=self.engine

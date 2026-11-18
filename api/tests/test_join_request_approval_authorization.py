@@ -1,4 +1,5 @@
 """Approval identity/transaction tests; synthetic SQLite, no PostgreSQL locking proof."""
+from http_error_assertions import assert_error_response
 from endpoints.league.admission.service import AdmissionService
 import json
 import os
@@ -136,7 +137,7 @@ class JoinRequestApprovalAuthorizationTests(unittest.TestCase):
                 response = self.client.post('/api/league/10/joinRequests/101/approve',
                     headers=self.headers(subject), json={'actingUserId': 1})
                 self.assertEqual(response.status_code, 403)
-                self.assertEqual(response.json, {'error': 'actor_identity_mismatch'})
+                assert_error_response(self, response, {'error': 'actor_identity_mismatch'})
                 self.assertEqual(self.state(), before)
 
     def test_member_nonmember_and_other_league_commissioner_cannot_approve(self):
@@ -174,7 +175,7 @@ class JoinRequestApprovalAuthorizationTests(unittest.TestCase):
         after = self.state()
         repeat = self.client.post('/api/league/10/joinRequests/101/approve', headers=self.headers(), json={'actingUserId': 1})
         self.assertEqual(repeat.status_code, 400)
-        self.assertEqual(repeat.json, {'message': 'Join request is not pending'})
+        assert_error_response(self, repeat, {'message': 'Join request is not pending'})
         self.assertEqual(self.state(), after)
 
     def test_auth_and_identity_failures_cannot_approve(self):
@@ -192,7 +193,7 @@ class JoinRequestApprovalAuthorizationTests(unittest.TestCase):
         self.db.connection.commit()
         response = self.client.post('/api/league/10/joinRequests/101/approve', headers=self.headers(), json={'actingUserId': 1})
         self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.json, {'error': 'application_identity_ambiguous'})
+        assert_error_response(self, response, {'error': 'application_identity_ambiguous'})
         self.assertEqual(self.state(), before)
 
     def test_invalid_actor_and_missing_league_have_safe_json_contracts(self):
@@ -205,7 +206,7 @@ class JoinRequestApprovalAuthorizationTests(unittest.TestCase):
                 self.assertEqual(self.state(), before)
         missing = self.client.post('/api/league/999/joinRequests/101/approve', headers=self.headers(), json={'actingUserId': 1})
         self.assertEqual(missing.status_code, 400)
-        self.assertEqual(missing.json, {'message': 'League 999 not found'})
+        assert_error_response(self, missing, {'message': 'League 999 not found'})
         self.assertEqual(self.state(), before)
 
     def test_failure_after_membership_insert_rolls_back_all_approval_mutations(self):
@@ -213,7 +214,7 @@ class JoinRequestApprovalAuthorizationTests(unittest.TestCase):
         self.db.fail_league_update = True
         response = self.client.post('/api/league/10/joinRequests/101/approve', headers=self.headers(), json={'actingUserId': 1})
         self.assertEqual(response.status_code, 500)
-        self.assertEqual(response.json, {'message': 'Failed to approve join request'})
+        assert_error_response(self, response, {'message': 'Failed to approve join request'})
         self.assertEqual(self.state(), before)
 
 

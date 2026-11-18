@@ -1,3 +1,4 @@
+import { safeErrorMessage, READ_ERROR, WRITE_UNCERTAIN } from "../../api/safeError";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import type {
@@ -20,12 +21,14 @@ import {
   deleteLeague,
   updateLeague,
 } from "../../api/leagues";
+import DraftOrderEditor from "../../components/League/DraftOrderEditor";
 import { setDraftOrder as setDraftOrderApi } from "../../api/draft";
 import {
   BonusesEditor,
   BONUS_TEMPLATES,
   type BonusWithLocalId,
-} from "../CreateLeague/BonusesEditor";
+} from "../../components/League/BonusesEditor";
+import { normalizeLeagueSettings } from "../../utils/leagueMapping";
 import { useCurrentUser } from "../../context/currentUserContext";
 import "../CreateLeague/CreateLeague.css";
 import "./ManageLeaguePage.css";
@@ -180,18 +183,6 @@ const ManageLeaguePage = () => {
     setForm(makeInitialForm(initialLeague));
   }, [initialLeague]);
 
-  const normalizeLeagueSettings = (value: unknown) => {
-    if (!value) return undefined;
-    if (typeof value === "string") {
-      try {
-        return JSON.parse(value) as League["settings"];
-      } catch {
-        return undefined;
-      }
-    }
-    return value as League["settings"];
-  };
-
   const mapLeagueFromResponse = (
     payload: SingleLeague | League | { league?: SingleLeague | League }
   ): League => {
@@ -268,7 +259,7 @@ const ManageLeaguePage = () => {
         setForm(makeInitialForm(nextLeague));
       } catch (err: any) {
         if (isMounted) {
-          setLeagueError(err?.message ?? "Failed to load league.");
+          setLeagueError(safeErrorMessage(err, READ_ERROR));
         }
       } finally {
         if (isMounted) {
@@ -299,7 +290,7 @@ const ManageLeaguePage = () => {
       if (options?.isCancelled?.()) {
         return;
       }
-      setMembersError(err?.message ?? "Failed to load league members");
+      setMembersError(safeErrorMessage(err, READ_ERROR));
     } finally {
       if (options?.isCancelled?.()) {
         return;
@@ -377,6 +368,7 @@ const ManageLeaguePage = () => {
     setSaveError(null);
     setSaveMessage(null);
 
+    let settingsSaved = false;
     try {
       setSaving(true);
       const bonuses = buildBonusesPayload(form.bonuses);
@@ -404,13 +396,16 @@ const ManageLeaguePage = () => {
       };
 
       await updateLeague(payload, leagueId);
+      settingsSaved = true;
       const refreshed = await getLeague(leagueId);
       const nextLeague = mapLeagueFromResponse(refreshed);
       setLeagueState(nextLeague);
       setForm(makeInitialForm(nextLeague));
       setSaveMessage("League settings saved.");
     } catch (err: any) {
-      setSaveError(err?.message ?? "Failed to save league settings.");
+      setSaveError(settingsSaved
+        ? "League settings were saved, but details could not be refreshed. Refresh to check the current state."
+        : safeErrorMessage(err, WRITE_UNCERTAIN));
     } finally {
       setSaving(false);
     }
@@ -421,6 +416,8 @@ const ManageLeaguePage = () => {
     setSaveError(null);
     setSaveMessage(null);
 
+    let settingsSaved = false;
+    let orderSaved = false;
     try {
       setSaving(true);
       const payload: UpdateLeague = {
@@ -442,9 +439,11 @@ const ManageLeaguePage = () => {
       };
 
       await updateLeague(payload, leagueId);
+      settingsSaved = true;
       if (orderedMemberIds.length > 0) {
         await setDraftOrderApi(leagueId, orderedMemberIds);
       }
+      orderSaved = true;
 
       const refreshed = await getLeague(leagueId);
       const nextLeague = mapLeagueFromResponse(refreshed);
@@ -456,10 +455,29 @@ const ManageLeaguePage = () => {
           : "Draft settings saved."
       );
     } catch (err: any) {
-      setSaveError(err?.message ?? "Failed to save draft settings.");
+      setSaveError(settingsSaved
+        ? orderSaved
+          ? "Draft settings were saved, but details could not be refreshed. Refresh to check the current state."
+          : "League settings were saved, but draft order could not be confirmed. Check current settings and draft order before saving again."
+        : safeErrorMessage(err, WRITE_UNCERTAIN));
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleMoveDraftMember = (memberId: number, direction: -1 | 1) => {
+    if (!isCommissioner || !isPreDraft || (direction !== -1 && direction !== 1) || !members.some(member => member.id === memberId)) return;
+    setOrderedMemberIds(current => {
+      const from = current.indexOf(memberId);
+      const to = from + direction;
+      if (from < 0 || to < 0 || to >= current.length) return current;
+      const next = [...current];
+      [next[from], next[to]] = [next[to], next[from]];
+      const ranks: Record<number, string> = {};
+      next.forEach((id, index) => { ranks[id] = String(index + 1); });
+      setDraftOrderState(ranks);
+      return next;
+    });
   };
 
   const handleRandomizeDraftOrder = () => {
@@ -486,7 +504,7 @@ const ManageLeaguePage = () => {
       );
       setRequests(data);
     } catch (err: any) {
-      setRequestsError(err?.message ?? "Failed to load join requests.");
+      setRequestsError(safeErrorMessage(err, READ_ERROR));
     } finally {
       setRequestsLoading(false);
     }
@@ -505,7 +523,7 @@ const ManageLeaguePage = () => {
       await approveRequestToJoinLeague(leagueId, requestId, currentUserId);
       await Promise.all([loadRequests(), loadMembers()]);
     } catch (err: any) {
-      setRequestsError(err?.message ?? "Failed to approve request.");
+      setRequestsError(safeErrorMessage(err, WRITE_UNCERTAIN));
     }
   };
 
@@ -515,7 +533,7 @@ const ManageLeaguePage = () => {
       await denyRequestToJoinLeague(leagueId, requestId, currentUserId);
       await loadRequests();
     } catch (err: any) {
-      setRequestsError(err?.message ?? "Failed to decline request.");
+      setRequestsError(safeErrorMessage(err, WRITE_UNCERTAIN));
     }
   };
 
@@ -543,7 +561,7 @@ const ManageLeaguePage = () => {
       );
       await loadMembers();
     } catch (err: any) {
-      setMemberActionError(err?.message ?? "Failed to remove member.");
+      setMemberActionError(safeErrorMessage(err, WRITE_UNCERTAIN));
     }
   };
 
@@ -563,7 +581,7 @@ const ManageLeaguePage = () => {
       await removeLeagueMember(leagueId, selfMember.id, currentUserId);
       navigate("/leagues");
     } catch (err: any) {
-      setMemberActionError(err?.message ?? "Failed to leave league.");
+      setMemberActionError(safeErrorMessage(err, WRITE_UNCERTAIN));
     }
   };
 
@@ -610,7 +628,7 @@ const ManageLeaguePage = () => {
       await deleteLeague(leagueId, currentUserId);
       navigate("/leagues");
     } catch (err: any) {
-      setDeleteError(err?.message ?? "Failed to delete league.");
+      setDeleteError(safeErrorMessage(err, WRITE_UNCERTAIN));
     }
   };
 
@@ -834,77 +852,21 @@ const ManageLeaguePage = () => {
             </div>
 
             {isCommissioner && (
-              <div className="ml-draft-order">
-                <div className="ml-draft-order-header">
-                  <h3>Draft Order</h3>
-                  <button
-                    className="cl-btn-secondary"
-                    type="button"
-                    onClick={handleRandomizeDraftOrder}
-                    disabled={members.length === 0}
-                  >
-                    Randomize Draft Order
-                  </button>
-                </div>
-
-                {membersLoading && (
-                  <p className="ml-muted">Loading league members…</p>
-                )}
-                {membersError && <p className="ml-error">{membersError}</p>}
-                {memberActionError && (
-                  <p className="ml-error">{memberActionError}</p>
-                )}
-
-                {members.length > 0 && (
-                  <div className="ml-draft-order-list">
-                    {orderedMembers.map((member, index) => (
-                      <div
-                        key={member.id}
-                        className={`ml-draft-order-row ${draggingMemberId === member.id ? "is-dragging" : ""}`}
-                        draggable
-                        onDragStart={() => handleDragStart(member.id)}
-                        onDragOver={(event) => {
-                          event.preventDefault();
-                          handleDragOver(member.id);
-                        }}
-                        onDragEnd={handleDragEnd}
-                      >
-                        <div className="ml-draft-order-main">
-                          <span className="ml-draft-rank">
-                            {index + 1}
-                          </span>
-                          <div>
-                            <p className="ml-draft-member">
-                              {member.teamName ?? `Member ${member.id}`}
-                            </p>
-                            <span className="ml-draft-sub">
-                              {member.displayName}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="ml-draft-actions">
-                          <button
-                            className="ml-remove-btn"
-                            type="button"
-                            onClick={() => handleRemoveMember(member)}
-                            disabled={member.userId === currentUserId}
-                            title={
-                              member.userId === currentUserId
-                                ? "You cannot remove yourself."
-                                : "Remove member"
-                            }
-                          >
-                            Remove
-                          </button>
-                          <span className="ml-drag-hint" aria-hidden="true">
-                            ⇅
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <DraftOrderEditor
+                orderedMembers={orderedMembers}
+                memberCount={members.length}
+                membersLoading={membersLoading}
+                membersError={membersError}
+                memberActionError={memberActionError}
+                draggingMemberId={draggingMemberId}
+                currentUserId={currentUserId}
+                onMoveMember={handleMoveDraftMember}
+                onRandomize={handleRandomizeDraftOrder}
+                onRemoveMember={handleRemoveMember}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDragEnd={handleDragEnd}
+              />
             )}
 
             {saveError && <p className="ml-error">{saveError}</p>}

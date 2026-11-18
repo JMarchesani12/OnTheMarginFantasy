@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { safeErrorMessage, READ_ERROR } from "../../api/safeError";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import ProfileStatus from "../../components/Profile/ProfileStatus";
 import LeagueCard from "../../components/LeagueCard/LeagueCard";
 import { getLeaguesForUser, searchLeagues } from "../../api/leagues";
 import { getSports } from "../../api/sport";
@@ -20,6 +22,12 @@ type StageValue = (typeof stageOptions)[number]["value"];
 type HomeTab = "leagues" | "search";
 
 const SEARCH_LIMIT = 6;
+const EMPTY_LEAGUES: League[] = [];
+type PrivateLeagues = { identityKey: string; items: League[] };
+type LeagueListState = {
+  selection: object;
+  attempt: number;
+} & ({ status: "loading" } | { status: "ready"; items: League[] } | { status: "error" });
 
 const applyStageFilter = (items: League[], stage: StageValue) => {
   if (stage === "completed") {
@@ -46,16 +54,29 @@ const normalizeLeaguesResponse = (response: unknown): League[] => {
     return (response as { leagues: League[] }).leagues;
   }
 
-  console.warn("Unexpected leagues payload", response);
+  console.warn("Unexpected leagues payload");
   return [];
 };
 
 const Home = () => {
   const navigate = useNavigate();
   const [tab, setTab] = useState<HomeTab>("leagues");
+  const [tabStop, setTabStop] = useState<HomeTab>("leagues");
+  const leagueTabRef = useRef<HTMLButtonElement>(null);
+  const searchTabRef = useRef<HTMLButtonElement>(null);
+  const moveTabFocus = (event: React.KeyboardEvent<HTMLButtonElement>, current: HomeTab) => {
+    let next: HomeTab;
+    if (event.key === "Home") next = "leagues";
+    else if (event.key === "End") next = "search";
+    else if (event.key === "ArrowLeft" || event.key === "ArrowRight") next = current === "leagues" ? "search" : "leagues";
+    else return;
+    event.preventDefault();
+    (next === "leagues" ? leagueTabRef : searchTabRef).current?.focus();
+  };
   const [stage, setStage] = useState<StageValue>("active");
-  const [leagues, setLeagues] = useState<League[]>([]);
-  const [memberLeagues, setMemberLeagues] = useState<League[]>([]);
+  const [leagueState, setLeagues] = useState<LeagueListState | null>(null);
+  const [retryAttempt, setRetryAttempt] = useState(0);
+  const [memberLeagueState, setMemberLeagues] = useState<PrivateLeagues | null>(null);
   const [sports, setSports] = useState<Sport[]>([]);
   const [sportsLoading, setSportsLoading] = useState(false);
   const [sportsError, setSportsError] = useState<string | null>(null);
@@ -69,7 +90,17 @@ const Home = () => {
   const [hasMore, setHasMore] = useState(false);
   const [overviewOpen, setOverviewOpen] = useState(false);
 
-  const { userId, displayName, email } = useCurrentUser();
+  const { userId, displayName, email, identityKey, isCurrentIdentity } = useCurrentUser();
+  // A new selection invalidates displayed data before its effect starts, including round trips.
+  const selectionRef = useRef({ identityKey, userId, stage });
+  if (selectionRef.current.identityKey !== identityKey || selectionRef.current.userId !== userId || selectionRef.current.stage !== stage) {
+    selectionRef.current = { identityKey, userId, stage };
+  }
+  const selection = selectionRef.current;
+  const currentList = userId && leagueState?.selection === selection && leagueState.attempt === retryAttempt ? leagueState : null;
+  const leagues = currentList?.status === "ready" ? currentList.items : EMPTY_LEAGUES;
+  const leaguesLoading = Boolean(userId) && (!currentList || currentList.status === "loading");
+  const memberLeagues = userId && memberLeagueState?.identityKey === identityKey ? memberLeagueState.items : EMPTY_LEAGUES;
 
   const { signOut } = useAuth();
 
@@ -79,18 +110,21 @@ const Home = () => {
     }
 
     let isMounted = true;
+    const controller = new AbortController();
 
+    setLeagues({ selection, attempt: retryAttempt, status: "loading" });
+    const isCurrent = () => isMounted && !controller.signal.aborted && isCurrentIdentity() && selectionRef.current === selection;
     async function loadLeagues() {
       try {
-        const response = await getLeaguesForUser(userId, stage);
+        const response = await getLeaguesForUser(userId, stage, controller.signal);
 
-        if (!isMounted) {
-          return;
+        if (!isCurrent()) return;
+        if (!Array.isArray(response) && !(response && typeof response === "object" && Array.isArray((response as { leagues?: unknown }).leagues))) {
+          throw new Error("Invalid leagues response");
         }
-
-        setLeagues(applyStageFilter(normalizeLeaguesResponse(response), stage));
-      } catch (error) {
-        console.error("Failed to load leagues", error);
+        setLeagues({ selection, attempt: retryAttempt, status: "ready", items: applyStageFilter(normalizeLeaguesResponse(response), stage) });
+      } catch {
+        if (isCurrent()) setLeagues({ selection, attempt: retryAttempt, status: "error" });
       }
     }
 
@@ -98,8 +132,9 @@ const Home = () => {
 
     return () => {
       isMounted = false;
+      controller.abort();
     };
-  }, [userId, stage]);
+  }, [userId, stage, selection, retryAttempt, isCurrentIdentity]);
 
   useEffect(() => {
     if (!userId) {
@@ -107,18 +142,19 @@ const Home = () => {
     }
 
     let isMounted = true;
+    const controller = new AbortController();
 
     const loadMemberLeagues = async () => {
       try {
-        const response = await getLeaguesForUser(userId, "all");
-        if (!isMounted) {
+        const response = await getLeaguesForUser(userId, "all", controller.signal);
+        if (!isMounted || !isCurrentIdentity()) {
           return;
         }
-        setMemberLeagues(normalizeLeaguesResponse(response));
+        setMemberLeagues({ identityKey, items: normalizeLeaguesResponse(response) });
       } catch (error) {
-        console.error("Failed to load member leagues", error);
-        if (isMounted) {
-          setMemberLeagues([]);
+        if (isMounted && isCurrentIdentity()) {
+          console.error("Failed to load member leagues");
+          setMemberLeagues({ identityKey, items: [] });
         }
       }
     };
@@ -127,8 +163,9 @@ const Home = () => {
 
     return () => {
       isMounted = false;
+      controller.abort();
     };
-  }, [userId]);
+  }, [userId, identityKey, isCurrentIdentity]);
 
   useEffect(() => {
     let isMounted = true;
@@ -145,7 +182,7 @@ const Home = () => {
         setSports(data);
       } catch (error: unknown) {
         if (isMounted) {
-          setSportsError(error instanceof Error ? error.message : "Failed to load sports");
+          setSportsError(safeErrorMessage(error, READ_ERROR));
         }
       } finally {
         if (isMounted) {
@@ -200,7 +237,7 @@ const Home = () => {
         }
       } catch (error: unknown) {
         if (!isCancelled) {
-          setSearchError(error instanceof Error ? error.message : "Failed to search leagues");
+          setSearchError(safeErrorMessage(error, READ_ERROR));
         }
       } finally {
         if (!isCancelled) {
@@ -240,6 +277,7 @@ const Home = () => {
   
   return (
     <main className="home">
+      <ProfileStatus />
       <header className="home__header">
         <div>
           <p className="home__eyebrow">Welcome back {welcomeName}</p>
@@ -356,8 +394,14 @@ const Home = () => {
           className={`home__tab ${tab === "leagues" ? "home__tab--active" : ""}`}
           type="button"
           role="tab"
+          id="home-leagues-tab"
+          ref={leagueTabRef}
+          aria-controls="home-leagues-panel"
           aria-selected={tab === "leagues"}
-          onClick={() => setTab("leagues")}
+          tabIndex={tabStop === "leagues" ? 0 : -1}
+          onFocus={() => setTabStop("leagues")}
+          onKeyDown={(event) => moveTabFocus(event, "leagues")}
+          onClick={() => { setTabStop("leagues"); setTab("leagues"); }}
         >
           Your Leagues
         </button>
@@ -365,21 +409,40 @@ const Home = () => {
           className={`home__tab ${tab === "search" ? "home__tab--active" : ""}`}
           type="button"
           role="tab"
+          id="home-search-tab"
+          ref={searchTabRef}
+          aria-controls="home-search-panel"
           aria-selected={tab === "search"}
-          onClick={() => setTab("search")}
+          tabIndex={tabStop === "search" ? 0 : -1}
+          onFocus={() => setTabStop("search")}
+          onKeyDown={(event) => moveTabFocus(event, "search")}
+          onClick={() => { setTabStop("search"); setTab("search"); }}
         >
           Search Leagues
         </button>
       </div>
 
-      {tab === "leagues" ? (
-        <section className="home__leagues" aria-label="Your leagues">
+      <section id="home-leagues-panel" role="tabpanel" aria-labelledby="home-leagues-tab" hidden={tab !== "leagues"} className="home__leagues">
+        {tab === "leagues" && (<>
+          {leaguesLoading && <p role="status">Loading your leagues…</p>}
+          {currentList?.status === "error" && (
+            <div role="alert">
+              <p>Could not load your leagues. Please retry.</p>
+              <button type="button" onClick={() => {
+                if (isCurrentIdentity() && selectionRef.current === selection) setRetryAttempt((attempt) => attempt + 1);
+              }}>Retry leagues</button>
+            </div>
+          )}
+          {currentList?.status === "ready" && leagues.length === 0 && (
+            <p role="status">{stage === "active" ? "You have no active leagues." : stage === "completed" ? "You have no completed leagues." : "You have no leagues yet."}</p>
+          )}
           {leagues.map((league) => (
             <LeagueCard key={league.leagueId} league={league} />
           ))}
-        </section>
-      ) : (
-        <section className="home__search" aria-label="Search leagues">
+        </>)}
+      </section>
+      <section id="home-search-panel" role="tabpanel" aria-labelledby="home-search-tab" hidden={tab !== "search"} className="home__search">
+        {tab === "search" && (<>
           <div className="home__search-controls">
             <div className="home__search-field">
               <label htmlFor="league-search">Search by league name</label>
@@ -485,8 +548,8 @@ const Home = () => {
               </button>
             </div>
           )}
-        </section>
-      )}
+        </>)}
+      </section>
     </main>
   );
 };

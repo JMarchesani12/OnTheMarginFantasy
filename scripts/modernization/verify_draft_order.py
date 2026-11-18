@@ -26,7 +26,11 @@ def tests(engine,database):
     assert row=={'members':[{'memberId':12,'userId':2,'teamName':'Bob Open','draftOrder':1},
                            {'memberId':11,'userId':1,'teamName':'Alice Open','draftOrder':2}]}
     assert state()['League']==before['League'] and state()['LeagueMember'][2:]==before['LeagueMember'][2:]
-    partial=service.set_order(actor,10,[11]);assert [m['draftOrder'] for m in partial['members']]==[1,100001]
+    before=state()
+    try:service.set_order(actor,10,[11])
+    except ValueError:pass
+    else:raise AssertionError('Partial order accepted')
+    assert state()==before
     reset();before=state()
     for who,league,ids,error in ((UserActor(2,'bob'),10,[12,11],PermissionError),(actor,999,[11],ValueError),
             (actor,10,[12,12],ValueError),(actor,10,[21,11],ValueError),(actor,10,[999],ValueError),(actor,10,[],ValueError)):
@@ -74,7 +78,7 @@ def tests(engine,database):
     assert state()==before
     reset();before=state();other=engine_for(database,'otm-order-revoke');changed=[]
     def revoke(conn,cursor,statement,params,context,many):
-        if '"draftOrder" + 100000' in statement and not changed:
+        if 'SELECT status FROM "League"' in statement and not changed:
             changed.append(True)
             with other.begin() as separate:separate.execute(text('UPDATE "League" SET commissioner=2 WHERE id=10'))
     event.listen(engine,'before_cursor_execute',revoke)
@@ -87,9 +91,9 @@ def tests(engine,database):
     reset();model=DraftPickService(engine)
     assert DraftControlService(model.db).set_order_for_job(10, [12, 11])['members'][0]['memberId']==12
     assert DraftControlService(model.db).set_order_for_legacy_user_id(10, [11, 12], '1')['members'][0]['memberId']==11
-    return {'native_bigint_arrays_any_unnest_generate_series_unique_swap':'PASS','exact_projection_partial_guard_compatibility':'PASS',
+    return {'native_bigint_arrays_any_unnest_generate_series_unique_swap':'PASS','exact_projection_permutation_guard':'PASS',
             'post_bump_assignment_read_statement_commit_rollback':'PASS','separate_connection_late_authority_rejection':'PASS',
-            'legacy_trusted_coercion':'PASS','scope_limit':'Original partial lists and unlocked state check preserved; no permutation/concurrent-start redesign'}
+            'legacy_trusted_coercion':'PASS','scope_limit':'MOD-025 full permutation and coordinated lock order; additional races in verify_mod025.py'}
 
 
 def main():

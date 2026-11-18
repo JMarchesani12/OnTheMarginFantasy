@@ -1,0 +1,149 @@
+import type { DraftPickResponse } from "../types/roster";
+import type { DraftSnapshot } from "../types/draft";
+import { apiFetch, API_BASE_URL } from "./client";
+
+type CreateDraftPickBody = {
+  leagueId: number
+  memberId: number;
+  sportTeamId: number;
+};
+
+export async function createDraftPick(
+  memberId: number,
+  leagueId: number,
+  sportTeamId: number
+): Promise<DraftPickResponse> {
+  const payload: CreateDraftPickBody = {
+    leagueId,
+    memberId,
+    sportTeamId,
+  };
+
+  const res = await apiFetch(`${API_BASE_URL}/api/draft/pick`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => null);
+    throw new Error(
+      typeof error?.message === "string" && error.message.trim()
+        ? error.message
+        : `Failed to submit draft pick: ${res.status}`,
+    );
+  }
+
+  const data = (await res.json()) as DraftPickResponse;
+  return data;
+}
+
+export async function getSportRounds(sportId: number) {
+  const res = await apiFetch(`${API_BASE_URL}/api/draft/rounds/${sportId}`)
+  if (!res.ok) {
+    const error = await res.json().catch(() => null);
+    throw new Error(error?.message ?? `Failed to get draft rounds: ${res.status}`);
+  }
+
+  const data = (await res.json());
+  return data['rounds'];
+}
+
+export async function setDraftOrder(leagueId: number, memberIdsInOrder: number[]) {
+  const payload = {
+    "memberIdsInOrder": memberIdsInOrder
+  }
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/draft/order`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) {
+    throw new Error(`Failed to set draft order: ${res.status}`);
+  }
+
+  const data = (await res.json());
+  return data;
+}
+
+export async function startDraft(leagueId: number): Promise<DraftSnapshot> {
+  const payload = {
+    "leagueId": leagueId
+  }
+  const res = await apiFetch(`${API_BASE_URL}/api/draft/start`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) {
+    throw new Error(`Failed to start draft: ${res.status}`);
+  }
+
+  const data = (await res.json()) as DraftSnapshot;
+  return data;
+}
+
+export async function pauseDraft(leagueId: number): Promise<DraftSnapshot> {
+  const payload = {
+    "leagueId": leagueId
+  }
+  const res = await apiFetch(`${API_BASE_URL}/api/draft/pause`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) {
+    throw new Error(`Failed to start draft: ${res.status}`);
+  }
+
+  const data = (await res.json()) as DraftSnapshot;
+  return data;
+}
+
+export async function resumeDraft(leagueId: number): Promise<DraftSnapshot> {
+  const payload = {
+    "leagueId": leagueId
+  }
+  const res = await apiFetch(`${API_BASE_URL}/api/draft/resume`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) {
+    throw new Error(`Failed to start draft: ${res.status}`);
+  }
+
+  const data = (await res.json()) as DraftSnapshot;
+  return data;
+}
+
+export async function finalizeDraft(
+  leagueId: number,
+  actingUserId: number
+): Promise<{ draftComplete: boolean; leagueId: number; leagueStatus: string | null }> {
+  const payload = {
+    leagueId,
+    actingUserId,
+  };
+  const res = await apiFetch(`${API_BASE_URL}/api/draft/finalize`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const error = await res.json().catch(() => null);
+    throw new Error(error?.message ?? `Failed to finalize draft: ${res.status}`);
+  }
+
+  return await res.json();
+}
+
+export async function getDraftState(leagueId: number, signal?: AbortSignal): Promise<DraftSnapshot> {
+  const res = await apiFetch(`${API_BASE_URL}/api/draft/state/${leagueId}`, { signal })
+  if (!res.ok) {
+    throw Object.assign(new Error(`Failed to read draft: ${res.status}`), {status: res.status});
+  }
+
+  const data = (await res.json()) as DraftSnapshot;
+  return data;
+}

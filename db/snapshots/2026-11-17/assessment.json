@@ -1,0 +1,47 @@
+{
+  "mod015_aggregate_preflight": {
+    "invalid_membership_sports": 0,
+    "duplicate_membership_scopes": 0,
+    "game_season_sport_mismatches": 0,
+    "game_phase_season_mismatches": 0,
+    "game_team_sport_mismatches": 0,
+    "phase_tournament_sport_mismatches": 0,
+    "tournament_conference_sport_mismatches": 0,
+    "slot_team_sport_mismatches": 0,
+    "season_teams_missing_effective_mapping": 0
+  },
+  "no_application_rows_exported": true,
+  "mod017_readonly_preflight": {
+    "ok": true,
+    "create": true,
+    "catalog": [
+      {
+        "oid": "17585",
+        "relname": "LeagueTeamSlot_pkey",
+        "indisvalid": true,
+        "indisready": true,
+        "indisunique": true,
+        "indisprimary": true,
+        "indisexclusion": false,
+        "constraints": [
+          "LeagueTeamSlot_pkey"
+        ],
+        "shape": false
+      },
+      {
+        "oid": "202501",
+        "relname": "LeagueTeamSlot_no_overlap",
+        "indisvalid": true,
+        "indisready": true,
+        "indisunique": false,
+        "indisprimary": false,
+        "indisexclusion": true,
+        "constraints": [
+          "LeagueTeamSlot_no_overlap"
+        ],
+        "shape": false
+      }
+    ],
+    "executed": "SELECT-only extraction of reviewed preflight; no psql CREATE/DROP/recovery file executed"
+  }
+}

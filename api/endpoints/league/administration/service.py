@@ -83,12 +83,14 @@ class LeagueAdminService:
         return self.create_for_job(league, initialize_weeks)
 
     def create_for_job(self, league, initialize_weeks):
-        """Trusted supplied commissioner; initialization retains post-commit scope."""
+        """Trusted supplied commissioner; initialization shares this transaction."""
         league = dict(league)
         team_name = league.get('teamName')
         if not isinstance(team_name, str) or not team_name.strip():
             raise ValueError('Team name is required.')
         team_name = team_name.strip()
+        # Membership count is derived; a fresh league contains its creator only.
+        league['numPlayers'] = 1
         settings = settings_for_creation(league['sport'], league.get('settings'))
         league['settings'] = json.dumps(ensure_timezone_in_settings(settings))
         if not callable(initialize_weeks):
@@ -100,5 +102,5 @@ class LeagueAdminService:
             created['creatorMemberId'] = self.repository.insert_creator_member(
                 conn, created['id'], created['commissioner'], team_name,
             )
-        initialize_weeks(created['id'])
+            initialize_weeks(created['id'], conn=conn)
         return created

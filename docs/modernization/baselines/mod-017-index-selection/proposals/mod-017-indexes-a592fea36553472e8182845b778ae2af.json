@@ -1,0 +1,27 @@
+{
+  "result": "FAILED",
+  "started_at": "2026-11-17T03:47:54.447573+00:00",
+  "provenance": {
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/scripts/modernization/verify_mod017_index_proposals.py": "19cb6ec2d3b20cbf25f74d969f952714353fd7d4bbcacf0a7dd74ce85d48d1c6",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/scripts/modernization/mod017_index_support.py": "51008ef2bd814c976155a989a5bd05f48fc5d498027626ade117bbf7edb4a828",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/docs/modernization/proposals/mod-017-indexes/verify.sql": "1f17734adc31f0d00f4501c5576d1717123e17ad7fa21d4b60551ad3c6aea8f6",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/docs/modernization/proposals/mod-017-indexes/preflight.sql": "56337131cc59dc6da75232d635b04474baa8f4c048ca6326473ab15d3404c540",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/docs/modernization/proposals/mod-017-indexes/recovery.sql": "ecf8b02750ae6ebe8da03694081b67f24ea3b3dfb301d266811e07b4cc4c0788",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/docs/modernization/proposals/mod-017-indexes/create.sql": "11c72e7c125232a31788f625a5a5a5a6afbbd21788ecf9e86dab464eb879d1c0",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/db/baselines/20261029/001_schema.sql": "7fe1c17223dd2cf3ebbfdb9d2ca318d4f7ad24f9a6578309c40aad3cfb58a109",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/api/migrations/20261104_user_identity_unique.sql": "64631ad06193c79bded2e52849e0264b281468ea098e3dfd72d9def01f3dab88",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/api/migrations/20261104_week_score_identity.sql": "b6a040b0d2599e32e4d87d7c59c30aecbbaa22cca7d79c07d988279a36c2e244",
+    "/Users/jeremymarchesani/Documents/OnTheMarginFantasy/api/migrations/20261104_ownership_integrity.sql": "fb3b6c5dd445a6e8da5dd67784d882032a698917e7ac1d9eebb1167120480116"
+  },
+  "databases": [
+    {
+      "name": "otm_mod017_702cde28753541a4b298c8f5dc5cbda9",
+      "cleanup": "removed"
+    }
+  ],
+  "cleanup": "no database created",
+  "tiers": [],
+  "cases": [],
+  "error_type": "AssertionError",
+  "error": "missing: unexpected psql exit 0: \\quit: extra argument \"3\" ignored\nSET\nSET\n[]\nREFUSE: missing relation/type metadata, invalid index, or same-name drift (member)\n"
+}

@@ -47,7 +47,7 @@ export type DraftSnapshot = {
   leagueId: number;
   draftSettings?: DraftSettings;
   serverNow?: string;
-  state?: DraftState;
+  state?: DraftState | null;
   onDeck?: DraftTurnSlot | null;
   inTheHole?: DraftTurnSlot | null;
   members?: DraftMember[];

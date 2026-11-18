@@ -1,3 +1,5 @@
+from utils.conference_membership import conference_sql
+from utils import ownership_reads
 """Named draft pick/timeout queries; transaction and result consumption belong to caller."""
 from sqlalchemy import text
 from .notifyChannel import notify_draft_updated
@@ -36,15 +38,7 @@ class DraftPickRepository:
                 """), params)
 
     def live_team_ownership(self, conn, params):
-        return conn.execute(text("""
-                    SELECT 1
-                    FROM "LeagueTeamSlot"
-                    WHERE "leagueId" = :leagueId
-                      AND "sportTeamId" = :sportTeamId
-                      AND "acquiredWeek" <= :week
-                      AND ("droppedWeek" IS NULL OR "droppedWeek" > :week)
-                    LIMIT 1
-                """), params)
+        return ownership_reads.team_ownership_rows(conn, params['leagueId'], params['sportTeamId'], params['week'])
 
     def insert_live_pick(self, conn, params):
         ownership_scope = 'WHERE EXISTS (\n                SELECT 1 FROM "LeagueMember" owned_member\n                WHERE owned_member.id = :memberId\n                  AND owned_member."leagueId" = :leagueId\n                  AND owned_member."userId" = :actingUserId\n            )' if 'actingUserId' in params else ''
@@ -215,7 +209,7 @@ class DraftPickRepository:
                     """), params)
 
     def conference_info(self, conn, params):
-        return conn.execute(text("""
+        return conn.execute(text(conference_sql("""
             WITH league_info AS (
               SELECT "seasonYear"
               FROM "League"
@@ -238,51 +232,16 @@ class DraftPickRepository:
             WHERE st.id = :sportTeamId
               AND (cm."seasonYear" IS NULL OR cm."seasonYear" = li."seasonYear")
             LIMIT 1
-        """), params)
+        """, '(SELECT "seasonYear" FROM "League" WHERE id=:leagueId)')), params)
 
     def member_conference_count(self, conn, params):
-        return conn.execute(text("""
-            WITH league_info AS (
-              SELECT "seasonYear"
-              FROM "League"
-              WHERE id = :leagueId
-            ),
-            owned AS (
-              SELECT lts."sportTeamId"
-              FROM "LeagueTeamSlot" lts
-              WHERE lts."leagueId"     = :leagueId
-                AND lts."memberId"     = :memberId
-                AND lts."acquiredWeek" <= :weekNumber
-                AND (lts."droppedWeek" IS NULL OR lts."droppedWeek" > :weekNumber)
-            )
-            SELECT COUNT(DISTINCT o."sportTeamId")::int AS cnt
-            FROM owned o
-            JOIN "SportTeam" st
-              ON st.id = o."sportTeamId"
-            JOIN "ConferenceMembership" cm
-              ON cm."sportTeamId" = st.id
-             AND cm."sportId" = st."sportId"
-            CROSS JOIN league_info li
-            JOIN "SportConference" sc
-              ON sc.id = cm."sportConferenceId"
-             AND sc."sportId" = st."sportId"
-            WHERE sc.id = :sportConferenceId
-              AND (cm."seasonYear" IS NULL OR cm."seasonYear" = li."seasonYear")
-        """), params)
+        return ownership_reads.distinct_conference_count_rows(conn, params['leagueId'], params['memberId'], params['weekNumber'], params['sportConferenceId'])
 
     def manual_league(self, conn, params):
         return conn.execute(text('SELECT "numPlayers" FROM "League" WHERE id = :leagueId'), params)
 
     def manual_team_ownership(self, conn, params):
-        return conn.execute(text("""
-                    SELECT 1
-                    FROM "LeagueTeamSlot"
-                    WHERE "leagueId" = :leagueId
-                      AND "sportTeamId" = :sportTeamId
-                      AND "acquiredWeek" <= :week
-                      AND ("droppedWeek" IS NULL OR "droppedWeek" > :week)
-                    LIMIT 1
-                """), params)
+        return ownership_reads.team_ownership_rows(conn, params['leagueId'], params['sportTeamId'], params['week'])
 
     def manual_pick_count(self, conn, params):
         return conn.execute(text('SELECT COUNT(*) AS cnt FROM "DraftPick" WHERE "leagueId" = :leagueId'), params)
@@ -326,7 +285,7 @@ class DraftPickRepository:
             """), params)
 
     def owned_conference_count(self, conn, params):
-        return conn.execute(text("""
+        return conn.execute(text(conference_sql("""
                 WITH league_info AS (
                   SELECT "seasonYear"
                   FROM "League"
@@ -349,7 +308,7 @@ class DraftPickRepository:
                 AND (lts."droppedWeek" IS NULL OR lts."droppedWeek" > :week)
                 AND sc.id = :sportConferenceId
                 AND (cm."seasonYear" IS NULL OR cm."seasonYear" = li."seasonYear")
-            """), params)
+            """, '(SELECT "seasonYear" FROM "League" WHERE id=:leagueId)')), params)
 
     def conference_cap(self, conn, params):
         return conn.execute(text("""
@@ -359,7 +318,7 @@ class DraftPickRepository:
             """), params)
 
     def random_conference_team(self, conn, params):
-        return conn.execute(text("""
+        return conn.execute(text(conference_sql("""
                 WITH league_info AS (
                   SELECT "seasonYear"
                   FROM "League"
@@ -388,39 +347,7 @@ class DraftPickRepository:
                 AND lts.id IS NULL
                 ORDER BY random()
                 LIMIT 1
-            """), params)
-
-    def random_independent_team(self, conn, params):
-        return conn.execute(text("""
-                WITH league_info AS (
-                  SELECT "seasonYear"
-                  FROM "League"
-                  WHERE id = :leagueId
-                )
-                SELECT st.id AS "sportTeamId"
-                FROM "SportTeam" st
-                CROSS JOIN league_info li
-                LEFT JOIN "DraftPick" dp
-                ON dp."leagueId" = :leagueId
-                AND dp."sportTeamId" = st.id
-                LEFT JOIN "LeagueTeamSlot" lts
-                ON lts."leagueId" = :leagueId
-                AND lts."sportTeamId" = st.id
-                AND lts."acquiredWeek" <= :week
-                AND (lts."droppedWeek" IS NULL OR lts."droppedWeek" > :week)
-                WHERE st."sportId" = :sportId
-                AND NOT EXISTS (
-                  SELECT 1
-                  FROM "ConferenceMembership" cm
-                  WHERE cm."sportTeamId" = st.id
-                    AND cm."sportId" = st."sportId"
-                    AND (cm."seasonYear" IS NULL OR cm."seasonYear" = li."seasonYear")
-                )
-                AND dp.id IS NULL
-                AND lts.id IS NULL
-                ORDER BY random()
-                LIMIT 1
-            """), params)
+            """, '(SELECT "seasonYear" FROM "League" WHERE id=:leagueId)')), params)
 
     def auto_state_for_update(self, conn, params):
         return conn.execute(text("""

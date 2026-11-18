@@ -72,8 +72,8 @@ class TransactionWorkflowTests(unittest.TestCase):
     def test_service_helper_override_and_explicit_job_dispatch(self):
         from endpoints.transaction.workflow_service import TransactionWorkflowService
         class Custom(TransactionWorkflowService):
-            def _get_week_for_league(self,*args):raise ValueError('custom week hook')
-        model = Custom.__new__(Custom)
+            def _get_week_for_league(self,*args,**kwargs):raise ValueError('custom week hook')
+        model = Custom(self.db)
         with self.assertRaisesRegex(ValueError,'custom week hook'):
             model.free_agency_add_drop(10,100,1,11,None,101)
         service = self.service()

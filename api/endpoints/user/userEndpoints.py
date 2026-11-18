@@ -1,3 +1,6 @@
+from sqlalchemy.exc import IntegrityError
+from werkzeug.exceptions import HTTPException
+from sqlalchemy.exc import DataError
 from flask import request, jsonify, g
 from .service import UserService
 from .contracts import ProfileAccessDenied, ProfileNotFound, ProfileUpdateRejected
@@ -23,6 +26,8 @@ class UserEndpoints:
             return jsonify({"error": e.code}), e.status_code
         except (ValueError, ProfileNotFound, ProfileAccessDenied) as e:
             return jsonify({"message": str(e)}), 404
+        except (HTTPException, DataError, IntegrityError):
+            raise
         except Exception:
             return jsonify({"message": "Failed to fetch user"}), 500
         
@@ -44,6 +49,8 @@ class UserEndpoints:
             return jsonify({"error": e.code}), e.status_code
         except (ValueError, ProfileNotFound, ProfileAccessDenied) as e:
             return jsonify({"message": str(e)}), 404
+        except (HTTPException, DataError, IntegrityError):
+            raise
         except Exception:
             return jsonify({"message": "Failed to fetch user"}), 500
 
@@ -78,6 +85,8 @@ class UserEndpoints:
             return jsonify({"error": e.code}), 403
         except (ValueError, ProfileCreationRejected):
             return jsonify({"message": "User creation failed"}), 400
+        except (HTTPException, DataError, IntegrityError):
+            raise
         except Exception:
             return jsonify({"message": "Failed to create user"}), 500
 
@@ -88,7 +97,11 @@ class UserEndpoints:
             actor = UserActor(principal.user_id, principal.subject)
             # Preserve concealed foreign-target denial before JSON parsing.
             self.user_service.require_profile_owner(actor, user_id)
-            body = request.get_json(force=True) or {}
+            body = request.get_json(silent=True)
+            if not isinstance(body, dict):
+                return jsonify({'message': 'Request body must be a JSON object'}), 400
+            if 'displayName' in body and not isinstance(body['displayName'], str):
+                return jsonify({'message': 'displayName must be a string'}), 400
             updated = self.user_service.update_profile(actor, user_id, body)
             return jsonify(updated), 200
         except PrincipalResolutionError as e:
@@ -97,5 +110,7 @@ class UserEndpoints:
             return jsonify({"message": str(e)}), 404
         except (ValueError, ProfileNotFound, ProfileUpdateRejected) as e:
             return jsonify({"message": str(e)}), 400
+        except (HTTPException, DataError, IntegrityError):
+            raise
         except Exception:
             return jsonify({"message": "Failed to update user"}), 500

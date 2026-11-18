@@ -1,4 +1,5 @@
 """Proposal authorization using the existing isolated transaction SQL fixture."""
+from http_error_assertions import assert_error_response
 import json
 import unittest
 import test_free_agency_authorization as fixture
@@ -53,7 +54,7 @@ class TradeProposalAuthorizationTests(unittest.TestCase):
                     body.update(fromTeamIds=[102],toTeamIds=[101])
                 response=self.post(body,league,week,subject)
                 self.assertEqual(response.status_code,404)
-                self.assertEqual(response.json,{'message':'League member not found'})
+                assert_error_response(self, response, {'message':'League member not found'})
                 self.assertEqual(self.state(),before)
                 self.assertFalse(any('FROM "Week"' in sql or 'FROM "LeagueTeamSlot"' in sql for sql in self.db.queries))
 
@@ -139,7 +140,7 @@ class TradeProposalAuthorizationTests(unittest.TestCase):
         before = self.state()
         response = self.post()
         self.assertEqual(response.status_code, 400)
-        self.assertIn('No unlocked future week', response.json['error'])
+        self.assertIn('No unlocked future week', response.json['error']['message'])
         self.assertEqual(self.state(), before)
 
     def test_forwarded_trade_uses_future_ownership(self):
@@ -151,7 +152,7 @@ class TradeProposalAuthorizationTests(unittest.TestCase):
         before = self.state()
         response = self.post()
         self.assertEqual(response.status_code, 400)
-        self.assertIn('does not own team', response.json['error'])
+        self.assertIn('does not own team', response.json['error']['message'])
         self.assertEqual(self.state(), before)
 
     def test_forwarded_trade_accepts_teams_acquired_for_future_week(self):
@@ -179,7 +180,7 @@ class TradeProposalAuthorizationTests(unittest.TestCase):
                 before = self.state()
                 response = self.post()
                 self.assertEqual(response.status_code, 400)
-                self.assertIn(error, response.json['error'])
+                self.assertIn(error, response.json['error']['message'])
                 self.assertEqual(self.state(), before)
                 self.db.connection.execute(restore)
                 self.db.connection.commit()
@@ -210,5 +211,5 @@ class TradeProposalAuthorizationTests(unittest.TestCase):
         self.db.before_query=fail
         response=self.post()
         self.assertEqual(response.status_code,500)
-        self.assertEqual(response.json,{'message':'Failed to propose trade'})
+        assert_error_response(self, response, {'message':'Failed to propose trade'})
         self.assertEqual(self.state(),before)

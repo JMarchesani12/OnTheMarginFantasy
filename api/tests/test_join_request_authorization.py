@@ -1,4 +1,5 @@
 """MOD-003A admission identity using real JWT/routes/SQL on synthetic SQLite."""
+from http_error_assertions import assert_error_response
 import os
 import time
 import unittest
@@ -67,7 +68,7 @@ class JoinRequestAuthorizationTests(unittest.TestCase):
                 response = self.client.post('/api/league/10/joinRequest', headers=self.headers(subject),
                     json={'userId': foreign, 'teamName': 'Forged'})
                 self.assertEqual(response.status_code, 403)
-                self.assertEqual(response.json, {'error': 'user_identity_mismatch'})
+                assert_error_response(self, response, {'error': 'user_identity_mismatch'})
                 self.assertEqual(self.requests(), [])
 
     def test_body_query_and_header_actors_cannot_override_owner_or_url_league(self):
@@ -100,7 +101,7 @@ class JoinRequestAuthorizationTests(unittest.TestCase):
             json={'userId': 1, 'teamName': 'Forged'})
         self.assertEqual(first.status_code, 201)
         self.assertEqual(response.status_code, 403)
-        self.assertNotIn('message', response.json)
+        self.assertEqual(response.json['message'], 'Access denied')
         self.assertEqual(self.requests(), before)
 
     def test_missing_invalid_expired_and_empty_subject_cannot_create(self):
@@ -115,7 +116,7 @@ class JoinRequestAuthorizationTests(unittest.TestCase):
         response = self.client.post('/api/league/10/joinRequest',
             headers=self.headers('00000000-0000-4000-8000-000000000099'), json={'userId': 1, 'teamName': 'Forged'})
         self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.json, {'error': 'application_identity_not_found'})
+        assert_error_response(self, response, {'error': 'application_identity_not_found'})
         self.db.connection.execute('PRAGMA foreign_keys = OFF')
         self.db.connection.execute('ALTER TABLE "User" RENAME TO original_user')
         self.db.connection.execute('CREATE TABLE "User" AS SELECT * FROM original_user')
@@ -124,7 +125,7 @@ class JoinRequestAuthorizationTests(unittest.TestCase):
         response = self.client.post('/api/league/10/joinRequest', headers=self.headers(),
                                     json={'userId': 1, 'teamName': 'Forged'})
         self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.json, {'error': 'application_identity_ambiguous'})
+        assert_error_response(self, response, {'error': 'application_identity_ambiguous'})
         self.assertEqual(self.requests(), [])
 
     def test_invalid_shape_actor_and_team_name_are_json_400_without_write(self):
@@ -141,7 +142,7 @@ class JoinRequestAuthorizationTests(unittest.TestCase):
         existing = self.client.post('/api/league/20/joinRequest', headers=self.headers(),
             json={'userId': 1, 'teamName': 'Already Member'})
         self.assertEqual(existing.status_code, 400)
-        self.assertEqual(existing.json, {'message': 'Already a member of this league'})
+        assert_error_response(self, existing, {'message': 'Already a member of this league'})
         self.assertEqual(self.requests(), [])
         own = self.client.post('/api/league/10/joinRequest', headers=self.headers(),
             json={'userId': '1', 'teamName': 'Own Team'})

@@ -3,6 +3,7 @@
 Global status sync is substituted; empty Week data and an adapted interval
 expression do not validate PostgreSQL date arithmetic or lifecycle transitions.
 """
+from http_error_assertions import assert_error_response
 from endpoints.league.lifecycle.service import LeagueLifecycleService
 import os
 import time
@@ -73,6 +74,12 @@ class OwnLeagueListingTests(unittest.TestCase):
             CREATE TABLE "WeeklyTeamScore" ("leagueId" INTEGER, "memberId" INTEGER,
                 "weekId" INTEGER, "pointsAwarded" INTEGER);
         ''')
+        from endpoints.league.lifecycle.query_service import LeagueLifecycleQueryService
+        def projection_only(query, actor, league_id=None, stage='all'):
+            if league_id is not None:
+                return query.reader.details(actor, league_id)
+            return query.reader.mine(actor, stage)
+        self.enterContext(patch.object(LeagueLifecycleQueryService, '_query', projection_only))
         self.status_sync = self.enterContext(patch.object(LeagueLifecycleService, 'synchronize_for_job'))
         app = Flask(__name__)
         app.config['TESTING'] = True
@@ -122,7 +129,7 @@ class OwnLeagueListingTests(unittest.TestCase):
                 response = self.client.post('/api/league/byUser', headers=self.headers(subject),
                     json={'userId': foreign, 'actingUserId': foreign})
                 self.assertEqual(response.status_code, 403)
-                self.assertEqual(response.json, {'error': 'user_identity_mismatch'})
+                assert_error_response(self, response, {'error': 'user_identity_mismatch'})
                 self.status_sync.assert_not_called()
 
     def test_body_query_and_header_cannot_override_principal(self):
@@ -146,14 +153,14 @@ class OwnLeagueListingTests(unittest.TestCase):
             with self.subTest(code=code):
                 response = self.client.post('/api/league/byUser', headers=headers, json={'userId': 1})
                 self.assertEqual(response.status_code, status)
-                self.assertEqual(response.json, {'error': code})
+                assert_error_response(self, response, {'error': code})
         self.db.connection.execute('ALTER TABLE "User" RENAME TO original_user')
         self.db.connection.execute('CREATE TABLE "User" AS SELECT * FROM original_user')
         self.db.connection.execute('INSERT INTO "User" (id, uuid) VALUES (?, ?)', (4, ALICE))
         self.db.connection.commit()
         response = self.client.post('/api/league/byUser', headers=self.headers(), json={'userId': 1})
         self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.json, {'error': 'application_identity_ambiguous'})
+        assert_error_response(self, response, {'error': 'application_identity_ambiguous'})
         self.status_sync.assert_not_called()
 
     def test_missing_or_invalid_input_is_json_400_before_model(self):
@@ -169,3 +176,14 @@ class OwnLeagueListingTests(unittest.TestCase):
         response = self.client.post('/api/league/byUser', headers=self.headers(), json={'userId': '1'})
         self.assertEqual(response.status_code, 200)
         self.assertEqual([row['memberId'] for row in response.json], [11])
+
+    def test_self_list_uses_explicit_coordinator_and_commit_failure_is_not_success(self):
+        from endpoints.league.lifecycle.query_service import LeagueLifecycleQueryService,LifecycleRefreshConflict
+        with patch.object(LeagueLifecycleQueryService,'mine',return_value=[]) as query:
+            response=self.client.post('/api/league/byUser',headers=self.headers(),json={'userId':1,'stage':'completed'})
+        self.assertEqual(response.status_code,200);self.assertEqual(query.call_args.args[0].user_id,1)
+        self.assertEqual(query.call_args.kwargs,{'stage':'completed'});self.status_sync.assert_not_called()
+        for error,status in [(RuntimeError('private commit error'),500),(LifecycleRefreshConflict(),409)]:
+            with patch.object(LeagueLifecycleQueryService,'mine',side_effect=error):
+                response=self.client.post('/api/league/byUser',headers=self.headers(),json={'userId':1})
+            self.assertEqual(response.status_code,status);self.assertNotIn('private commit error',response.get_data(as_text=True))

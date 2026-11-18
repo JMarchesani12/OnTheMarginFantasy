@@ -1,0 +1,82 @@
+{
+  "date": "2026-11-13",
+  "result": "PASS_BOUNDED_GAME_BASELINE",
+  "scope": "Member/conference/team game reads; audit-only and optimization deferred",
+  "artifact": "mod-017-games-9110dad45a77426bb2a7afbe7e3270e0.json",
+  "rawSha256": "6e8d5f6f0c1eb279b40c218207909933a758d4d2aec38fea32b31e4c73b09641",
+  "checks": {
+    "units": "14/14 PASS",
+    "nativeTiers": "10000/100000/500000 games PASS",
+    "caseConfigurations": "108/108 strict expectedcounts/fingerprints/5samples/SQLparams match",
+    "provenance": "all10 hashes match",
+    "diff/newSourceWhitespace": "PASS",
+    "productionCodeChanged": false
+  },
+  "review": {
+    "model": "gpt-6-astra/high",
+    "critical": 0,
+    "important": 0,
+    "deferredMinors": [
+      "New unit does not explicitly assert incorrect sample count rejection, though shared validator and prior tests cover it",
+      "Arithmetic unit broad positive assertion does not specifically establish inclusive date boundary behavior"
+    ],
+    "independent": "14units,108records/SQLparams/counts/fingerprints/medians,10hashes/reportfigures verified",
+    "declined": "Live cleanup/native reproducibility/historicalRED,production/RLS/roles/concurrency/cache/writecost/realistic skew/unmeasured families"
+  },
+  "rulings": [
+    {
+      "decision": "Audit-only work; all actual performance/index/query/tuning changes deferred until audit ends",
+      "reason": "User explicitly requested deferral",
+      "costIfWrong": "No realized production speedup yet; followup decisions/migrations still required"
+    },
+    {
+      "decision": "512teams,one sport,20/50/100seasons and deterministic91day/pair distribution plus anchor game",
+      "reason": "Known independently counted fixtures exercising current/history/membership precedence",
+      "costIfWrong": "Real provider schedule/skew/cardinality may produce different plans"
+    },
+    {
+      "decision": "Apply exacttimeTBDmigration only in private fixture, preserve previous scripts/artifacts",
+      "reason": "Actual query prerequisite without touching application schema",
+      "costIfWrong": "Fixture lacks later unrelated deployment/role/RLS facts"
+    },
+    {
+      "decision": "No combined ownership/game-index or planner-setting experiment in this batch",
+      "reason": "Measure game-index hypothesis separately, ownership plans show remaining work",
+      "costIfWrong": "Final combined optimization benefit/cost unmeasured"
+    },
+    {
+      "decision": "Defer two unit-test strength gaps",
+      "reason": "No production/runner defect; all current native counts and five samples verified",
+      "costIfWrong": "Future unit regressions may lack direct boundary/sample assertions"
+    },
+    {
+      "decision": "Leave code/evidence uncommitted and retain ledger; cleanup owned fixture only",
+      "reason": "Established user workflow and ephemeral isolation",
+      "costIfWrong": "User must commit artifacts; Docker/cache remain available"
+    }
+  ],
+  "cleanup": {
+    "databaseCountZero": true,
+    "ownedContainer": "aaaa6d8da0c609c438f8d2b3150da2e3b0a59727ae0cb3b94a8e47c9b2c07095",
+    "labelsVerified": {
+      "otm.synthetic": "true",
+      "otm.task": "mod017-games"
+    },
+    "persistentMounts": [],
+    "containerRemoved": true,
+    "remainingGameContainers": 0,
+    "dockerAndImageCacheRetained": true
+  },
+  "sourceSha256": {
+    "scripts/modernization/measure_mod017_games.py": "e42d4a568b0fd0214fae7a94cf3c277ff2d4e98a0e791ca5b870a2d0d197945d",
+    "scripts/modernization/tests/test_mod017_games.py": "d7b40aea2e052787bbb12eda4794d29baa9d883bb66fcc9e4453e824e366af5b",
+    "docs/modernization/mod-017-game-baselines.md": "073bdda7023c1bd9be0541b9457817f8a2f4b7ede5236f33db76a3a313afcbb9"
+  },
+  "limits": [
+    "One sport,512teams,20/50/100seasons; current-season fraction5%/2%/1%,not production estimates",
+    "Deterministic pair/date distribution plus one anchor game,not real sports schedule",
+    "Prior schema/RLS/cache/writecost/concurrency/provider limits remain; no rollout or SQL rewrite"
+  ],
+  "uncommitted": true,
+  "deployed": false
+}

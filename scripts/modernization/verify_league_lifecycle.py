@@ -83,12 +83,13 @@ def tests(engine,database):
     assert LeagueLifecycleService(model).synchronize_for_job() is None
     assert {r['id']:r['status'] for r in state()}==EXPECTED
     reset()
-    row=LeagueReadService(engine).details(UserActor(1,'alice'),5,LeagueLifecycleService(model).synchronize_for_job)
+    service.synchronize_for_job()  # Explicit trusted operation, not a reader callback.
+    row=LeagueReadService(engine).details(UserActor(1,'alice'),5)
     assert row['status']=='In-Season' and {r['id']:r['status'] for r in state()}==EXPECTED
-    assert LeagueReadService(model).details_for_job(5, LeagueLifecycleService(model).synchronize_for_job)['status']=='In-Season'
+    assert LeagueReadService(model).details_for_job(5)['status']=='In-Season'
     return {'native_order_precedence_date_boundaries_sport_year_null_unchanged':'PASS',
             'repeat_status_convergence':'PASS','each_post_phase_statement_and_deferred_commit_rollback':'PASS',
-            'db_only_legacy_none_and_real_read_callback':'PASS',
+            'db_only_legacy_none_and_explicit_global_then_read':'PASS',
             'scope_limit':'Existing global read-time writes and intermediate timestamp updates preserved; no concurrency redesign'}
 
 

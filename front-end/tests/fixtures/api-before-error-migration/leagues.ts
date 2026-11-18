@@ -1,0 +1,324 @@
+import { parseApiError, CREATE_LEAGUE_UNCERTAIN, JOIN_LEAGUE_UNCERTAIN } from "./safeError";
+import type { LeagueRules } from "../types/leagueRules";
+import type { ApproveRequestResponse, CreateLeaguePayload, GetConferences, GetRequestResponse, League, LeagueSearchResult, RequestResponse, SingleLeague, UpdateLeague } from "../types/league";
+import type { LeagueMember, LeagueMemberPreview, UpdateLeagueMember } from "../types/leagueMember";
+import { apiFetch, API_BASE_URL } from "./client";
+
+export type LeaguePreview = Pick<LeagueSearchResult, "id" | "name" | "sport" | "commissionerDisplayName">;
+
+export async function getLeaguePreview(leagueId: number, signal?: AbortSignal): Promise<LeaguePreview> {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}?view=preview`, { method: "GET", signal });
+  if (!res.ok) throw Object.assign(new Error("Could not load league preview"), { status: res.status });
+  return res.json();
+}
+
+export async function getLeague(leagueId: number, signal?: AbortSignal): Promise<SingleLeague> {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}?view=full`, {
+    method: "GET",
+    signal,
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to get league: ${res.status}`);
+  }
+
+  return res.json();
+}
+
+export async function createLeague(
+  payload: CreateLeaguePayload
+): Promise<unknown> {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/create`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    throw await parseApiError(res, CREATE_LEAGUE_UNCERTAIN);
+  }
+
+  return res.json();
+}
+
+export async function updateLeague(
+  payload: UpdateLeague,
+  leagueId: number
+): Promise<UpdateLeague> {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to update league: ${res.status}`);
+  }
+
+  return res.json() as UpdateLeague;
+}
+
+export async function getLeaguesForUser(
+  userId: number | null, type: string, signal?: AbortSignal
+): Promise<League[]> {
+    const body = {
+        "userId": userId,
+        "stage": type
+    }
+  const res = await apiFetch(`${API_BASE_URL}/api/league/byUser`, {
+    method: "POST",
+    signal,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to get leagues: ${res.status}`);
+  }
+
+  return res.json();
+}
+
+export async function getMembersOfLeague(
+  leagueId: number,
+  signal?: AbortSignal
+): Promise<LeagueMember[]> {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/members?view=full`, {
+    signal,
+    method: "GET",
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to get league members: ${res.status}`);
+  }
+
+  return res.json();
+}
+
+export async function getMemberPreviewsOfLeague(
+  leagueId: number,
+  signal?: AbortSignal
+): Promise<LeagueMemberPreview[]> {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/members?view=preview`, { signal });
+  if (!res.ok) {
+    throw new Error(`Failed to get league members: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function getConferences(
+  leagueId: number
+): Promise<GetConferences> {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/conferences`, {
+    method: "GET",
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to get conferences: ${res.status}`);
+  }
+
+  return res.json();
+}
+
+export async function requestToJoinLeague(
+  leagueId: number,
+  userId: number,
+  message?: string,
+  teamName?: string
+): Promise<RequestResponse> {
+  const body = {
+        "userId": userId,
+        "message": message,
+        "teamName": teamName
+    }
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/joinRequest`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    throw await parseApiError(res, JOIN_LEAGUE_UNCERTAIN);
+  }
+
+  return res.json();
+}
+
+export async function approveRequestToJoinLeague(
+  leagueId: number,
+  requestId: number,
+  userId: number,
+): Promise<ApproveRequestResponse> {
+  const body = {
+        "actingUserId": userId
+    }
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/joinRequests/${requestId}/approve`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to approve request: ${res.status}`);
+  }
+
+  return res.json();
+}
+
+export async function denyRequestToJoinLeague(
+  leagueId: number,
+  requestId: number,
+  userId: number,
+): Promise<RequestResponse> {
+  const body = {
+        "actingUserId": userId
+    }
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/joinRequests/${requestId}/deny`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to deny request: ${res.status}`);
+  }
+
+  return res.json();
+}
+
+export async function cancelRequestToJoinLeague(
+  leagueId: number,
+  requestId: number,
+  userId: number,
+): Promise<RequestResponse> {
+  const body = {
+        "userId": userId
+    }
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/joinRequests/${requestId}/cancel`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to cancel request: ${res.status}`);
+  }
+
+  return res.json();
+}
+
+export async function getRequestsToJoinLeague(
+  leagueId: number,
+  userId: number,
+  status?: string
+): Promise<GetRequestResponse[]> {
+  const body = {
+        "actingUserId": userId,
+        "status": status
+    }
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/joinRequests`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to get requests: ${res.status}`);
+  }
+
+  return res.json();
+}
+
+export async function removeLeagueMember(
+  leagueId: number,
+  memberId: number,
+  actingUserId: number
+) {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/members/${memberId}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ actingUserId, shiftDraftOrder: true }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => null);
+    throw new Error(err?.message ?? `Failed to remove member: ${res.status}`);
+  }
+
+  return res.json();
+}
+
+export async function searchLeagues(params: {
+  query: string;
+  sportId?: number;
+  limit?: number;
+  offset?: number;
+}): Promise<LeagueSearchResult[]> {
+  const { query, sportId, limit = 20, offset = 0 } = params;
+
+  const url = new URL(`${API_BASE_URL}/api/leagues/search`);
+  url.searchParams.set("q", query);
+  url.searchParams.set("limit", String(limit));
+  url.searchParams.set("offset", String(offset));
+
+  if (sportId !== undefined) {
+    url.searchParams.set("sportId", String(sportId));
+  }
+
+  const res = await apiFetch(url.toString());
+
+  if (!res.ok) {
+    throw new Error(`Failed to get leagues: ${res.status}`);
+  }
+
+  return res.json();
+}
+
+export async function deleteLeague(
+  leagueId: number,
+  actingUserId: number
+) {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ actingUserId }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => null);
+    throw new Error(err?.message ?? `Failed to delete league`);
+  }
+
+  return res.json();
+}
+
+export async function updateLeagueMember(
+  memberId: number,
+  teamName: string
+) {
+
+  const payload: UpdateLeagueMember = {
+    teamName: teamName
+  }
+  const res = await apiFetch(`${API_BASE_URL}/api/league/leagueMember/${memberId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => null);
+    throw new Error(err?.message ?? `Failed to update league member`);
+  }
+
+  return res.json();
+}
+
+export async function getLeagueRules(leagueId: number): Promise<LeagueRules> {
+  const res = await apiFetch(`${API_BASE_URL}/api/league/${leagueId}/rules`);
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.message ?? `Unable to load league rules (${res.status})`);
+  }
+  return res.json();
+}

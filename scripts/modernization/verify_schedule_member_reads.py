@@ -102,9 +102,9 @@ def tests(engine):
     reset();query('UPDATE "Week" SET "startDate"=NULL')
     assert len(service.member_games_for_job(10,11,2))==6 and service.week_for_job(10,2)['startDate'] is not None
     assert service.head_to_head_for_job(10,11,12,2)==[]
-    # Owned-team projection deliberately retains original unrestricted-season membership join.
+    # MOD015: unrelated historical membership cannot duplicate owned-team rows.
     reset();query('INSERT INTO "ConferenceMembership" VALUES (101,1,2025,501)')
-    assert len(service.owned_teams_for_job(10,11,2))==2
+    assert len(service.owned_teams_for_job(10,11,2))==1
     reset();query('UPDATE "League" SET settings=\'{"ruleSetVersion":"unknown"}\'')
     expect(ValueError,lambda:service.member_games_for_job(10,11,99))
     assert len(service.member_games_for_job(10,11,2,resolve_rules(1,{})))==6

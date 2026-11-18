@@ -1,3 +1,4 @@
+import { safeErrorMessage, READ_ERROR } from "../../api/safeError";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { getLeague, getLeaguesForUser } from "../../api/leagues";
@@ -69,7 +70,7 @@ const TeamLookupPage = () => {
         }
       } catch (err: any) {
         if (isMounted) {
-          setLeagueError(err?.message ?? "Failed to load league details.");
+          setLeagueError(safeErrorMessage(err, READ_ERROR));
         }
       } finally {
         if (isMounted) {
@@ -87,6 +88,7 @@ const TeamLookupPage = () => {
 
   useEffect(() => {
     if (!leagueId || trimmedQuery.length < 2) {
+      setLoading(false);
       setResults([]);
       setError(null);
       return;
@@ -105,7 +107,7 @@ const TeamLookupPage = () => {
       } catch (err: any) {
         if (!isCancelled) {
           setResults([]);
-          setError(err?.message ?? "Failed to search teams.");
+          setError(safeErrorMessage(err, READ_ERROR));
         }
       } finally {
         if (!isCancelled) {
@@ -208,7 +210,7 @@ const TeamLookupPage = () => {
                 <span className="team-lookup__result-main">
                   <span className="team-lookup__team-name">{team.teamName}</span>
                   <span className="team-lookup__meta">
-                    {team.conferenceName ?? "Independent"}
+                    {team.conferenceName ?? "Conference unavailable"}
                   </span>
                 </span>
                 <span

@@ -1,9 +1,12 @@
+from sqlalchemy.exc import IntegrityError
+from werkzeug.exceptions import HTTPException
+from sqlalchemy.exc import DataError
 from typing import Any, Dict
 import logging
 
 logger = logging.getLogger(__name__)
 from flask import request, jsonify
-from .lifecycle.service import LeagueLifecycleService
+from .lifecycle.query_service import LeagueLifecycleQueryService, LifecycleRefreshConflict
 from endpoints.schedule.read_service import ScheduleReadService
 from .admission.service import AdmissionService
 from .members.service import MemberService
@@ -11,11 +14,12 @@ from .administration.service import LeagueAdminService
 from .reads.service import LeagueReadService
 from .admission.contracts import AdmissionDenied, AdmissionRejected
 from actors import UserActor
+from utils.requestValidation import integer_field
 from authenticatedPrincipal import PrincipalResolutionError, resolve_authenticated_principal
 
 class LeagueEndpoints:
     def __init__(self, db_engine):
-        self.league_lifecycle_service = LeagueLifecycleService(db_engine)
+        self.league_lifecycle_queries = LeagueLifecycleQueryService(db_engine)
         self.schedule_service = ScheduleReadService(db_engine)
         self.db_engine = db_engine
         self.admission_service = AdmissionService(db_engine)
@@ -51,9 +55,7 @@ class LeagueEndpoints:
                 return jsonify({'message': 'League membership required'}), 403
             else:
                 if view == 'details':
-                    payload = self.league_read_service.details(
-                        actor, league_id, self.league_lifecycle_service.synchronize_for_job,
-                    )
+                    payload = self.league_lifecycle_queries.details(actor, league_id)
                 elif view == 'rules':
                     payload = self.league_read_service.rules(
                         UserActor(principal.user_id, principal.subject), league_id,
@@ -70,10 +72,14 @@ class LeagueEndpoints:
             if payload is None:
                 return jsonify({'message': 'League not found'}), 404
             return jsonify(payload), 200
+        except LifecycleRefreshConflict:
+            return jsonify({'message': 'League state changed. Please retry.'}), 409
         except PrincipalResolutionError as exc:
             return jsonify({'error': exc.code}), exc.status_code
         except ValueError as exc:
             return jsonify({'message': str(exc)}), 400
+        except (HTTPException, DataError, IntegrityError):
+            raise
         except Exception:
             return jsonify({'message': 'Failed to read league'}), 500
 
@@ -88,6 +94,13 @@ class LeagueEndpoints:
             missing = [field for field in required if field not in data]
             if missing:
                 return jsonify({"message": f"Missing fields: {', '.join(missing)}"}), 400
+
+            for field in ('sport', 'numPlayers', 'seasonYear'):
+                data[field] = integer_field(data, field)
+                if data[field] <= 0:
+                    raise ValueError(f'{field} must be positive')
+            if not isinstance(data['name'], str):
+                raise ValueError('name must be a string')
 
             # Legacy commissioner is an assertion; verified identity owns creation.
             commissioner = data['commissioner']
@@ -117,10 +130,14 @@ class LeagueEndpoints:
                 self.schedule_service.ensure_weeks_for_job,
             )
             return jsonify(created), 201
+        except LifecycleRefreshConflict:
+            return jsonify({'message': 'League state changed. Please retry.'}), 409
         except PrincipalResolutionError as exc:
             return jsonify({"error": exc.code}), exc.status_code
         except ValueError as exc:
             return jsonify({'message': str(exc)}), 400
+        except (HTTPException, DataError, IntegrityError):
+            raise
         except Exception:
             return jsonify({"message": "Failed to create league"}), 500
 
@@ -130,16 +147,26 @@ class LeagueEndpoints:
             patch = request.get_json(silent=True)
             if not isinstance(patch, dict):
                 return jsonify({"message": "Expected a JSON object"}), 400
+            if 'numPlayers' in patch:
+                patch['numPlayers'] = integer_field(patch, 'numPlayers')
+                if patch['numPlayers'] <= 0:
+                    raise ValueError('numPlayers must be positive')
+            if 'name' in patch and not isinstance(patch['name'], str):
+                raise ValueError('name must be a string')
             updated = self.league_admin_service.update(
                 UserActor(principal.user_id, principal.subject), league_id=league_id, patch=patch,
             )
             return jsonify(updated), 200
+        except LifecycleRefreshConflict:
+            return jsonify({'message': 'League state changed. Please retry.'}), 409
         except PrincipalResolutionError as e:
             return jsonify({"error": e.code}), e.status_code
         except PermissionError as e:
             return jsonify({"message": str(e)}), 403
         except ValueError as e:
             return jsonify({"message": str(e)}), 400
+        except (HTTPException, DataError, IntegrityError):
+            raise
         except Exception:
             return jsonify({"message": "Failed to update league"}), 500
 
@@ -164,13 +191,16 @@ class LeagueEndpoints:
             stage = data.get('stage', 'all')
             if stage is not None and not isinstance(stage, str):
                 return jsonify({"message": "Invalid stage"}), 400
-            leagues = self.league_read_service.mine(
-                UserActor(principal.user_id, principal.subject),
-                self.league_lifecycle_service.synchronize_for_job, stage=stage,
+            leagues = self.league_lifecycle_queries.mine(
+                UserActor(principal.user_id, principal.subject), stage=stage,
             )
             return jsonify(leagues), 200
+        except LifecycleRefreshConflict:
+            return jsonify({'message': 'League state changed. Please retry.'}), 409
         except PrincipalResolutionError as e:
             return jsonify({"error": e.code}), e.status_code
+        except (HTTPException, DataError, IntegrityError):
+            raise
         except Exception:
             return jsonify({"message": "Failed to fetch leagues"}), 500
 
@@ -208,8 +238,10 @@ class LeagueEndpoints:
             return jsonify({"error": e.code}), e.status_code
         except (ValueError, AdmissionRejected) as e:
             return jsonify({"message": str(e)}), 400
+        except (HTTPException, DataError, IntegrityError):
+            raise
         except Exception:
-            logger.exception("Failed to create join request")
+            logger.error("Failed to create join request")
             return jsonify({"message": "Failed to create join request"}), 500
 
     def join_requests(self, league_id: int):
@@ -244,8 +276,10 @@ class LeagueEndpoints:
             return jsonify({"message": str(e)}), 403
         except (ValueError, AdmissionRejected) as e:
             return jsonify({"message": str(e)}), 400
+        except (HTTPException, DataError, IntegrityError):
+            raise
         except Exception:
-            logger.exception("Failed to list join requests")
+            logger.error("Failed to list join requests")
             return jsonify({"message": "Failed to list join requests"}), 500
 
     def add_user_to_league(self, league_id: int, request_id: int):
@@ -278,8 +312,10 @@ class LeagueEndpoints:
             return jsonify({"message": str(e)}), 403
         except (ValueError, AdmissionRejected) as e:
             return jsonify({"message": str(e)}), 400
+        except (HTTPException, DataError, IntegrityError):
+            raise
         except Exception:
-            logger.exception("Failed to approve join request")
+            logger.error("Failed to approve join request")
             return jsonify({"message": "Failed to approve join request"}), 500
 
     def deny_join(self, league_id: int, request_id: int):
@@ -311,8 +347,10 @@ class LeagueEndpoints:
             return jsonify({"message": str(e)}), 403
         except (ValueError, AdmissionRejected) as e:
             return jsonify({"message": str(e)}), 400
+        except (HTTPException, DataError, IntegrityError):
+            raise
         except Exception:
-            logger.exception("Failed to deny join request")
+            logger.error("Failed to deny join request")
             return jsonify({"message": "Failed to deny join request"}), 500
 
     def cancel_join(self, league_id: int, request_id: int):
@@ -344,8 +382,10 @@ class LeagueEndpoints:
             return jsonify({"message": str(e)}), 403
         except (ValueError, AdmissionRejected) as e:
             return jsonify({"message": str(e)}), 400
+        except (HTTPException, DataError, IntegrityError):
+            raise
         except Exception:
-            logger.exception("Failed to cancel join request")
+            logger.error("Failed to cancel join request")
             return jsonify({"message": "Failed to cancel join request"}), 500
 
     # DELETE /api/league/<league_id>/members/<member_id>
@@ -381,6 +421,8 @@ class LeagueEndpoints:
             return jsonify({"message": str(e)}), 403
         except ValueError as e:
             return jsonify({"message": str(e)}), 400
+        except (HTTPException, DataError, IntegrityError):
+            raise
         except Exception:
             return jsonify({"message": "Failed to remove member"}), 500
 
@@ -392,6 +434,9 @@ class LeagueEndpoints:
             limit = int(request.args.get("limit", 20))
             offset = int(request.args.get("offset", 0))
 
+            if len(q) > 128 or not 1 <= limit <= 50 or not 0 <= offset <= 10000:
+                return jsonify({'message': 'Search parameters exceed supported limits'}), 400
+
             results = self.league_read_service.search_public(
                 q=q,
                 sport_id=int(sport_id) if sport_id is not None else None,
@@ -402,8 +447,10 @@ class LeagueEndpoints:
 
         except ValueError:
             return jsonify({"message": "Invalid parameters"}), 400
+        except (HTTPException, DataError, IntegrityError):
+            raise
         except Exception:
-            logger.exception("Failed to search leagues")
+            logger.error("Failed to search leagues")
             return jsonify({"message": "Failed to search leagues"}), 500
 
     # DELETE /api/league/<league_id>
@@ -435,6 +482,8 @@ class LeagueEndpoints:
             return jsonify({"message": str(e)}), 403
         except ValueError as e:
             return jsonify({"message": str(e)}), 400
+        except (HTTPException, DataError, IntegrityError):
+            raise
         except Exception:
             return jsonify({"message": "Failed to delete league"}), 500
 
@@ -460,5 +509,7 @@ class LeagueEndpoints:
             return jsonify({"message": "LeagueMember not found"}), 404
         except ValueError as e:
             return jsonify({"message": str(e)}), 400
+        except (HTTPException, DataError, IntegrityError):
+            raise
         except Exception:
             return jsonify({"message": "Failed to update league member"}), 500

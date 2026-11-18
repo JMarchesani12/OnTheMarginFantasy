@@ -1,4 +1,4 @@
-"""Details/listing scopes, normalization and pre-read lifecycle capability."""
+"""Details/listing scopes, normalization and read-only supplied-connection boundary."""
 import unittest
 from actors import UserActor
 from endpoints.league.reads.service import LeagueReadService
@@ -13,25 +13,23 @@ class LeagueDetailsServiceTests(unittest.TestCase):
         self.db=base.db;self.engine=ConnectionOwner(self.db);self.service=LeagueReadService(self.engine);self.calls=[]
     def sync(self):
         self.assertEqual(self.engine.active,0);self.calls.append('sync')
-    def test_actor_and_scoped_details_sync_before_read(self):
+    def test_actor_and_scoped_details_are_read_only(self):
         self.assertTrue(hasattr(self.service,'details'),'details operation missing')
-        with self.assertRaises(TypeError):self.service.details(None,10,self.sync)
+        with self.assertRaises(TypeError):self.service.details(None,10)
         self.assertEqual(self.calls,[]);self.assertEqual(self.engine.begins,0)
-        row=self.service.details(UserActor(2,'bob'),10,self.sync)
+        row=self.service.details(UserActor(2,'bob'),10)
         self.assertEqual((row['id'],row['name'],row['currentWeekId']),(10,'Open League',None))
-        self.assertIsNone(self.service.details(UserActor(3,'outsider'),10,self.sync))
-        self.assertIsNone(self.service.details(UserActor(1,'alice'),999,self.sync))
-        self.assertEqual(self.calls,['sync']*3)
-    def test_sync_failure_prevents_read(self):
-        self.assertTrue(hasattr(self.service,'details'),'details operation missing')
-        def fail():raise RuntimeError('synthetic sync failure')
-        with self.assertRaises(RuntimeError):self.service.details(UserActor(1,'alice'),10,fail)
+        self.assertIsNone(self.service.details(UserActor(3,'outsider'),10))
+        self.assertIsNone(self.service.details(UserActor(1,'alice'),999))
+        self.assertEqual(self.calls,[])
+    def test_old_callback_signature_is_rejected_instead_of_ignored(self):
+        with self.assertRaises(TypeError):self.service.details(UserActor(1,'alice'),10,self.sync)
         self.assertEqual(self.engine.begins,0)
-    def test_trusted_and_scoped_model_with_deferred_callback(self):
-        model=self.engine;sync_statuses=self.sync
-        self.assertEqual(LeagueReadService(model).details_for_job(30, sync_statuses)['id'],30)
-        self.assertIsNone(LeagueReadService(model).details_for_reader_id(30, 1, sync_statuses))
-        self.assertEqual(self.calls,['sync','sync'])
+    def test_trusted_and_scoped_read_only_model(self):
+        model=self.engine
+        self.assertEqual(LeagueReadService(model).details_for_job(30)['id'],30)
+        self.assertIsNone(LeagueReadService(model).details_for_reader_id(30, 1))
+        self.assertEqual(self.calls,[])
 
 
 class OwnLeagueReadServiceTests(unittest.TestCase):
@@ -42,19 +40,19 @@ class OwnLeagueReadServiceTests(unittest.TestCase):
         self.assertEqual(self.engine.active,0);self.calls.append('sync')
     def test_actor_membership_stage_filters_and_normalization(self):
         self.assertTrue(hasattr(self.service,'mine'),'own listing operation missing')
-        with self.assertRaises(TypeError):self.service.mine(None,self.sync)
+        with self.assertRaises(TypeError):self.service.mine(None)
         self.assertEqual(self.calls,[])
         bob=UserActor(2,'bob')
-        rows=self.service.mine(bob,self.sync)
+        rows=self.service.mine(bob)
         self.assertEqual([r['leagueId'] for r in rows],[10,20])
         self.assertEqual([r['teamName'] for r in rows],['Bob Team','Bob Completed'])
-        self.assertEqual([r['leagueId'] for r in self.service.mine(bob,self.sync,'ACTIVE')],[10])
-        self.assertEqual([r['leagueId'] for r in self.service.mine(bob,self.sync,'completed')],[20])
-        self.assertEqual(self.service.mine(bob,self.sync,'unknown'),rows)
-        self.assertEqual(self.service.mine(UserActor(3,'outsider'),self.sync),[])
+        self.assertEqual([r['leagueId'] for r in self.service.mine(bob,'ACTIVE')],[10])
+        self.assertEqual([r['leagueId'] for r in self.service.mine(bob,'completed')],[20])
+        self.assertEqual(self.service.mine(bob,'unknown'),rows)
+        self.assertEqual(self.service.mine(UserActor(3,'outsider')),[])
         self.assertEqual(self.engine.connects,5)
-    def test_invalid_legacy_stage_before_sync_and_legacy_listing(self):
-        model=self.engine;sync_statuses=self.sync
-        with self.assertRaises(AttributeError):LeagueReadService(model).mine_for_user_id(2, sync_statuses, 42)
+    def test_invalid_stage_and_read_only_listing(self):
+        model=self.engine
+        with self.assertRaises(AttributeError):LeagueReadService(model).mine_for_user_id(2, 42)
         self.assertEqual(self.calls,[])
-        self.assertEqual([r['leagueId'] for r in LeagueReadService(model).mine_for_user_id(2, sync_statuses, None)],[10,20])
+        self.assertEqual([r['leagueId'] for r in LeagueReadService(model).mine_for_user_id(2, None)],[10,20])

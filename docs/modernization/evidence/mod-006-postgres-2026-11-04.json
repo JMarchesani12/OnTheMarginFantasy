@@ -1,0 +1,58 @@
+{
+  "result": "PASS",
+  "scope": "Marked owned disposable loopback PostgreSQL; no configured/hosted access",
+  "tests": {
+    "baseline_plus_upgrade_replay": "PASS",
+    "aggregate_dirty_preflight_and_atomic_refusal": "PASS",
+    "rls_filtered_preflight_fails_closed": "PASS",
+    "constraint_shape_and_null_policy_drift_rejection": "PASS",
+    "nullable_legacy_email_fk_policy": "PASS",
+    "concurrent_first_login": [
+      {
+        "same_subject": true,
+        "same_email": true,
+        "observed_lock_wait": true,
+        "outcomes": {
+          "first": "created",
+          "second": "already_exists"
+        }
+      },
+      {
+        "same_subject": true,
+        "same_email": false,
+        "observed_lock_wait": true,
+        "outcomes": {
+          "first": "created",
+          "second": "already_exists"
+        }
+      },
+      {
+        "same_subject": false,
+        "same_email": true,
+        "observed_lock_wait": true,
+        "outcomes": {
+          "first": "created",
+          "second": "rejected"
+        }
+      }
+    ],
+    "prior_creation_rollback_contracts": {
+      "creation_normalization_projection_reload": "PASS",
+      "existing_and_ambiguous_denials": "PASS",
+      "real_email_unique_and_auth_fk": "PASS",
+      "insert_statement_rollback": "PASS",
+      "deferred_insert_commit_rollback": "PASS",
+      "job_uuid_and_creation_contracts": "PASS"
+    }
+  },
+  "sha256": {
+    "api/endpoints/user/service.py": "ccb6c73417303f2f2425f35cdc825f32cc71432ff0ddd3811b7b62ad35e54fb9",
+    "api/migrations/20261104_user_identity_unique.sql": "64631ad06193c79bded2e52849e0264b281468ea098e3dfd72d9def01f3dab88",
+    "db/preflights/20261104_user_identity.sql": "6dc52269efa557f627a4c6caf988b90cd01f19945659be9a652314dfd121c916",
+    "scripts/modernization/verify_mod006.py": "dc2cd9b6970b3dca13be54586bbcf102807b2318c7b7f37f6d121b750bcd47d4",
+    "db/tables.sql": "60f72900f800012e8c000aa4fdedbc7ae9801deb9533c59d6b546aeb97b60790",
+    "db/baselines/20261029/001_schema.sql": "7fe1c17223dd2cf3ebbfdb9d2ca318d4f7ad24f9a6578309c40aad3cfb58a109",
+    "api/migrations/20261030_game_kickoff_tbd.sql": "4fa4d40cf16cf0600a37aec2f915e31efe024c294fe5c5a047d32ad599cf33d4",
+    "scripts/modernization/verify_profile_creation.py": "ab27b8cc2673f05b81b7b88d680c956d5a962b0118a3cdcd6030869e645edf0a"
+  }
+}

@@ -1,4 +1,5 @@
 """Actual HTTP/job builder composition without configured engines/providers."""
+from http_error_assertions import assert_error_response
 import ast
 import time
 import unittest
@@ -56,12 +57,14 @@ class ScheduleCompositionTests(unittest.TestCase):
                     (RuntimeError('private detail'),500,'Failed to search teams')):
                 service.search_teams_for_job.side_effect = error
                 response = client.post('/api/schedule/teamSearch',json={'leagueId':10,'query':'iowa'})
-                self.assertEqual((response.status_code,response.json),(status,{'message':message}))
+                self.assertEqual(response.status_code, status)
+                assert_error_response(self, response, {'message': message})
 
     def test_disabled_week_route_never_calls_canonical_service(self):
         client,service = self.client()
         response = client.post('/api/schedule/createWeeks',json={'leagueId':10,'trustedJob':True})
-        self.assertEqual((response.status_code,response.json),(410,{'error':'http_week_generation_disabled'}))
+        self.assertEqual(response.status_code, 410)
+        assert_error_response(self, response, {'error': 'http_week_generation_disabled'})
         self.assertEqual(service.method_calls,[])
 
     def test_member_aggregate_resolves_once_and_preserves_callback_order_and_payload(self):
@@ -91,3 +94,15 @@ class ScheduleCompositionTests(unittest.TestCase):
             exec(compile(ast.Module(body=[builder],type_ignores=[]),str(path),'exec'),namespace)
             result = namespace['build_scoring'](object())
             self.assertIs(result.schedule_model,schedule)
+
+    def test_generic_failure_does_not_log_traceback_or_private_values(self):
+        import io
+        from contextlib import redirect_stderr
+        client, service = self.client()
+        service.search_teams_for_job.side_effect = RuntimeError('private detail')
+        output = io.StringIO()
+        with redirect_stderr(output):
+            response = client.post('/api/schedule/teamSearch', json={'leagueId':10, 'query':'iowa'})
+        self.assertEqual(response.status_code, 500)
+        self.assertNotIn('private detail', output.getvalue())
+        self.assertNotIn('Traceback', output.getvalue())

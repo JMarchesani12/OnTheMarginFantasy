@@ -220,6 +220,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-006 — Establish one application profile per auth subject
 
+- **Status — 2026-11-04:** Local implementation/verification complete; maintainer-authorized configured-database preflight/migration applied and catalog-verified.14 profiles,0 unlinked/duplicate groups; counts unchanged. [Rollout evidence](evidence/mod-006-rollout-2026-11-04.json). Backend deployment unchanged; other targets need their own preflight. Nullable legacy UUIDs and unique-email policy retained. Prepared guarded `User_uuid_key` migration and conflict-safe provisioning; real PostgreSQL first-login race/dirty-preflight/replay/RLS checks pass. [Runbook](../../db/preflights/README.md), [evidence](evidence/mod-006-postgres-2026-11-04.json). No automatic account remediation; the configured database uniqueness constraint is now installed.
+
 - **Priority / size / risk:** P1 / M / High.
 - **Features:** F-002, F-004, F-022.
 - **Problem / evidence:** DB-03: nullable nonunique User.uuid with maybeSingle/API lookups; FE S01.
@@ -243,6 +245,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 - **Implementation status — 2026-10-29: Complete in bounded model scope.** Weekly score deletion and all replacement inserts share one `db.begin()` connection. Three new isolated tests verify rollback after deletion/before first insert and during second insert, exact successful replacement with other league/week rows preserved, and sequential repeat convergence. Full backend 354/354 passes, including existing ranking/tiebreak/week0/final-period fixtures. No scoring rule, response, schema or job orchestration changes. Concurrent job uniqueness remains MOD-008.
 
 ### MOD-008 — Enforce week/weekly-score identity under concurrent work
+
+- **Completion — 2026-11-04:** Application/synthetic PostgreSQL scope complete; configured identity constraints installed after clean aggregate preflight (176 weeks,340 scores, no duplicate/null/cross-league counts; unchanged after). Atomic League-locked full week initialization, scoped Week-locked score replacement, natural keys and same-league composite FKs verified under real competing lock waits/rollback. Backend624/624, frontend64/64/build and independent review pass. [Native evidence](evidence/mod-008-postgres-2026-11-04.json), [rollout](evidence/mod-008-rollout-2026-11-04.json), [runbook](../../db/preflights/MOD-008.md). No automatic historical cleanup/rebuild or job-completion redesign. Backend changes remain local/uncommitted; application deployment separate.
 
 - **Priority / size / risk:** P1 / M / High.
 - **Features:** F-007, F-009, F-025, F-028, F-031, F-032, F-036.
@@ -270,6 +274,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-010 — Verify ownership reservation concurrency and add justified guards
 
+- **Completion — 2026-11-04:** Supported application/native PostgreSQL scope complete; configured interval CHECK, same-league member FK and GiST overlap exclusion installed with clean/unchanged1059-slot counts (10 empty valid). Shared per-league mutex, same-connection free-agent checks and apply-time ownership/cap revalidation pass real cross-command and direct-SQL races/rollback/replay. Backend630/630, frontend64/64/build; independent review no material findings. [Native evidence](evidence/mod-010-postgres-2026-11-04.json), [rollout](evidence/mod-010-rollout-2026-11-04.json), [runbook](../../db/preflights/MOD-010.md). Backend changes still local/uncommitted; queue timing/recovery and concurrent membership/calendar administration remain separate. No historical cleanup or configured ownership commands.
+
 - **Priority / size / risk:** P1 / M / High.
 - **Features:** F-013, F-015, F-016, F-024, F-025, F-030, F-033.
 - **Problem / evidence:** DB-05; BE S02/S03; no interval overlap/same-league guards; checks on separate connections.
@@ -280,6 +286,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 - **Contract impact:** Behavior: concurrency yes; API: conflict outcomes possible; schema: conditional validated guards.
 
 ### MOD-011 — Repair join denial and cancellation
+
+- **Completion — 2026-11-04:** Complete in application/synthetic PostgreSQL scope. Existing repairs verified on real baseline CHECK/FKs plus current migrations: canonical transitions, once-only/role/owner/URL scope, approved-state rejection, statement/commit rollback and real competing denial/cancellation locks. Prior native admission suites and623/623 backend pass; independent review no material findings. [Evidence](evidence/mod-011-postgres-2026-11-04.json). Supersedes historical outstanding-PostgreSQL notes below. No product repair repeated, no hosted admission writes or new capacity guarantee.
 
 - **Priority / size / risk:** P1 / S / Low–Medium.
 - **Features:** F-006, F-019, F-029.
@@ -300,8 +308,11 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 - **Expected benefit:** Avoid capacity/order collisions and partially initialized leagues.
 - **Scope / exclusions:** First cover concurrent approval/request reuse and league creation failure, then lock allocation and define initialization retry/transaction boundary. No broad league-model split.
 - **Dependencies:** MOD-005/008/011; MOD-003A role policy.
-- **Acceptance / verification:** Last-slot approvals cannot exceed capacity or collide; pending request race returns deliberate outcome; create failure cannot present an unusable completed league and retry repairs/converges without duplicate weeks.
+- **Acceptance / verification:** User clarified uncapped membership on 2026-11-04: concurrent approvals cannot collide and numPlayers reflects actual membership; pending request race returns the existing request; create failure cannot present an unusable completed league and retry repairs/converges without duplicate weeks.
 - **Contract impact:** Behavior: concurrency/recovery yes; API: deliberate conflict/retry outcomes; schema: reuse existing and MOD-008 keys.
+
+- **Completed — 2026-11-04 (application/synthetic PostgreSQL scope):** League-first request reuse and checked/trusted/supplied approvals serialize allocation. New leagues start at one member; approval derives the count from memberships. League, creator and complete calendar now commit together, using the same supplied connection for planning and writes; failed planning/insertion/deferred commit rolls back and retry succeeds. Native lock waits, same/distinct approval races, precommit visibility and prior creation/admission/calendar suites pass. [Evidence](evidence/mod-012-postgres-2026-11-04.json). No migration or application deployment. Existing partial leagues are not automatically repaired.
+- **Policy follow-up:** No hard membership limit. Preserve the existing round formula for this change; a fair scaling design remains open and must account for eligible team supply, equal roster sizes and conference restrictions. MOD-012 does not establish draft fairness.
 
 ### MOD-013 — Define retry-safe weekly job completion and pending application
 
@@ -313,6 +324,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 - **Dependencies:** MOD-007/008/009/010; Q3/Q5.
 - **Acceptance / verification:** Fault injection at each stage and concurrent runners converge; failed leagues do not advance/application-skip incorrectly; no-week case follows agreed timing; one failed transaction does not silently lose remaining work; J5 synthetic replay passes.
 - **Contract impact:** Behavior: job timing/recovery yes; API: no intended; schema: only if explicit durable state proves needed.
+
+- **Completed — 2026-11-05 (application/synthetic PostgreSQL scope):** User confirmed predecessor-close timing and retries with no new scoring. WeeklyCompletionService commits score replacement/completion/period locks atomically, processes pending commands before target scoring, serializes under the existing ownership mutex, and isolates failed leagues. Pending commands retain individual durable progress. Trade acceptance/veto/cancellation join that mutex after native reproduction of acceptance during closure. First/missing predecessor and wrong-league/scored targets are retained/reported; CLI returns nonzero for failures/blocks. Backend649/649, frontend64/64, build and native full-schema failure/concurrency plus prior ownership/week/scoring suites pass. Independent review found no actionable issues. [Evidence](evidence/mod-013-postgres-2026-11-05.json), [plan](../superpowers/plans/2026-11-05-mod-013.md). No new SQL migration, configured job run or deployment. Remaining MOD-014 finalization is next; manual historical maintenance remains MOD-016.
 
 ### MOD-014 — Decouple scoring jobs from Flask and repair season finalization
 
@@ -327,16 +340,21 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 - **Overlap status — 2026-10-29: construction decoupling complete, broader card partial.** MOD-003C first repaired finalizer invocation. MOD-038 now makes both job builders construct ScoringService and use explicit trusted service methods; isolated builder tests and finalizer fixture verify the new composition outside HTTP. No endpoint object is constructed. Completion/failure policy, broader startup decoupling and failure-path/recovery acceptance remain open; MOD-014 is not complete and existing completion/locking SQL was not redesigned.
 
+- **Completed — 2026-11-05 (application/synthetic PostgreSQL scope):** User approved atomic sport-season finalization. New service/repository validate ended/complete nonempty calendars, no PENDING_APPLY, exact current-member standings with finite totals; lifecycle Completed cannot bypass checks. Season row → sorted v1 ownership mutexes → row locks protect one transaction for exact league updates and season flag. Inclusive seasonEnd day is excluded. Failure rolls back the affected season, other seasons continue, replay skips. Standings/bonus/tiebreak reads support the supplied connection and retain HTTP/formula contracts. Safe CLI JSON/nonzero failure outcomes include discovery/startup errors. Backend663/663, frontend64/64, build/native tests pass; independent review's discovery-report finding fixed RED→GREEN. [Evidence](evidence/mod-014-postgres-2026-11-05.json), [plan](../superpowers/plans/2026-11-05-mod-014.md). No new SQL migration, configured job execution or deployment. The marker is scoped validation, not an immutable season seal; future administration/provider/history protection remains outside this card.
+
 ### MOD-015 — Make seasonal conference precedence and sport consistency explicit
 
 - **Priority / size / risk:** P1 / M / High.
 - **Features:** F-007, F-009–016, F-024, F-025, F-027, F-028, F-030, F-033, F-035.
 - **Problem / evidence:** DB-08: current OR season membership join can duplicate candidate rows; independent sport/phase FKs.
 - **Expected benefit:** Avoid duplicate teams and inconsistent conference/scoring decisions.
-- **Scope / exclusions:** Fixture current-only/season-only/both/independent cases; choose fallback precedence, apply first to team search and roster, then independently to remaining consumers. Audit cross-sport/season relationships and propose guarded constraints after preflight; no global table rename.
+- **Scope / exclusions:** Fixture current-only/season-only/both/unmapped and mapped real-world-independent cases; choose fallback precedence, apply first to team search and roster, then independently to remaining consumers. Audit cross-sport/season relationships and propose guarded constraints after preflight; no global table rename.
 - **Dependencies:** Q6 historical policy; MOD-005 for any migration.
-- **Acceptance / verification:** Each consumer returns one appropriate membership per team/season; matching seasonal row overrides fallback only under agreed rules; independent handling preserved; inconsistent sports/seasons rejected at selected boundary. Record deliberate historical behavior differences.
+- **Acceptance / verification:** Each consumer returns one appropriate membership per team/season; matching seasonal row overrides fallback only under agreed rules; user-approved assigned-conference requirement; no independent/uncapped fallback; inconsistent sports/seasons rejected at selected boundary. Record deliberate historical behavior differences.
 - **Contract impact:** Behavior: potentially yes; API: row cardinality correction; schema: conditional consistency constraints.
+
+- **Completed — 2026-11-05 (application + preflight/proposal scope):** User chose season-first/current fallback and explicitly rejected independent drafting. Shared effective SQL covers all runtime membership consumers; missing/invalid mappings block affected/retained draft/transaction writes, auto-pick has no independent bucket, and read/history rows retain nullable metadata with Conference unavailable UI labels. Ingestion validates/locks season/phase/team references on the supplied transaction. Backend672/672, frontend64/64/build and owned PostgreSQL tests pass, including affected prior domain suites. Independent review's timeout-retained-roster and league-sport historical projection findings fixed RED→GREEN. [Inventory/evidence](mod-015-conference-membership.md), [plan](../superpowers/plans/2026-11-05-mod-015.md).
+- **Schema follow-up remains explicit:** [Read-only preflight and composite-constraint proposal](../../db/preflights/MOD-015.md) delivered; no migration authored/applied or target preflight run. Parent keys/nullable sportId and target dirty-data decisions require a separately reviewable rollout. Do not claim arbitrary direct SQL or future metadata edits are constrained. No historical repair/snapshot, guessed assignments or app deployment; default fallback remains intentionally mutable for seasons without explicit rows.
 
 ### MOD-016 — Protect historical integrity in week rebuild/rescore
 
@@ -349,7 +367,20 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 - **Acceptance / verification:** Synthetic historical ownership/transactions/postseason fixture produces explicit before/after mapping and equivalent intended totals; failure/retry restores or converges; no production execution in verification. Split approved remapping into a follow-up task if scope exceeds M.
 - **Contract impact:** Behavior: maintenance safeguards yes; API: CLI additions; schema: conditional history model, separately approved.
 
+- **Completed — 2026-11-06 (approved safeguards scope):** User chose preview/atomicity safeguards and historical remapping/snapshots separately. Maintenance is preview by default, explicit --apply only for unused Pre-Draft with no observable history/locks/non-pristine draft/finalized season. Reports proposed temporal impacts and stored totals without rewriting historical meaning; even unchanged-calendar historical rescoring is refused. Permitted calendar/scoring/flags share one transaction per league; existing IDs retained, referenced weeks never removed by cascade. Safe JSON/exact scope/exit codes and lazy injected CLI composition replace the destructive loop. Backend687/687, frontend64/64, production build and current-schema native rollback/history/writer-race tests pass. Review's draft-control lock inversion and missing currentMemberId guard fixed RED→GREEN, including existing/no-state start and order races. [Evidence](evidence/mod-016-postgres-2026-11-06.json), [plan](../superpowers/plans/2026-11-06-mod-016.md), [operations](../../api/startSeasonJobs/README.md).
+- **Separate history work remains:** no ownership/transaction period remapping, historical rescore input approval, tier/conference/game/rule snapshot or season reopening workflow is implemented. Existing provider/default metadata remains mutable; this tool guards supported maintenance rather than sealing history against arbitrary SQL/other trusted writers. No new schema, configured maintenance/job, history cleanup or deployment.
+
 ### MOD-017 — Measure query plans and propose only supported indexes
+
+- **Stored-score read baseline — 2026-11-15:** Weekly points/season totals/ranks and actual trusted job reader measured at9588/95988/479988 scores;29 runner tests,180SQL/84service complete expected records pass. Extra score indexes show no consistent benefit; no added index supported. [Report](mod-017-score-read-baselines.md). Optimization deferred; full scoring/ingestion and other cards remain open.
+
+- **Head-to-head baseline — 2026-11-15:** Actual SQL/service mapping measured at10k/100k/500k games, complete expected fields/boundary dates/[7,10) transfer;24 runner tests and132 SQL/132 service records pass. Separate/combined game-date and ownership indexes measured privately. [Report](mod-017-head-to-head-baselines.md). All optimization implementation remains deferred; full scoring/ingestion and other cards remain open.
+
+- **Game/schedule baseline — 2026-11-13:** Member-week/conference-week/team-season actual SQL measured at10k/100k/500k synthetic games;108equivalent case/configuration results,14runner testsPASS, reviewed no material issues. Game indexes help selected team-season work but repeated ownership joins remain dominant. [Report](mod-017-game-baselines.md). User defers all performance implementation until audit completion; other query families remain open.
+
+- **Transaction-read baseline — 2026-11-13:** Actual transaction-list/open-trade/weekly-candidate SQL measured in isolated three-tier PostgreSQL fixtures, with strict counts/output equivalence and run-specific failure/cleanup artifacts. Full/partial index tradeoffs and substantial open-trade JIT cost recorded; no production change/rollout. [Report](mod-017-transaction-baselines.md). Prior baseline/runner preserved; games/team/conference/scoring and production workload/write-cost evidence remain open.
+
+- **Two-family baseline — 2026-11-11:** Own-league and point-ownership PostgreSQL baselines implemented/run at100/1000/5000 leagues using synthetic data. All102 case/configuration results preserve expected cardinality/fingerprints. Covering ownership candidate supported for separate deployment-informed evaluation; reverse-member index alone shows little benefit. No migration/rollout/drop. [Report](mod-017-query-baselines.md), [raw plans](evidence/mod-017-query-baselines-2026-11-11.json). Other query families and production traffic/role/write-cost evidence remain open.
 
 - **Priority / size / risk:** P2 / M / Low for investigation; index rollout later Medium.
 - **Features:** F-004–006, F-008, F-009, F-011–016, F-024–028, F-032.
@@ -362,6 +393,10 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-018 — Measure retrieval and stabilize/paginate proven large lists
 
+- **Stable search ordering implemented — 2026-11-16:** Final league-ID tie key added after similarity/name, no other query/route/payload/filter/bounds change. Real PostgreSQL RED→GREEN at6/20/50rows/all+sports/bothlayouts:18orderedwalks/90boundaries/3mixednamecases pass; backend782/measurement52 PASS. [Implementation](mod-018-search-order-implementation.md). Resolves measured static equal-name repeats/omissions; no concurrent/cursor/production rollout claim.
+
+- **Search measurement — 2026-11-16:** Actual discoverable search/service at1k/10k/100kleagues,51runner tests/72SQL/42service records/4small walks verified. Equal-name pagination repeats one ID five extra times and omits five matches; private IDtie probe returns all700 exactly once across layouts. [Report](mod-018-league-search-baseline.md). Measurement complete in bounded scope; actual ordering correction/paging decisions remain deferred until audit completion. No app optimization or large full-traversal claim.
+
 - **Priority / size / risk:** P2 / M / Medium.
 - **Features:** F-005, F-006, F-012–016.
 - **Problem / evidence:** DB-10; BE S01: Python team ranking, deep offset and unbounded collections.
@@ -372,6 +407,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 - **Contract impact:** Behavior/API: conditional paging/order changes; schema: only separate measured index task.
 
 ### MOD-019 — Bound request resources and standardize safe backend errors
+
+- **Status — 2026-11-03:** Safe-error mapping and local body/collection/query bounds implemented and verified. [Contract/ceilings](../../api/README.md#http-errors-and-input-limits), [verification](verification.md#priority-4-continuation--2026-11-03). Gateway quota/proxy decisions and distributed rate enforcement remain open; no rate infrastructure added.
 
 - **Priority / size / risk:** P1 / M / Medium.
 - **Features:** F-004, F-006–009, F-013, F-015–022, F-027, F-028, F-030, F-032–034.
@@ -384,6 +421,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-020 — Remove global lifecycle writes from ordinary league reads after measurement
 
+- **Measurement baseline — 2026-11-15:** Actual scoped reader/lifecyclecallback at100/1000/5000leagues:46runner tests/24records/144calls preserve exact final statuses/timestamp sets/projections/counts. Five global UPDATEs precede one SELECT; converged5,000-league fixture still1,000updates on500ended/live-draft leagues. [Report](mod-020-lifecycle-read-baseline.md). Internal reader probes, not HTTP bypass proof. No policy/scoping/job/optimization change, deferred until audit completion.
+
 - **Priority / size / risk:** P2 / M / Medium–High.
 - **Features:** F-005, F-008, F-013, F-018, F-020, F-025.
 - **Problem / evidence:** BE S01 / DB-10: five global status UPDATEs during league read methods.
@@ -394,6 +433,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 - **Contract impact:** Behavior: lifecycle timing may change explicitly; API: no intended shape change; schema: no unless justified later.
 
 ### MOD-021 — Batch member/week scoring reads where measurements justify it
+
+- **Measurement baseline — 2026-11-15:** Real weekly scorer/schedule/rules + native rolled-back score writes at4/8/16members, five tie/tier/phase/dual-ownership cases:35runner tests/15records/90invocations pass. At16members52untied vs204unresolved statements, including120pair H2H reads. [Report](mod-021-weekly-scoring-baseline.md). Batching/context sharing remains deferred until audit completion; no optimization/full-season or ingestion claim.
 
 - **Priority / size / risk:** P2 / M / High.
 - **Features:** F-008, F-009, F-011, F-025, F-026, F-032, F-035.
@@ -406,6 +447,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-022 — Deduplicate ingestion by sport season and bound provider retries
 
+- **Measurement baseline — 2026-11-15:** Real ingestion/parser/nativeSQL with canned fetch and HTTP blocked;40runner tests/12records/72workloads plus2partial-failure/rerun probes pass. At16same-season leagues, existing per-league loop32fetches/64upserts/640SQL versus existing season helper once2/3/29. [Report](mod-022-ingestion-baseline.md). No routing/dedup/retry change; conflicting duplicates/bootstrap/checkpoints/backoff/production evidence remain open and optimization deferred.
+
 - **Priority / size / risk:** P2 / M / Medium–High.
 - **Features:** F-027, F-028, F-035.
 - **Problem / evidence:** BE S04 / DB-10: per-league provider fetch/global upsert; repeated team/phase lookups.
@@ -416,6 +459,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 - **Contract impact:** Behavior: retry/delivery yes; API: no public change; schema: no.
 
 ### MOD-023 — Publish every committed draft transition and verify reconnect convergence
+
+- **Status — 2026-11-06:** Implemented in application/synthetic verification scope: transaction-local notifications, guarded per-recipient socket delivery, and serialized HTTP refresh/reconnect. [Design](../superpowers/specs/2026-11-06-mod-023-design.md), [native evidence](evidence/mod-023-postgres-2026-11-06.json). Final verification/review recorded in verification.md. Listener recovery/supervision remains MOD-024; no deployment implied.
 
 - **Priority / size / risk:** P1 / M / Medium–High.
 - **Features:** F-013, F-020, F-023, F-024.
@@ -428,6 +473,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-024 — Verify operational supervision, listener recovery and sanitized observability
 
+- **Completed — 2026-11-06 (application/synthetic verification scope):** Dedicated engine-derived listener recovery, bounded fair wakeup retries/reconnect resync, explicit stop hooks, cached readiness and safe operational logs. Same-command cron session gates skip overlaps; timeout stop/signals and partial job failure reporting are covered. [Operations/hosted boundary](mod-024-operations.md), [native evidence](evidence/mod-024-postgres-2026-11-06.json). Priority6 application work closes; hosted commands/schedules/roles/supervision remain unverified and the intentionally suspended service remains unchanged. No migration, configured job/provider run or deployment.
+
 - **Priority / size / risk:** P1 / M / Medium.
 - **Features:** F-022–028, F-034, F-036.
 - **Problem / evidence:** BE S05/S06; DB functions/jobs section: LISTEN failures, mismatched DSN names, static health, unknown scheduler.
@@ -438,6 +485,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 - **Contract impact:** Behavior: operations yes; API: readiness optional explicit contract; schema: no.
 
 ### MOD-025 — Validate draft order and guard draft-start replay
+
+- **Status — 2026-11-03:** Complete in application/synthetic PostgreSQL scope: exact permutation, conflict replay and native start/order/finalization lock-race verification. [Evidence](evidence/mod-025-postgres-2026-11-03.json), [details](verification.md#priority-4-continuation--2026-11-03). Admission serialization/deployed policy remain separate.
 
 - **Priority / size / risk:** P1 / M / High.
 - **Features:** F-013, F-018, F-020, F-024, F-030.
@@ -450,6 +499,10 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-026 — Coordinate profile ownership and identity transitions
 
+- **Completed application/isolated scope — 2026-11-10:** CurrentUserProvider is the sole API-backed profile read/provision owner; AuthProvider publishes coherent sessions with synchronous captured subject/credential epochs and validity checks before React batching. Profile attempts bind subject/token/signal, require confirmed404 before one create, converge409 by one reread, reject mismatched UUID/ID, and guard signup hints against obsolete/newer records. Token-only renewal preserves ready profile/form; explicit refresh failures reject and show retry feedback. Home masks private identity-keyed resources while preserving public discovery; Settings scopes input/save/refresh and avoids false success. Frontend150/150, build/import graph PASS; review Important source-to-render gap reproduced and fixed with five actual-module no-render regressions; no deferred Minor findings. Backend/apiFetch unchanged; no live browser/Supabase/provider/DB/deployment validation. [Design](../superpowers/specs/2026-11-10-mod-026-profile-ownership-design.md), [evidence](evidence/mod-026-profile-ownership-2026-11-10.json). MOD027/028B remain separate.
+
+- **Narrow dependency completed — 2026-11-09:** MOD-029 binds numeric profile outcomes to the authenticated subject and latest request; masks unresolved/failed/obsolete identity. Broader application-profile resource ownership, AuthContext session/provisioning coordination, and full acceptance matrix remain open; this is not MOD-026 completion. [Evidence](evidence/mod-029-league-context-2026-11-09.json).
+
 - **Priority / size / risk:** P1 / M / Medium.
 - **Features:** F-002, F-004, F-005, F-022.
 - **Problem / evidence:** FE S01/S03; DB-03: two providers provision/read via different paths.
@@ -460,6 +513,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 - **Contract impact:** Behavior: confirmed race fixes yes; API: reuse existing or explicitly agreed profile path; schema: MOD-006 only.
 
 ### MOD-027A — Show own-league loading, empty and failure states
+
+- **Status — 2026-11-10:** Implemented in the approved Home-only scope: current account/stage loading, stage-specific successful emptiness, safe failure/Retry, synchronous obsolete-selection masking and guarded/abortable requests. Final verification/review is recorded in [evidence](evidence/mod-027a-own-league-feedback-2026-11-10.json). API/schema and discovery membership reads unchanged; browser/runtime limits remain explicit.
 
 - **Priority / size / risk:** P1 / S / Low.
 - **Features:** F-005.
@@ -472,6 +527,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-027B — Refresh sibling trade/pending panels after successful mutations
 
+- **Status — 2026-11-10:** Implemented in the approved page-owned refresh scope; all successful add/drop/proposal/respond/cancel/veto paths refresh related reads, preserving pending ownership and panel state. See [evidence](evidence/mod-027b-roster-refresh-2026-11-10.json) for final verification/review and limits. No backend/schema changes or deployment.
+
 - **Priority / size / risk:** P1 / S–M / Medium.
 - **Features:** F-015, F-016.
 - **Problem / evidence:** FE D02: successful add/drop/proposal/accept refresh incomplete lists.
@@ -482,6 +539,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 - **Contract impact:** Behavior: yes; API/schema: no.
 
 ### MOD-027C — Clear team-search loading when query becomes ineligible
+
+- **Status — 2026-11-10:** Completed bounded loading reset; six stale success/failure schedules RED→GREEN, debounce cancellation retained. Frontend183/183/build/import PASS. [Evidence](evidence/mod-027c-team-search-2026-11-10.json); broader context/ranking unchanged, uncommitted/undeployed.
 
 - **Priority / size / risk:** P1 / S / Low.
 - **Features:** F-012.
@@ -494,6 +553,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-027D — Resolve Discover from URL without navigation state
 
+- **Status — 2026-11-10:** Implemented URL-authoritative restricted-preview resolution, scoped member/join work and deterministic back navigation. Frontend190/190/build/import PASS. [Evidence](evidence/mod-027d-discover-url-2026-11-10.json); no backend/public-policy changes or deployment.
+
 - **Priority / size / risk:** P1 / S–M / Low–Medium.
 - **Features:** F-006.
 - **Problem / evidence:** FE D04 / B3/Q8: screen uses only location.state league.
@@ -504,6 +565,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 - **Contract impact:** Behavior: yes; API/schema: no.
 
 ### MOD-027E — Associate create-form labels with controls
+
+- **Status — 2026-11-10:** Implemented stable label/control associations including dynamic bonuses and conditional veto count; existing validation messages describe matching fields/form. Frontend193/193/build/import PASS. [Evidence](evidence/mod-027e-create-labels-2026-11-10.json); native browser focus/keyboard remains unverified, no validation redesign or deployment.
 
 - **Priority / size / risk:** P1 / S / Low.
 - **Features:** F-007.
@@ -516,6 +579,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-027F — Implement draft modal focus behavior
 
+- **Status — 2026-11-11:** Native dialog, title focus, in-place Close/Escape, guarded restoration/fallback and scope-bound visibility implemented in the approved application scope. Frontend201/201/build/import PASS. Native browser/assistive-technology verification remains open; [evidence](evidence/mod-027f-draft-dialog-2026-11-11.json). No draft-controller/API changes or deployment.
+
 - **Priority / size / risk:** P1 / S–M / Low–Medium.
 - **Features:** F-013, F-020.
 - **Problem / evidence:** FE D06: aria-modal without focus containment/restoration.
@@ -526,6 +591,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 - **Contract impact:** Behavior: accessibility yes; API/schema: no.
 
 ### MOD-027G — Add keyboard draft-order controls
+
+- **Status — 2026-11-11:** Native named up/down buttons with boundary disabling, moved-member focus and polite position announcement implemented. Parent owns existing order/ranks/save; drag/randomize/removal preserved. Frontend205/205/build/import PASS. [Evidence](evidence/mod-027g-keyboard-order-2026-11-11.json); native browser/AT checks remain open. No API/schema changes or deployment.
 
 - **Priority / size / risk:** P1 / S / Low.
 - **Features:** F-018.
@@ -550,6 +617,11 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-028B — Consolidate frontend safe error parsing
 
+- **Completion — 2026-11-11:** All45 application HTTP helpers across8 modules and remaining application HTTP UI catches migrated. Shared response/JSON safety covers HTTP/network/decode failures, preserves profile404/create409/draft denial/cancellation and successful transport/shape contracts, with phase-aware partial-save feedback. Frontend235/235/build/import PASS. [Completion evidence](evidence/mod-028b-completion-2026-11-11.json). MOD028A andB application scopes complete; SDK-authF002, browser/live verification and recorded minors remain outside this completion claim. No deployment.
+
+- **Transaction mutation batch — 2026-11-11:** Five mutation APIs and roster/trade mutation catches migrated; exact safe business mappings, uncertain outcomes and retained selections/controls verified. Frontend221/221/build/import PASS. [Evidence](evidence/mod-028b-transaction-errors-2026-11-11.json). Transaction reads and draft/admin/profile consumers were open at this batch; now covered by the completion entry above.
+- **Pilot status — 2026-11-11:** Shared safe parser/formatter and approved create/join batch implemented; known messages/status fallbacks, uncertain outcomes, input retention and no replay verified. Frontend213/213/build/import PASS. [Evidence](evidence/mod-028b-safe-create-join-2026-11-11.json). Remaining consumers were open at this pilot; now covered by the completion entry above. No auth/backend/schema/deployment changes.
+
 - **Priority / size / risk:** P2 / S–M / Low.
 - **Features:** F-004, F-006–008, F-017–019, F-021.
 - **Problem / evidence:** FE M04: repeated status-only versus message/error parsing.
@@ -560,6 +632,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 - **Contract impact:** Behavior: feedback yes; API/schema: no.
 
 ### MOD-029 — Consolidate league context, mapping and request identity incrementally
+
+- **Completed paired-screen pilot — 2026-11-09:** Detail and Roster share list/find/fallback resolution and require fresh matching route/account context before actions. Navigation seeds ignored; fallback never supplies membership. Subject-bound numeric profile lookup is a narrow MOD-026 prerequisite, not full provider/provisioning consolidation. Keyed screen state, scoped resource reads/commands and week-bound roster readiness prevent obsolete responses/selections/mutation completions crossing context. Frontend123/123, build/import graph PASS; fresh review Important week-generation finding reproduced and fixed, existing Minor pending-trade completion clearing a newer partner selection deferred. Seeded Roster intentionally adds one fresh context read; no cache/performance reduction claimed. [Design](../superpowers/specs/2026-11-09-mod-029-league-context-design.md), [evidence](evidence/mod-029-league-context-2026-11-09.json). Other screen migrations/caching remain follow-up scope; browser/real-session runtime unverified.
 
 - **Priority / size / risk:** P2 / M / Medium.
 - **Features:** F-005, F-008, F-009, F-011–019, F-021.
@@ -572,6 +646,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-030 — Move shared BonusesEditor to component ownership
 
+- **Completed — 2026-11-07:** MOD040 frontend ownership pilot moved the byte-identical editor to components/League and updated exactly two consumer imports; exports, templates, props, styles and payload logic unchanged. [Import map/design](../superpowers/specs/2026-11-07-mod-040-bonuses-editor-move-design.md), [evidence](evidence/mod-040-bonuses-editor-move-2026-11-07.json). Frontend78/build and source import graph PASS. No component algorithm refactor or browser visual check claimed.
+
 - **Priority / size / risk:** P3 / S / Low.
 - **Features:** F-007, F-017.
 - **Problem / evidence:** FE M03: Manage imports CreateLeague route-owned editor.
@@ -582,6 +658,10 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 - **Contract impact:** Behavior/API/schema: no.
 
 ### MOD-031A — Extract draft clock and connection responsibilities
+
+- **Completed — 2026-11-09:** Separately reviewed clock and connection hooks now own their page responsibilities. useDraftConnection returns the actual controller ref, preserves epoch/command guards and member refresh, and delegates to unchanged createDraftRealtime. Parent loader retains order/signal/errors/payload. Hook4 RED→GREEN; focused12/frontend96/build/import graph PASS; independent connection review no findings. [Connection evidence](evidence/mod-031a-draft-connection-2026-11-09.json). No backend/browser/runtime/deployment behavior change is claimed.
+
+- **Clock stage completed — 2026-11-07:** useDraftClock owns existing now/offset state, live-only interval/cleanup and countdown formatting. Stable offset callback preserves authoritative snapshot wiring without recreating controller. Page2 characterized before extraction, hook3 RED→GREEN, focused10/frontend91/build/import graph PASS; independent review no findings. [Design](../superpowers/specs/2026-11-07-mod-031a-draft-clock-design.md), [evidence](evidence/mod-031a-draft-clock-2026-11-07.json). Existing paused samples/retained offsets deliberately preserved. Connection wrapper remains the second separately reviewed stage; MOD031A is not yet fully complete.
 
 - **Priority / size / risk:** P2 / M / Medium.
 - **Features:** F-013, F-020, F-023.
@@ -594,6 +674,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-031B — Extract Manage draft-order editor
 
+- **Completed — 2026-11-07 (presentational extraction):** Stateless components/League/DraftOrderEditor renders existing rows/actions via typed data/callback props. Parent retains member/order/drag state, randomize/reorder/removal/dialogs, save/API sequence, errors and commissioner/Pre-Draft gates. Source comparison confirms parent unchanged outside import/subtree and child markup unchanged apart from prop names; CSS unchanged. Parent characterization5 before extraction, child3 RED→GREEN, frontend86/build/import graph PASS; independent review no findings. [Design](../superpowers/specs/2026-11-07-mod-031b-draft-order-editor-design.md), [evidence](evidence/mod-031b-draft-order-editor-2026-11-07.json). Existing Save and Start Draft stub is separate behavior work; keyboard reordering remains MOD027G. No backend/runtime/deployment change.
+
 - **Priority / size / risk:** P2 / S–M / Low–Medium.
 - **Features:** F-018, F-019.
 - **Problem / evidence:** FE M02: Manage combines order/moderation/settings/deletion.
@@ -605,6 +687,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-032 — Separate schedule ingestion from read/calendar responsibilities
 
+- **Reconciled complete — 2026-11-09:** This decomposition was already delivered by the earlier MOD038/MOD040 schedule slices: canonical read/calendar/ingestion services and supplied-connection repositories, injected ingestion client, and HTTP/job/scoring/season wiring. Current source/caller audit and fresh full isolated backend741 PASS; no duplicate extraction needed. [Reconciliation evidence](evidence/mod-032-reconciliation-2026-11-09.json), [boundaries](../../api/endpoints/schedule/README.md). Previous native schedule/season/calendar evidence remains historical; no fresh native/provider/hosted run claimed.
+
 - **Priority / size / risk:** P2 / M / Medium.
 - **Features:** F-007, F-009, F-011, F-012, F-025, F-027, F-028, F-031, F-035, F-036.
 - **Problem / evidence:** BE M02: ScheduleModel owns calendar/read/provider/bootstrap work.
@@ -614,7 +698,16 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 - **Acceptance / verification:** Same games/upsert classification/checkpoint outputs and read payloads with fixture provider; import graph remains acyclic; no network during tests.
 - **Contract impact:** Behavior/API/schema: no intended.
 
+### MOD-033A — Resolve conference-cap policy before ownership extraction
+
+- **Completed application/isolated scope — 2026-11-09:** User chose zero=no teams, positive=inclusive maximum, negative/missing/noninteger=configuration error. Shared pure validator now covers live/manual draft, auto buckets, required roster mappings, free-agent submission/application, trade validation and roster-cap reports. Removed draft unlimited bypass and missing trade-limit999 fallback. Reporting retains invalid/missing effective mappings before validation/filtering. Zero drop-only reductions and positive-cap/history contracts preserved; no eviction, schema/data change or ownership-read extraction. Scoped23/23 and full backend764/764 PASS; fresh review Critical0/Important0/Minor0 and independent reruns PASS. Native PostgreSQL not rerun because local Docker daemon stopped; administrative config-edit concurrency remains unchanged. [Design](../superpowers/specs/2026-11-09-mod-033a-conference-cap-policy-design.md), [evidence](evidence/mod-033a-conference-cap-policy-2026-11-09.json).
+- **Priority / size / risk:** Priority7 prerequisite / M / Medium.
+- **Dependencies:** MOD-009/010/015/025; completed before MOD-033 read extraction by user choice.
+- **Acceptance:** Consistent cap matrix across acquisition/reporting, fail-closed invalid config, zero-cap reduction allowed, caller connection/rollback/history preserved. Application correction only; configured DB contents/deployment unverified.
+
 ### MOD-033 — Consolidate ownership and conference-cap logic after correctness work
+
+- **Completed bounded pilot — 2026-11-09:** Following MOD-033A, six draft/free-agency repository methods delegate to shared supplied-connection reads. Scalar DISTINCT/grouped row counts, zero/empty/orphan/NULL-member semantics, effective membership, raw results and one-statement calls preserve baseline behavior. Services/cap/mutex/trade repository and67 untouched methods byte-identical. Characterization10 before/after, scoped17/cap23/full backend781 PASS. Fresh final review has no findings. After user enabled Docker, PostgreSQL17.6 characterization10 and existing native draft/transaction/MOD015 checks PASS; disposable DB/container removed. [Design](../superpowers/specs/2026-11-09-mod-033-ownership-reads-design.md), [evidence](evidence/mod-033-ownership-reads-2026-11-09.json), [native evidence](evidence/mod-033-ownership-reads-postgres-2026-11-09.json). Auto/trade-specific read migration, alternate helper retirement and performance work remain explicit follow-ups, not unfinished pilot requirements. No schema/configured-data/deployment changes.
 
 - **Priority / size / risk:** P2 / M / High.
 - **Features:** F-013, F-015, F-016, F-024, F-025, F-030, F-033, F-035.
@@ -640,6 +733,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-035 — Resolve legacy/documentation ownership before retirement
 
+- **Remaining source inventory complete — 2026-11-15:** [Ten-target ownership/caller/keep-decision inventory](mod-035-legacy-ownership-inventory.md) distinguishes current retired Models/forwarders from historical snapshots; retains tested exception shim and uncertain CLI/auth/provider/socket/lock/bootstrap paths. Corrects current interpretation of old lock-helper/bonus descriptions without rewriting history. No deletion/registration/runtime repair or external usage/owner confirmation; eventual retirement/operator policy remains separately scoped.
+
 - **Bounded retirement — 2026-10-30:** User-authorized cleanup removed 10 temporary league root service/repository forwarders after migrating all first-party test/tool imports and source manifests to canonical packages. Canonical16 files unchanged, backend564/564, complete native league rerun PASS. Explicit old exception unpickling shim and 8 Model facades retained for known contracts. [Evidence](evidence/mod-035-league-forwarder-retirement-2026-10-30.json), [ledger](../superpowers/plans/2026-10-30-league-legacy-forwarder-retirement.md). Internal Python forwarder paths intentionally retired; HTTP unchanged. Independent review unavailable after session usage-limit failure; local audit passed. Wider legacy/ownership questions remain open.
 - **Priority / size / risk:** P3 / S–M / Low for investigation.
 - **Features:** F-026, F-028, F-032, F-038–041.
@@ -652,6 +747,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 
 ### MOD-036 — Measure wider rendering/accessibility and tier-tool reliability
 
+- **Bounded local audit — 2026-11-16:** Controlled bundle/17lazyroute footprints, native actual Home/DraftOrderEditor/LeagueScoreboard synthetic component probes (9cases/45samples), Home keyboard/AX and draft move focus/announcement, real TS tier-loader canned cache/failure probes. Frontend235/tier9/audit7/bothTSchecks/importgraphPASS. [Report](mod-036-local-ui-tier-audit.md). Home tabs pattern/invalid cache handling support narrow future fixes; no blanket memoization/cache/framework or product change. Full authenticated pages/AT/mobile/route recovery/operator/provider acceptance remains separate.
+
 - **Priority / size / risk:** P3 / M / Low.
 - **Features:** F-001, F-005, F-007, F-009, F-011–016, F-018, F-020, F-037.
 - **Problem / evidence:** FE S06; BE S04 distinguishes separate TS provider; existing lazy routes/utilities.
@@ -662,6 +759,8 @@ These conventions remain the baseline. Approved MOD-038/041 decisions and their 
 - **Contract impact:** Behavior/API/schema: no in measurement task.
 
 ### MOD-037 — Correct misleading local names and comments in separate small changes
+
+- **Completed demonstrated text scope — 2026-11-15:** Five local filename/route/bootstrap comment corrections across four files, executable PythonAST (excluding docstrings)/roster emittedJS unchanged and frontend import graph75files/219edges PASS. Existing user/sports and scoring-comment findings already resolved. [Report](mod-037-text-cleanup.md). No executable/message/import/SQL/route/payload changes or broad renaming; uncertain alternative names retained per MOD035.
 
 - **Priority / size / risk:** P3 / S / Low.
 - **Features:** F-004, F-015, F-022, F-025, F-026, F-032.
@@ -692,6 +791,10 @@ These cards reflect the user's explicit new scope. They cross-cut existing featu
 
 ### MOD-039 — Inventory and extract demonstrated common functions
 
+- **Second bounded pilot — 2026-11-07:** Manage League now imports the existing pure settings normalizer; its identical nested parser is removed. The local mapper/current-week null behavior and form/fetch/default semantics remain separate. [Inventory/design](../superpowers/specs/2026-11-07-mod-039-settings-normalization-design.md), [evidence](evidence/mod-039-settings-normalization-2026-11-07.json). Broader inventory found differing diagnostics, mapper/current-week semantics, JSON/error contracts and unused placeholder provider parsers; those are deliberate non-extractions, not automatic remaining work.
+
+- **First pilot — 2026-11-07:** Backend integer-parser inventory and bounded extraction implemented: existing requestValidation scalar is public and shared by real draft pick/control handlers and existing field/list wrappers. Required/default/error/actor/order semantics remain unchanged. [Inventory/design](../superpowers/specs/2026-11-07-mod-039-integer-parser-design.md), [evidence](evidence/mod-039-integer-parser-2026-11-07.json). Similar actor parsing with different messages, distinct authorization policies, frontend context freshness and MOD-033 domain rules are deliberate non-extractions. This completes the first backend pilot, not a global helper rewrite; subsequent batches need their own demonstrated duplication/scope.
+
 - **Priority / size / risk:** P1 / S–M per pilot / Medium.
 - **Features:** Cross-cutting backend/frontend boundary helpers.
 - **Problem / evidence:** Repeated parsing, error translation, principal/ownership predicates and serialization; existing requestValidation/authorization/apiFetch should be reused before introducing alternatives.
@@ -702,6 +805,10 @@ These cards reflect the user's explicit new scope. They cross-cut existing featu
 - **Contract impact:** Behavior/API/schema: no intended; real defects receive separate behavior-change scope.
 
 ### MOD-040 — Pilot file-content and folder refactoring without changing behavior
+
+- **Frontend content pilot — 2026-11-07:** MOD031B draft-order presentation extracted with all state/handlers/gates/API ownership retained in Manage League. This follows the separate MOD030 import-only move; prior MOD039/MOD030 work is preserved. [Evidence](evidence/mod-031b-draft-order-editor-2026-11-07.json). MOD031A clock/connection, context policy and domain-rule consolidation remain separately scoped.
+
+- **Frontend ownership pilot — 2026-11-07:** Completed MOD030's mechanical shared BonusesEditor move, retaining byte-identical content and both screen styles. Before/after literal-relative TS/TSX graph:65 files/178 edges,0 unresolved/0 cycles; Create and Manage now resolve the canonical component. Full frontend78/type/build checks PASS. [Design/import map](../superpowers/specs/2026-11-07-mod-040-bonuses-editor-move-design.md), [evidence](evidence/mod-040-bonuses-editor-move-2026-11-07.json). Prior MOD039 work preserved. Other frontend content extraction (MOD031A/B) remains separately scoped; no mass reorganization or backend re-extraction.
 
 - **Continuation — 2026-10-30: transaction remainder resolved; planned eight-domain backend extraction complete.** Workflow service/repository own31 original queries/actions/free-agency/dispatch/reads; actor HTTP and explicit trusted cron composition complete, exact legacy facade constructor/helpers/constants/exception identity retained. Backend564/564, independent review no findings, [native33 workflow operations plus original pilots](evidence/mod-038-transaction-complete-postgres-2026-10-30.json) and affected full schedule/scoring reruns pass. [Final model/source audit](evidence/mod-038-backend-extraction-audit-2026-10-30.json) confirms all8 model files now SQL-free; prior transaction partial inventory resolved. Unregistered lock helper's proven undefined connection fixed without a new route; applyHTTP410/policies remain. No pending planned backend domain content slices. Broader MOD-040 stays partial for frontend/optional organization and separate correctness/startup work. [Ledger](../superpowers/plans/2026-10-30-mod-038-transaction-complete-implementation.md).
 - **Continuation — 2026-10-30: schedule domain complete; backend count corrected.** SQL-free compatibility facade, canonical calendar/read/ingestion layers and HTTP/league/scoring/cron/season/rebuild wiring complete. Backend557/557, independent review no findings, [all30 native schedule query checks](evidence/mod-038-schedule-complete-postgres-2026-10-30.json) and affected full league/scoring reruns pass. Original provider/transaction/checkpoint/error policy retained. No schedule slices remain. **Earlier only-sport/schedule count was wrong:** [source audit](evidence/mod-038-backend-extraction-audit-2026-10-30.json) shows transaction pilot remains partial (22 SQL-bearing trade/free-agency/dispatch/read methods). Backend rollout and broader MOD-040 stay partial; frontend/folder/correctness/startup work also separate. [Ledger](../superpowers/plans/2026-10-30-mod-038-schedule-complete-implementation.md).
@@ -810,3 +917,23 @@ Every inventory feature is included below. Cross-cutting tasks apply only where 
 Each implementation task should update progress and link its changed files, exact isolated checks/results, remaining unknowns, contract decisions and any follow-up task. Run verification appropriate to the change: import/type/build checks for moves, journey/model fixtures for refactors, adversarial identity/concurrency/fault cases for integrity/security, disposable Postgres for SQL/migration behavior, browser keyboard/reconnect checks for interactions, and representative plans/traces for performance claims. Existing test suites are regression inputs, not proof of auth/concurrency coverage.
 
 Task cards with staged scope intentionally require separate reviews: MOD-015 consumers, MOD-019 errors versus bounds, MOD-022 dedup versus retries, MOD-023 notifications versus browser lifecycle, MOD-025 order versus start, MOD-029 extraction versus freshness, MOD-031A clock versus socket, and MOD-032 ingestion versus calendar. If a stage exceeds M, assign a stable suffixed follow-up card with its own evidence and acceptance criteria before expanding implementation. Keep existing IDs stable when reprioritizing. Unknown external usage, live schema, roles, schedules and runtime metrics remain evidence gaps, not implicit permission to remove structures or deploy changes.
+
+### MOD020 local implementation follow-up — 2026-11-16
+
+Authorized scoped lifecycle/read boundary implemented and verified; no global writes from ordinary readers. Existing five-phase policy/churn retained, scheduler deferred. [Implementation/evidence/remaining limits](mod-020-scoped-lifecycle-implementation.md).
+
+### MOD021 rules-only context — 2026-11-16
+
+Supplied-connection weekly scoring now resolves rules once per call, preserving scores, other SQL reads, locks and no-conn behavior. Backend804/804, audit55/55 and native count/equivalence/rollback/boundary checks pass; review found no material issues. [Implementation/evidence/deferred notes](mod-021-weekly-rules-context-implementation.md). Local, uncommitted/undeployed; H2H/game batching and full input consistency remain separate.
+
+### MOD021 tied-group H2H implementation — 2026-11-16
+
+Supplied weekly H2H uses1raw statement per tied group, preserving static scores/pair arithmetic and no-conn behavior with an explicit per-group snapshot. Backend813/813, audit56/56 and PostgreSQL counts/parity/recovery checks pass; review found no material defects. At16members H2H-decides157→38statements, fallback173→54; no production latency claim. [Report/evidence/deferred trace note](mod-021-head-to-head-batch-implementation.md). Local, uncommitted/undeployed; member-game batching/full-input consistency remain separate.
+
+### MOD022 shared live ingestion — 2026-11-16
+
+Live cron shares season/date/group work across leagues with later-valid-wins, identical-skip and shared failure fanout, preserving committed progress and per-league reporting. Backend823/823, audit57/57 and native fields/counters/recovery/real-gate checks pass; review no material issues. At16leagues32→2fetches,64→3upserts,640→76SQL in the fixture. [Report/evidence/limits](mod-022-shared-scoreboard-implementation.md). Local/uncommitted/undeployed; transport retry/bootstrap/checkpoint policy remains separate.
+
+### MOD017 scoped own-league aggregate — 2026-11-16
+
+Own-league score SUM now filters eligible user/member/league/stage/refreshed IDs before grouping; outer results/fallbacks unchanged. Backend827/827, audit60/60 and native100/1000/5000comparison/plan checks pass; review no findings. Sparse5000-league case aggregates12scores instead of480k; hot scans remain disclosed. [Implementation/evidence/tradeoffs](mod-017-own-score-scope-implementation.md). Local/uncommitted/undeployed; index comparisons/rollout remain separate.

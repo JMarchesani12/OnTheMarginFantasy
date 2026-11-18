@@ -3,6 +3,7 @@
 SQLite LIKE substitutes PostgreSQL ILIKE; similarity is fixed to exercise the
 secondary name order. This is not a PostgreSQL trigram/ranking validation.
 """
+from http_error_assertions import assert_error_response
 import ast
 import os
 import sqlite3
@@ -18,6 +19,7 @@ from endpoints.league.routes import setup_routes
 
 class SearchDatabase:
     def __init__(self):
+        self.last_statement = None
         self.connection = sqlite3.connect(':memory:')
         self.connection.row_factory = sqlite3.Row
         self.connection.create_function('similarity', 2, lambda name, query: 1)
@@ -43,6 +45,7 @@ class SearchDatabase:
         return False
 
     def execute(self, statement, params):
+        self.last_statement = str(statement)
         cursor = self.connection.execute(str(statement).replace(' ILIKE ', ' LIKE '), params)
 
         class Result:
@@ -85,6 +88,22 @@ class PublicLeagueSearchTests(unittest.TestCase):
             self.assertEqual(set(row), set(response.json[0]))
         self.assertNotIn('private-commissioner@example.test', response.get_data(as_text=True))
 
+    def test_equal_name_pages_use_unique_key_after_relevance_and_name(self):
+        self.db.connection.executescript('''INSERT INTO "League" VALUES
+            (41, 'Margin Alpha', 1, 8, 'Pre-Draft', NULL, true, 1),
+            (42, 'Margin Alpha', 1, 8, 'Pre-Draft', NULL, true, 1),
+            (43, 'Margin Alpha', 1, 8, 'Pre-Draft', NULL, true, 1);''')
+        ids = []
+        for offset in (0, 2, 4):
+            response = self.client.get('/api/leagues/search', query_string={'q':'Margin','limit':2,'offset':offset})
+            self.assertEqual(response.status_code, 200)
+            ids.extend(row['id'] for row in response.json)
+        self.assertEqual(ids, [1, 41, 42, 43, 2])
+        # SQLite may return this incidental order already; require the actual SQL
+        # to make ties total, then prove PostgreSQL pages in the native driver.
+        self.assertIn('ORDER BY similarity(l.name, :q) DESC, l.name ASC, l.id ASC LIMIT',
+                      ' '.join(self.db.last_statement.split()))
+
     def test_sport_filter_and_page_still_work(self):
         filtered = self.client.get('/api/leagues/search?q=Margin&sportId=2')
         self.assertEqual(filtered.status_code, 200)
@@ -103,4 +122,4 @@ class PublicLeagueSearchTests(unittest.TestCase):
     def test_invalid_parameters_keep_json_error_contract(self):
         response = self.client.get('/api/leagues/search?q=Margin&sportId=bad')
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json, {'message': 'Invalid parameters'})
+        assert_error_response(self, response, {'message': 'Invalid parameters'})

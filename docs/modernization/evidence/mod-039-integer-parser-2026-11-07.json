@@ -1,0 +1,39 @@
+{
+  "date": "2026-11-07",
+  "result": "PASS",
+  "scope": "First bounded MOD-039 backend integer-parser pilot; isolated tests only",
+  "checks": {
+    "consumer_characterization_before_extraction": "6/6 PASS",
+    "public_scalar_and_consumer_wiring": "3/3 RED missing API/import -> GREEN",
+    "full_backend": "741/741 PASS",
+    "whitespace": "PASS"
+  },
+  "preserved": [
+    "integer/string coercion and rejection messages",
+    "required-field/error precedence",
+    "weekNumber default0 vs explicit null",
+    "verified actor assertion and domain order rules",
+    "existing field/list signatures and ceilings"
+  ],
+  "not_run": [
+    "frontend/build: no frontend changes",
+    "native/configured DB/runtime/provider: no SQL or I/O changes"
+  ],
+  "sha256": {
+    "api/utils/requestValidation.py": "e2bf5ab6a74ea92f131b4830a6886f5a2ac04fb8a4eae4b0212f8c091538a877",
+    "api/endpoints/draft/draftEndpoints.py": "950c8209d7b3142ef7aac3b64d18ba55bf885bc0ddfcc28f97312f2f307b3ffd",
+    "api/tests/test_draft_integer_parsing.py": "21ecc0dc7a5be26edff67a2709c02c9089b91a139c9b71474a99af49bdb40445",
+    "api/tests/test_integer_value.py": "219912927211f874f55af4c3dfb7295fa6733301f75827946d5a82afe952efcf"
+  },
+  "commands": [
+    "python3 api/tests/run_isolated.py test_draft_integer_parsing.py",
+    "python3 api/tests/run_isolated.py test_integer_value.py",
+    "python3 api/tests/run_isolated.py",
+    "git diff --check"
+  ],
+  "independent_review": {
+    "result": "PASS",
+    "findings": 0,
+    "focused_tests": "9/9 PASS"
+  }
+}

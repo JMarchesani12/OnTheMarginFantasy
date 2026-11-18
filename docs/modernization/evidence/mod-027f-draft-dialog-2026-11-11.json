@@ -1,0 +1,52 @@
+{
+  "date": "2026-11-11",
+  "baseCommit": "fb06280",
+  "result": "PASS_APPLICATION_SCOPE",
+  "scope": "MOD027F native modal lifecycle and scope-bound draft completion presentation",
+  "checks": {
+    "red": "6 hook regressions;2 actual-page regressions replayed on committed page",
+    "frontend": "201/201 PASS",
+    "build": "PASS",
+    "imports": "74files195edges zero unresolved/cycles",
+    "diff": "PASS"
+  },
+  "behavior": [
+    "native showModal/title focus, no handmade trap/inert state",
+    "Close/Escape in-place user decision, no automatic navigation",
+    "prior usable focus restoration or visible heading fallback",
+    "cleanup/context disposal avoids explicit stale focus restoration",
+    "scoped completion does not reopen same dismissed status; oldscopehidden"
+  ],
+  "decisions": [
+    "Native dialog instead of bespoke focus trap",
+    "Keep existing audit workspace and leave uncommitted/undeployed",
+    "Native browser tests unavailable; do not equate controlled DOM double to browser behavior"
+  ],
+  "limits": [
+    "Browser/assistive technology acceptance remains open: native Tab/ShiftTab,inert,title announcement,actual restoration",
+    "No Playwright/Puppeteer/react-test-renderer/jsdom available; no dependency installed",
+    "No backend/API/controller/live-service changes or verification"
+  ],
+  "sourceSha256": {
+    "front-end/src/hooks/useDraftSummaryDialog.ts": "f9d61b04aaa7cd83ce44bd08b354c8e89dea3c8e15d1fca84c6d042464aea724",
+    "front-end/src/screens/League/LeagueDraftPage.tsx": "1e5e03798019da1a4f71c021937288aa182b27efb21e1ffda3a1620624f73cc7",
+    "front-end/src/screens/League/LeagueDraftPage.css": "89d06f1d49e05c0d488b51519171e0f0486afceab45d5e5032e75c90ee55f28a",
+    "front-end/tests/draftDialogFocus.test.ts": "49df8ab129579bfac5d6958d803f8973c27b0f8df6fa2588e4c64b7aa6ee7b5b",
+    "front-end/tests/draftDialogPage.test.ts": "3e266af0a6928d1288d70e45fa0d013a6c8b2b9120c88242c828c174c7a9dec3",
+    "front-end/tests/helpers/draftPageHarness.ts": "3e335bc806733c838ea0df400f54a56b5d180e2e50632c1b009176d115144fec"
+  },
+  "protectedMatchBase": {
+    "front-end/src/hooks/useDraftClock.ts": true,
+    "front-end/src/hooks/useDraftConnection.ts": true,
+    "front-end/src/lib/draftRealtime.ts": true
+  },
+  "review": {
+    "model": "gpt-6-astra/high",
+    "critical": 0,
+    "important": 0,
+    "minor": 1,
+    "independentChecks": "targeted8/8 and diff PASS",
+    "deferredMinor": "Hook context-replacement test sets open true before committing the dismissed false state, so it does not exercise active-dialog context replacement; page scope masking and cleanup/replay tested separately",
+    "declined": "Native browser containment/inert/restoration/event ordering and assistive-technology announcement; no native proof claimed"
+  }
+}

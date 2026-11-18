@@ -9,7 +9,7 @@ const picks = [
 ];
 test("conference groups retain overall pick order without mutating input", () => {
   const groups = groupDraftedTeams(picks, "conference");
-  assert.deepEqual(groups.map((g) => g.label), ["ACC", "Independent", "SEC"]);
+  assert.deepEqual(groups.map((g) => g.label), ["ACC", "Conference unavailable", "SEC"]);
   assert.deepEqual(groups[2].picks.map((p) => p.overallPickNumber), [1, 12]);
   assert.equal(picks[0].overallPickNumber, 12);
 });
@@ -31,7 +31,7 @@ test("conference counts include each member once per conference", async () => {
   ]);
   assert.equal(counts.get("SEC"), 2);
   assert.equal(counts.get("ACC"), 1);
-  assert.equal(counts.get("Independent"), 1);
+  assert.equal(counts.get("Conference unavailable"), 1);
   assert.equal(countConferenceDrafters([]).size, 0);
 });
 

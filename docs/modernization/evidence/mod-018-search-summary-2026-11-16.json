@@ -1,0 +1,105 @@
+{
+  "date": "2026-11-16",
+  "result": "PASS_BOUNDED_SEARCH_MEASUREMENT_WITH_ORDERING_FINDING",
+  "artifact": "mod-018-search-f19d74870f2c42f0a44870aa8dfe18c9.json",
+  "rawSha256": "a57d8790ceac78e9d045b230cfec9ca5b5bb610ad21b8753fe2a3adbaa0c4fc7",
+  "checks": {
+    "units": "51/51 PASS",
+    "leagueCounts": [
+      1000,
+      10000,
+      100000
+    ],
+    "sqlRecords": 72,
+    "serviceRecords": 42,
+    "smallPageWalks": 4,
+    "provenanceHashes": 12,
+    "independentFullProjectedFields": true,
+    "productionCodeChanged": false,
+    "diff/newSourceWhitespace": "PASS"
+  },
+  "findings": {
+    "currentSmallWalkReturned": 700,
+    "currentSmallWalkUnique": 695,
+    "currentDuplicateOccurrences": 5,
+    "currentMissing": 5,
+    "idProbeCompleteStable": true
+  },
+  "review": {
+    "model": "gpt-6-astra/high",
+    "critical": 0,
+    "important": 0,
+    "minor": 0,
+    "independent": "51units,72SQL/42service/fourwalks/fivesamples/medians/counts/fullpayloads/captures/12hashes/rawSHA/indexdefinitions/reportfigures",
+    "declined": [
+      "Livecleanup/historicalRED/timingreproduction author-observed",
+      "Production/otherrelevance/concurrentmutations/largecompletetraversal outside scope"
+    ]
+  },
+  "cleanup": {
+    "databaseCountZero": true,
+    "ownedContainer": "b096a205cc9f7a803a0abb46f5d7ac5ca6a7514655c78da6c0e1d3d61cdf3e02",
+    "labelsVerified": {
+      "otm.synthetic": "true",
+      "otm.task": "mod018-search"
+    },
+    "persistentMounts": [],
+    "containerRemoved": true,
+    "remainingSearchContainers": 0,
+    "dockerAndImageCacheRetained": true
+  },
+  "implementationDeferred": true,
+  "uncommitted": true,
+  "deployed": false,
+  "consumerContext": {
+    "homePageSize": 6,
+    "apiHelperDefaultLimit": 20,
+    "nativeProbeLimit": 50,
+    "browserReproduction": false,
+    "sourceOnlyAnnotation": true
+  },
+  "rulings": [
+    {
+      "decision": "Measurements only; ordering implementation deferred",
+      "reason": "User explicitly defers optimizations until audit completion",
+      "costIfWrong": "Known tied-page repeats/omissions remain until final implementation"
+    },
+    {
+      "decision": "Equal-name-only search fixture and independent ID-tie probe",
+      "reason": "Isolate total-order issue without copying similarity algorithm",
+      "costIfWrong": "Other relevance distributions unmeasured"
+    },
+    {
+      "decision": "HeapCLUSTER/tempindex only inside owned UUID fixture, definitions restored",
+      "reason": "Test layout dependence without app query/index change",
+      "costIfWrong": "Layout/cache differs from production"
+    },
+    {
+      "decision": "Offsets sampled withinHTTPcap10000, fullwalk onlysmall700matches",
+      "reason": "Bounded accessible workload, preserve consumer contracts",
+      "costIfWrong": "Large complete traversal unmeasured"
+    },
+    {
+      "decision": "Home6-row paging annotated from source; native50-row probe only",
+      "reason": "Distinguish actual client from helper default20 and measured API page size",
+      "costIfWrong": "Exactbrowser/page6 impact needs later acceptance"
+    },
+    {
+      "decision": "Accept author livecleanup/RED evidence; broader production claims unmade",
+      "reason": "Fresh reviewer no native services",
+      "costIfWrong": "Live behavior not independently reproduced"
+    },
+    {
+      "decision": "Keep audit checkout/files/ledger uncommitted, no merge/push/deploy",
+      "reason": "Established user-owned integration workflow",
+      "costIfWrong": "User mustcommit; Docker/cache retained"
+    }
+  ],
+  "sourceSha256": {
+    "scripts/modernization/measure_mod018_search.py": "018a728350663786fe38394937c63db53e18baef757030c8e3dd0a884313ac21",
+    "scripts/modernization/tests/test_mod018_search.py": "1b252b01b6a31b9caf1365a2921e081ddd1b5f0ce8a4085a9366fc7c5ac88934",
+    "docs/modernization/mod-018-league-search-baseline.md": "7054d3e0a28107b48fa45e8ff098563ad34a460586920f8f909ce825f430c14c",
+    "front-end/src/api/leagues.ts": "48630495df0b5018648e3c724fc531734566b2bd550fb6912bcf035847147784",
+    "front-end/src/screens/Home/Home.tsx": "f16cb189883ed7ad719b1be157e6d0522f86fb7d949473d59e8048ded8f810dc"
+  }
+}
