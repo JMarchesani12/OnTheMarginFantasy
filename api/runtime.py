@@ -39,7 +39,7 @@ def start_web_listener(app, socketio, engine, *, starter=None, use_reloader=Fals
     app.extensions['draft_notify_task'] = controller.task
 
 
-def create_web_app(*, engine=None, use_reloader=False):
+def create_web_app(*, engine=None, use_reloader=False, start_listener=True):
     load_runtime_environment()
     # Check configuration before constructing resources or starting tasks.
     listener_enabled()
@@ -50,8 +50,16 @@ def create_web_app(*, engine=None, use_reloader=False):
     from socketioInstance import socketio
     engine = engine if engine is not None else get_engine()
     app = create_app(engine=engine)
-    start_web_listener(app, socketio, engine, use_reloader=use_reloader)
+    app.extensions['draft_listener_runtime'] = (socketio, engine)
+    if start_listener:
+        start_web_listener(app, socketio, engine, use_reloader=use_reloader)
     return app
+
+
+def start_web_listener_for_app(app):
+    """Called after Gunicorn initializes its serving worker, including preload."""
+    socketio, engine = app.extensions['draft_listener_runtime']
+    start_web_listener(app, socketio, engine)
 
 
 def stop_web_listener(app):

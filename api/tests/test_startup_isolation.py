@@ -81,6 +81,7 @@ with patch.dict(os.environ, {}, clear=True), patch.object(dotenv, 'load_dotenv',
     def test_web_composition_passes_engine_to_factory_and_listener(self):
         from runtime import create_web_app
         engine, app = Mock(), Mock()
+        app.extensions = {}
         with patch('runtime.load_runtime_environment') as load, patch('api.create_app', return_value=app) as factory, patch('runtime.start_web_listener') as start:
             self.assertIs(create_web_app(engine=engine, use_reloader=True), app)
         load.assert_called_once()
@@ -122,17 +123,15 @@ with patch.dict(os.environ, {}, clear=True), patch.object(dotenv, 'load_dotenv',
             runtime.load_runtime_environment()
         load.assert_called_once_with(API / '.env')
 
-    def test_wsgi_composes_after_eventlet_patch_with_fakes(self):
+    def test_wsgi_defers_composition_until_worker_initialization(self):
         import runpy
-        import types
-        eventlet = types.ModuleType('eventlet')
-        calls = []
-        eventlet.monkey_patch = lambda: calls.append('patch')
         sentinel = object()
-        with patch.dict(sys.modules, {'eventlet': eventlet}), patch('runtime.create_web_app', side_effect=lambda: calls.append('compose') or sentinel):
+        with patch('runtime.create_web_app', return_value=sentinel) as compose:
             namespace = runpy.run_path(str(API / 'wsgi.py'))
-        self.assertIs(namespace['app'], sentinel)
-        self.assertEqual(calls, ['patch', 'compose'])
+            compose.assert_not_called()
+            self.assertIs(namespace['app'].initialize(), sentinel)
+            self.assertIs(namespace['app'].initialize(), sentinel)
+            compose.assert_called_once_with(start_listener=False)
 
     def test_dev_launch_composes_before_running_server(self):
         import dev

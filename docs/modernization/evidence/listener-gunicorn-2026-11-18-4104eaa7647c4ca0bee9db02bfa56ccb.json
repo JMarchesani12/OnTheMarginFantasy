@@ -1,0 +1,229 @@
+{
+  "result": "PASS",
+  "started_at": "2026-11-18T14:47:37.168199+00:00",
+  "scope": "Real Gunicorn/eventlet; fake DB; synthetic configuration/temporary loopback HTTP only",
+  "cases": [
+    {
+      "preload": false,
+      "configuration": "autoload",
+      "enabled": true,
+      "master_pid": 90040,
+      "worker_replacement": false,
+      "observations": [
+        {
+          "status": 200,
+          "body": {
+            "created_pid": 90041,
+            "listener": {
+              "category": null,
+              "enabled": true,
+              "state": "connected"
+            },
+            "ok": true,
+            "run_id": "f0ba140255154c8c8fb58ad274c1d772",
+            "run_pid": 90041,
+            "serving_pid": 90041
+          }
+        }
+      ],
+      "master_reaped": true,
+      "events": [
+        {
+          "event": "connected",
+          "operation": "listener",
+          "runId": "f0ba140255154c8c8fb58ad274c1d772"
+        },
+        {
+          "event": "stopped",
+          "operation": "listener",
+          "runId": "f0ba140255154c8c8fb58ad274c1d772"
+        }
+      ],
+      "cleanup": "verified"
+    },
+    {
+      "preload": true,
+      "configuration": "autoload",
+      "enabled": true,
+      "master_pid": 90050,
+      "worker_replacement": true,
+      "observations": [
+        {
+          "status": 200,
+          "body": {
+            "created_pid": 90051,
+            "listener": {
+              "category": null,
+              "enabled": true,
+              "state": "connected"
+            },
+            "ok": true,
+            "run_id": "4670af52fe8646758a78090f4bad3b1f",
+            "run_pid": 90051,
+            "serving_pid": 90051
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "created_pid": 90060,
+            "listener": {
+              "category": null,
+              "enabled": true,
+              "state": "connected"
+            },
+            "ok": true,
+            "run_id": "e22d8e2f61414378a4f1441dcb095a7f",
+            "run_pid": 90060,
+            "serving_pid": 90060
+          }
+        }
+      ],
+      "master_reaped": true,
+      "events": [
+        {
+          "event": "connected",
+          "operation": "listener",
+          "runId": "4670af52fe8646758a78090f4bad3b1f"
+        },
+        {
+          "event": "stopped",
+          "operation": "listener",
+          "runId": "4670af52fe8646758a78090f4bad3b1f"
+        },
+        {
+          "event": "connected",
+          "operation": "listener",
+          "runId": "e22d8e2f61414378a4f1441dcb095a7f"
+        },
+        {
+          "event": "stopped",
+          "operation": "listener",
+          "runId": "e22d8e2f61414378a4f1441dcb095a7f"
+        }
+      ],
+      "cleanup": "verified"
+    },
+    {
+      "preload": false,
+      "configuration": "explicit",
+      "enabled": true,
+      "master_pid": 90066,
+      "worker_replacement": false,
+      "observations": [
+        {
+          "status": 200,
+          "body": {
+            "created_pid": 90067,
+            "listener": {
+              "category": null,
+              "enabled": true,
+              "state": "connected"
+            },
+            "ok": true,
+            "run_id": "215b504a24174efba0fb8fcb77bde091",
+            "run_pid": 90067,
+            "serving_pid": 90067
+          }
+        }
+      ],
+      "master_reaped": true,
+      "events": [
+        {
+          "event": "connected",
+          "operation": "listener",
+          "runId": "215b504a24174efba0fb8fcb77bde091"
+        },
+        {
+          "event": "stopped",
+          "operation": "listener",
+          "runId": "215b504a24174efba0fb8fcb77bde091"
+        }
+      ],
+      "cleanup": "verified"
+    },
+    {
+      "preload": true,
+      "configuration": "explicit",
+      "enabled": true,
+      "master_pid": 90071,
+      "worker_replacement": false,
+      "observations": [
+        {
+          "status": 200,
+          "body": {
+            "created_pid": 90072,
+            "listener": {
+              "category": null,
+              "enabled": true,
+              "state": "connected"
+            },
+            "ok": true,
+            "run_id": "a44e502ed3f84d4db7007f115d665b3c",
+            "run_pid": 90072,
+            "serving_pid": 90072
+          }
+        }
+      ],
+      "master_reaped": true,
+      "events": [
+        {
+          "event": "connected",
+          "operation": "listener",
+          "runId": "a44e502ed3f84d4db7007f115d665b3c"
+        },
+        {
+          "event": "stopped",
+          "operation": "listener",
+          "runId": "a44e502ed3f84d4db7007f115d665b3c"
+        }
+      ],
+      "cleanup": "verified"
+    },
+    {
+      "preload": true,
+      "configuration": "autoload",
+      "enabled": false,
+      "master_pid": 90076,
+      "worker_replacement": false,
+      "observations": [
+        {
+          "status": 200,
+          "body": {
+            "created_pid": null,
+            "listener": {
+              "category": null,
+              "enabled": false,
+              "state": "disabled"
+            },
+            "ok": true,
+            "run_id": null,
+            "run_pid": null,
+            "serving_pid": 90077
+          }
+        }
+      ],
+      "master_reaped": true,
+      "events": [],
+      "cleanup": "verified"
+    }
+  ],
+  "production_preload_flag": "unconfirmed",
+  "provenance": {
+    "api/runtime.py": "dc15a616bd5a65b6dc65f1d79927359366d7a487ac1a55fa040f122a9a8778fd",
+    "api/wsgi.py": "7303b57b1525f97f580f4a878b87a06875a9c18d18f57ca1bcc6700f1853de44",
+    "api/gunicorn_conf.py": "f67c1082ceeb9f92877f2cc347d8dabbcc08eec9e6b5d2e9a071e691978c93d3",
+    "api/gunicorn.conf.py": "151c1cdc35892e7050c5c094abd7031267fe3870790b032ee1c03ad58cbcbc34",
+    "api/endpoints/draft/listener.py": "1d7b89e092e44019e57a43591ad7dc68268d271f7b0b7b275b2efa9e1f76e791",
+    "api/api.py": "a0b291b9e71843152178dfd85e7f19d907bab846a58180f32af3c1fec8ad376b",
+    "scripts/modernization/verify_gunicorn_listener.py": "64cfa6fda3f4d46f12b051b87ed12b2c702be4def80243a068d3ddf0611dd37d"
+  },
+  "versions": {
+    "gunicorn": "23.0.0",
+    "eventlet": "0.40.4",
+    "Flask-SocketIO": "5.6.0",
+    "python-engineio": "4.13.0"
+  },
+  "cleanup": "verified",
+  "completed_at": "2026-11-18T14:47:45.606157+00:00"
+}

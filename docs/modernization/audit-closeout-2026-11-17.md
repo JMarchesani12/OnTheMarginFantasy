@@ -62,3 +62,15 @@ After audited deployment and browser/socket/session smoke checks, finish revised
 ## Production revision confirmed — November17,2026
 
 Maintainer confirms Vercel Production is854bb9b98ccddddb47ae0edd8d6345f4fa77cc95 frommain. Render API and both active crons independently report that same commit. Current auditHEAD0262dcc is34commits ahead, plus this run's uncommitted snapshots/migration/verification records. No further Vercel reconnection or manual revision lookup is needed for this fact. Next action is user-owned commit/integration of audit→main and a coordinated release; record the new shared deployment SHA afterward. Render/Vercel commands/configuration and authenticated behavior still need release verification. No branch/service/deployment mutation was performed by the assistant.
+
+## Post-merge verification — November18,2026
+
+[Fresh read-only evidence](evidence/post-deploy-audit-2026-11-18.json) supersedes the older Render revision inventory: API and both active cron services are live on merged commit `e0cb54679ecd54a1d91fb0b3e391e5ee6eee38f5`. The application release has advanced. No new service/environment/DB mutation was performed during this check.
+
+Operational acceptance remains open: `/health`200but repeated uncached `/ready`503 with enabled listener state`starting`, categorynull, several minutes after deployment. A safe listener log records a connection event, but it does not explain readiness stayingstarting; root cause is not established. Investigate before declaring listener/socket readiness complete. API start command still bypasses `gunicorn_conf.py` worker-exit hook; use reviewed `./start.sh` or equivalent as a separate coordinated configuration change. User-suspended timeout worker remains suspended. Browser privilege hardening, runtime connection verification, actual authenticated/browser/socket acceptance and staged validation before extra job scheduling remain open. Approved MOD015/MOD017 SQL rollouts are already complete; do not rerun them.
+
+## Listener patch and Vercel confirmation — November18,2026
+
+[Worker-local readiness patch](mod-024-worker-readiness-fix-2026-11-18.md) is prepared/reviewed locally;834backend/71audit tests and five real-Gunicorn synthetic configurations pass, including preloaded worker replacement/shutdown. It is not yet deployed. Include `api/gunicorn.conf.py` with the runtime/wsgi/hook changes; both default discovery from root`api` and explicit start.sh config are tested. Exact production preload flag is still unconfirmed; matching failure mode was reproduced locally. No readiness policy bypass or production mutation.
+
+Vercel tools became available: [authenticated deployment metadata](evidence/vercel-production-2026-11-18.json) independently confirms productionwww.onthemarginfantasy.comREADY, branchmain, commit e0cb54679ecd54a1d91fb0b3e391e5ee6eee38f5 matching Render. Earlier Vercel connection/tool-access limitation is resolved; no reconnect action required. This verifies source revision, not authenticated acceptance. Browser privilege/job gates remain separate; SQL rollouts complete.

@@ -1,7 +1,19 @@
-"""Explicit production entry point, loaded by gunicorn's eventlet worker."""
-import eventlet
-eventlet.monkey_patch()
+"""Gunicorn callable; runtime construction belongs to the patched serving worker."""
 
-from runtime import create_web_app
+class WorkerApplication:
+    def __init__(self):
+        self.application = None
 
-app = create_web_app()
+    def initialize(self):
+        if self.application is None:
+            from runtime import create_web_app
+            self.application = create_web_app(start_listener=False)
+        return self.application
+
+    def __call__(self, environ, start_response):
+        if self.application is None:
+            raise RuntimeError('Gunicorn worker runtime has not been initialized')
+        return self.application(environ, start_response)
+
+
+app = WorkerApplication()

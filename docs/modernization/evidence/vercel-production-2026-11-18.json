@@ -1,0 +1,13 @@
+{
+  "date_local": "2026-11-18",
+  "provider": "Vercel",
+  "source": "Authenticated read-only get_deployment for www.onthemarginfantasy.com",
+  "deployment_id": "dpl_HZ1AdmycetgY3ZEvPTJVvUs8S4L8",
+  "status": "READY",
+  "target": "production",
+  "commit": "e0cb54679ecd54a1d91fb0b3e391e5ee6eee38f5",
+  "branch": "main",
+  "production_domain": "www.onthemarginfantasy.com",
+  "matches_render_commit": true,
+  "limits": "Deployment metadata, not authenticated browser/socket acceptance; listener patch is not deployed"
+}

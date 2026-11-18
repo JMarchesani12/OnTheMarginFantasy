@@ -3,8 +3,8 @@
 The backend is Python/Flask; `npm run dev` starts the separate frontend.
 Local isolated checks are verified with Python **3.14.1** and Node **22.22.2**.
 CI uses Python **3.14** and Node **22.22.2**. Other runtime versions have not been
-validated for this startup change. Production eventlet/Gunicorn operation still
-needs a deployment smoke check; isolated tests use fake launch dependencies.
+validated for this startup change. Real Gunicorn/eventlet lifecycle checks use synthetic configuration and fake DB I/O;
+hosted listener/socket acceptance still needs a deployment smoke check.
 
 From `api`, create/activate a virtual environment and install dependencies:
 
@@ -46,7 +46,10 @@ retry independently in a bounded set; reconnect refreshes current subscribed roo
 through the MOD023 authorization gate. No durable event replay platform is added.
 
 `create_app(engine=...)` constructs routes/sockets without starting background work;
-`runtime.create_web_app()` explicitly starts the enabled listener. The reload parent
+`runtime.create_web_app()` explicitly starts the enabled listener by default.
+Production `wsgi:app` defers the entire Flask/runtime construction until Gunicorn
+has patched and initialized its serving worker; `post_worker_init` then starts
+the listener once. The parent does not construct the app/engine/listener under preload. The reload parent
 skips startup, and repeated startup is idempotent per app. Explicit stop closes the
 owned connection and prevents retries/emits; development finally and Gunicorn's
 worker_exit hook invoke it. No request teardown stops the listener.
@@ -59,9 +62,13 @@ Production retains the single-worker eventlet topology:
 gunicorn -c gunicorn_conf.py -k eventlet -w 1 -b 0.0.0.0:5050 wsgi:app
 ```
 
-Do not preload the app or increase Socket.IO worker count without a separate
-coordination review. Definition imports stay free of configuration and runtime
-side effects; wsgi is an intentional composition/monkey-patching entry point.
+Keep the single-worker Socket.IO topology; increasing worker count needs separate
+coordination review. Both normal and preloaded Gunicorn loading are covered by
+worker-local startup tests, but no production preload setting is assumed. Gunicorn
+eventlet patches the worker before app initialization. `gunicorn.conf.py` is the
+standard autoload shim when invoked from `api`; explicit `-c gunicorn_conf.py`
+used by `start.sh` loads the same startup/shutdown hooks. Custom config files must
+retain both hooks. WSGI imports no longer start or configure application resources.
 See the [MOD024 runbook](../docs/modernization/mod-024-operations.md) for connection
 mode requirements, shutdown limits and the outstanding hosted inspection.
 

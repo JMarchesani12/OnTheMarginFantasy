@@ -39,3 +39,16 @@ class RuntimeReadinessTests(unittest.TestCase):
         with patch('runtime.create_web_app',return_value=app),patch('eventlet.monkey_patch'),patch('runtime.stop_web_listener') as stop,patch('socketioInstance.socketio.run',side_effect=KeyboardInterrupt):
             with self.assertRaises(KeyboardInterrupt):dev.main()
             stop.assert_called_once_with(app)
+
+    def test_deferred_composition_and_worker_hook_start_only_in_worker(self):
+        import runtime,runpy
+        from pathlib import Path
+        app=Mock();app.extensions={};engine=Mock();server=Mock()
+        with patch('runtime.load_runtime_environment'),patch('supabaseAuth.auth_configuration'),patch('api.create_app',return_value=app),patch('socketioInstance.socketio',server),patch('runtime.start_web_listener') as start:
+            runtime.create_web_app(engine=engine,start_listener=False)
+            start.assert_not_called()
+            hooks=runpy.run_path(str(Path(__file__).parents[1]/'gunicorn_conf.py'))
+            wrapped=Mock();wrapped.initialize.return_value=app
+            hooks['post_worker_init'](Mock(wsgi=wrapped))
+            wrapped.initialize.assert_called_once_with()
+            start.assert_called_once_with(app,server,engine)

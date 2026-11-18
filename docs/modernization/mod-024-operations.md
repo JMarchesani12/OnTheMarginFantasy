@@ -8,7 +8,7 @@ The separate Render service reported suspended remains intentionally suspended.
 
 | Process | Invocation from api | Observed behavior | Hosted evidence |
 | --- | --- | --- | --- |
-| Web | ./start.sh | gunicorn -c gunicorn_conf.py -k eventlet -w1; wsgi applies monkey patching, runtime composes app/listener | Actual Render command/revision/role unknown |
+| Web | ./start.sh | gunicorn -c gunicorn_conf.py -k eventlet -w1; eventlet worker patches; post_worker_init composes app/listener after fork | Actual Render command/revision/role unknown |
 | Development | python3 dev.py | Reload supervisor skips listener; serving child owns it | Local entry only |
 | Draft timeout | python3 -m worker.draftTimeoutWorker | Continuous deadline polling; idle wait ≤30s, active minimum0.5s, failure wait2s | Actual supervisor/restart policy unknown |
 | Live scoreboard | python3 -m cronJobs.cronIngestScoreboard | Central today; also yesterday before03:00; per-league failures continue and CLI exits1 | Actual cadence unknown |
@@ -119,3 +119,10 @@ or scheduler coverage from repository source or a historical activity snapshot.
 Priority6 can close in application/synthetic verification scope after MOD024 tests
 and review. Hosted verification/rollout, MOD015 composite-constraint follow-up and
 historical snapshot/remapping policy remain explicit independent work.
+
+
+## Worker-local readiness follow-up — November18,2026
+
+The listener readiness mismatch has a matching real-Gunicorn preload reproduction: parent listener connection log, serving worker with a starting-state copy. Actual hosted preload configuration is unconfirmed. The prepared fix defers all WSGI Flask/runtime construction to post_worker_init after the eventlet worker patch, then starts the controller in that worker. worker_exit stops the initialized app's listener. Standard `gunicorn.conf.py` autoload from service root `api` forwards to the same hooks as explicit `gunicorn_conf.py`/`start.sh`; retain both hooks when using a custom config. Development/reloader composition remains unchanged. Single-worker topology and readiness policy are unchanged; no master-owned DB/listener is created under preload.
+
+[Proof and deployment limits](mod-024-worker-readiness-fix-2026-11-18.md) cover normal/preload ×autoload/explicit config, disabled readiness, graceful shutdown and worker replacement with fake DB I/O. Hosted readiness/socket acceptance must be rechecked after the user-owned release; this change does not close browser privileges or job scheduling gates.
