@@ -33,3 +33,5 @@ npm run build
 CI uses Python 3.14 and Node 22.22.2. The backend runner prevents configured database/network access. Optional native integration tests are documented in [api/tests/integration](api/tests/integration/README.md).
 
 See [operations](docs/operations.md) for deployment, jobs and recovery, and [follow-ups](docs/follow-ups.md) for outstanding operating decisions.
+
+Draft Privacy Policy and Terms of Service are in [legal](legal/README.md). They require completion and review before publication.
