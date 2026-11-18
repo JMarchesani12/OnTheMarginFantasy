@@ -357,7 +357,10 @@ class TransactionWorkflowService:
                 self.workflow_repository.assert_owned_member(conn, league_id, from_member_id, acting_user_id)
         week = self._get_week_for_league(league_id, week_id)
         if week["isLocked"]:
-            raise ValueError("Week is locked")
+            # Match roster reads and add/drop requests: locked-week changes
+            # belong to the next unlocked week, never the current roster.
+            week = self._get_next_unlocked_week_for_league(league_id, week["weekNumber"])
+            week_id = week["id"]
 
         self._validate_members_in_league(league_id, [from_member_id, to_member_id])
 
