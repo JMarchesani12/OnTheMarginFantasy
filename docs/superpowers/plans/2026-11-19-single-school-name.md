@@ -62,8 +62,14 @@ Verification: `python3 api/tests/run_isolated.py` — 882 passing;
 `node --test --experimental-strip-types tests/*.test.ts` — 266 passing;
 `npm run build` — passing; `git diff --check` — clean.
 
-**Pending external step:** deploy the compatible API and job code, then commit
-`--drop-retired-columns --deployed-revision <verified revision>`. No app deployment
-or live column-drop commit has been performed. Dropping before compatible readers
-are deployed would break current API/job consumers. The deployed-revision argument
-is an operator attestation, not an automatic check of all running services.
+**Final external step complete:** the user confirmed deployment, the public API
+was independently verified to return canonical school names, and the reviewed
+column-drop transaction was committed against target fingerprint 4ecd426e8efadd29.
+A fresh read-only connection confirmed both retired columns absent, all 366
+schools/631 teams/2,079 aliases unchanged, updated repository reads passing, and
+deployed health/catalog HTTP200. Recorded local committed revision:
+e2245ac8f500907f7713245d9beb90deac39e5b9 (user deployment attestation plus public
+behavior verification; Render workspace metadata was not available in-session).
+See school-name-column-drop and school-name-column-drop-postflight receipts.
+No deployment, restart, job trigger, unsuspension or unrelated data change was
+performed by the agent during final column removal.

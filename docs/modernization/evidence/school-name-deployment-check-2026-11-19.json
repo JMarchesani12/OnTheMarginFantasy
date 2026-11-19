@@ -1,0 +1,17 @@
+{
+  "/health": {
+    "status": 200
+  },
+  "/api/team-search/catalog": {
+    "status": 200,
+    "teams": 631,
+    "northernIowaTeamIds": [
+      369,
+      525
+    ],
+    "canonicalNamesVerified": true
+  },
+  "deploymentConfirmation": "User confirmed API/jobs deployment; public API canonical names verified",
+  "localCommittedRevision": "e2245ac8f500907f7713245d9beb90deac39e5b9",
+  "result": "PASS"
+}

@@ -500,10 +500,9 @@ is separate from the applied database migration.
 
 The updated application reads team labels from `School.name`, using shorter names
 approved by the user. `SchoolAlias` retains official names and abbreviations.
-`School.shortName` and `SportTeam.displayName` are deprecated and prepared for
-removal by `20261119_retire_school_name_columns.sql`. **Their live drop is pending
-compatible API/job deployment**, so they remain in the transitional descriptive
-schema below. Existing public JSON field names are retained for client compatibility.
+`School.shortName` and `SportTeam.displayName` were removed by
+`20261119_retire_school_name_columns.sql` after the user confirmed compatible
+API/job deployment. The current descriptive schema reflects the removed columns. Existing public JSON field names are retained for client compatibility.
 GameResult provider name fields remain stored; linked teams render canonical School
 names and unlinked opponents retain source labels.
 
@@ -514,6 +513,15 @@ and [dry-run evidence](../docs/modernization/evidence/school-name-dry-run-2026-1
 
 The configured canonical-name phase is now committed: **336 shorter names**,
 with all 2,079 aliases retained and school/team counts unchanged. A fresh read-only
-postflight plans no additional name changes. The physical column-drop phase is
-still pending deployment; see [name rollout receipt](../docs/modernization/evidence/school-name-rollout-2026-11-19.json)
+postflight plans no additional name changes. The physical column-drop phase is now complete; see [name rollout receipt](../docs/modernization/evidence/school-name-rollout-2026-11-19.json)
 and [postflight](../docs/modernization/evidence/school-name-postflight-2026-11-19.json).
+
+
+Final column removal was **committed and verified** on November 19, 2026.
+A fresh read-only connection confirmed both columns absent, with all 366 schools,
+631 sport teams, and 2,079 aliases intact. Updated repository reads passed and the
+deployed `/health` and `/api/team-search/catalog` returned HTTP 200 after removal.
+Deployment was confirmed by the user; public API behavior was independently checked.
+See [drop receipt](../docs/modernization/evidence/school-name-column-drop-2026-11-19.json)
+and [postflight](../docs/modernization/evidence/school-name-column-drop-postflight-2026-11-19.json).
+Frozen baseline and historical snapshot files remain unchanged.

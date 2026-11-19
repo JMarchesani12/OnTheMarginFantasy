@@ -6,13 +6,13 @@ Update draft history, rosters, search/catalog, league rules, transaction summari
 
 Preserve every old short/team name in SchoolAlias before dropping columns. Do not infer current names from arbitrary aliases. Update the seed importer so future runs work without the removed fields. Frozen baselines/historical migrations/snapshots remain historical; current schema and maintained tools/tests use School.name.
 
-Rollout order: verify alias preservation and dependencies; deploy code that no longer reads or writes either column; then execute a bounded, transaction-owned drop migration without CASCADE. The deployed app currently reads SportTeam.displayName, so dropping it before updated API deployment would break live requests. No live column removal has been committed. Rollback-only checks temporarily removed both columns and verified the updated read paths, then restored them.
+Rollout order: verify alias preservation and dependencies; deploy code that no longer reads or writes either column; then execute a bounded, transaction-owned drop migration without CASCADE. The original deployed app read SportTeam.displayName, so column removal was deferred until the user confirmed the compatible deployment. Rollback-only checks verified the new reads before the final committed drop.
 
 Alternatives considered: retain a sport-specific override (user declined); hide old fields without removing them (useful only during deployment transition); selected School.name plus aliases with staged column removal.
 
 
 The configured target now has the 336 approved canonical-name changes applied,
-with all 2,079 aliases preserved. Both legacy columns remain until compatible
-API/job deployment; the drop migration is prepared and verified but not committed.
+with all 2,079 aliases preserved. Both legacy columns were removed after the user confirmed compatible API/job
+deployment; the committed migration and fresh database/API postflight passed.
 The one unmapped school (347) is left unchanged; all 365 schools with teams have
 unambiguous provider mappings. See the rollout and read-only postflight receipts.

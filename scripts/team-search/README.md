@@ -9,7 +9,8 @@ The configured project migration was applied and verified on **2026-11-19**:
 **2,079 aliases, 366 schools, 631 existing teams**. School/team counts were unchanged.
 See the [rollout receipt](../../docs/modernization/evidence/school-alias-rollout-2026-11-19.json)
 and [runtime verification](../../docs/modernization/evidence/school-alias-runtime-2026-11-19.json).
-The application code has not been deployed by this task.
+The user subsequently confirmed compatible API/job deployment; the two retired
+name columns were then removed and the deployed API verified healthy.
 
 ## Runtime reads
 
@@ -93,8 +94,8 @@ SportTeam display-name column. Official names and abbreviations stay in
 labels resolve to School.name and unlinked opponents retain their source name.
 
 The reviewed consolidation plan contains 336 name changes and leaves unmapped
-School347 unchanged. Both retired columns must remain on the live database until
-all API/job deployments run the compatible code. Frozen baselines/snapshots and
+School347 unchanged. Both retired columns were removed after user-confirmed
+compatible API/job deployment, with aliases and record counts preserved. Frozen baselines/snapshots and
 historical verifier fixtures remain historical, rather than being rewritten.
 
 ```sh
@@ -115,3 +116,10 @@ ambiguous provider mappings in either direction, and drops without CASCADE.
 The receipt records before/after names for review and recovery. Canonical names
 are changed only by this explicitly invoked maintenance command; the seed importer
 and ordinary ingestion do not overwrite independently maintained School names.
+
+
+The final column-drop commit and fresh postflight are recorded in
+`docs/modernization/evidence/school-name-column-drop-2026-11-19.json` and
+`school-name-column-drop-postflight-2026-11-19.json`. Both retired columns are
+absent from the configured target. Canonical reads and public API health/catalog
+checks passed after commit; all 2,079 aliases remain available.
