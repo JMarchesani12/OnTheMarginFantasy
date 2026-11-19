@@ -199,6 +199,7 @@ class ESPNClient:
                 "externalGameId": external_game_id,
                 "date": event_dt,
                 "timeTBD": time_tbd,
+                "isCompleted": (comp.get("status") or event.get("status") or {}).get("type", {}).get("completed"),
                 "homeEspnId": home_id,
                 "awayEspnId": away_id,
                 "homeName": home_name,

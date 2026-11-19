@@ -49,3 +49,24 @@ test("league-local boundaries include November 1 without an extra November 9 col
   assert.equal(pages[0].at(-1)?.key, "2026-11-01");
   assert.equal(pages[1].at(-1)?.key, "2026-11-08");
 });
+
+ test("mobile schedule pages expose one date at a time without losing dates", () => {
+ const headers = buildDateHeadersFromWeek("2026-10-27T05:00:00Z", "2026-11-03T05:59:59.999Z", "America/Chicago");
+ const pages = buildSchedulePages(headers, true);
+ assert.equal(pages.length, 7);
+ assert.ok(pages.every(page => page.length === 1));
+ assert.deepEqual(pages.flat(), headers);
+ assert.equal(getSchedulePageIndex(pages, null, "2026-10-29"), 2);
+ });
+
+ test("day navigation reaches previous and future days and respects scoring week boundaries", () => {
+   const pages = buildSchedulePages(buildDateHeadersFromWeek("2026-10-27T05:00:00Z", "2026-11-03T05:59:59.999Z", "America/Chicago"), true);
+   assert.deepEqual(moveSchedulePage(9, 2, pages.length, -1, 1, 20), { weekNumber: 9, pageIndex: 1 });
+   assert.deepEqual(moveSchedulePage(9, 2, pages.length, 1, 1, 20), { weekNumber: 9, pageIndex: 3 });
+   assert.deepEqual(moveSchedulePage(9, 6, pages.length, 1, 1, 20), { weekNumber: 10, pageIndex: 0 });
+   assert.deepEqual(moveSchedulePage(9, 0, pages.length, -1, 1, 20), { weekNumber: 8, pageIndex: -1 });
+   assert.deepEqual(moveSchedulePage(1, 0, pages.length, -1, 1, 20), { weekNumber: 1, pageIndex: 0 });
+   const day = pages[3][0].key;
+   const weeklyPages = buildSchedulePages(pages.flat());
+   assert.equal(getSchedulePageIndex(weeklyPages, null, day), 0);
+ });

@@ -1,6 +1,7 @@
 import type { DateHeader } from "./scheduleTable";
 
-export function buildSchedulePages(headers: DateHeader[]): DateHeader[][] {
+export function buildSchedulePages(headers: DateHeader[], daily = false): DateHeader[][] {
+  if (daily) return headers.map(header => [header]);
   // Keep a single scoring week intact, including football's Tuesday–Monday window.
   // Only longer periods need calendar-week pagination.
   if (headers.length <= 7) return headers.length ? [headers] : [];

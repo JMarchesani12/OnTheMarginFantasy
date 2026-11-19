@@ -100,6 +100,7 @@ const ConferenceSchedulePage = () => {
   const [error, setError] = useState<string | null>(null);
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
 
   const storageKey =
     typeof window !== "undefined" && leagueId
@@ -417,6 +418,8 @@ const ConferenceSchedulePage = () => {
 
     return { dateHeaders: headers, teamRows: rows };
   }, [schedule, weekInfo, league, weekNumber]);
+  const activeDate = dateHeaders.find(header => header.key === selectedDate) ?? dateHeaders[0];
+  const visibleDates = activeDate ? [activeDate] : [];
 
   const filteredRows = useMemo(() => {
     if (!searchTerm) {
@@ -587,11 +590,16 @@ const ConferenceSchedulePage = () => {
 
       {!loading && filteredRows.length > 0 && (
         <div className="conference-schedule__table-wrapper">
+          <label className="conference-schedule__date-picker">Game date
+            <select value={activeDate?.key ?? ""} onChange={event => setSelectedDate(event.target.value)}>
+              {dateHeaders.map(header => <option key={header.key} value={header.key}>{header.label}</option>)}
+            </select>
+          </label>
           <table className="conference-schedule__table">
             <thead>
               <tr>
                 <th className="conference-schedule__team-col">Team</th>
-                {dateHeaders.map((header) => (
+                {visibleDates.map((header) => (
                   <th key={header.key}>{header.label}</th>
                 ))}
               </tr>
@@ -614,7 +622,7 @@ const ConferenceSchedulePage = () => {
                     </span>
                   </td>
 
-                  {dateHeaders.map((header) => {
+                  {visibleDates.map((header) => {
                     const cells = row.cellsByDate[header.key];
                     if (!cells || cells.length === 0) {
                       return (

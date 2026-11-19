@@ -156,3 +156,31 @@
   color: #FF4D6D;
   margin: 0;
 }
+
+.league-scoreboard__table { overflow: visible; }
+.league-scoreboard__table > * { min-width: 0; }
+.league-scoreboard__row { grid-template-columns: minmax(0, 1fr) minmax(65px, .45fr) minmax(58px, .35fr); }
+.league-scoreboard__row > :first-child { position: static; margin: 0; padding: 0; box-shadow: none; overflow-wrap: anywhere; }
+.league-scoreboard__week-picker { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem; color: #B7C2E6; }
+.league-scoreboard__week-picker select { min-height: 44px; border: 1px solid #334277; border-radius: .5rem; padding: .4rem .65rem; background: #0B0E1A; color: #F4F7FF; font: inherit; }
+@media (max-width: 768px) {
+  .league-scoreboard { padding: .85rem; }
+  .league-scoreboard__row { gap: .4rem; padding: .65rem .4rem; font-size: .85rem; }
+  .league-scoreboard__row--header { font-size: .7rem; }
+}
+
+.league-scoreboard__controls { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; justify-content: space-between; }
+.league-scoreboard__view-toggle, .league-scoreboard__shortcuts { display: flex; gap: .25rem; }
+.league-scoreboard__view-toggle { border: 1px solid #2F3B6A; border-radius: .65rem; padding: .2rem; background: #070A14; }
+.league-scoreboard__controls button { min-height: 44px; padding: .4rem .65rem; font: inherit; font-size: .85rem; font-weight: 700; color: #B7C2E6; background: #0B0E1A; border: 1px solid #334277; border-radius: .45rem; cursor: pointer; }
+.league-scoreboard__view-toggle button { background: transparent; border-color: transparent; }
+.league-scoreboard__view-toggle button[aria-pressed="true"] { background: #163047; border-color: #22D3EE; color: #F4F7FF; }
+.league-scoreboard__controls button:focus-visible, .league-scoreboard__table:focus-visible { outline: 2px solid #22D3EE; outline-offset: 2px; }
+.league-scoreboard__scroll-hint { margin: 0; color: #8EA0D6; font-size: .8rem; }
+.league-scoreboard--all .league-scoreboard__table { overflow-x: auto; max-width: 100%; }
+.league-scoreboard--all .league-scoreboard__row { min-width: calc(140px + var(--week-count) * 100px + 80px); grid-template-columns: 140px repeat(var(--week-count), minmax(100px, 1fr)) 80px; gap: 0; padding: 0; }
+.league-scoreboard--all .league-scoreboard__row > * { padding: .7rem .5rem; }
+.league-scoreboard--all .league-scoreboard__row > :first-child { position: sticky; left: 0; z-index: 1; padding: .7rem .5rem; background: inherit; box-shadow: 6px 0 8px -6px #00000099; }
+.league-scoreboard__row.league-scoreboard__row--yours { background: #163047; }
+.league-scoreboard__rank { color: #8EA0D6; font-variant-numeric: tabular-nums; }
+.league-scoreboard__you { display: inline-block; padding: .05rem .3rem; margin-left: .3rem; border-radius: .3rem; background: #22D3EE22; color: #67E8F9; font-size: .65rem; }

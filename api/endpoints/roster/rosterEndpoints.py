@@ -4,6 +4,7 @@ from sqlalchemy.exc import DataError
 # endpoints/roster/rosterEndpoints.py
 from flask import request, jsonify
 from .service import RosterService
+from .team_performance import TeamPerformanceService
 from .contracts import RosterAccessDenied, RosterWeekUnavailable
 from actors import UserActor
 from utils.requestValidation import integer_field
@@ -63,3 +64,24 @@ class RosterEndpoints:
             raise
         except Exception:
             return jsonify({'message': 'Failed to read available teams'}), 500
+
+    def get_team_performance(self):
+        try:
+            principal = resolve_authenticated_principal(self.db_engine)
+            data = request.get_json(silent=True)
+            if not isinstance(data, dict):
+                return jsonify({'message': 'Request body must be a JSON object'}), 400
+            result = TeamPerformanceService(self.db_engine).read(
+                UserActor(principal.user_id, principal.subject),
+                integer_field(data, 'leagueId'), integer_field(data, 'weekNumber'))
+            return jsonify(result)
+        except PrincipalResolutionError as exc:
+            return jsonify({'error': exc.code}), exc.status_code
+        except RosterAccessDenied:
+            return jsonify({'message': 'League not found'}), 404
+        except (ValueError, RosterWeekUnavailable) as exc:
+            return jsonify({'message': str(exc)}), 400
+        except (HTTPException, DataError, IntegrityError):
+            raise
+        except Exception:
+            return jsonify({'message': 'Failed to read team performance'}), 500

@@ -1,3 +1,5 @@
+import { useTeamPerformance } from "../../hooks/useTeamPerformance";
+import { TeamPerformanceStats } from "../../components/TeamPerformance/TeamPerformanceStats";
 import { safeErrorMessage, TRANSACTION_UNCERTAIN, READ_ERROR } from "../../api/safeError";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -84,6 +86,7 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
       timeZone: league.settings?.timezone ?? null,
     }) ?? 1, [league]);
   const rosterWeekNumber = getRosterWeek();
+  const performance = useTeamPerformance(leagueId, rosterWeekNumber, scope);
   const [, checkWeek] = useState(0);
   const rosterScope = useRef({ week: rosterWeekNumber, generation: 0 });
   if (rosterScope.current.week !== rosterWeekNumber) {
@@ -524,6 +527,7 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
                 disabled={disabled}
               >
                 {team.teamName}
+                <TeamPerformanceStats stats={performance.teams[team.teamId]} />
               </button>
             );
           })}
@@ -627,6 +631,9 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
         </button>
       </nav>
 
+      <p className="roster-page__subhead">Team stats use league-adjusted differentials from confirmed completed games. Season averages are per game, independent of fantasy ownership.</p>
+      {performance.loading && <p>Loading team performance…</p>}
+      {performance.failed && <p>Team performance is unavailable. <button type="button" onClick={performance.retry}>Retry team stats</button></p>}
       {error && <p className="roster-page__error">{error}</p>}
       {submissionStatus && <p role="status">{submissionStatus}</p>}
       {(loading || submitting) && <p className="roster-page__loading">Loading teams…</p>}
@@ -702,7 +709,7 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
                 <p className="roster-page__queue-empty">No adds selected.</p>
               ) : (
                 <div className="roster-page__queue-entry">
-                  <span>{selectedAdd.teamName}</span>
+                  <span>{selectedAdd.teamName}<TeamPerformanceStats stats={performance.teams[selectedAdd.teamId]} /></span>
                   <button
                     type="button"
                     className="roster-page__queue-remove"
@@ -720,7 +727,7 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
                 <p className="roster-page__queue-empty">No drops selected.</p>
               ) : (
                 <div className="roster-page__queue-entry">
-                  <span>{selectedDrop.teamName}</span>
+                  <span>{selectedDrop.teamName}<TeamPerformanceStats stats={performance.teams[selectedDrop.teamId]} /></span>
                   <button
                     type="button"
                     className="roster-page__queue-remove"
@@ -840,7 +847,7 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
                       <p className="roster-page__queue-empty">No team selected.</p>
                     ) : (
                       <div className="roster-page__queue-entry">
-                        <span>{selectedTradeGive.teamName}</span>
+                        <span>{selectedTradeGive.teamName}<TeamPerformanceStats stats={performance.teams[selectedTradeGive.teamId]} /></span>
                         <button
                           type="button"
                           className="roster-page__queue-remove"
@@ -858,7 +865,7 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
                       <p className="roster-page__queue-empty">No team selected.</p>
                     ) : (
                       <div className="roster-page__queue-entry">
-                        <span>{selectedTradeReceive.teamName}</span>
+                        <span>{selectedTradeReceive.teamName}<TeamPerformanceStats stats={performance.teams[selectedTradeReceive.teamId]} /></span>
                         <button
                           type="button"
                           className="roster-page__queue-remove"
@@ -893,6 +900,7 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
             </>
           )}
           <TradeRequestsPanel
+            teamPerformance={performance.teams}
             leagueId={league.leagueId}
             memberId={league.memberId}
             isCurrent={isRosterCurrent}

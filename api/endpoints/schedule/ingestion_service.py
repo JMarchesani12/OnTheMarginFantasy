@@ -98,6 +98,7 @@ class ScheduleIngestionService(ScheduleReadService):
             "externalGameId": external_game_id,
             "date": event_dt,
             "timeTBD": game.get("timeTBD", False),
+            "isCompleted": game.get("isCompleted"),
             "homeTeamId": home_team_id,
             "awayTeamId": away_team_id,
             "homeScore": game["homeScore"],

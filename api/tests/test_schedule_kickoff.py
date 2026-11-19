@@ -27,3 +27,14 @@ class KickoffTests(unittest.TestCase):
         event = self.event(True)
         del event['competitions'][0]['timeValid']
         self.assertFalse(ESPNClient('', '').extract_game_from_event(event)['timeTBD'])
+
+    def test_completion_requires_provider_confirmation_not_nonzero_scores(self):
+        for completed in (True, False, None):
+            event = self.event(True)
+            competition = event['competitions'][0]
+            for competitor in competition['competitors']:
+                competitor['score'] = '70'
+            if completed is not None:
+                competition['status'] = {'type': {'completed': completed}}
+            game = ESPNClient('', '').extract_game_from_event(event)
+            self.assertIs(game['isCompleted'], completed)

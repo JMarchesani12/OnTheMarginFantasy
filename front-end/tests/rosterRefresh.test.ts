@@ -9,7 +9,8 @@ function setup(clock?:()=>number) {
  const checks=new Map<string,()=>boolean>();
  const req=(kind:string,args:any[])=>{const d=deferred();const r={...d,kind,args,done:false};requests.push(r);return d.promise;};
  const Page=h.load('src/screens/League/LeagueRosterPage.tsx',{
-  'react-router-dom':{useNavigate:()=>()=>{},useParams:()=>({league_id:String(league.leagueId)})},
+  '../api/teamPerformance':{getTeamPerformance:async()=>({weekNumber:1,teams:[]})},
+ 'react-router-dom':{useNavigate:()=>()=>{},useParams:()=>({league_id:String(league.leagueId)})},
   '../../hooks/useLeagueContext':{useLeagueContext:()=>{const captured=key;if(!checks.has(key))checks.set(key,()=>key===captured);return {league,isMember:true,scopeKey:key,isCurrent:checks.get(key)};}},
   '../../api/leagues':{getMembersOfLeague:(...a:any[])=>req('members',a)},
   '../../api/roster':{getMemberTeams:(...a:any[])=>req('teams',a),getAvailableTeams:(...a:any[])=>req('available',a)},

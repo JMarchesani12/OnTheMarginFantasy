@@ -503,3 +503,66 @@
 .league-schedule__rules-summary { color: #B7C2E6; font-size: 0.85rem; }
 .league-schedule__rules-summary p { margin: 0 0 0.4rem; }
 .league-schedule__rules-summary a { color: #67E8F9; }
+
+.league-schedule__member-picker { display: flex; flex-direction: column; gap: .3rem; min-width: 0; max-width: 100%; color: #B7C2E6; font-size: .85rem; }
+.league-schedule__member-picker select { width: 100%; max-width: 100%; min-height: 44px; padding: .5rem; border: 1px solid #334277; border-radius: .5rem; background: #0B0E1A; color: #F4F7FF; font: inherit; }
+@media (max-width: 800px) {
+  .league-schedule__header { flex-direction: column; align-items: stretch; }
+  .league-schedule__week-controls { flex-wrap: wrap; }
+  .league-schedule__table { min-width: 0; }
+  .league-schedule__table tr { grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); }
+  .league-schedule__table-wrapper { overflow: visible; }
+}
+.league-schedule__view-toggle { display: flex; gap: .25rem; }
+.league-schedule__view-toggle button[aria-pressed="true"] { border-color: #22D3EE; background: #163047; color: #F4F7FF; }
+.league-schedule__week-controls button { min-height: 44px; }
+@media (max-width: 800px) {
+  .league-schedule--week .league-schedule__table-wrapper {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+  .league-schedule--week .league-schedule__table {
+    min-width: calc(130px + var(--schedule-days, 7) * 110px);
+  }
+  .league-schedule--week .league-schedule__table tr {
+    grid-template-columns: 130px repeat(var(--schedule-days, 7), minmax(110px, 1fr));
+  }
+}
+.league-schedule__day-picker { display: flex; align-items: center; flex-wrap: wrap; gap: .4rem; }
+.league-schedule__day-picker select { max-width: 100%; min-height: 44px; padding: .4rem; border: 1px solid #334277; border-radius: .5rem; background: #0B0E1A; color: #F4F7FF; font: inherit; }
+
+/* Schedule toolbar: filters, date navigation, and a calendar strip. */
+.league-schedule__toolbar { border: 1px solid #2F3B6A; border-radius: 1rem; background: #0B1022; margin-bottom: 1rem; overflow: hidden; }
+.league-schedule__toolbar-top { display: grid; grid-template-columns: minmax(160px, 1fr) 110px auto; align-items: end; gap: 1rem; padding: 1rem; border-bottom: 1px solid #243055; }
+.league-schedule__toolbar .league-schedule__member-picker { max-width: 360px; }
+.league-schedule__period-picker { display: flex; flex-direction: column; gap: .3rem; color: #B7C2E6; font-size: .85rem; }
+.league-schedule__period-picker input { box-sizing: border-box; width: 100%; min-width: 0; height: 44px; padding: .5rem .65rem; border: 1px solid #334277; border-radius: .5rem; background: #0B0E1A; color: #F4F7FF; font: inherit; }
+.league-schedule__toolbar .league-schedule__view-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: .2rem; padding: .2rem; border: 1px solid #2F3B6A; border-radius: .65rem; background: #070A14; }
+.league-schedule__view-toggle button { min-height: 38px; min-width: 64px; padding: .4rem .75rem; border: 1px solid transparent; border-radius: .45rem; background: transparent; color: #B7C2E6; font: inherit; font-size: .9rem; font-weight: 700; cursor: pointer; }
+.league-schedule__view-toggle button[aria-pressed="true"] { background: #163047; border-color: #22D3EE; color: #F4F7FF; box-shadow: 0 1px 6px #00000044; }
+.league-schedule__date-nav { display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px auto; gap: .75rem; align-items: center; padding: 1rem; }
+.league-schedule__date-heading { min-width: 0; text-align: center; }
+.league-schedule__date-heading > span { display: block; color: #8EA0D6; font-size: .75rem; margin-bottom: .15rem; }
+.league-schedule__date-heading .league-schedule__title { font-size: 1.1rem; overflow-wrap: anywhere; }
+.league-schedule__date-arrow, .league-schedule__today { min-height: 44px; border: 1px solid #334277; border-radius: .6rem; background: #111A33; color: #F4F7FF; cursor: pointer; }
+.league-schedule__date-arrow { padding: 0; font-size: 1.7rem; line-height: 1; }
+.league-schedule__today { padding: .4rem .75rem; font: inherit; font-size: .8rem; font-weight: 600; }
+.league-schedule__date-strip { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: .3rem; padding: 0 1rem 1rem; }
+.league-schedule__date-strip button { position: relative; min-width: 0; min-height: 66px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .15rem; padding: .4rem .1rem; border: 1px solid transparent; border-radius: .7rem; background: #101831; color: #B7C2E6; font: inherit; cursor: pointer; }
+.league-schedule__date-strip button > span:first-child { font-size: .75rem; }
+.league-schedule__date-strip button strong { font-size: 1.15rem; }
+.league-schedule__date-strip button[aria-pressed="true"] { background: #163047; border-color: #22D3EE; color: #F4F7FF; }
+.league-schedule__today-dot { position: absolute; bottom: .25rem; width: 4px; height: 4px; border-radius: 50%; background: #22D3EE; }
+.league-schedule__toolbar button:focus-visible, .league-schedule__toolbar select:focus-visible, .league-schedule__toolbar input:focus-visible { outline: 2px solid #22D3EE; outline-offset: 2px; }
+.league-schedule__toolbar button:disabled { opacity: .4; cursor: default; }
+.league-schedule__toolbar button:hover:not(:disabled) { border-color: #22D3EE; }
+@media (max-width: 800px) {
+  .league-schedule__toolbar-top { grid-template-columns: minmax(0, 1fr) 90px; gap: .75rem; padding: .75rem; }
+  .league-schedule__toolbar .league-schedule__member-picker { max-width: none; }
+  .league-schedule__toolbar .league-schedule__view-toggle { grid-column: 1 / -1; }
+  .league-schedule__date-nav { grid-template-columns: 44px minmax(0, 1fr) 44px; gap: .4rem; padding: .75rem; }
+  .league-schedule__date-heading .league-schedule__title { font-size: .95rem; }
+  .league-schedule__today { grid-column: 1 / -1; justify-self: center; min-height: 36px; }
+  .league-schedule__date-strip { padding: 0 .5rem .75rem; gap: .2rem; }
+  .league-schedule__date-strip button > span:first-child { font-size: .65rem; }
+}

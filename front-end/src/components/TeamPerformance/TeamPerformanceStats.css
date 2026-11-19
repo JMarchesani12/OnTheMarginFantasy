@@ -1,0 +1,7 @@
+.team-performance { display: flex; flex-wrap: wrap; gap: .25rem .65rem; margin-top: .35rem; color: #B7C2E6; font-size: .72rem; line-height: 1.45; font-weight: 400; text-align: left; }
+.team-performance > span { white-space: normal; }
+.team-performance strong { color: #F4F7FF; font-variant-numeric: tabular-nums; font-weight: 700; }
+.team-performance .team-performance__pending { flex-basis: 100%; color: #8EA0D6; font-size: .65rem; }
+.roster-page__team-btn:has(.team-performance) { display: block; text-align: left; }
+.league-schedule__team-col .team-performance { font-size: .65rem; gap: .2rem .4rem; }
+.league-schedule__team-col .team-performance__pending { font-size: .6rem; }
