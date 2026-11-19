@@ -1,4 +1,5 @@
 from endpoints.schedule.scheduleEndpoints import ScheduleEndpoints
+from .daily_scoreboard import DailyScoreboardEndpoints
 
 def setup_routes(app, engine):
 
@@ -9,3 +10,6 @@ def setup_routes(app, engine):
     app.add_url_rule("/api/schedule/teamGamesBySeason", view_func=scheduleEndpoints.team_games_by_season, methods=["POST"])
     app.add_url_rule("/api/schedule/teamSearch", view_func=scheduleEndpoints.team_search, methods=["POST"])
     app.add_url_rule("/api/schedule/createWeeks", view_func=scheduleEndpoints.createWeeksForLeague, methods=["POST"])
+
+    daily = DailyScoreboardEndpoints(engine)
+    app.add_url_rule("/api/schedule/dailyScoreboard", view_func=daily.read, methods=["POST"])

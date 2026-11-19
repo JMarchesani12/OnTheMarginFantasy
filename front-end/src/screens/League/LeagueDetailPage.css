@@ -709,8 +709,10 @@
 }
 .league-detail__draft-notice { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem; padding-bottom: 1rem; }
 .league-detail__draft-notice p { margin: 0; }
-.league-detail__nav { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.league-detail__nav { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .league-detail__overview-extras { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-top: 1rem; align-items: start; }
 .league-detail__overview-extras .league-detail__overview { grid-column: 1 / -1; margin-bottom: 0; }
 .league-detail__overview-extras .league-detail__tools-card { margin-bottom: 0; }
 @media (max-width: 768px) { .league-detail__overview-extras { grid-template-columns: minmax(0, 1fr); } }
+
+@media (max-width: 480px) { .league-detail__nav button { font-size: .75rem; } }
