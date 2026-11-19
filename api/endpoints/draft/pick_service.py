@@ -1,5 +1,6 @@
 from utils.conference_membership import require_member_roster_mappings
 from utils.conference_caps import require_conference_cap
+from utils.draft_eligibility import require_draft_caps
 """Draft allocation and timeout policy, owning each write transaction.
 
 Interactive callers use pick_live(UserActor, ...); worker/trusted callers use
@@ -266,6 +267,25 @@ class DraftPickService:
                 # already past end
                 return None
 
+            # Exhaustion is permanent for this draft, distinct from a clock timeout.
+            # Check before expiry so an impossible turn never waits or rotates.
+            require_draft_caps(conn, league_id)
+            require_member_roster_mappings(conn, league_id, [state._mapping['currentMemberId']], 1)
+            from .snapshot_repository import DraftSnapshotRepository
+            if not DraftSnapshotRepository().member_has_legal_pick(conn, league_id, state._mapping['currentMemberId']):
+                nxt = self._get_next_unpicked_turn_from(conn, league_id, current_overall + 1)
+                if nxt is None:
+                    self.finalize_draft(league_id, conn=conn)
+                    return {'type': 'NO-LEGAL-PICKS', 'draftComplete': True}
+                next_overall, next_member_id = nxt
+                self.pick_repository.timeout_advance(conn, {
+                    'leagueId': league_id, 'nextOverall': next_overall,
+                    'nextMemberId': next_member_id, 'selectionTime': selection_time,
+                })
+                self.pick_repository.notify(conn, league_id, 'no_legal_picks')
+                return {'type': 'NO-LEGAL-PICKS', 'draftComplete': False,
+                        'nextOverallPickNumber': next_overall, 'nextMemberId': next_member_id}
+
             # If no expiresAt, treat as not expirable
             if state._mapping["expiresAt"] is None:
                 return None
@@ -313,14 +333,11 @@ class DraftPickService:
                 self.pick_repository.timeout_rotate_turns(conn, {"leagueId": league_id, "cur": current_overall, "last": last_unpicked_overall})
 
                 # Advance DraftState to next unpicked overall (>= current_overall)
-                next_row = self.pick_repository.timeout_next_turn(conn, {"leagueId": league_id, "cur": current_overall}).fetchone()
-
-                if not next_row:
+                nxt = self._get_next_unpicked_turn_from(conn, league_id, current_overall)
+                if not nxt:
                     self.finalize_draft(league_id, conn=conn)
                     return {"type": "AUTO-SKIP-MOVE-TO-END", "draftComplete": True}
-
-                next_overall = int(next_row._mapping["nextOverall"])
-                next_member_id = int(next_row._mapping["nextMemberId"])
+                next_overall, next_member_id = nxt
 
                 self.pick_repository.timeout_advance(conn, {
                         "leagueId": league_id,
@@ -560,6 +577,7 @@ class DraftPickService:
 
 
     def _get_next_unpicked_turn_from(self, conn, league_id: int, start_overall: int) -> Optional[tuple[int, int]]:
+        require_draft_caps(conn, league_id)
         return DraftSnapshotService(None).next_unpicked_turn(conn, league_id, start_overall)
 
 

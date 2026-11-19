@@ -9,6 +9,7 @@ function setup(clock?:()=>number) {
  const checks=new Map<string,()=>boolean>();
  const req=(kind:string,args:any[])=>{const d=deferred();const r={...d,kind,args,done:false};requests.push(r);return d.promise;};
  const Page=h.load('src/screens/League/LeagueRosterPage.tsx',{
+  '../api/teamSearch':{getTeamSearchCatalog:async()=>({teams:[1,2,3].map(teamId=>({teamId,schoolId:369,teamName:'Northern Iowa Panthers',aliases:['Northern Iowa','UNI']}))})},
   '../api/teamPerformance':{getTeamPerformance:async()=>({weekNumber:1,teams:[]})},
  'react-router-dom':{useNavigate:()=>()=>{},useParams:()=>({league_id:String(league.leagueId)})},
   '../../hooks/useLeagueContext':{useLeagueContext:()=>{const captured=key;if(!checks.has(key))checks.set(key,()=>key===captured);return {league,isMember:true,scopeKey:key,isCurrent:checks.get(key)};}},
@@ -108,4 +109,20 @@ test('successful proposal clears submitted IDs after concurrent acceptance refre
 
 test('a genuinely edited draft survives a delayed write even when it reselects the same team ID',async()=>{
  const h=setup();await h.ready();h.click('Available');h.click('Submit Add / Drop Request');h.click('Available');h.click('Available');h.resolve(h.waiting('addDrop')[0],{});await h.flush();await h.settleReads();assert.equal(h.button('Available').props['aria-pressed'],true);h.dispose();
+});
+
+test('roster, free-agent and trade search share aliases and typo matching',async()=>{
+ const h=setup();h.render();
+ const available=[team(3,'Northern Iowa Panthers'),team(4,'Northern Illinois Huskies')];
+ const teams=(r:any)=>r.args[0]===11?[team(1,'Northern Iowa Panthers')]:[team(2,'Northern Iowa Panthers'),team(5,'Northern Illinois Huskies')];
+ await h.settleReads({available,teams});
+ const search=(query:string)=>{h.all().find(n=>n.props?.id==='roster-search').props.onChange({target:{value:query}});h.render();};
+ search('UNI');
+ assert.match(h.text(),/Northern Iowa Panthers/);assert.doesNotMatch(h.text(),/Northern Illinois Huskies/);
+ search('nothern iwoa');
+ assert.match(h.text(),/Northern Iowa Panthers/);assert.doesNotMatch(h.text(),/Northern Illinois Huskies/);
+ h.click('Trade');await h.settleReads({available,teams});
+ search('UNI');
+ assert.equal(h.all().filter(n=>n.type==='button'&&text(n)==='Northern Iowa Panthers').length,2);
+ assert.doesNotMatch(h.text(),/Northern Illinois Huskies/);h.dispose();
 });

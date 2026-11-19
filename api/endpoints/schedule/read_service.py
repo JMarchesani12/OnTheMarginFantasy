@@ -3,7 +3,7 @@
 Internal trusted capabilities preserve existing caller policy; transport/job wiring
 is migrated separately. No provider URL/client or configured engine is needed.
 """
-import re
+from utils.team_search import normalize_team_search_text, rank_team_search_match, STRONG_MATCH, MAX_QUERY_LENGTH, MAX_QUERY_TOKENS
 from contextlib import nullcontext
 from typing import Any, Dict, List, Optional
 from rules.leagueRules import resolve_rules, adjust_margin, rule_summary
@@ -238,40 +238,11 @@ class ScheduleReadService(ScheduleCalendarService):
 
     @staticmethod
     def _normalize_team_search_text(value: str) -> str:
-        abbreviations = {
-            "st": "state",
-            "univ": "university",
-        }
-        cleaned = re.sub(
-            r"[^a-z0-9]+",
-            " ",
-            (value or "").lower().replace("&", " and "),
-        )
-        tokens = [abbreviations.get(token, token) for token in cleaned.split()]
-        return " ".join(tokens)
+        return normalize_team_search_text(value)
 
     @classmethod
     def _team_search_rank(cls, row: Dict[str, Any], query: str) -> int:
-        normalized_query = cls._normalize_team_search_text(query)
-        if not normalized_query:
-            return 0
-
-        normalized_candidate = cls._normalize_team_search_text(row.get("teamName") or "")
-        if normalized_candidate == normalized_query:
-            return 100
-        if normalized_candidate.startswith(normalized_query):
-            return 90
-        if normalized_query in normalized_candidate:
-            return 75
-
-        candidate_tokens = normalized_candidate.split()
-        query_tokens = normalized_query.split()
-        if query_tokens and all(
-            any(candidate_token.startswith(query_token) for candidate_token in candidate_tokens)
-            for query_token in query_tokens
-        ):
-            return 50
-        return 0
+        return rank_team_search_match(row.get('teamName') or '', query, row.get('searchAliases') or ())
 
     def search_teams_for_league(
         self,
@@ -281,7 +252,7 @@ class ScheduleReadService(ScheduleCalendarService):
     ) -> List[Dict[str, Any]]:
         limit = max(1, min(int(limit or 20), 50))
         normalized_query = self._normalize_team_search_text(query)
-        if len(normalized_query) < 2:
+        if len(query) > MAX_QUERY_LENGTH or len(normalized_query.split()) > MAX_QUERY_TOKENS or len(normalized_query) < 2:
             return []
 
         
@@ -305,9 +276,12 @@ class ScheduleReadService(ScheduleCalendarService):
         for row in rows:
             item = dict(row._mapping)
             rank = self._team_search_rank(item, normalized_query)
+            item.pop("searchAliases", None)
             if rank > 0:
                 ranked.append((rank, item["teamName"], item))
 
+        if any(rank >= STRONG_MATCH for rank, _, _ in ranked):
+            ranked = [row for row in ranked if row[0] >= STRONG_MATCH]
         ranked.sort(key=lambda value: (-value[0], value[1]))
         return [item for _, _, item in ranked[:limit]]
 

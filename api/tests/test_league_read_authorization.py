@@ -40,6 +40,9 @@ class ReadDatabase(ProfileDatabase):
         sql = str(statement).replace('FOR UPDATE', '').replace('FOR SHARE', '').replace(
             "w.\"endDate\" + interval '1 microsecond' - interval '7 days'",
             "datetime(w.\"endDate\", '-7 days')")
+        sql = sql.replace('json_agg(sa.alias ORDER BY sa."normalizedAlias")','json_group_array(sa.alias)').replace("'[]'::json", "'[]'")
+        from school_name_fixture import adapt_legacy_school_fixture
+        sql = adapt_legacy_school_fixture(self.connection, sql)
         if self.before_query:
             self.before_query(sql)
         cursor = self.connection.execute(sql, params)
@@ -48,6 +51,8 @@ class ReadDatabase(ProfileDatabase):
             if row is None:
                 return None
             result = dict(row)
+            if isinstance(result.get('searchAliases'), str):
+                result['searchAliases'] = json.loads(result['searchAliases'])
             if isinstance(result.get('settings'), str):
                 result['settings'] = json.loads(result['settings'])
             return result

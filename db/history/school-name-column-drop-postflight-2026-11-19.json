@@ -1,0 +1,22 @@
+{
+  "result": "PASS",
+  "retiredColumnsAbsent": true,
+  "counts": {
+    "schools": 366,
+    "teams": 631,
+    "aliases": 2079
+  },
+  "readChecks": {
+    "canonicalNamesVerified": true,
+    "preservedSearchQueries": [
+      "UNI",
+      "Northern Iowa",
+      "University of Northern Iowa"
+    ]
+  },
+  "deployedHttpStatuses": {
+    "/health": 200,
+    "/api/team-search/catalog": 200
+  },
+  "deploymentEvidence": "User confirmed deployment; public API behavior verified. Recorded revision is the clean local committed revision."
+}

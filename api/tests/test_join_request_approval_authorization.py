@@ -93,6 +93,8 @@ class JoinRequestApprovalAuthorizationTests(unittest.TestCase):
                 (102, '2026-10-27', 10, 4, 'DENIED', 'Old request', 'Other Team', '2026-10-27', 1),
                 (201, '2026-10-27', 20, 1, 'PENDING', 'Join B', 'Alice Other', NULL, NULL);
         ''')
+        from draft_capacity_fixture import install_capacity_fixture
+        install_capacity_fixture(self.db)
         app = Flask(__name__)
         app.config['TESTING'] = True
         install_auth_middleware(app)

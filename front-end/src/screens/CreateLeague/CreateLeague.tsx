@@ -157,8 +157,7 @@ const CreateLeague: React.FC = () => {
       (sport) => sport.id === Number(form.sportId),
     );
     if (
-      selectedSport?.maxDraftRounds == null ||
-      selectedSport.maxPlayersToHaveMaxRounds == null
+      selectedSport?.maxDraftRounds == null
     ) {
       setErrorField("league-sport");
       setError(

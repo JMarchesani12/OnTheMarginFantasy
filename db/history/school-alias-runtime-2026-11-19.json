@@ -1,0 +1,17 @@
+{
+  "catalogHttpStatus": 200,
+  "catalogTeams": 631,
+  "northernIowaTeamIds": [
+    369,
+    525
+  ],
+  "verifiedQueries": [
+    "UNI",
+    "Northern Iowa",
+    "Nothern Iowa"
+  ],
+  "lookupAliasJoinVerified": true,
+  "rlsEnabled": true,
+  "browserDirectAccess": false,
+  "result": "PASS"
+}

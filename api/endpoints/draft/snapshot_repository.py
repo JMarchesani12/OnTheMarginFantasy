@@ -1,6 +1,7 @@
 from utils.conference_membership import conference_sql
 """Draft snapshot SQL; caller supplies every connection and transaction."""
 from sqlalchemy import text
+from utils.draft_eligibility import ELIGIBILITY_CTES, legal_pick_predicate
 
 
 class DraftSnapshotRepository:
@@ -50,13 +51,14 @@ class DraftSnapshotRepository:
                       dp."memberId",
                       lm."teamName" AS "memberTeamName",
                       dp."sportTeamId",
-                      st."displayName" AS "sportTeamName",
+                      school.name AS "sportTeamName",
                       sc.id AS "sportConferenceId",
                       conf.name AS "conferenceName"
                     FROM "DraftPick" dp
                     CROSS JOIN league_info li
                     JOIN "LeagueMember" lm ON lm.id = dp."memberId"
                     JOIN "SportTeam" st ON st.id = dp."sportTeamId"
+                    JOIN "School" school ON school.id=st."schoolId"
                     LEFT JOIN "ConferenceMembership" cm
                       ON cm."sportTeamId" = st.id
                      AND cm."sportId" = st."sportId"
@@ -86,7 +88,7 @@ class DraftSnapshotRepository:
         return (dict(row._mapping) if hasattr(row, "_mapping") else dict(row)) if row else None
 
     def next_unpicked_turn(self, conn, league_id, start_overall):
-        row = conn.execute(text("""
+        row = conn.execute(text(ELIGIBILITY_CTES + f"""
                 SELECT dt."overallPickNumber" AS "overall",
                     dt."memberId"          AS "memberId"
                 FROM "DraftTurn" dt
@@ -96,7 +98,13 @@ class DraftSnapshotRepository:
                 WHERE dt."leagueId" = :leagueId
                 AND dt."overallPickNumber" >= :startOverall
                 AND dp.id IS NULL
+                AND {legal_pick_predicate('dt."memberId"')}
                 ORDER BY dt."overallPickNumber" ASC
                 LIMIT 1
             """), {'leagueId': league_id , 'startOverall': start_overall}).fetchone()
         return (int(row._mapping["overall"]), int(row._mapping["memberId"])) if row else None
+
+    def member_has_legal_pick(self, conn, league_id, member_id):
+        row = conn.execute(text(ELIGIBILITY_CTES + f"SELECT {legal_pick_predicate(':memberId')} AS eligible"),
+                           {'leagueId': league_id, 'memberId': member_id}).fetchone()
+        return bool(row._mapping['eligible'])

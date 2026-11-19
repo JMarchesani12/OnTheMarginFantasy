@@ -184,55 +184,8 @@ class AdmissionRepository:
         )
 
     def update_capacity(self, conn, league_id):
-        conn.execute(
-            text("""
-                WITH locked_league AS (
-                    SELECT l.id,
-                        l."sport",
-                        (SELECT CAST(count(*) AS integer) FROM "LeagueMember" members WHERE members."leagueId"=l.id) AS member_count,
-                        l.settings AS cur_settings
-                    FROM "League" l
-                    WHERE l.id = :leagueId
-                    FOR UPDATE
-                ),
-                sport_cfg AS (
-                    SELECT s.id,
-                        s."maxDraftRounds" AS max_rounds,
-                        s."maxPlayersToHaveMaxRounds" AS max_players_full
-                    FROM "Sport" s
-                    JOIN locked_league ll ON ll."sport" = s.id
-                ),
-                computed AS (
-                    SELECT
-                        ll.id AS league_id,
-                        ll.member_count AS new_players,
-                        GREATEST(
-                            1,
-                            CASE
-                                WHEN ll.member_count <= sc.max_players_full
-                                    THEN sc.max_rounds
-                                ELSE sc.max_rounds - (ll.member_count - sc.max_players_full)
-                            END
-                        ) AS new_num_rounds
-                    FROM locked_league ll
-                    JOIN sport_cfg sc ON true
-                )
-                UPDATE "League" l
-                SET
-                    "numPlayers" = c.new_players,
-                    settings = jsonb_set(
-                        COALESCE(l.settings, '{}'::jsonb),
-                        '{draft,numberOfRounds}',
-                        to_jsonb(c.new_num_rounds),
-                        true
-                    ),
-                    "updatedAt" = now()
-                FROM computed c
-                WHERE l.id = c.league_id
-                RETURNING l.id, l."numPlayers", l.settings
-            """),
-            {"leagueId": league_id},
-        ).mappings().first()
+        from utils.draft_capacity import refresh_draft_capacity
+        return refresh_draft_capacity(conn, league_id)
 
     def approve_pending(self, conn, league_id, request_id, acting_user_id):
         updated = conn.execute(

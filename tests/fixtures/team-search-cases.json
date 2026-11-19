@@ -1,0 +1,466 @@
+[
+  {
+    "candidate": "Northern Iowa",
+    "query": "Northern Iowa",
+    "score": 100,
+    "aliases": [
+      "Northern Iowa",
+      "Northern Iowa Panthers",
+      "UNI",
+      "UNI Panthers"
+    ]
+  },
+  {
+    "candidate": "Northern Iowa Panthers",
+    "query": "UNI",
+    "score": 98,
+    "aliases": [
+      "Northern Iowa",
+      "Northern Iowa Panthers",
+      "UNI",
+      "UNI Panthers"
+    ]
+  },
+  {
+    "candidate": "UNI",
+    "query": "Northern Iowa",
+    "score": 98,
+    "aliases": [
+      "Northern Iowa",
+      "Northern Iowa Panthers",
+      "UNI",
+      "UNI Panthers"
+    ]
+  },
+  {
+    "candidate": "Northern Iowa Panthers",
+    "query": "University of Northern Iowa",
+    "minimum": 50,
+    "aliases": [
+      "Northern Iowa",
+      "Northern Iowa Panthers",
+      "UNI",
+      "UNI Panthers"
+    ]
+  },
+  {
+    "candidate": "Northern Iowa Panthers",
+    "query": "U.N.I.",
+    "score": 98,
+    "aliases": [
+      "Northern Iowa",
+      "Northern Iowa Panthers",
+      "UNI",
+      "UNI Panthers"
+    ]
+  },
+  {
+    "candidate": "Northern Iowa",
+    "query": "nothern iwoa",
+    "minimum": 1,
+    "maximum": 49,
+    "aliases": [
+      "Northern Iowa",
+      "Northern Iowa Panthers",
+      "UNI",
+      "UNI Panthers"
+    ]
+  },
+  {
+    "candidate": "Northern Iowa",
+    "query": "Nrothern Iowa",
+    "minimum": 1,
+    "maximum": 49,
+    "aliases": [
+      "Northern Iowa",
+      "Northern Iowa Panthers",
+      "UNI",
+      "UNI Panthers"
+    ]
+  },
+  {
+    "candidate": "Iowa State Cyclones",
+    "query": "iwoa state",
+    "minimum": 1,
+    "maximum": 49,
+    "aliases": [
+      "ISU",
+      "ISU Cyclones",
+      "Iowa State",
+      "Iowa State Cyclones"
+    ]
+  },
+  {
+    "candidate": "Northern Illinois Huskies",
+    "query": "UNI",
+    "score": 0,
+    "aliases": [
+      "N Illinois",
+      "N Illinois Huskies",
+      "NIU",
+      "NIU Huskies",
+      "Northern Illinois",
+      "Northern Illinois Huskies"
+    ]
+  },
+  {
+    "candidate": "Northern Iowa Panthers",
+    "query": "NIU",
+    "score": 0,
+    "aliases": [
+      "Northern Iowa",
+      "Northern Iowa Panthers",
+      "UNI",
+      "UNI Panthers"
+    ]
+  },
+  {
+    "candidate": "University of Texas",
+    "query": "UNI",
+    "score": 0,
+    "aliases": [
+      "TEX",
+      "TEX Longhorns",
+      "Texas",
+      "Texas Longhorns"
+    ]
+  },
+  {
+    "candidate": "Iowa State Cyclones",
+    "query": "IOWA ST.",
+    "minimum": 50,
+    "aliases": [
+      "ISU",
+      "ISU Cyclones",
+      "Iowa State",
+      "Iowa State Cyclones"
+    ]
+  },
+  {
+    "candidate": "St. John's Red Storm",
+    "query": "saint johns",
+    "minimum": 50,
+    "aliases": [
+      "SJU",
+      "SJU Red Storm",
+      "St John's",
+      "St John's Red Storm",
+      "St. John's",
+      "St. John's Red Storm"
+    ]
+  },
+  {
+    "candidate": "St. John's Red Storm",
+    "query": "St Johns",
+    "minimum": 50,
+    "aliases": [
+      "SJU",
+      "SJU Red Storm",
+      "St John's",
+      "St John's Red Storm",
+      "St. John's",
+      "St. John's Red Storm"
+    ]
+  },
+  {
+    "candidate": "Texas A&M Aggies",
+    "query": "texas a and m",
+    "minimum": 50,
+    "aliases": [
+      "TA&M",
+      "TA&M Aggies",
+      "Texas A&M",
+      "Texas A&M Aggies"
+    ]
+  },
+  {
+    "candidate": "San José State Spartans",
+    "query": "san jose state",
+    "minimum": 50,
+    "aliases": [
+      "SJSU",
+      "SJSU Spartans",
+      "San José St",
+      "San José St Spartans",
+      "San José State",
+      "San José State Spartans"
+    ]
+  },
+  {
+    "candidate": "UConn Huskies",
+    "query": "Connecticut",
+    "score": 98,
+    "aliases": [
+      "CONN",
+      "CONN Huskies",
+      "Connecticut",
+      "Connecticut Huskies",
+      "UConn",
+      "UConn Huskies",
+      "University of Connecticut",
+      "University of Connecticut Huskies"
+    ]
+  },
+  {
+    "candidate": "Connecticut Huskies",
+    "query": "UConn",
+    "score": 98,
+    "aliases": [
+      "CONN",
+      "CONN Huskies",
+      "Connecticut",
+      "Connecticut Huskies",
+      "UConn",
+      "UConn Huskies",
+      "University of Connecticut",
+      "University of Connecticut Huskies"
+    ]
+  },
+  {
+    "candidate": "USC Trojans",
+    "query": "Southern California",
+    "score": 98,
+    "aliases": [
+      "Southern California",
+      "Southern California Trojans",
+      "USC",
+      "USC Trojans",
+      "University of Southern California",
+      "University of Southern California Trojans"
+    ]
+  },
+  {
+    "candidate": "Ohio State Buckeyes",
+    "query": "OSU",
+    "score": 98,
+    "aliases": [
+      "OSU",
+      "OSU Buckeyes",
+      "Ohio State",
+      "Ohio State Buckeyes"
+    ]
+  },
+  {
+    "candidate": "Oregon State Beavers",
+    "query": "OSU",
+    "score": 98,
+    "aliases": [
+      "ORST",
+      "ORST Beavers",
+      "OSU",
+      "OSU Beavers",
+      "Oregon St",
+      "Oregon St Beavers",
+      "Oregon State",
+      "Oregon State Beavers"
+    ]
+  },
+  {
+    "candidate": "Oklahoma State Cowboys",
+    "query": "OSU",
+    "score": 98,
+    "aliases": [
+      "OKST",
+      "OKST Cowboys",
+      "OKST Cowgirls",
+      "OSU",
+      "OSU Cowboys",
+      "OSU Cowgirls",
+      "Oklahoma St",
+      "Oklahoma St Cowboys",
+      "Oklahoma St Cowgirls",
+      "Oklahoma State",
+      "Oklahoma State Cowboys",
+      "Oklahoma State Cowgirls"
+    ]
+  },
+  {
+    "candidate": "Iowa State Cyclones",
+    "query": "IOWA",
+    "minimum": 50,
+    "aliases": [
+      "ISU",
+      "ISU Cyclones",
+      "Iowa State",
+      "Iowa State Cyclones"
+    ]
+  },
+  {
+    "candidate": "Iowa State Cyclones",
+    "query": "HAWKEYES",
+    "score": 0,
+    "aliases": [
+      "ISU",
+      "ISU Cyclones",
+      "Iowa State",
+      "Iowa State Cyclones"
+    ]
+  },
+  {
+    "candidate": "Miami (OH) RedHawks",
+    "query": "Hurricanes",
+    "score": 0,
+    "aliases": [
+      "M-OH",
+      "M-OH RedHawks",
+      "Miami (OH)",
+      "Miami (OH) RedHawks",
+      "Miami OH",
+      "Miami OH RedHawks"
+    ]
+  },
+  {
+    "candidate": "Miami Hurricanes",
+    "query": "RedHawks",
+    "score": 0,
+    "aliases": [
+      "MIA",
+      "MIA Hurricanes",
+      "Miami",
+      "Miami Hurricanes"
+    ]
+  },
+  {
+    "candidate": "Northern Iowa",
+    "query": "iowa northern",
+    "minimum": 50,
+    "aliases": [
+      "Northern Iowa",
+      "Northern Iowa Panthers",
+      "UNI",
+      "UNI Panthers"
+    ]
+  },
+  {
+    "candidate": "Iowa State",
+    "query": "iowa iowa",
+    "score": 0,
+    "aliases": [
+      "ISU",
+      "ISU Cyclones",
+      "Iowa State",
+      "Iowa State Cyclones"
+    ]
+  },
+  {
+    "candidate": "Iowa State",
+    "query": "unlikely unrelated search",
+    "score": 0,
+    "aliases": [
+      "ISU",
+      "ISU Cyclones",
+      "Iowa State",
+      "Iowa State Cyclones"
+    ]
+  },
+  {
+    "candidate": "LSU Tigers",
+    "query": "LSV",
+    "score": 0,
+    "aliases": [
+      "LSU",
+      "LSU Tigers"
+    ]
+  },
+  {
+    "candidate": "UNI",
+    "query": "UNII",
+    "score": 0,
+    "aliases": [
+      "Northern Iowa",
+      "Northern Iowa Panthers",
+      "UNI",
+      "UNI Panthers"
+    ]
+  },
+  {
+    "candidate": "Northern Iowa",
+    "query": "",
+    "score": 0,
+    "aliases": [
+      "Northern Iowa",
+      "Northern Iowa Panthers",
+      "UNI",
+      "UNI Panthers"
+    ]
+  },
+  {
+    "candidate": "USC Upstate Spartans",
+    "query": "Trojans",
+    "score": 0,
+    "aliases": []
+  },
+  {
+    "candidate": "USC Upstate",
+    "query": "Southern California",
+    "score": 0,
+    "aliases": []
+  },
+  {
+    "candidate": "Iowa Wesleyan Tigers",
+    "query": "Hawkeyes",
+    "score": 0,
+    "aliases": []
+  },
+  {
+    "candidate": "Northern Iowa State",
+    "query": "UNI",
+    "score": 0,
+    "aliases": []
+  },
+  {
+    "candidate": "University of Connecticut Huskies",
+    "query": "UConn",
+    "minimum": 50,
+    "aliases": [
+      "CONN",
+      "CONN Huskies",
+      "Connecticut",
+      "Connecticut Huskies",
+      "UConn",
+      "UConn Huskies",
+      "University of Connecticut",
+      "University of Connecticut Huskies"
+    ]
+  },
+  {
+    "candidate": "Northern Iowa",
+    "query": "northemm iowa",
+    "minimum": 1,
+    "maximum": 49,
+    "aliases": [
+      "Northern Iowa",
+      "Northern Iowa Panthers",
+      "UNI",
+      "UNI Panthers"
+    ]
+  },
+  {
+    "candidate": "Iowa State",
+    "query": "ioxx state",
+    "score": 0,
+    "aliases": [
+      "ISU",
+      "ISU Cyclones",
+      "Iowa State",
+      "Iowa State Cyclones"
+    ]
+  },
+  {
+    "candidate": "Northern Iowa Panthers",
+    "query": "U N I",
+    "score": 98,
+    "aliases": [
+      "Northern Iowa",
+      "Northern Iowa Panthers",
+      "UNI",
+      "UNI Panthers"
+    ]
+  },
+  {
+    "candidate": "",
+    "query": "UNI",
+    "score": 0,
+    "aliases": []
+  }
+]

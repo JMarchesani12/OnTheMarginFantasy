@@ -393,3 +393,52 @@ The [member-led ownership index package](indexes/ownership/README.md) is already
 Use [scripts/database](../scripts/database/README.md) for explicitly read-only snapshots. Catalog and pg_dump share an exported transaction snapshot and checksummed manifests; no app/Auth rows are exported. Source paths in historical manifests refer to the original capture checkout and are not automatically rewritten after repository cleanup. Preserve immutable SQL/state/package hashes and actual execution receipts.
 
 A schema-only snapshot is not a data backup, full provider setup or universal restore script. Use ordinary database backups/PITR and a tested data-recovery process separately. Never execute a snapshot against a populated database.
+
+
+## School aliases — November 19, 2026
+
+`SchoolAlias.schoolId -> School.id` stores shared search aliases across sports.
+The `(schoolId, normalizedAlias)` key deduplicates within a school while allowing
+ambiguous abbreviations across schools. This additive migration and its seed
+import were **APPLIED_AND_VERIFIED** on the configured project: 2,079 aliases,
+366 existing schools, and 631 existing teams. Existing School/SportTeam rows were
+not modified. Frozen baselines and historical snapshots remain unchanged.
+
+See [migration](../api/migrations/20261119_school_alias.sql),
+[maintenance/runtime notes](../scripts/team-search/README.md), and
+[rollout receipt](history/school-alias-rollout-2026-11-19.json).
+Runtime search reads this table; the JSON catalog is offline seed data only.
+Browser direct access is revoked and RLS enabled; the backend exposes public
+school-name metadata through `/api/team-search/catalog`. Application deployment
+is separate from the applied database migration.
+
+
+## Single canonical school-name transition — November 19, 2026
+
+The updated application reads team labels from `School.name`, using shorter names
+approved by the user. `SchoolAlias` retains official names and abbreviations.
+`School.shortName` and `SportTeam.displayName` were removed by
+`20261119_retire_school_name_columns.sql` after the user confirmed compatible
+API/job deployment. The current descriptive schema reflects the removed columns. Existing public JSON field names are retained for client compatibility.
+GameResult provider name fields remain stored; linked teams render canonical School
+names and unlinked opponents retain source labels.
+
+The configured rollback-only check physically removed both columns and verified
+current catalog, rules, ingestion, roster, search, draft, trade and game queries,
+then restored the schema. See [staged rollout/commands](../scripts/team-search/README.md)
+and [dry-run evidence](history/school-name-dry-run-2026-11-19.json).
+
+The configured canonical-name phase is now committed: **336 shorter names**,
+with all 2,079 aliases retained and school/team counts unchanged. A fresh read-only
+postflight plans no additional name changes. The physical column-drop phase is now complete; see [name rollout receipt](history/school-name-rollout-2026-11-19.json)
+and [postflight](history/school-name-postflight-2026-11-19.json).
+
+
+Final column removal was **committed and verified** on November 19, 2026.
+A fresh read-only connection confirmed both columns absent, with all 366 schools,
+631 sport teams, and 2,079 aliases intact. Updated repository reads passed and the
+deployed `/health` and `/api/team-search/catalog` returned HTTP 200 after removal.
+Deployment was confirmed by the user; public API behavior was independently checked.
+See [drop receipt](history/school-name-column-drop-2026-11-19.json)
+and [postflight](history/school-name-column-drop-postflight-2026-11-19.json).
+Frozen baseline and historical snapshot files remain unchanged.

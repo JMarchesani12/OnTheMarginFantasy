@@ -33,7 +33,11 @@ class ControlDatabase(live_fixture.LivePickDatabase):
                 FROM json_each(:ids)
             ) UPDATE "LeagueMember" AS lm SET "draftOrder" = i.new_order
               FROM input i WHERE lm.id = i.member_id AND lm."leagueId" = :leagueId'''
-        sql = sql.replace('UPDATE "League" l', 'UPDATE "League" AS l')
+        # PostgreSQL statement snapshots keep the source turn assignments stable
+        # during UPDATE; SQLite needs explicit materialization for that behavior.
+        if 'savedMemberId' in sql:
+            sql = sql.replace('unpicked AS (', 'unpicked AS MATERIALIZED (').replace('saved AS (', 'saved AS MATERIALIZED (')
+        sql = sql.replace('UPDATE "League" l', 'UPDATE "League" AS l').replace('UPDATE "DraftTurn" dt', 'UPDATE "DraftTurn" AS dt')
         sql = sql.replace('ss."seasonEnd"::date', 'date(ss."seasonEnd")').replace(
             'ss."seasonStart"::date', 'date(ss."seasonStart")').replace('now()::date', 'date(now())')
         sql = sql.replace('RETURNING l.id AS "leagueId", l.status AS "leagueStatus"',
@@ -52,12 +56,11 @@ class DraftControlAuthorizationTests(unittest.TestCase):
         self.db, self.model, self.client = self.fixture.db, self.fixture.model, self.fixture.client
         self.headers, self.emit = self.fixture.headers, self.fixture.emit
         self.db.connection.executescript('''
-            ALTER TABLE "League" ADD COLUMN status TEXT DEFAULT 'Pre-Draft';
-            ALTER TABLE "League" ADD COLUMN "updatedAt" TEXT;
-            CREATE TABLE "SportSeason" ("sportId" INTEGER, "seasonYear" INTEGER, "seasonStart" TEXT, "seasonEnd" TEXT);
-            INSERT INTO "SportSeason" VALUES (1, 2026, '2026-11-01', '2027-03-31');
             CREATE UNIQUE INDEX draft_turn_unique ON "DraftTurn" ("leagueId", "overallPickNumber");
         ''')
+
+        from draft_capacity_fixture import install_capacity_fixture
+        install_capacity_fixture(self.db, max_rounds=2)
 
     def prepare(self, action, league_id=10):
         if action in ('start', 'order'):

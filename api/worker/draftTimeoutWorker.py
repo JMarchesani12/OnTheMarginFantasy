@@ -6,6 +6,7 @@ from typing import Optional, Tuple
 
 from endpoints.draft.pick_service import DraftPickService
 from endpoints.draft.pick_repository import DraftPickRepository
+from endpoints.draft.snapshot_repository import DraftSnapshotRepository
 
 
 # Safety bounds: never sleep longer than this without re-checking (handles config changes)
@@ -17,10 +18,20 @@ def _get_next_expired_or_soonest_deadline(conn) -> Optional[Tuple[int, float]]:
     """
     Returns:
       (league_id, seconds_until_deadline)
-    Where deadline = expiresAt + graceSeconds.
+    Exhausted owners return an immediate deadline, including null clocks.
+    Otherwise deadline = expiresAt + graceSeconds.
     If already expired, seconds_until_deadline will be <= 0.
     """
-    row = DraftPickRepository().next_timeout_deadline(conn).fetchone()
+    # Exhausted turns need attention even with an unexpired or absent clock.
+    # The write path rechecks eligibility under its ownership/state locks.
+    repository = DraftPickRepository()
+    availability = DraftSnapshotRepository()
+    for state in repository.live_draft_members(conn):
+        league_id = int(state._mapping['leagueId'])
+        if not availability.member_has_legal_pick(conn, league_id, int(state._mapping['currentMemberId'])):
+            return league_id, 0.0
+
+    row = repository.next_timeout_deadline(conn).fetchone()
 
     if not row:
         return None

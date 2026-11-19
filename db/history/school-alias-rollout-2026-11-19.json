@@ -1,0 +1,15 @@
+{
+  "targetFingerprint": "4ecd426e8efadd29",
+  "mode": "apply",
+  "plannedAliases": 2079,
+  "schools": 366,
+  "aliasCount": 2079,
+  "inserted": 2079,
+  "schoolCount": 366,
+  "teamCount": 631,
+  "northernIowaTeamIds": [
+    369,
+    525
+  ],
+  "result": "APPLIED_AND_VERIFIED"
+}

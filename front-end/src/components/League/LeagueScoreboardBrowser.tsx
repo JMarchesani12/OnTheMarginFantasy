@@ -1,3 +1,4 @@
+import { useTeamSearchCatalog } from "../../hooks/useTeamSearchCatalog";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import type { League } from "../../types/league";
@@ -16,6 +17,7 @@ function localToday(timezone: string) {
 
 export default function LeagueScoreboardBrowser({ league }: { league: League }) {
   const navigate = useNavigate();
+  const teamSearch = useTeamSearchCatalog();
   const [params, setParams] = useSearchParams();
   const timezone = getScoreboardTimezone(league.settings);
   const today = localToday(timezone);
@@ -57,7 +59,7 @@ export default function LeagueScoreboardBrowser({ league }: { league: League }) 
   const current = result?.date === date && result.leagueId === league.leagueId ? result : null;
   const games = current?.data?.games;
   const conferences = useMemo(() => [...new Set((games ?? []).flatMap(game => [game.homeConferenceName, game.awayConferenceName]).filter((name): name is string => !!name))].sort(), [games]);
-  const filtered = filterDailyGames(games ?? [], conference, gameQuery);
+  const filtered = filterDailyGames(games ?? [], conference, gameQuery, teamSearch.index);
   const currentTeams = teamResult?.query === search && teamResult.leagueId === league.leagueId ? teamResult : null;
   const saveBrowseParam = (key: string, value: string) => setParams(previous => {
     const next = new URLSearchParams(previous); next.set(key, value); return next;
@@ -101,9 +103,11 @@ export default function LeagueScoreboardBrowser({ league }: { league: League }) 
             {conference && !conferences.includes(conference) && <option value={conference}>{conference}</option>}
             {conferences.map(name => <option key={name} value={name}>{name}</option>)}
           </select></label>
-          <label>Find a game<input type="search" value={gameQuery} placeholder="Search either team" onChange={event => { setGameQuery(event.target.value); saveBrowseParam("game", event.target.value); }} /></label>
+          <label>Find a game<input type="search" aria-describedby="league-game-search-help" value={gameQuery} placeholder="Name or abbreviation (e.g. UNI)" maxLength={120} onChange={event => { setGameQuery(event.target.value); saveBrowseParam("game", event.target.value); }} /></label>
         </div>
       </div>
+      {teamSearch.error && <p role="status">Alternate names could not load. <button type="button" onClick={teamSearch.retry}>Retry search names</button></p>}
+      <p id="league-game-search-help" className="league-browser__hint">Search by name or abbreviation; minor typos work too.</p>
       <p className="league-browser__hint">Times in {current?.data?.timezone ?? timezone}. Ownership shown for each game’s scoring week.</p>
       {!current && <p role="status">Loading daily games…</p>}
       {current?.error && <p role="alert">{current.error} <button type="button" onClick={() => { setResult(null); setRevision(value => value + 1); }}>Retry games</button></p>}
@@ -128,9 +132,10 @@ export default function LeagueScoreboardBrowser({ league }: { league: League }) 
         </div>
       </>}
     </> : <div className="league-browser__team-search">
-      <label>Find any team<input type="search" value={teamQuery} placeholder="Search UNI, Iowa State, Duke…" onChange={event => { setTeamQuery(event.target.value); saveBrowseParam("q", event.target.value); }} /></label>
+      <label>Find any team<input type="search" aria-describedby="league-team-search-help" value={teamQuery} placeholder="Name or abbreviation (e.g. UNI)" maxLength={120} onChange={event => { setTeamQuery(event.target.value); saveBrowseParam("q", event.target.value); }} /></label>
       <p className="league-browser__hint">Find teams even when they aren’t playing today. Ownership here is current; select a team to see its season schedule.</p>
       {search.length < 2 && <p>Enter at least two characters.</p>}
+      <p id="league-team-search-help" className="league-browser__hint">Search by name or abbreviation; minor typos work too.</p>
       {search.length >= 2 && !currentTeams && <p role="status">Searching teams…</p>}
       {currentTeams?.error && <p role="alert">{currentTeams.error} <button type="button" onClick={() => { setTeamResult(null); setRevision(value => value + 1); }}>Retry search</button></p>}
       {currentTeams?.teams?.length === 0 && <p>No teams match that search.</p>}

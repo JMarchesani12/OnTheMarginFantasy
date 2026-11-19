@@ -24,9 +24,9 @@ export function fixture() {
     const source=readFileSync(absolute,'utf8');
     runInNewContext(ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText,
       {exports,console,AbortController,Date,Error,...globals,require:(id:string)=>{
-        if(id in stubs)return stubs[id];if(id==='react')return react;if(id==='react/jsx-runtime')return jsx;
+        if(id in stubs)return stubs[id];if(id==='../api/teamSearch'&&absolute.endsWith('/hooks/useTeamSearchCatalog.ts'))return {getTeamSearchCatalog:async()=>({teams:[]})};if(id==='react')return react;if(id==='react/jsx-runtime')return jsx;
         if(id.endsWith('.css'))return {};
-        if(id.startsWith('.')){const base=resolve(dirname(absolute),id);for(const ext of ['.ts','.tsx']){try {readFileSync(base+ext);return load(base+ext,stubs,globals);}catch(e:any){if(e.code!=='ENOENT')throw e;}}}
+        if(id.startsWith('.')){const base=resolve(dirname(absolute),id);for(const ext of (base.endsWith('.ts')?['']:['.ts','.tsx'])){try {readFileSync(base+ext);return load(base+ext,stubs,globals);}catch(e:any){if(e.code!=='ENOENT')throw e;}}}
         throw new Error('Unexpected dependency '+id);
       }});
     return exports;

@@ -60,7 +60,7 @@ class RosterRepository:
               lts."acquiredWeek",
               lts."droppedWeek",
               lts."acquiredVia",
-              st."displayName",
+              school.name AS "displayName",
               COALESCE(st.tier, (
                     SELECT COALESCE(MAX(tier_team.tier), 0) + 1
                     FROM "SportTeam" tier_team
@@ -72,6 +72,7 @@ class RosterRepository:
             FROM "LeagueTeamSlot" lts
             JOIN "SportTeam" st
               ON st.id = lts."sportTeamId"
+            JOIN "School" school ON school.id=st."schoolId"
             CROSS JOIN league_info li
             LEFT JOIN "ConferenceMembership" cm
               ON cm."sportTeamId" = st.id
@@ -92,7 +93,7 @@ class RosterRepository:
                           WHERE target_member.id = lts."memberId"
                             AND target_member."leagueId" = lts."leagueId")
             """ if reader_user_id is not None else "") + """
-            ORDER BY st."displayName"
+            ORDER BY school.name
         """, '(SELECT "seasonYear" FROM "League" WHERE id=:leagueId)'))
         result = conn.execute(sql, {**reader_params, 'leagueId': league_id,
                                    'memberId': member_id, 'weekNumber': week_number})
@@ -121,7 +122,7 @@ class RosterRepository:
             )
             SELECT
               st.id,
-              st."displayName",
+              school.name AS "displayName",
               COALESCE(st.tier, (
                   SELECT COALESCE(MAX(tier_team.tier), 0) + 1
                   FROM "SportTeam" tier_team
@@ -134,6 +135,7 @@ class RosterRepository:
               sc."conferenceId",
               conf.name AS "conferenceName"
             FROM "SportTeam" st
+            JOIN "School" school ON school.id=st."schoolId"
             LEFT JOIN "ConferenceMembership" cm
               ON cm."sportTeamId" = st.id
              AND cm."sportId" = st."sportId"
@@ -157,7 +159,7 @@ class RosterRepository:
                 OR st.id IN (SELECT team_id FROM pending_drops)
               )
             """ + scope + """
-            ORDER BY conf.name, st."displayName"
+            ORDER BY conf.name, school.name
         """, ':seasonYear'))
         result = conn.execute(sql, {**reader_params, 'leagueId': league_id, 'sportId': sport_id,
                                    'seasonYear': season_year, 'weekId': week_id, 'weekNumber': week_number})

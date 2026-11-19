@@ -43,12 +43,12 @@ class MemberRemovalServiceTests(unittest.TestCase):
             with self.assertRaises(ValueError):self.service.remove(self.actor,league,member)
         self.assertEqual(self.state(),before)
 
-    def test_shift_disabled_and_count_floor(self):
+    def test_shift_disabled_and_count_repaired_from_members(self):
         self.assertTrue(hasattr(self.service,'remove'), 'actor removal operation missing')
         self.db.connection.execute('UPDATE "League" SET "numPlayers"=0 WHERE id=10');self.db.connection.commit()
         row=self.service.remove(self.actor,10,12,False)
         self.assertEqual([m['draftOrder'] for m in row['members']],[1,3])
-        self.assertEqual(self.state()['League'][0]['numPlayers'],0)
+        self.assertEqual(self.state()['League'][0]['numPlayers'],2)
 
     def test_failure_after_delete_rolls_back_all_mutations(self):
         self.assertTrue(hasattr(self.service,'remove'), 'actor removal operation missing')

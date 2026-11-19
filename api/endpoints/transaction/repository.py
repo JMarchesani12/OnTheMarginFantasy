@@ -57,23 +57,25 @@ class TransactionRepository:
               SELECT jsonb_agg(
                 jsonb_build_object(
                   'id', st.id,
-                  'displayName', st."displayName"
+                  'displayName', school.name
                 )
-                ORDER BY st."displayName"
+                ORDER BY school.name
               ) AS "fromTeams"
               FROM jsonb_array_elements_text(t."fromTeamIds") AS f(team_id)
               JOIN "SportTeam" st ON st.id = (f.team_id)::int
+              JOIN "School" school ON school.id=st."schoolId"
             ) ft ON TRUE
             LEFT JOIN LATERAL (
               SELECT jsonb_agg(
                 jsonb_build_object(
                   'id', st.id,
-                  'displayName', st."displayName"
+                  'displayName', school.name
                 )
-                ORDER BY st."displayName"
+                ORDER BY school.name
               ) AS "toTeams"
               FROM jsonb_array_elements_text(t."toTeamIds") AS tt(team_id)
               JOIN "SportTeam" st ON st.id = (tt.team_id)::int
+              JOIN "School" school ON school.id=st."schoolId"
             ) tt ON TRUE
             WHERE t."leagueId" = :leagueId
         """

@@ -38,6 +38,7 @@ class SeasonalReadConsumerTests(unittest.TestCase):
             INSERT INTO SportConference VALUES (1,1,1),(2,1,2);
             INSERT INTO Conference VALUES (1,'Default'),(2,'Seasonal');
             INSERT INTO ConferenceMembership VALUES (101,1,NULL,1),(101,1,2026,2);''')
+        db.connection.executescript('ALTER TABLE SportTeam ADD COLUMN schoolId INTEGER DEFAULT 1; CREATE TABLE SchoolAlias(schoolId INTEGER,alias TEXT,normalizedAlias TEXT);')
         roster=RosterRepository().member_teams(db,10,12,1)
         self.assertEqual(len(roster),1);self.assertEqual(roster[0]['conferenceName'],'Seasonal')
         rows=ScheduleReadRepository().search_teams(db,dict(sport=1,seasonYear=2026,leagueId=10,weekNumber=1)).fetchall()
@@ -71,6 +72,7 @@ class UnmappedAllocationTests(unittest.TestCase):
         from endpoints.draft.pick_service import DraftPickService
         base=fixture.LivePickAuthorizationTests();base.setUp();self.addCleanup(base.doCleanups)
         service=DraftPickService(base.db)
+        base.db.connection.execute('DELETE FROM ConferenceMembership WHERE sportTeamId IN (90001,90002)')
         with base.db.begin() as conn:self.assertEqual(service._choose_random_team_for_auto_pick(conn,10,12,1),102)
         base.db.connection.executescript('DELETE FROM ConferenceMembership WHERE sportTeamId=102;')
         with base.db.begin() as conn:self.assertIsNone(service._choose_random_team_for_auto_pick(conn,10,12,1))

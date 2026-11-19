@@ -101,12 +101,12 @@ class DraftControlsServiceTests(unittest.TestCase):
         with self.assertRaises(ValueError): self.service.start(self.actor, 10)
         self.assertEqual(self.state(), before)
 
-    def test_start_rejects_extra_members(self):
+    def test_start_refreshes_stale_member_count(self):
         self.db.connection.execute('INSERT INTO "LeagueMember" (id,"leagueId","userId","draftOrder") VALUES (13,10,3,3)')
         self.db.connection.commit()
-        before = self.state()
-        with self.assertRaises(ValueError): self.service.start(self.actor, 10)
-        self.assertEqual(self.state(), before)
+        result = self.service.start(self.actor, 10)
+        self.assertEqual(len(result['members']), 3)
+        self.assertEqual(len(self.turns()), 3)
 
     def test_pristine_pre_state_can_start(self):
         self.db.connection.execute('INSERT INTO "DraftState" ("leagueId",status,"currentOverallPickNumber") VALUES (10,?,1)', ('pre',))

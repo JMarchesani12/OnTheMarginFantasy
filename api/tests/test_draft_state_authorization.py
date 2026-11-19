@@ -91,10 +91,21 @@ class DraftStateAuthorizationTests(unittest.TestCase):
             CREATE TABLE "ConferenceMembership" ("sportTeamId" INTEGER, "sportId" INTEGER,
                 "seasonYear" INTEGER, "sportConferenceId" INTEGER);
             INSERT INTO "ConferenceMembership" VALUES (101, 1, 2026, 501);
-            CREATE TABLE "SportConference" (id INTEGER, "sportId" INTEGER, "conferenceId" INTEGER);
-            INSERT INTO "SportConference" VALUES (501, 1, 401);
+            CREATE TABLE "SportConference" (id INTEGER, "sportId" INTEGER, "conferenceId" INTEGER, "maxTeamsPerOwner" INTEGER DEFAULT 2);
+            INSERT INTO "SportConference" VALUES (501, 1, 401, 2);
             CREATE TABLE "Conference" (id INTEGER, name TEXT);
             INSERT INTO "Conference" VALUES (401, 'Synthetic Conference');
+        ''')
+        self.db.connection.executescript('''
+            ALTER TABLE "League" ADD COLUMN status TEXT DEFAULT 'Pre-Draft';
+            ALTER TABLE "League" ADD COLUMN "updatedAt" TEXT;
+            CREATE TABLE "SportSeason" ("sportId" INTEGER, "seasonYear" INTEGER, "seasonStart" TEXT, "seasonEnd" TEXT);
+            INSERT INTO "SportSeason" VALUES (1,2026,'2026-11-01','2027-03-31');
+            CREATE TABLE "LeagueTeamSlot" (id INTEGER PRIMARY KEY AUTOINCREMENT, "leagueId" INTEGER,
+                "memberId" INTEGER, "sportTeamId" INTEGER, "acquiredWeek" INTEGER,
+                "acquiredVia" TEXT, "droppedWeek" INTEGER);
+            INSERT INTO "SportTeam" VALUES (90001,1,'Other Available Team'),(90002,1,'Last Available Team');
+            INSERT INTO "ConferenceMembership" VALUES (90001,1,2026,501),(90002,1,2026,501);
         ''')
         self.model = DraftPickService(self.db)
         app = Flask(__name__)

@@ -90,11 +90,11 @@ class ScheduleIngestionRepository:
 
     def sport_teams(self, conn, params):
         base_sql = """
-            SELECT id, "sportId", "displayName", "externalId"
-            FROM "SportTeam"
-            WHERE "sportId" = :sportId
-              AND "externalId" IS NOT NULL
-            ORDER BY id
+            SELECT st.id, st."sportId", school.name AS "displayName", st."externalId"
+            FROM "SportTeam" st JOIN "School" school ON school.id=st."schoolId"
+            WHERE st."sportId" = :sportId
+              AND st."externalId" IS NOT NULL
+            ORDER BY st.id
         """
         if "maxTeams" in params:
             base_sql += " LIMIT :maxTeams"

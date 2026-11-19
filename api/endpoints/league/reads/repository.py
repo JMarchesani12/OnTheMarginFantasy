@@ -13,11 +13,11 @@ class LeagueReadRepository:
 
     def rules_teams(self, conn, sport_id):
         rows = conn.execute(text("""
-                SELECT st.id AS "teamId", st."displayName" AS "teamName",
+                SELECT st.id AS "teamId", school.name AS "teamName",
                     COALESCE(st.tier, (SELECT COALESCE(MAX(t.tier), 0) + 1
                         FROM "SportTeam" t WHERE t."sportId" = :sportId)) AS tier
-                FROM "SportTeam" st WHERE st."sportId" = :sportId
-                ORDER BY tier, st."displayName"
+                FROM "SportTeam" st JOIN "School" school ON school.id=st."schoolId" WHERE st."sportId" = :sportId
+                ORDER BY tier, school.name
             """), {'sportId': sport_id}).fetchall()
         return [dict(row._mapping) for row in rows]
 

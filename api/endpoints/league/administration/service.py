@@ -102,5 +102,9 @@ class LeagueAdminService:
             created['creatorMemberId'] = self.repository.insert_creator_member(
                 conn, created['id'], created['commissioner'], team_name,
             )
+            from utils.draft_capacity import refresh_draft_capacity
+            rounds = refresh_draft_capacity(conn, created['id'])
+            if rounds is not None:
+                created['settings'] = {**created['settings'], 'draft': {**(created['settings'].get('draft') or {}), 'numberOfRounds': rounds}}
             initialize_weeks(created['id'], conn=conn)
         return created

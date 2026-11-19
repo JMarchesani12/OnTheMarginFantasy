@@ -68,6 +68,8 @@ class MemberRemovalAuthorizationTests(unittest.TestCase):
                 (13, 10, 3, 'Charlie Team', 3, 30),
                 (21, 20, 2, 'Bob Other', 1, 40), (22, 20, 1, 'Alice Other', 2, 50);
         ''')
+        from draft_capacity_fixture import install_capacity_fixture
+        install_capacity_fixture(self.db)
         app = Flask(__name__)
         app.config['TESTING'] = True
         install_auth_middleware(app)

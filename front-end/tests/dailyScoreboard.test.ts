@@ -1,3 +1,4 @@
+import {buildTeamSearchIndex} from '../src/utils/teamSearch.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {shiftScoreboardDate,isScoreboardDate,filterDailyGames,getScoreboardTimezone} from '../src/utils/dailyScoreboard.ts';
@@ -5,6 +6,8 @@ import {fixture,deferred,settle,nodes,text} from './helpers/leagueContextHarness
 import {leagueFixture} from './helpers/leagueFixture.ts';
 import type {DailyScoreboardGame} from '../src/types/dailyScoreboard.ts';
 
+const aliases=[{teamId:10,schoolId:369,teamName:'Northern Iowa Panthers',aliases:['Northern Iowa','UNI']}];
+const searchIndex=buildTeamSearchIndex(aliases);
 const game=(changes:Partial<DailyScoreboardGame>={}):DailyScoreboardGame=>({id:1,externalGameId:'1',date:'2027-02-13T22:00:00Z',timeTBD:false,isCompleted:true,broadcast:null,ownershipWeekNumber:15,
  homeTeamId:10,homeTeamName:'Northern Iowa Panthers',homeScore:74,homeConferenceName:'Missouri Valley',homeOwnerMemberId:11,homeOwnerTeamName:'My squad',homeOwnerDisplayName:'Me',
  awayTeamId:20,awayTeamName:'Duke Blue Devils',awayScore:70,awayConferenceName:'ACC',awayOwnerMemberId:null,awayOwnerTeamName:null,awayOwnerDisplayName:null,...changes});
@@ -28,6 +31,7 @@ function setup(){
  const h=fixture(),requests:any[]=[],navigations:any[]=[];let params=new URLSearchParams('view=scoreboard&date=2027-02-13');
  const Page=h.load('src/components/League/LeagueScoreboardBrowser.tsx',{
   'react-router-dom':{useNavigate:()=> (...args:any[])=>navigations.push(args),useSearchParams:()=>[params,(update:any)=>{params=typeof update==='function'?update(params):update;}]},
+  '../api/teamSearch':{getTeamSearchCatalog:async()=>({teams:aliases})},
   '../../api/dailyScoreboard':{getDailyScoreboard:(...args:any[])=>{const request={...deferred(),args};requests.push(request);return request.promise;}},
   '../../api/schedule':{searchTeamsForLeague:async()=>({teams:[]})},
  },{URLSearchParams,window:{setTimeout,clearTimeout}}).default;
@@ -64,4 +68,12 @@ test('scoreboard Today uses the same nested timezone precedence as the backend',
  assert.equal(getScoreboardTimezone({timezone:'invalid',schedule:{timezone:'America/Chicago'}}),'America/Chicago');
  assert.equal(getScoreboardTimezone('{"schedule":{"timezone":"America/Chicago"}}'),'America/Chicago');
  assert.equal(getScoreboardTimezone(undefined),'UTC');
+});
+
+test('game search accepts aliases and typos within the selected conference',()=>{
+ const games=[game(),game({id:2,homeTeamId:11,homeTeamName:'Northern Illinois Huskies',homeConferenceName:'MAC',awayConferenceName:'MAC'})];
+ assert.deepEqual(filterDailyGames(games,'','UNI',searchIndex).map(g=>g.id),[1]);
+ assert.deepEqual(filterDailyGames(games,'Missouri Valley','nothern iwoa').map(g=>g.id),[1]);
+ assert.deepEqual(filterDailyGames(games,'MAC','UNI',searchIndex).map(g=>g.id),[]);
+ assert.deepEqual(filterDailyGames(games,'','Northern Devils').map(g=>g.id),[]);
 });

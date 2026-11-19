@@ -139,6 +139,10 @@ class DraftControlService:
         if (league['status'] != 'Pre-Draft' or not pristine or
                 self.repository.has_draft_data(conn, league_id)):
             raise DraftStartConflict('Draft has already started or cannot be started in its current state')
+        from utils.draft_capacity import refresh_draft_capacity
+        rounds = refresh_draft_capacity(conn, league_id)
+        if rounds == 0:
+            raise ValueError('Not enough draft capacity for one full round')
         cfg = self.draft_settings(conn, league_id)
         members = self.repository.seed_members(conn, league_id)
         orders = [row['draftOrder'] for row in members]

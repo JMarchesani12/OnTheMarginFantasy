@@ -1,0 +1,18 @@
+{
+  "targetFingerprint": "4ecd426e8efadd29",
+  "schoolCount": 366,
+  "teamCount": 631,
+  "updates": [],
+  "unmappedSchoolIds": [
+    347
+  ],
+  "canonicalNamesVerified": true,
+  "preservedSearchQueries": [
+    "UNI",
+    "Northern Iowa",
+    "University of Northern Iowa"
+  ],
+  "aliasCount": 2079,
+  "result": "COLUMNS_REMOVED",
+  "deployedRevision": "e2245ac8f500907f7713245d9beb90deac39e5b9"
+}

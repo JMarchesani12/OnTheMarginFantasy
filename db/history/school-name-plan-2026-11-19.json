@@ -1,0 +1,1691 @@
+{
+  "targetFingerprint": "4ecd426e8efadd29",
+  "schoolCount": 366,
+  "teamCount": 631,
+  "updates": [
+    {
+      "schoolId": 1,
+      "oldName": "Binghamton University",
+      "newName": "Binghamton"
+    },
+    {
+      "schoolId": 2,
+      "oldName": "Bryant University",
+      "newName": "Bryant"
+    },
+    {
+      "schoolId": 6,
+      "oldName": "University at Albany",
+      "newName": "UAlbany"
+    },
+    {
+      "schoolId": 7,
+      "oldName": "University of Maine",
+      "newName": "Maine"
+    },
+    {
+      "schoolId": 8,
+      "oldName": "University of New Hampshire",
+      "newName": "New Hampshire"
+    },
+    {
+      "schoolId": 9,
+      "oldName": "University of Vermont",
+      "newName": "Vermont"
+    },
+    {
+      "schoolId": 11,
+      "oldName": "Florida Atlantic University",
+      "newName": "Florida Atlantic"
+    },
+    {
+      "schoolId": 12,
+      "oldName": "Rice University",
+      "newName": "Rice"
+    },
+    {
+      "schoolId": 13,
+      "oldName": "Temple University",
+      "newName": "Temple"
+    },
+    {
+      "schoolId": 14,
+      "oldName": "The University of Tulsa",
+      "newName": "Tulsa"
+    },
+    {
+      "schoolId": 15,
+      "oldName": "Tulane University",
+      "newName": "Tulane"
+    },
+    {
+      "schoolId": 17,
+      "oldName": "UNC Charlotte",
+      "newName": "Charlotte"
+    },
+    {
+      "schoolId": 18,
+      "oldName": "University of Memphis",
+      "newName": "Memphis"
+    },
+    {
+      "schoolId": 19,
+      "oldName": "University of North Texas",
+      "newName": "North Texas"
+    },
+    {
+      "schoolId": 20,
+      "oldName": "Wichita State University",
+      "newName": "Wichita State"
+    },
+    {
+      "schoolId": 22,
+      "oldName": "Clemson University",
+      "newName": "Clemson"
+    },
+    {
+      "schoolId": 23,
+      "oldName": "Duke University",
+      "newName": "Duke"
+    },
+    {
+      "schoolId": 24,
+      "oldName": "Florida State University",
+      "newName": "Florida State"
+    },
+    {
+      "schoolId": 26,
+      "oldName": "North Carolina State University",
+      "newName": "NC State"
+    },
+    {
+      "schoolId": 27,
+      "oldName": "Southern Methodist University",
+      "newName": "SMU"
+    },
+    {
+      "schoolId": 28,
+      "oldName": "Stanford University",
+      "newName": "Stanford"
+    },
+    {
+      "schoolId": 29,
+      "oldName": "Syracuse University",
+      "newName": "Syracuse"
+    },
+    {
+      "schoolId": 30,
+      "oldName": "University of California",
+      "newName": "California"
+    },
+    {
+      "schoolId": 31,
+      "oldName": "University of Louisville",
+      "newName": "Louisville"
+    },
+    {
+      "schoolId": 32,
+      "oldName": "University of Miami",
+      "newName": "Miami"
+    },
+    {
+      "schoolId": 33,
+      "oldName": "University of North Carolina",
+      "newName": "North Carolina"
+    },
+    {
+      "schoolId": 34,
+      "oldName": "University of Notre Dame",
+      "newName": "Notre Dame"
+    },
+    {
+      "schoolId": 35,
+      "oldName": "University of Pittsburgh",
+      "newName": "Pittsburgh"
+    },
+    {
+      "schoolId": 36,
+      "oldName": "University of Virginia",
+      "newName": "Virginia"
+    },
+    {
+      "schoolId": 38,
+      "oldName": "Wake Forest University",
+      "newName": "Wake Forest"
+    },
+    {
+      "schoolId": 39,
+      "oldName": "Austin Peay State University",
+      "newName": "Austin Peay"
+    },
+    {
+      "schoolId": 40,
+      "oldName": "Bellarmine University",
+      "newName": "Bellarmine"
+    },
+    {
+      "schoolId": 41,
+      "oldName": "Eastern Kentucky University",
+      "newName": "Eastern Kentucky"
+    },
+    {
+      "schoolId": 42,
+      "oldName": "Florida Gulf Coast University",
+      "newName": "Florida Gulf Coast"
+    },
+    {
+      "schoolId": 43,
+      "oldName": "Jacksonville University",
+      "newName": "Jacksonville"
+    },
+    {
+      "schoolId": 44,
+      "oldName": "Lipscomb University",
+      "newName": "Lipscomb"
+    },
+    {
+      "schoolId": 45,
+      "oldName": "Queens University of Charlotte",
+      "newName": "Queens University"
+    },
+    {
+      "schoolId": 46,
+      "oldName": "Stetson University",
+      "newName": "Stetson"
+    },
+    {
+      "schoolId": 47,
+      "oldName": "University of Central Arkansas",
+      "newName": "Central Arkansas"
+    },
+    {
+      "schoolId": 48,
+      "oldName": "University of North Alabama",
+      "newName": "North Alabama"
+    },
+    {
+      "schoolId": 49,
+      "oldName": "University of North Florida",
+      "newName": "North Florida"
+    },
+    {
+      "schoolId": 50,
+      "oldName": "Davidson College",
+      "newName": "Davidson"
+    },
+    {
+      "schoolId": 51,
+      "oldName": "Duquesne University",
+      "newName": "Duquesne"
+    },
+    {
+      "schoolId": 52,
+      "oldName": "Fordham University",
+      "newName": "Fordham"
+    },
+    {
+      "schoolId": 53,
+      "oldName": "George Mason University",
+      "newName": "George Mason"
+    },
+    {
+      "schoolId": 54,
+      "oldName": "George Washington University",
+      "newName": "George Washington"
+    },
+    {
+      "schoolId": 55,
+      "oldName": "La Salle University",
+      "newName": "La Salle"
+    },
+    {
+      "schoolId": 56,
+      "oldName": "Loyola University Chicago",
+      "newName": "Loyola Chicago"
+    },
+    {
+      "schoolId": 57,
+      "oldName": "Saint Joseph's University",
+      "newName": "Saint Joseph's"
+    },
+    {
+      "schoolId": 58,
+      "oldName": "Saint Louis University",
+      "newName": "Saint Louis"
+    },
+    {
+      "schoolId": 59,
+      "oldName": "St. Bonaventure University",
+      "newName": "St. Bonaventure"
+    },
+    {
+      "schoolId": 60,
+      "oldName": "University of Dayton",
+      "newName": "Dayton"
+    },
+    {
+      "schoolId": 61,
+      "oldName": "University of Rhode Island",
+      "newName": "Rhode Island"
+    },
+    {
+      "schoolId": 62,
+      "oldName": "University of Richmond",
+      "newName": "Richmond"
+    },
+    {
+      "schoolId": 63,
+      "oldName": "Virginia Commonwealth University",
+      "newName": "VCU"
+    },
+    {
+      "schoolId": 64,
+      "oldName": "Butler University",
+      "newName": "Butler"
+    },
+    {
+      "schoolId": 66,
+      "oldName": "Creighton University",
+      "newName": "Creighton"
+    },
+    {
+      "schoolId": 67,
+      "oldName": "DePaul University",
+      "newName": "DePaul"
+    },
+    {
+      "schoolId": 68,
+      "oldName": "Georgetown University",
+      "newName": "Georgetown"
+    },
+    {
+      "schoolId": 69,
+      "oldName": "Marquette University",
+      "newName": "Marquette"
+    },
+    {
+      "schoolId": 70,
+      "oldName": "Providence College",
+      "newName": "Providence"
+    },
+    {
+      "schoolId": 71,
+      "oldName": "Seton Hall University",
+      "newName": "Seton Hall"
+    },
+    {
+      "schoolId": 72,
+      "oldName": "St. John's University (Minn.)",
+      "newName": "St. John's"
+    },
+    {
+      "schoolId": 73,
+      "oldName": "Villanova University",
+      "newName": "Villanova"
+    },
+    {
+      "schoolId": 74,
+      "oldName": "Xavier University",
+      "newName": "Xavier"
+    },
+    {
+      "schoolId": 75,
+      "oldName": "Idaho State University",
+      "newName": "Idaho State"
+    },
+    {
+      "schoolId": 76,
+      "oldName": "Montana State University-Bozeman",
+      "newName": "Montana State"
+    },
+    {
+      "schoolId": 77,
+      "oldName": "Portland State University",
+      "newName": "Portland State"
+    },
+    {
+      "schoolId": 78,
+      "oldName": "Sacramento State University",
+      "newName": "Sacramento State"
+    },
+    {
+      "schoolId": 79,
+      "oldName": "University of Idaho",
+      "newName": "Idaho"
+    },
+    {
+      "schoolId": 80,
+      "oldName": "University of Montana",
+      "newName": "Montana"
+    },
+    {
+      "schoolId": 81,
+      "oldName": "Weber State University",
+      "newName": "Weber State"
+    },
+    {
+      "schoolId": 82,
+      "oldName": "California State University, Chico",
+      "newName": "Chicago State"
+    },
+    {
+      "schoolId": 83,
+      "oldName": "Gardner-Webb University",
+      "newName": "Gardner-Webb"
+    },
+    {
+      "schoolId": 84,
+      "oldName": "High Point University",
+      "newName": "High Point"
+    },
+    {
+      "schoolId": 85,
+      "oldName": "Longwood University",
+      "newName": "Longwood"
+    },
+    {
+      "schoolId": 86,
+      "oldName": "Presbyterian College",
+      "newName": "Presbyterian"
+    },
+    {
+      "schoolId": 87,
+      "oldName": "Radford University",
+      "newName": "Radford"
+    },
+    {
+      "schoolId": 89,
+      "oldName": "Winthrop University",
+      "newName": "Winthrop"
+    },
+    {
+      "schoolId": 90,
+      "oldName": "Indiana University, Bloomington",
+      "newName": "Indiana"
+    },
+    {
+      "schoolId": 91,
+      "oldName": "Michigan State University",
+      "newName": "Michigan State"
+    },
+    {
+      "schoolId": 92,
+      "oldName": "Northwestern University",
+      "newName": "Northwestern"
+    },
+    {
+      "schoolId": 93,
+      "oldName": "Penn State University",
+      "newName": "Penn State"
+    },
+    {
+      "schoolId": 94,
+      "oldName": "Purdue University",
+      "newName": "Purdue"
+    },
+    {
+      "schoolId": 95,
+      "oldName": "Rutgers University",
+      "newName": "Rutgers"
+    },
+    {
+      "schoolId": 97,
+      "oldName": "University of Illinois",
+      "newName": "Illinois"
+    },
+    {
+      "schoolId": 98,
+      "oldName": "University of Iowa",
+      "newName": "Iowa"
+    },
+    {
+      "schoolId": 99,
+      "oldName": "University of Maryland-College Park",
+      "newName": "Maryland"
+    },
+    {
+      "schoolId": 100,
+      "oldName": "University of Michigan",
+      "newName": "Michigan"
+    },
+    {
+      "schoolId": 101,
+      "oldName": "University of Minnesota",
+      "newName": "Minnesota"
+    },
+    {
+      "schoolId": 102,
+      "oldName": "University of Nebraska-Lincoln",
+      "newName": "Nebraska"
+    },
+    {
+      "schoolId": 103,
+      "oldName": "University of Oregon",
+      "newName": "Oregon"
+    },
+    {
+      "schoolId": 104,
+      "oldName": "University of Washington",
+      "newName": "Washington"
+    },
+    {
+      "schoolId": 105,
+      "oldName": "University of Wisconsin, Madison",
+      "newName": "Wisconsin"
+    },
+    {
+      "schoolId": 106,
+      "oldName": "Arizona State University",
+      "newName": "Arizona State"
+    },
+    {
+      "schoolId": 107,
+      "oldName": "Baylor University",
+      "newName": "Baylor"
+    },
+    {
+      "schoolId": 108,
+      "oldName": "Brigham Young University",
+      "newName": "BYU"
+    },
+    {
+      "schoolId": 109,
+      "oldName": "Iowa State University",
+      "newName": "Iowa State"
+    },
+    {
+      "schoolId": 110,
+      "oldName": "Kansas State University",
+      "newName": "Kansas State"
+    },
+    {
+      "schoolId": 111,
+      "oldName": "Oklahoma State University",
+      "newName": "Oklahoma State"
+    },
+    {
+      "schoolId": 112,
+      "oldName": "Texas Christian University",
+      "newName": "TCU"
+    },
+    {
+      "schoolId": 113,
+      "oldName": "Texas Tech University",
+      "newName": "Texas Tech"
+    },
+    {
+      "schoolId": 114,
+      "oldName": "University of Arizona",
+      "newName": "Arizona"
+    },
+    {
+      "schoolId": 115,
+      "oldName": "University of Central Florida",
+      "newName": "UCF"
+    },
+    {
+      "schoolId": 116,
+      "oldName": "University of Cincinnati",
+      "newName": "Cincinnati"
+    },
+    {
+      "schoolId": 117,
+      "oldName": "University of Colorado",
+      "newName": "Colorado"
+    },
+    {
+      "schoolId": 118,
+      "oldName": "University of Houston",
+      "newName": "Houston"
+    },
+    {
+      "schoolId": 119,
+      "oldName": "University of Kansas",
+      "newName": "Kansas"
+    },
+    {
+      "schoolId": 120,
+      "oldName": "University of Utah",
+      "newName": "Utah"
+    },
+    {
+      "schoolId": 121,
+      "oldName": "West Virginia University",
+      "newName": "West Virginia"
+    },
+    {
+      "schoolId": 122,
+      "oldName": "CSU Bakersfield",
+      "newName": "Cal State Bakersfield"
+    },
+    {
+      "schoolId": 124,
+      "oldName": "Cal State-Fullerton",
+      "newName": "Cal State Fullerton"
+    },
+    {
+      "schoolId": 125,
+      "oldName": "Long Beach State University",
+      "newName": "Long Beach State"
+    },
+    {
+      "schoolId": 131,
+      "oldName": "University of Hawaii, Manoa",
+      "newName": "Hawai'i"
+    },
+    {
+      "schoolId": 132,
+      "oldName": "Campbell University",
+      "newName": "Campbell"
+    },
+    {
+      "schoolId": 134,
+      "oldName": "College of William and Mary",
+      "newName": "William & Mary"
+    },
+    {
+      "schoolId": 135,
+      "oldName": "Drexel University",
+      "newName": "Drexel"
+    },
+    {
+      "schoolId": 136,
+      "oldName": "Elon University",
+      "newName": "Elon"
+    },
+    {
+      "schoolId": 137,
+      "oldName": "Hampton University",
+      "newName": "Hampton"
+    },
+    {
+      "schoolId": 138,
+      "oldName": "Hofstra University",
+      "newName": "Hofstra"
+    },
+    {
+      "schoolId": 139,
+      "oldName": "Monmouth University",
+      "newName": "Monmouth"
+    },
+    {
+      "schoolId": 140,
+      "oldName": "North Carolina A&T State University",
+      "newName": "North Carolina A&T"
+    },
+    {
+      "schoolId": 141,
+      "oldName": "Northeastern University",
+      "newName": "Northeastern"
+    },
+    {
+      "schoolId": 142,
+      "oldName": "Stony Brook University",
+      "newName": "Stony Brook"
+    },
+    {
+      "schoolId": 143,
+      "oldName": "Towson University",
+      "newName": "Towson"
+    },
+    {
+      "schoolId": 146,
+      "oldName": "Florida International University",
+      "newName": "Florida International"
+    },
+    {
+      "schoolId": 147,
+      "oldName": "Kennesaw State University",
+      "newName": "Kennesaw State"
+    },
+    {
+      "schoolId": 148,
+      "oldName": "Liberty University",
+      "newName": "Liberty"
+    },
+    {
+      "schoolId": 149,
+      "oldName": "Middle Tennessee State University",
+      "newName": "Middle Tennessee"
+    },
+    {
+      "schoolId": 151,
+      "oldName": "New Mexico State University",
+      "newName": "New Mexico State"
+    },
+    {
+      "schoolId": 152,
+      "oldName": "Sam Houston State University",
+      "newName": "Sam Houston"
+    },
+    {
+      "schoolId": 153,
+      "oldName": "University of Delaware",
+      "newName": "Delaware"
+    },
+    {
+      "schoolId": 154,
+      "oldName": "Western Kentucky University",
+      "newName": "Western Kentucky"
+    },
+    {
+      "schoolId": 155,
+      "oldName": "Cleveland State University",
+      "newName": "Cleveland State"
+    },
+    {
+      "schoolId": 156,
+      "oldName": "Oakland University",
+      "newName": "Oakland"
+    },
+    {
+      "schoolId": 157,
+      "oldName": "Purdue University Fort Wayne",
+      "newName": "Purdue Fort Wayne"
+    },
+    {
+      "schoolId": 158,
+      "oldName": "University of Detroit Mercy",
+      "newName": "Detroit Mercy"
+    },
+    {
+      "schoolId": 159,
+      "oldName": "University of Indianapolis",
+      "newName": "IU Indianapolis"
+    },
+    {
+      "schoolId": 160,
+      "oldName": "University of Wisconsin, Green Bay",
+      "newName": "Green Bay"
+    },
+    {
+      "schoolId": 161,
+      "oldName": "University of Wisconsin, Milwaukee",
+      "newName": "Milwaukee"
+    },
+    {
+      "schoolId": 162,
+      "oldName": "Wright State University",
+      "newName": "Wright State"
+    },
+    {
+      "schoolId": 163,
+      "oldName": "Youngstown State University",
+      "newName": "Youngstown State"
+    },
+    {
+      "schoolId": 164,
+      "oldName": "Brown University",
+      "newName": "Brown"
+    },
+    {
+      "schoolId": 165,
+      "oldName": "Columbia University-Barnard College",
+      "newName": "Columbia"
+    },
+    {
+      "schoolId": 166,
+      "oldName": "Cornell University",
+      "newName": "Cornell"
+    },
+    {
+      "schoolId": 167,
+      "oldName": "Dartmouth College",
+      "newName": "Dartmouth"
+    },
+    {
+      "schoolId": 168,
+      "oldName": "Harvard University",
+      "newName": "Harvard"
+    },
+    {
+      "schoolId": 169,
+      "oldName": "Princeton University",
+      "newName": "Princeton"
+    },
+    {
+      "schoolId": 170,
+      "oldName": "University of Pennsylvania",
+      "newName": "Pennsylvania"
+    },
+    {
+      "schoolId": 171,
+      "oldName": "Yale University",
+      "newName": "Yale"
+    },
+    {
+      "schoolId": 172,
+      "oldName": "Canisius College",
+      "newName": "Canisius"
+    },
+    {
+      "schoolId": 173,
+      "oldName": "Fairfield University",
+      "newName": "Fairfield"
+    },
+    {
+      "schoolId": 174,
+      "oldName": "Iona College",
+      "newName": "Iona"
+    },
+    {
+      "schoolId": 175,
+      "oldName": "Manhattan College",
+      "newName": "Manhattan"
+    },
+    {
+      "schoolId": 176,
+      "oldName": "Marist College",
+      "newName": "Marist"
+    },
+    {
+      "schoolId": 177,
+      "oldName": "Merrimack College",
+      "newName": "Merrimack"
+    },
+    {
+      "schoolId": 178,
+      "oldName": "Mount St. Mary's University",
+      "newName": "Mount St. Mary's"
+    },
+    {
+      "schoolId": 179,
+      "oldName": "Niagara University",
+      "newName": "Niagara"
+    },
+    {
+      "schoolId": 180,
+      "oldName": "Quinnipiac University",
+      "newName": "Quinnipiac"
+    },
+    {
+      "schoolId": 181,
+      "oldName": "Rider University",
+      "newName": "Rider"
+    },
+    {
+      "schoolId": 182,
+      "oldName": "Sacred Heart University",
+      "newName": "Sacred Heart"
+    },
+    {
+      "schoolId": 183,
+      "oldName": "Saint Peter's University",
+      "newName": "Saint Peter's"
+    },
+    {
+      "schoolId": 184,
+      "oldName": "Siena College",
+      "newName": "Siena"
+    },
+    {
+      "schoolId": 185,
+      "oldName": "Ball State University",
+      "newName": "Ball State"
+    },
+    {
+      "schoolId": 186,
+      "oldName": "Bowling Green State University",
+      "newName": "Bowling Green"
+    },
+    {
+      "schoolId": 187,
+      "oldName": "Eastern Michigan University",
+      "newName": "Eastern Michigan"
+    },
+    {
+      "schoolId": 188,
+      "oldName": "Miami University (Ohio)",
+      "newName": "Miami (OH)"
+    },
+    {
+      "schoolId": 189,
+      "oldName": "Ohio University",
+      "newName": "Ohio"
+    },
+    {
+      "schoolId": 190,
+      "oldName": "University at Buffalo",
+      "newName": "Buffalo"
+    },
+    {
+      "schoolId": 191,
+      "oldName": "University of Akron",
+      "newName": "Akron"
+    },
+    {
+      "schoolId": 192,
+      "oldName": "University of Central Missouri",
+      "newName": "Central Michigan"
+    },
+    {
+      "schoolId": 193,
+      "oldName": "University of Massachusetts",
+      "newName": "Massachusetts"
+    },
+    {
+      "schoolId": 194,
+      "oldName": "University of Toledo",
+      "newName": "Toledo"
+    },
+    {
+      "schoolId": 195,
+      "oldName": "Western Michigan University",
+      "newName": "Western Michigan"
+    },
+    {
+      "schoolId": 196,
+      "oldName": "Coppin State University",
+      "newName": "Coppin State"
+    },
+    {
+      "schoolId": 197,
+      "oldName": "Delaware State University",
+      "newName": "Delaware State"
+    },
+    {
+      "schoolId": 199,
+      "oldName": "Howard University",
+      "newName": "Howard"
+    },
+    {
+      "schoolId": 200,
+      "oldName": "Norfolk State University",
+      "newName": "Norfolk State"
+    },
+    {
+      "schoolId": 201,
+      "oldName": "Oregon State University",
+      "newName": "Oregon State"
+    },
+    {
+      "schoolId": 202,
+      "oldName": "University of Maryland, Eastern Shore",
+      "newName": "Maryland Eastern Shore"
+    },
+    {
+      "schoolId": 203,
+      "oldName": "Belmont University",
+      "newName": "Belmont"
+    },
+    {
+      "schoolId": 204,
+      "oldName": "Bradley University",
+      "newName": "Bradley"
+    },
+    {
+      "schoolId": 205,
+      "oldName": "Drake University",
+      "newName": "Drake"
+    },
+    {
+      "schoolId": 206,
+      "oldName": "Illinois State University",
+      "newName": "Illinois State"
+    },
+    {
+      "schoolId": 207,
+      "oldName": "Indiana State University",
+      "newName": "Indiana State"
+    },
+    {
+      "schoolId": 208,
+      "oldName": "Murray State University",
+      "newName": "Murray State"
+    },
+    {
+      "schoolId": 209,
+      "oldName": "Southern Illinois University",
+      "newName": "Southern Illinois"
+    },
+    {
+      "schoolId": 210,
+      "oldName": "University of Evansville",
+      "newName": "Evansville"
+    },
+    {
+      "schoolId": 211,
+      "oldName": "University of the Incarnate Word",
+      "newName": "Incarnate Word"
+    },
+    {
+      "schoolId": 213,
+      "oldName": "Valparaiso University",
+      "newName": "Valparaiso"
+    },
+    {
+      "schoolId": 214,
+      "oldName": "Air Force Academy",
+      "newName": "Air Force"
+    },
+    {
+      "schoolId": 215,
+      "oldName": "Boise State University",
+      "newName": "Boise State"
+    },
+    {
+      "schoolId": 216,
+      "oldName": "Colorado State University",
+      "newName": "Colorado State"
+    },
+    {
+      "schoolId": 218,
+      "oldName": "San Diego State University",
+      "newName": "San Diego State"
+    },
+    {
+      "schoolId": 219,
+      "oldName": "San Jose State University",
+      "newName": "San José State"
+    },
+    {
+      "schoolId": 221,
+      "oldName": "University of Nevada",
+      "newName": "Nevada"
+    },
+    {
+      "schoolId": 222,
+      "oldName": "University of New Mexico",
+      "newName": "New Mexico"
+    },
+    {
+      "schoolId": 223,
+      "oldName": "University of Wyoming",
+      "newName": "Wyoming"
+    },
+    {
+      "schoolId": 224,
+      "oldName": "Utah State University",
+      "newName": "Utah State"
+    },
+    {
+      "schoolId": 225,
+      "oldName": "Central Connecticut State University",
+      "newName": "Central Connecticut"
+    },
+    {
+      "schoolId": 227,
+      "oldName": "FDU",
+      "newName": "Fairleigh Dickinson"
+    },
+    {
+      "schoolId": 228,
+      "oldName": "Le Moyne College",
+      "newName": "Le Moyne"
+    },
+    {
+      "schoolId": 229,
+      "oldName": "Mercyhurst College",
+      "newName": "Mercyhurst"
+    },
+    {
+      "schoolId": 230,
+      "oldName": "Stonehill College",
+      "newName": "Stonehill"
+    },
+    {
+      "schoolId": 231,
+      "oldName": "University of New Haven",
+      "newName": "New Haven"
+    },
+    {
+      "schoolId": 232,
+      "oldName": "Wagner College",
+      "newName": "Wagner"
+    },
+    {
+      "schoolId": 233,
+      "oldName": "Eastern Illinois University",
+      "newName": "Eastern Illinois"
+    },
+    {
+      "schoolId": 235,
+      "oldName": "Lindenwood University",
+      "newName": "Lindenwood"
+    },
+    {
+      "schoolId": 237,
+      "oldName": "Morehead State University",
+      "newName": "Morehead State"
+    },
+    {
+      "schoolId": 238,
+      "oldName": "Southern Illinois Univ.-Edwardsville",
+      "newName": "SIU Edwardsville"
+    },
+    {
+      "schoolId": 239,
+      "oldName": "Tennessee State University",
+      "newName": "Tennessee State"
+    },
+    {
+      "schoolId": 240,
+      "oldName": "University of Southern Indiana",
+      "newName": "Southern Indiana"
+    },
+    {
+      "schoolId": 241,
+      "oldName": "University of Tennessee at Martin",
+      "newName": "UT Martin"
+    },
+    {
+      "schoolId": 242,
+      "oldName": "Western Illinois University",
+      "newName": "Western Illinois"
+    },
+    {
+      "schoolId": 244,
+      "oldName": "Army West Point",
+      "newName": "Army"
+    },
+    {
+      "schoolId": 246,
+      "oldName": "Bucknell University",
+      "newName": "Bucknell"
+    },
+    {
+      "schoolId": 247,
+      "oldName": "Colgate University",
+      "newName": "Colgate"
+    },
+    {
+      "schoolId": 248,
+      "oldName": "College of the Holy Cross",
+      "newName": "Holy Cross"
+    },
+    {
+      "schoolId": 249,
+      "oldName": "Lafayette College",
+      "newName": "Lafayette"
+    },
+    {
+      "schoolId": 250,
+      "oldName": "Lehigh University",
+      "newName": "Lehigh"
+    },
+    {
+      "schoolId": 251,
+      "oldName": "Loyola University Maryland",
+      "newName": "Loyola Maryland"
+    },
+    {
+      "schoolId": 252,
+      "oldName": "U.S. Naval Academy",
+      "newName": "Navy"
+    },
+    {
+      "schoolId": 253,
+      "oldName": "Auburn University",
+      "newName": "Auburn"
+    },
+    {
+      "schoolId": 254,
+      "oldName": "Louisiana State University",
+      "newName": "LSU"
+    },
+    {
+      "schoolId": 255,
+      "oldName": "Mississippi State University",
+      "newName": "Mississippi State"
+    },
+    {
+      "schoolId": 256,
+      "oldName": "Texas A&M University",
+      "newName": "Texas A&M"
+    },
+    {
+      "schoolId": 257,
+      "oldName": "University of Alabama",
+      "newName": "Alabama"
+    },
+    {
+      "schoolId": 258,
+      "oldName": "University of Arkansas",
+      "newName": "Arkansas"
+    },
+    {
+      "schoolId": 259,
+      "oldName": "University of Florida",
+      "newName": "Florida"
+    },
+    {
+      "schoolId": 260,
+      "oldName": "University of Georgia",
+      "newName": "Georgia"
+    },
+    {
+      "schoolId": 261,
+      "oldName": "University of Kentucky",
+      "newName": "Kentucky"
+    },
+    {
+      "schoolId": 262,
+      "oldName": "University of Missouri",
+      "newName": "Missouri"
+    },
+    {
+      "schoolId": 263,
+      "oldName": "University of Oklahoma",
+      "newName": "Oklahoma"
+    },
+    {
+      "schoolId": 264,
+      "oldName": "University of South Carolina",
+      "newName": "South Carolina"
+    },
+    {
+      "schoolId": 265,
+      "oldName": "University of Tennessee",
+      "newName": "Tennessee"
+    },
+    {
+      "schoolId": 266,
+      "oldName": "University of Texas",
+      "newName": "Texas"
+    },
+    {
+      "schoolId": 267,
+      "oldName": "Vanderbilt University",
+      "newName": "Vanderbilt"
+    },
+    {
+      "schoolId": 268,
+      "oldName": "Furman University",
+      "newName": "Furman"
+    },
+    {
+      "schoolId": 269,
+      "oldName": "Mercer University",
+      "newName": "Mercer"
+    },
+    {
+      "schoolId": 270,
+      "oldName": "Samford University",
+      "newName": "Samford"
+    },
+    {
+      "schoolId": 272,
+      "oldName": "University of Tennessee at Chattanooga",
+      "newName": "Chattanooga"
+    },
+    {
+      "schoolId": 273,
+      "oldName": "Virginia Military Institute",
+      "newName": "VMI"
+    },
+    {
+      "schoolId": 274,
+      "oldName": "Wofford College",
+      "newName": "Wofford"
+    },
+    {
+      "schoolId": 275,
+      "oldName": "East Texas A&M University",
+      "newName": "East Texas A&M"
+    },
+    {
+      "schoolId": 276,
+      "oldName": "Houston Christian University",
+      "newName": "Houston Christian"
+    },
+    {
+      "schoolId": 277,
+      "oldName": "Lamar University",
+      "newName": "Lamar"
+    },
+    {
+      "schoolId": 278,
+      "oldName": "McNeese State University",
+      "newName": "McNeese"
+    },
+    {
+      "schoolId": 279,
+      "oldName": "Nichols College",
+      "newName": "Nicholls"
+    },
+    {
+      "schoolId": 280,
+      "oldName": "Northwestern State University",
+      "newName": "Northwestern State"
+    },
+    {
+      "schoolId": 282,
+      "oldName": "Stephen F. Austin State University",
+      "newName": "Stephen F. Austin"
+    },
+    {
+      "schoolId": 283,
+      "oldName": "University of New Orleans",
+      "newName": "LSU New Orleans"
+    },
+    {
+      "schoolId": 285,
+      "oldName": "Alabama A&M University",
+      "newName": "Alabama A&M"
+    },
+    {
+      "schoolId": 286,
+      "oldName": "Alabama State University",
+      "newName": "Alabama State"
+    },
+    {
+      "schoolId": 287,
+      "oldName": "Alcorn State University",
+      "newName": "Alcorn State"
+    },
+    {
+      "schoolId": 289,
+      "oldName": "Florida A&M University",
+      "newName": "Florida A&M"
+    },
+    {
+      "schoolId": 290,
+      "oldName": "Grambling State University",
+      "newName": "Grambling"
+    },
+    {
+      "schoolId": 291,
+      "oldName": "Jackson State University",
+      "newName": "Jackson State"
+    },
+    {
+      "schoolId": 292,
+      "oldName": "Mississippi Valley State University",
+      "newName": "Mississippi Valley State"
+    },
+    {
+      "schoolId": 293,
+      "oldName": "Prairie View A&M University",
+      "newName": "Prairie View A&M"
+    },
+    {
+      "schoolId": 294,
+      "oldName": "Southern University",
+      "newName": "Southern"
+    },
+    {
+      "schoolId": 295,
+      "oldName": "Texas Southern University",
+      "newName": "Texas Southern"
+    },
+    {
+      "schoolId": 296,
+      "oldName": "University of Arkansas-Pine Bluff",
+      "newName": "Arkansas-Pine Bluff"
+    },
+    {
+      "schoolId": 297,
+      "oldName": "North Dakota State University",
+      "newName": "North Dakota State"
+    },
+    {
+      "schoolId": 298,
+      "oldName": "Oral Roberts University",
+      "newName": "Oral Roberts"
+    },
+    {
+      "schoolId": 299,
+      "oldName": "South Dakota State University",
+      "newName": "South Dakota State"
+    },
+    {
+      "schoolId": 300,
+      "oldName": "St. Thomas University",
+      "newName": "St. Thomas"
+    },
+    {
+      "schoolId": 301,
+      "oldName": "University of Denver",
+      "newName": "Denver"
+    },
+    {
+      "schoolId": 302,
+      "oldName": "University of Missouri-Kansas City",
+      "newName": "Kansas City"
+    },
+    {
+      "schoolId": 303,
+      "oldName": "University of Nebraska-Omaha",
+      "newName": "Omaha"
+    },
+    {
+      "schoolId": 304,
+      "oldName": "University of North Dakota",
+      "newName": "North Dakota"
+    },
+    {
+      "schoolId": 305,
+      "oldName": "University of South Dakota",
+      "newName": "South Dakota"
+    },
+    {
+      "schoolId": 306,
+      "oldName": "Appalachian State University",
+      "newName": "App State"
+    },
+    {
+      "schoolId": 307,
+      "oldName": "Arkansas State University",
+      "newName": "Arkansas State"
+    },
+    {
+      "schoolId": 308,
+      "oldName": "Coastal Carolina University",
+      "newName": "Coastal Carolina"
+    },
+    {
+      "schoolId": 309,
+      "oldName": "Georgia Southern University",
+      "newName": "Georgia Southern"
+    },
+    {
+      "schoolId": 310,
+      "oldName": "Georgia State University",
+      "newName": "Georgia State"
+    },
+    {
+      "schoolId": 312,
+      "oldName": "Louisiana College",
+      "newName": "Louisiana"
+    },
+    {
+      "schoolId": 313,
+      "oldName": "Marshall University",
+      "newName": "Marshall"
+    },
+    {
+      "schoolId": 314,
+      "oldName": "Old Dominion University",
+      "newName": "Old Dominion"
+    },
+    {
+      "schoolId": 315,
+      "oldName": "Texas State University",
+      "newName": "Texas State"
+    },
+    {
+      "schoolId": 316,
+      "oldName": "The University of Southern Mississippi",
+      "newName": "Southern Miss"
+    },
+    {
+      "schoolId": 317,
+      "oldName": "Troy University",
+      "newName": "Troy"
+    },
+    {
+      "schoolId": 319,
+      "oldName": "University of South Alabama",
+      "newName": "South Alabama"
+    },
+    {
+      "schoolId": 320,
+      "oldName": "Gonzaga University",
+      "newName": "Gonzaga"
+    },
+    {
+      "schoolId": 321,
+      "oldName": "Pepperdine University",
+      "newName": "Pepperdine"
+    },
+    {
+      "schoolId": 323,
+      "oldName": "Santa Clara University",
+      "newName": "Santa Clara"
+    },
+    {
+      "schoolId": 324,
+      "oldName": "Seattle University",
+      "newName": "Seattle U"
+    },
+    {
+      "schoolId": 325,
+      "oldName": "University of Portland",
+      "newName": "Portland"
+    },
+    {
+      "schoolId": 326,
+      "oldName": "University of San Diego",
+      "newName": "San Diego"
+    },
+    {
+      "schoolId": 327,
+      "oldName": "University of San Francisco",
+      "newName": "San Francisco"
+    },
+    {
+      "schoolId": 328,
+      "oldName": "University of the Pacific",
+      "newName": "Pacific"
+    },
+    {
+      "schoolId": 329,
+      "oldName": "Washington State University",
+      "newName": "Washington State"
+    },
+    {
+      "schoolId": 330,
+      "oldName": "Abilene Christian University",
+      "newName": "Abilene Christian"
+    },
+    {
+      "schoolId": 331,
+      "oldName": "California Baptist University",
+      "newName": "California Baptist"
+    },
+    {
+      "schoolId": 332,
+      "oldName": "Southern Utah University",
+      "newName": "Southern Utah"
+    },
+    {
+      "schoolId": 333,
+      "oldName": "Tarleton State University",
+      "newName": "Tarleton State"
+    },
+    {
+      "schoolId": 334,
+      "oldName": "University of Texas at Arlington",
+      "newName": "UT Arlington"
+    },
+    {
+      "schoolId": 335,
+      "oldName": "Utah Tech University",
+      "newName": "Utah Tech"
+    },
+    {
+      "schoolId": 336,
+      "oldName": "Utah Valley University",
+      "newName": "Utah Valley"
+    },
+    {
+      "schoolId": 338,
+      "oldName": "New Jersey Institute of Technology",
+      "newName": "NJIT"
+    },
+    {
+      "schoolId": 340,
+      "oldName": "Ohio State University",
+      "newName": "Ohio State"
+    },
+    {
+      "schoolId": 341,
+      "oldName": "University of Connecticut",
+      "newName": "UConn"
+    },
+    {
+      "schoolId": 342,
+      "oldName": "Western Carolina University",
+      "newName": "Western Carolina"
+    },
+    {
+      "schoolId": 343,
+      "oldName": "West Georgia University",
+      "newName": "West Georgia"
+    },
+    {
+      "schoolId": 344,
+      "oldName": "Northern Colorado University",
+      "newName": "Northern Colorado"
+    },
+    {
+      "schoolId": 345,
+      "oldName": "North Carolina Central University",
+      "newName": "North Carolina Central"
+    },
+    {
+      "schoolId": 346,
+      "oldName": "Tennessee Tech University",
+      "newName": "Tennessee Tech"
+    },
+    {
+      "schoolId": 348,
+      "oldName": "Morgan State University",
+      "newName": "Morgan State"
+    },
+    {
+      "schoolId": 349,
+      "oldName": "Jacksonville State University",
+      "newName": "Jacksonville State"
+    },
+    {
+      "schoolId": 350,
+      "oldName": "Loyola Marymount University",
+      "newName": "Loyola Marymount"
+    },
+    {
+      "schoolId": 351,
+      "oldName": "Louisiana Tech University",
+      "newName": "Louisiana Tech"
+    },
+    {
+      "schoolId": 353,
+      "oldName": "Northern Arizona University",
+      "newName": "Northern Arizona"
+    },
+    {
+      "schoolId": 354,
+      "oldName": "Texas A&M-Corpus Christi University",
+      "newName": "Texas A&M-Corpus Christi"
+    },
+    {
+      "schoolId": 356,
+      "oldName": "Bethune-Cookman University",
+      "newName": "Bethune-Cookman"
+    },
+    {
+      "schoolId": 357,
+      "oldName": "Cal State Northridge University",
+      "newName": "Cal State Northridge"
+    },
+    {
+      "schoolId": 358,
+      "oldName": "Charleston Southern University",
+      "newName": "Charleston Southern"
+    },
+    {
+      "schoolId": 359,
+      "oldName": "Charleston University",
+      "newName": "Charleston"
+    },
+    {
+      "schoolId": 360,
+      "oldName": "East Carolina University",
+      "newName": "East Carolina"
+    },
+    {
+      "schoolId": 361,
+      "oldName": "East Tennessee State University",
+      "newName": "East Tennessee State"
+    },
+    {
+      "schoolId": 362,
+      "oldName": "James Madison University",
+      "newName": "James Madison"
+    },
+    {
+      "schoolId": 363,
+      "oldName": "South Carolina State University",
+      "newName": "South Carolina State"
+    },
+    {
+      "schoolId": 364,
+      "oldName": "SE Louisiana University",
+      "newName": "SE Louisiana"
+    },
+    {
+      "schoolId": 366,
+      "oldName": "UL Monroe University",
+      "newName": "UL Monroe"
+    },
+    {
+      "schoolId": 369,
+      "oldName": "University of Northern Iowa",
+      "newName": "Northern Iowa"
+    },
+    {
+      "schoolId": 370,
+      "oldName": "University of South Carolina",
+      "newName": "USC"
+    },
+    {
+      "schoolId": 371,
+      "oldName": "University of South Carolina Upstate",
+      "newName": "South Carolina Upstate"
+    },
+    {
+      "schoolId": 372,
+      "oldName": "University of South Florida",
+      "newName": "South Florida"
+    },
+    {
+      "schoolId": 373,
+      "oldName": "University of Texas at El Paso",
+      "newName": "UTEP"
+    },
+    {
+      "schoolId": 374,
+      "oldName": "University of Texas Rio Grande Valley",
+      "newName": "UT Rio Grande Valley"
+    },
+    {
+      "schoolId": 375,
+      "oldName": "University of Texas at San Antonio",
+      "newName": "UTSA"
+    },
+    {
+      "schoolId": 376,
+      "oldName": "Missouri State University",
+      "newName": "Missouri State"
+    },
+    {
+      "schoolId": 378,
+      "oldName": "Robert Morris University",
+      "newName": "Robert Morris"
+    },
+    {
+      "schoolId": 379,
+      "oldName": "University of Illinois-Chicago",
+      "newName": "UIC"
+    },
+    {
+      "schoolId": 380,
+      "oldName": "Grand Canyon University",
+      "newName": "Grand Canyon"
+    },
+    {
+      "schoolId": 384,
+      "oldName": "Kent State University",
+      "newName": "Kent State"
+    },
+    {
+      "schoolId": 387,
+      "oldName": "University of West Florida",
+      "newName": "West Florida"
+    }
+  ],
+  "unmappedSchoolIds": [
+    347
+  ],
+  "result": "READ_ONLY_PLAN"
+}

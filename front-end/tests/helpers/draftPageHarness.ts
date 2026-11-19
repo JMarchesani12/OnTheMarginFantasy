@@ -6,6 +6,7 @@ import ts from 'typescript';
 import * as mapping from '../../src/utils/leagueMapping.ts';
 import * as teams from '../../src/utils/teams.ts';
 import * as tiers from '../../src/utils/teamTierGroups.ts';
+import * as search from '../../src/utils/teamSearch.ts';
 import * as drafted from '../../src/utils/draftedTeamGroups.ts';
 
 const settle=()=>new Promise(resolve=>setImmediate(resolve));
@@ -48,7 +49,7 @@ export function harness() {
     '../../context/currentUserContext':{useCurrentUser:()=>({userId})},
     '../../utils/leagueMapping':mapping,'../../utils/teams':teams,'../../utils/teamTierGroups':tiers,'../../utils/draftedTeamGroups':drafted,
     '../../utils/safeStorage':{safeLocalStorage:{getItem:()=>null,setItem:()=>{}}},
-    '../../utils/teamSearch':{teamSearchMatches:()=>true},'./LeagueDraftPage.css':{},
+    '../../utils/teamSearch':search,'./LeagueDraftPage.css':{},
     './client':{apiFetch,API_BASE_URL:'https://api.example.test'},
   };
   const clockWindow={setInterval:(callback:()=>void,delay:number)=>{assert.equal(delay,1000);timers.set(++timerId,callback);timerStarts++;return timerId;},clearInterval:(id:number)=>{timers.delete(id);timerStops++;},confirm:()=>true};
@@ -77,6 +78,15 @@ export function harness() {
       {exports:result,require:(id:string)=>{assert.equal(id,'react');return react;}});
     return result;
   }
+  const searchHook:any={};
+  const searchSource=readFileSync(new URL('../../src/hooks/useTeamSearchCatalog.ts',import.meta.url),'utf8');
+  runInNewContext(ts.transpileModule(searchSource,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,
+    {exports:searchHook,require:(id:string)=>id==='react'?react:id==='../utils/teamSearch'?search:{getTeamSearchCatalog:async()=>({teams:[
+      {teamId:2460,schoolId:369,teamName:'Northern Iowa Panthers',aliases:['Northern Iowa','UNI']},
+      {teamId:2459,schoolId:370,teamName:'Northern Illinois Huskies',aliases:['Northern Illinois','NIU']},
+      {teamId:1,schoolId:1,teamName:'Iona Gaels',aliases:[]},{teamId:2,schoolId:2,teamName:'Iowa Hawkeyes',aliases:[]},
+    ]})}});
+  deps['../../hooks/useTeamSearchCatalog']=searchHook;
   const exports:any={};
   const source=readFileSync(new URL('../../src/screens/League/LeagueDraftPage.tsx',import.meta.url),'utf8').replaceAll('import.meta.env.','testEnv.');
   const compiled=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText;
