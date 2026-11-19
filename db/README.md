@@ -476,3 +476,44 @@ the frozen baseline/checksums remain unchanged. Backend deployment is separate.
 Use [db/snapshots](snapshots/README.md) for the current dated schema/catalog records rather than treating the historical flat `tables.sql` as a live export. Before/after captures share a read-only exported snapshot within each run, retain ACL/RLS/index/constraint metadata and carry checksums/source provenance. They contain no application rows and are not initialization/migration/data-backup scripts. Frozen October29baseline/checksums remain unchanged.
 
 The configured target now additionally has the approved valid/ready `mod017_owner_member_team` covering index ([rollout receipt](../docs/modernization/evidence/mod-017-rollout-2026-11-17-3241bd9f036441c69353b3168a731e30.json)). The seasonal composite-reference migration `api/migrations/20261117_seasonal_reference_integrity.sql` was separately approved and **APPLIED_AND_VERIFIED** on the configured target; [receipt](../docs/modernization/evidence/mod-015-rollout-2026-11-17-8b3245fe0fab49d392d62dddc77e6197.json) and [final snapshot](snapshots/2026-11-17-after-mod015/manifest.json). Other environments still require fresh review/approval; don't infer their state from a filename. [Runbook](preflights/MOD-015-rollout.md). No old migrations or baseline adoption were rerun.
+
+
+## School aliases — November 19, 2026
+
+`SchoolAlias.schoolId -> School.id` stores shared search aliases across sports.
+The `(schoolId, normalizedAlias)` key deduplicates within a school while allowing
+ambiguous abbreviations across schools. This additive migration and its seed
+import were **APPLIED_AND_VERIFIED** on the configured project: 2,079 aliases,
+366 existing schools, and 631 existing teams. Existing School/SportTeam rows were
+not modified. Frozen baselines and historical snapshots remain unchanged.
+
+See [migration](../api/migrations/20261119_school_alias.sql),
+[maintenance/runtime notes](../scripts/team-search/README.md), and
+[rollout receipt](../docs/modernization/evidence/school-alias-rollout-2026-11-19.json).
+Runtime search reads this table; the JSON catalog is offline seed data only.
+Browser direct access is revoked and RLS enabled; the backend exposes public
+school-name metadata through `/api/team-search/catalog`. Application deployment
+is separate from the applied database migration.
+
+
+## Single canonical school-name transition — November 19, 2026
+
+The updated application reads team labels from `School.name`, using shorter names
+approved by the user. `SchoolAlias` retains official names and abbreviations.
+`School.shortName` and `SportTeam.displayName` are deprecated and prepared for
+removal by `20261119_retire_school_name_columns.sql`. **Their live drop is pending
+compatible API/job deployment**, so they remain in the transitional descriptive
+schema below. Existing public JSON field names are retained for client compatibility.
+GameResult provider name fields remain stored; linked teams render canonical School
+names and unlinked opponents retain source labels.
+
+The configured rollback-only check physically removed both columns and verified
+current catalog, rules, ingestion, roster, search, draft, trade and game queries,
+then restored the schema. See [staged rollout/commands](../scripts/team-search/README.md)
+and [dry-run evidence](../docs/modernization/evidence/school-name-dry-run-2026-11-19.json).
+
+The configured canonical-name phase is now committed: **336 shorter names**,
+with all 2,079 aliases retained and school/team counts unchanged. A fresh read-only
+postflight plans no additional name changes. The physical column-drop phase is
+still pending deployment; see [name rollout receipt](../docs/modernization/evidence/school-name-rollout-2026-11-19.json)
+and [postflight](../docs/modernization/evidence/school-name-postflight-2026-11-19.json).

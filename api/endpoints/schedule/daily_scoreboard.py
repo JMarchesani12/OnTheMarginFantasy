@@ -36,8 +36,8 @@ class DailyScoreboardRepository:
         scope, reader_params = league_read_scope(params['leagueId'], params['readerUserId'])
         sql = conference_sql('''SELECT gr.id, gr."externalGameId", gr.date,
             gr."timeTBD", gr."isCompleted", gr.broadcast,
-            gr."homeTeamId", gr."homeTeamName", gr."homeScore",
-            gr."awayTeamId", gr."awayTeamName", gr."awayScore",
+            gr."homeTeamId", COALESCE(home_school.name,gr."homeTeamName") AS "homeTeamName", gr."homeScore",
+            gr."awayTeamId", COALESCE(away_school.name,gr."awayTeamName") AS "awayTeamName", gr."awayScore",
             hc.name AS "homeConferenceName", ac.name AS "awayConferenceName",
             hw."weekNumber" AS "ownershipWeekNumber",
             hm.id AS "homeOwnerMemberId", hm."teamName" AS "homeOwnerTeamName",
@@ -45,6 +45,10 @@ class DailyScoreboardRepository:
             am.id AS "awayOwnerMemberId", am."teamName" AS "awayOwnerTeamName",
             au."displayName" AS "awayOwnerDisplayName"
             FROM "GameResult" gr
+            LEFT JOIN "SportTeam" home_name_team ON home_name_team.id=gr."homeTeamId" AND home_name_team."sportId"=gr.sport
+            LEFT JOIN "School" home_school ON home_school.id=home_name_team."schoolId"
+            LEFT JOIN "SportTeam" away_name_team ON away_name_team.id=gr."awayTeamId" AND away_name_team."sportId"=gr.sport
+            LEFT JOIN "School" away_school ON away_school.id=away_name_team."schoolId"
             LEFT JOIN "ConferenceMembership" hcm ON hcm."sportTeamId"=gr."homeTeamId" AND hcm."sportId"=:sport
             LEFT JOIN "SportConference" hsc ON hsc.id=hcm."sportConferenceId" AND hsc."sportId"=:sport
             LEFT JOIN "Conference" hc ON hc.id=hsc."conferenceId"

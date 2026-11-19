@@ -17,3 +17,14 @@ class SportEndpoints:
             raise
         except Exception:
             return jsonify({"message": "Failed to get sports"}), 500
+
+    def get_team_search_catalog(self):
+        try:
+            response=jsonify(self.service.team_search_catalog())
+            # The browser's deduplicated application cache owns the five-minute TTL.
+            response.headers['Cache-Control']='no-store'
+            return response,200
+        except (HTTPException, DataError, IntegrityError):
+            raise
+        except Exception:
+            return jsonify({'message':'Failed to load team search names'}),500

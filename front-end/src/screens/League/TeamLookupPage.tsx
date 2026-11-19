@@ -179,12 +179,15 @@ const TeamLookupPage = () => {
         <label htmlFor="team-lookup-search">Team</label>
         <input
           id="team-lookup-search"
+          aria-describedby="team-lookup-search-help"
           type="text"
-          placeholder="Search Iowa State, iowa st, Duke..."
+          placeholder="Name or abbreviation (e.g. UNI)"
+          maxLength={120}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           autoComplete="off"
         />
+        <p id="team-lookup-search-help" className="team-lookup__hint">Names, abbreviations, and minor typos work.</p>
       </section>
 
       {error && <p className="team-lookup__error">{error}</p>}

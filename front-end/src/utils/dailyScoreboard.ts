@@ -1,3 +1,4 @@
+import { filterTeamSearch, type TeamSearchIndex } from "./teamSearch.ts";
 import type { DailyScoreboardGame } from "../types/dailyScoreboard";
 
 export function getScoreboardTimezone(settings: unknown): string {
@@ -27,8 +28,7 @@ export function shiftScoreboardDate(date: string, direction: number): string {
   return value.toISOString().slice(0, 10);
 }
 
-export function filterDailyGames(games: DailyScoreboardGame[], conference: string, query: string) {
-  const search = query.trim().toLowerCase();
-  return games.filter(game => (!conference || game.homeConferenceName === conference || game.awayConferenceName === conference)
-    && (!search || `${game.homeTeamName} ${game.awayTeamName}`.toLowerCase().includes(search)));
+export function filterDailyGames(games: DailyScoreboardGame[], conference: string, query: string, index?: TeamSearchIndex) {
+  const eligible = games.filter(game => !conference || game.homeConferenceName === conference || game.awayConferenceName === conference);
+  return filterTeamSearch(eligible, query, game => [{teamId: game.homeTeamId, teamName: game.homeTeamName}, {teamId: game.awayTeamId, teamName: game.awayTeamName}], index);
 }

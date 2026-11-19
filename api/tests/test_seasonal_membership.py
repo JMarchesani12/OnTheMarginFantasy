@@ -38,6 +38,7 @@ class SeasonalReadConsumerTests(unittest.TestCase):
             INSERT INTO SportConference VALUES (1,1,1),(2,1,2);
             INSERT INTO Conference VALUES (1,'Default'),(2,'Seasonal');
             INSERT INTO ConferenceMembership VALUES (101,1,NULL,1),(101,1,2026,2);''')
+        db.connection.executescript('ALTER TABLE SportTeam ADD COLUMN schoolId INTEGER DEFAULT 1; CREATE TABLE SchoolAlias(schoolId INTEGER,alias TEXT,normalizedAlias TEXT);')
         roster=RosterRepository().member_teams(db,10,12,1)
         self.assertEqual(len(roster),1);self.assertEqual(roster[0]['conferenceName'],'Seasonal')
         rows=ScheduleReadRepository().search_teams(db,dict(sport=1,seasonYear=2026,leagueId=10,weekNumber=1)).fetchall()

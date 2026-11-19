@@ -1,3 +1,4 @@
+import { useTeamSearchCatalog } from "../../hooks/useTeamSearchCatalog";
 import { safeErrorMessage, READ_ERROR, WRITE_UNCERTAIN } from "../../api/safeError";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -33,12 +34,13 @@ import {
 } from "../../utils/leagueMapping";
 import { groupTeamsByTier, getTierLabel } from "../../utils/teamTierGroups";
 import { countConferenceDrafters, getFilledConferences, groupDraftedTeams } from "../../utils/draftedTeamGroups";
-import { teamSearchMatches } from "../../utils/teamSearch";
+import { filterTeamSearch, rankTeamSearchMatch } from "../../utils/teamSearch";
 import "./LeagueDraftPage.css";
 
 type GroupedTeams = [string, OwnedTeam[]][];
 
 const LeagueDraftPage = () => {
+  const teamSearch = useTeamSearchCatalog();
   const navigate = useNavigate();
   const { league_id } = useParams();
   const { session } = useAuth();
@@ -319,7 +321,7 @@ const LeagueDraftPage = () => {
 
     return Array.from(map.entries())
       .sort(([a], [b]) => a.localeCompare(b))
-      .map(([conference, members]) => [conference, [...members].sort((a, b) => a.teamName.localeCompare(b.teamName))]);
+      .map(([conference, members]) => [conference, [...members].sort((a, b) => rankTeamSearchMatch(b, searchTerm, teamSearch.index.aliasesFor(b)) - rankTeamSearchMatch(a, searchTerm, teamSearch.index.aliasesFor(a)) || a.teamName.localeCompare(b.teamName))]);
   };
 
   const conferenceDrafterCounts = useMemo(
@@ -365,14 +367,13 @@ const LeagueDraftPage = () => {
   const availableTiers = useMemo(() => groupTeamsByTier(availableTeams), [availableTeams]);
 
   const applyFilters = (teams: OwnedTeam[]) =>
-    teams.filter((team) => {
-      const matchesSearch = teamSearchMatches(team.teamName, searchTerm);
+    filterTeamSearch(teams.filter((team) => {
       const matchesConference =
         activeConferenceFilter === "all" ||
         resolveConferenceName(team.conferenceName) === activeConferenceFilter;
       const matchesTier = tierFilter === "all" || String(team.tier ?? "unassigned") === tierFilter;
-      return matchesSearch && matchesConference && matchesTier && !filledConferences.has(resolveConferenceName(team.conferenceName));
-    });
+      return matchesConference && matchesTier && !filledConferences.has(resolveConferenceName(team.conferenceName));
+    }), searchTerm, team => team, teamSearch.index);
 
   const groupedAvailable = useMemo(
     () => {
@@ -384,7 +385,7 @@ const LeagueDraftPage = () => {
         conferences: groupTeams(group.teams),
       }));
     },
-    [availableTeams, searchTerm, activeConferenceFilter, tierFilter, league?.sport, filledConferences, resolveConferenceName]
+    [availableTeams, searchTerm, activeConferenceFilter, tierFilter, league?.sport, filledConferences, resolveConferenceName, teamSearch.index]
   );
   const isCommissioner =
     currentUserId != null && league?.commissionerId === currentUserId;
@@ -792,11 +793,15 @@ const LeagueDraftPage = () => {
           <label htmlFor="draft-search">Search teams</label>
           <input
             id="draft-search"
+            aria-describedby="draft-search-help"
             type="text"
-            placeholder="Search by team name"
+            placeholder="Name or abbreviation (e.g. UNI)"
+            maxLength={120}
             value={searchTerm}
             onChange={(evt) => setSearchTerm(evt.target.value)}
           />
+          <small id="draft-search-help">Names, abbreviations, and minor typos work.</small>
+          {teamSearch.error && <p role="status">Alternate names could not load. <button type="button" onClick={teamSearch.retry}>Retry search names</button></p>}
         </div>
         <div className="draft-page__control">
           <label htmlFor="draft-tier">Tier</label>

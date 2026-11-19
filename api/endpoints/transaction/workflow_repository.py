@@ -283,7 +283,7 @@ class TransactionWorkflowRepository:
                 jsonb_agg(
                 DISTINCT jsonb_build_object(
                     'id', st_from.id,
-                    'displayName', st_from."displayName"
+                    'displayName', school_from.name
                 )
                 ) FILTER (WHERE st_from.id IS NOT NULL),
                 '[]'::jsonb
@@ -294,7 +294,7 @@ class TransactionWorkflowRepository:
                 jsonb_agg(
                 DISTINCT jsonb_build_object(
                     'id', st_to.id,
-                    'displayName', st_to."displayName"
+                    'displayName', school_to.name
                 )
                 ) FILTER (WHERE st_to.id IS NOT NULL),
                 '[]'::jsonb
@@ -322,12 +322,14 @@ class TransactionWorkflowRepository:
             ON TRUE
             LEFT JOIN "SportTeam" st_from
             ON st_from.id = f.team_id::bigint
+            LEFT JOIN "School" school_from ON school_from.id=st_from."schoolId"
 
             -- Expand TO team ids
             LEFT JOIN LATERAL jsonb_array_elements_text(t."toTeamIds") AS tt(team_id)
             ON TRUE
             LEFT JOIN "SportTeam" st_to
             ON st_to.id = tt.team_id::bigint
+            LEFT JOIN "School" school_to ON school_to.id=st_to."schoolId"
 
             WHERE t."leagueId" = :league_id
             AND t.type = 'TRADE'

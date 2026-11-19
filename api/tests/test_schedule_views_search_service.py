@@ -26,7 +26,7 @@ class ScheduleViewsSearchTests(unittest.TestCase):
 
     def test_search_normalization_and_rank_precedence(self):
         service, _ = self.service([])
-        self.assertEqual(service._normalize_team_search_text(' A&M Univ. St. '),'a and m university state')
+        self.assertEqual(service._normalize_team_search_text(' A&M Univ. St. '),'a and m university st')
         self.assertEqual([service._team_search_rank({'teamName':name},'iowa st') for name in
             ('Iowa State','Iowa State Cyclones','East Iowa State','Iowa Big State','Other')],
             [100,90,75,50,0])
@@ -100,3 +100,31 @@ class ScheduleViewsSearchTests(unittest.TestCase):
         model.db = SequenceEngine([[{'id':1}]])
         self.assertEqual(model.get_conference_games_by_week(10,2,2026,501),[{'id':1}])
         self.assertEqual(len(model.db.calls),1)
+
+    def test_alias_and_typo_search_returns_canonical_records_with_existing_scope(self):
+        teams = [
+            {'teamId':2460,'teamName':'Northern Iowa Panthers','ownerMemberId':11,'searchAliases':['UNI']},
+            {'teamId':2459,'teamName':'Northern Illinois Huskies','ownerMemberId':None,'searchAliases':['NIU']},
+            {'teamId':41,'teamName':'UConn Huskies','ownerMemberId':12,'searchAliases':['Connecticut']},
+        ]
+        for query, expected in (('UNI',[2460]),('U.N.I.',[2460]),('nothern iwoa',[2460]),('NIU',[2459]),('Connecticut',[41])):
+            with self.subTest(query=query):
+                service, engine = self.service([[self.context()], teams])
+                results = service.search_teams_for_job(10,query)
+                self.assertEqual([row['teamId'] for row in results],expected)
+                self.assertTrue(all(set(row)=={'teamId','teamName','ownerMemberId'} for row in results))
+                self.assertEqual(engine.calls[1][1],{'leagueId':10,'sport':1,'seasonYear':2026,'weekNumber':2})
+
+    def test_exact_search_suppresses_fuzzy_noise_and_query_bounds_avoid_io(self):
+        rows = [{'teamName':'Iona Gaels'},{'teamName':'Iowa Hawkeyes'}]
+        service,_ = self.service([[self.context()],rows])
+        self.assertEqual(service.search_teams_for_job(10,'iowa'),[{'teamName':'Iowa Hawkeyes'}])
+        for query in ('iowa ' * 100,'one two three four five six seven eight nine'):
+            service,engine = self.service([])
+            self.assertEqual(service.search_teams_for_job(10,query),[])
+            self.assertEqual(engine.calls,[])
+
+    def test_ambiguous_abbreviation_keeps_multiple_distinct_schools(self):
+        rows = [{'teamId':i,'teamName':name,'searchAliases':['OSU']} for i,name in enumerate(('Ohio State Buckeyes','Oklahoma State Cowboys','Oregon State Beavers'))]
+        service,_ = self.service([[self.context()],rows])
+        self.assertEqual(len(service.search_teams_for_job(10,'OSU')),3)

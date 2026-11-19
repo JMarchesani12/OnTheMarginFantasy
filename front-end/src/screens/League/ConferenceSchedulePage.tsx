@@ -1,3 +1,4 @@
+import { useTeamSearchCatalog } from "../../hooks/useTeamSearchCatalog";
 import { safeErrorMessage, READ_ERROR } from "../../api/safeError";
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
@@ -22,7 +23,7 @@ import {
   normalizeLeaguesResponse,
 } from "../../utils/leagueMapping";
 import { safeLocalStorage } from "../../utils/safeStorage";
-import { teamSearchMatches } from "../../utils/teamSearch";
+import { filterTeamSearch } from "../../utils/teamSearch";
 import "./ConferenceSchedulePage.css";
 
 type LocationState = {
@@ -65,6 +66,7 @@ const buildFallbackHeaders = (games: ConferenceSchedule["games"]): DateHeader[] 
 };
 
 const ConferenceSchedulePage = () => {
+  const teamSearch = useTeamSearchCatalog();
   const navigate = useNavigate();
   const location = useLocation();
   const { league_id } = useParams();
@@ -425,8 +427,8 @@ const ConferenceSchedulePage = () => {
     if (!searchTerm) {
       return teamRows;
     }
-    return teamRows.filter((row) => teamSearchMatches(row.teamName, searchTerm));
-  }, [teamRows, searchTerm]);
+    return filterTeamSearch(teamRows, searchTerm, row => row, teamSearch.index);
+  }, [teamRows, searchTerm, teamSearch.index]);
 
   const activeConference = useMemo(
     () =>
@@ -562,10 +564,14 @@ const ConferenceSchedulePage = () => {
           Filter teams
           <input
             type="text"
-            placeholder="Search by team name"
+            aria-describedby="conference-team-search-help"
+            placeholder="Name or abbreviation (e.g. UNI)"
+            maxLength={120}
             value={searchTerm}
             onChange={(evt) => setSearchTerm(evt.target.value)}
           />
+          <small id="conference-team-search-help">Names, abbreviations, and minor typos work.</small>
+          {teamSearch.error && <p role="status">Alternate names could not load. <button type="button" onClick={teamSearch.retry}>Retry search names</button></p>}
         </label>
         {weekInfoLoading && <span className="conference-schedule__hint">Syncing week…</span>}
       </div>

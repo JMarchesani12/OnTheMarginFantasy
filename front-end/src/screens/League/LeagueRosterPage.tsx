@@ -1,3 +1,5 @@
+import { useTeamSearchCatalog } from "../../hooks/useTeamSearchCatalog";
+import { filterTeamSearch } from "../../utils/teamSearch";
 import { useTeamPerformance } from "../../hooks/useTeamPerformance";
 import { TeamPerformanceStats } from "../../components/TeamPerformance/TeamPerformanceStats";
 import { safeErrorMessage, TRANSACTION_UNCERTAIN, READ_ERROR } from "../../api/safeError";
@@ -40,6 +42,7 @@ const LeagueRosterPage = () => {
 };
 
 const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
+  const teamSearch = useTeamSearchCatalog();
   const navigate = useNavigate();
   const scope = useRequestScope(isCurrent);
   const leagueId = league.leagueId;
@@ -311,28 +314,24 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
   }, [ownedTeams, availableTeams, tradeMemberTeams]);
 
   const applyFilters = (teams: OwnedTeam[]) =>
-    teams.filter((team) => {
-      const name = team.teamName ?? "";
-      const matchesSearch = name
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
+    filterTeamSearch(teams.filter((team) => {
       const matchesConference =
         conferenceFilter === "all" ||
         (team.conferenceName ?? "Conference unavailable") === conferenceFilter;
-      return matchesSearch && matchesConference;
-    });
+      return matchesConference;
+    }), searchTerm, team => team, teamSearch.index);
 
   const groupedOwned = useMemo(
     () => groupTeams(applyFilters(ownedTeams)),
-    [ownedTeams, searchTerm, conferenceFilter]
+    [ownedTeams, searchTerm, conferenceFilter, teamSearch.index]
   );
   const groupedAvailable = useMemo(
     () => groupTeams(applyFilters(availableTeams)),
-    [availableTeams, searchTerm, conferenceFilter]
+    [availableTeams, searchTerm, conferenceFilter, teamSearch.index]
   );
   const groupedTradeTarget = useMemo(
     () => groupTeams(applyFilters(tradeMemberTeams)),
-    [tradeMemberTeams, searchTerm, conferenceFilter]
+    [tradeMemberTeams, searchTerm, conferenceFilter, teamSearch.index]
   );
 
   const teamNameLookup = useMemo(() => {
@@ -645,11 +644,15 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
           <label htmlFor="roster-search">Search teams</label>
           <input
             id="roster-search"
+            aria-describedby="roster-search-help"
             type="text"
-            placeholder="Search by team name"
+            placeholder="Name or abbreviation (e.g. UNI)"
+            maxLength={120}
             value={searchTerm}
             onChange={(evt) => setSearchTerm(evt.target.value)}
           />
+          <small id="roster-search-help">Names, abbreviations, and minor typos work.</small>
+          {teamSearch.error && <p role="status">Alternate names could not load. <button type="button" onClick={teamSearch.retry}>Retry search names</button></p>}
         </div>
         <div className="roster-page__control">
           <label htmlFor="roster-conference">Conference</label>

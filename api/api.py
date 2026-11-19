@@ -66,6 +66,7 @@ def create_app(engine=None):
             "/health",
             "/ready",
             "/api/sports",
+            "/api/team-search/catalog",
             "/api/leagues/search",
         },
         public_prefixes=[

@@ -68,3 +68,34 @@ test('draft page explains optional conferences and uses current snapshot maximum
   assert.match(h.text(),/No conference is required/);
   assert.match(h.text(),/remaining turns are skipped/);
 });
+
+test('actual draft search accepts aliases and typos while retaining conference filters',async()=>{
+  const h=harness();h.render();await h.flush();
+  h.controllers.at(-1).options.apply({state:{status:'live',currentMemberId:11},members:[],picks:[],availableTeams:[
+    {teamId:2460,teamName:'Northern Iowa Panthers',conferenceName:'Missouri Valley',tier:1},
+    {teamId:2459,teamName:'Northern Illinois Huskies',conferenceName:'MAC',tier:1},
+  ]});h.render();
+  const change=(id:string,value:string)=>{h.all().find(node=>node.props?.id===id).props.onChange({target:{value}});h.render();};
+  change('draft-search','UNI');
+  assert.match(h.text(),/Northern Iowa Panthers/);assert.doesNotMatch(h.text(),/Northern Illinois Huskies/);
+  change('draft-search','nothern iwoa');
+  assert.match(h.text(),/Northern Iowa Panthers/);assert.doesNotMatch(h.text(),/Northern Illinois Huskies/);
+  change('draft-conference','MAC');
+  assert.match(h.text(),/No teams available/);assert.doesNotMatch(h.text(),/Northern Iowa Panthers/);
+  h.dispose();
+});
+
+
+test('draft typo fallback is chosen after conference filtering',async()=>{
+  const h=harness();h.render();await h.flush();
+  h.controllers.at(-1).options.apply({state:{status:'live',currentMemberId:11},members:[],picks:[],availableTeams:[
+    {teamId:1,teamName:'Iona Gaels',conferenceName:'MAAC',tier:1},
+    {teamId:2,teamName:'Iowa Hawkeyes',conferenceName:'Big Ten',tier:1},
+  ]});h.render();
+  const change=(id:string,value:string)=>{h.all().find(node=>node.props?.id===id).props.onChange({target:{value}});h.render();};
+  change('draft-search','Iowa');
+  assert.match(h.text(),/Iowa Hawkeyes/);assert.doesNotMatch(h.text(),/Iona Gaels/);
+  change('draft-conference','MAAC');
+  assert.match(h.text(),/Iona Gaels/);assert.doesNotMatch(h.text(),/Iowa Hawkeyes/);
+  h.dispose();
+});

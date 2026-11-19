@@ -51,13 +51,14 @@ class DraftSnapshotRepository:
                       dp."memberId",
                       lm."teamName" AS "memberTeamName",
                       dp."sportTeamId",
-                      st."displayName" AS "sportTeamName",
+                      school.name AS "sportTeamName",
                       sc.id AS "sportConferenceId",
                       conf.name AS "conferenceName"
                     FROM "DraftPick" dp
                     CROSS JOIN league_info li
                     JOIN "LeagueMember" lm ON lm.id = dp."memberId"
                     JOIN "SportTeam" st ON st.id = dp."sportTeamId"
+                    JOIN "School" school ON school.id=st."schoolId"
                     LEFT JOIN "ConferenceMembership" cm
                       ON cm."sportTeamId" = st.id
                      AND cm."sportId" = st."sportId"

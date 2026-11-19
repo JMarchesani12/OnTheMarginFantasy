@@ -51,8 +51,8 @@ class ScheduleReadRepository:
             COALESCE(sp.rules, '{}'::jsonb) AS "phaseRules",
             gr."homeTeamId",
             gr."awayTeamId",
-            gr."homeTeamName",
-            gr."awayTeamName",
+            COALESCE(home_school.name,gr."homeTeamName") AS "homeTeamName",
+            COALESCE(away_school.name,gr."awayTeamName") AS "awayTeamName",
             gr."homeScore",
             gr."awayScore",
             (gr."homeTeamId" IN (SELECT "sportTeamId" FROM member_teams)) AS "ownsHome",
@@ -72,6 +72,10 @@ class ScheduleReadRepository:
                 ELSE 0
             END AS "rawMemberPointDiff"
             FROM "GameResult" gr
+            LEFT JOIN "SportTeam" home_name_team ON home_name_team.id=gr."homeTeamId" AND home_name_team."sportId"=gr.sport
+            LEFT JOIN "School" home_school ON home_school.id=home_name_team."schoolId"
+            LEFT JOIN "SportTeam" away_name_team ON away_name_team.id=gr."awayTeamId" AND away_name_team."sportId"=gr.sport
+            LEFT JOIN "School" away_school ON away_school.id=away_name_team."schoolId"
             LEFT JOIN "SeasonPhase" sp ON sp.id=gr."seasonPhaseId"
             CROSS JOIN target_week tw
             CROSS JOIN max_tier mt
@@ -132,15 +136,19 @@ class ScheduleReadRepository:
             gr."timeTBD",
             gr."homeTeamId",
             gr."awayTeamId",
-            gr."homeTeamName",
-            gr."awayTeamName",
+            COALESCE(home_school.name,gr."homeTeamName") AS "homeTeamName",
+            COALESCE(away_school.name,gr."awayTeamName") AS "awayTeamName",
             gr."homeScore",
             gr."awayScore",
             (gr."homeTeamId" IN (SELECT "sportTeamId" FROM a_teams)) AS "homeOwnedByA",
             (gr."awayTeamId" IN (SELECT "sportTeamId" FROM a_teams)) AS "awayOwnedByA",
             (gr."homeTeamId" IN (SELECT "sportTeamId" FROM b_teams)) AS "homeOwnedByB",
             (gr."awayTeamId" IN (SELECT "sportTeamId" FROM b_teams)) AS "awayOwnedByB"
-            FROM "GameResult" gr,
+            FROM "GameResult" gr
+            LEFT JOIN "SportTeam" home_name_team ON home_name_team.id=gr."homeTeamId" AND home_name_team."sportId"=gr.sport
+            LEFT JOIN "School" home_school ON home_school.id=home_name_team."schoolId"
+            LEFT JOIN "SportTeam" away_name_team ON away_name_team.id=gr."awayTeamId" AND away_name_team."sportId"=gr.sport
+            LEFT JOIN "School" away_school ON away_school.id=away_name_team."schoolId",
                 target_week tw
             WHERE gr.sport           = tw."sportId"
             AND gr."sportSeasonId" = tw."sportSeasonId"
@@ -177,7 +185,8 @@ class ScheduleReadRepository:
                          WHERE o."sportTeamId"=gr."homeTeamId" ORDER BY o."memberId") AS "homeMemberIds",
                    ARRAY(SELECT o."memberId" FROM active_owners o
                          WHERE o."sportTeamId"=gr."awayTeamId" ORDER BY o."memberId") AS "awayMemberIds"
-            FROM "GameResult" gr CROSS JOIN target_week tw
+            FROM "GameResult" gr
+            CROSS JOIN target_week tw
             WHERE gr.sport=tw."sportId" AND gr."sportSeasonId"=tw."sportSeasonId"
               AND gr.date BETWEEN tw."startDate" AND tw."endDate"
               AND EXISTS (
@@ -224,7 +233,7 @@ class ScheduleReadRepository:
             )
             SELECT
                 st.id              AS "teamId",
-                st."displayName"   AS "teamName",
+                school.name   AS "teamName",
                 COALESCE(st.tier, (
                   SELECT COALESCE(MAX(tier_team.tier), 0) + 1
                   FROM "SportTeam" tier_team
@@ -235,6 +244,7 @@ class ScheduleReadRepository:
             FROM member_teams mt
             JOIN "SportTeam" st
             ON st.id = mt."sportTeamId"
+            JOIN "School" school ON school.id=st."schoolId"
             LEFT JOIN "ConferenceMembership" cm
             ON cm."sportTeamId" = st.id
             AND cm."sportId" = st."sportId"
@@ -244,7 +254,7 @@ class ScheduleReadRepository:
             AND sc."sportId" = st."sportId"
             LEFT JOIN "Conference" c
             ON c.id = sc."conferenceId"
-            ORDER BY st."displayName";
+            ORDER BY school.name;
         """, '(SELECT "seasonYear" FROM "League" WHERE id=:leagueId)')), params)
 
     def week_window(self, conn, params):
@@ -304,8 +314,8 @@ class ScheduleReadRepository:
                 gr."homeTeamId",
                 gr."awayTeamId",
                 gr."broadcast",
-                gr."homeTeamName",
-                gr."awayTeamName",
+                COALESCE(home_school.name,gr."homeTeamName") AS "homeTeamName",
+                COALESCE(away_school.name,gr."awayTeamName") AS "awayTeamName",
                 gr."homeScore",
                 gr."awayScore",
                 home_lm.id AS "homeOwnerMemberId",
@@ -317,6 +327,10 @@ class ScheduleReadRepository:
                 (gr."homeTeamId" IN (SELECT "sportTeamId" FROM conf_teams)) AS "homeInConference",
                 (gr."awayTeamId" IN (SELECT "sportTeamId" FROM conf_teams)) AS "awayInConference"
             FROM "GameResult" gr
+            LEFT JOIN "SportTeam" home_name_team ON home_name_team.id=gr."homeTeamId" AND home_name_team."sportId"=gr.sport
+            LEFT JOIN "School" home_school ON home_school.id=home_name_team."schoolId"
+            LEFT JOIN "SportTeam" away_name_team ON away_name_team.id=gr."awayTeamId" AND away_name_team."sportId"=gr.sport
+            LEFT JOIN "School" away_school ON away_school.id=away_name_team."schoolId"
             JOIN ss ON ss."sportSeasonId" = gr."sportSeasonId"
             LEFT JOIN "LeagueTeamSlot" home_lts
               ON home_lts."leagueId" = :leagueId
@@ -400,8 +414,8 @@ class ScheduleReadRepository:
                 gr."roundOrder",
                 gr."homeTeamId",
                 gr."awayTeamId",
-                gr."homeTeamName",
-                gr."awayTeamName",
+                COALESCE(home_school.name,gr."homeTeamName") AS "homeTeamName",
+                COALESCE(away_school.name,gr."awayTeamName") AS "awayTeamName",
                 gr."homeScore",
                 gr."awayScore",
                 (gr."homeTeamId" = :sportTeamId) AS "isHome",
@@ -410,13 +424,17 @@ class ScheduleReadRepository:
                     ELSE gr."homeTeamId"
                 END AS "opponentTeamId",
                 CASE
-                    WHEN gr."homeTeamId" = :sportTeamId THEN gr."awayTeamName"
-                    ELSE gr."homeTeamName"
+                    WHEN gr."homeTeamId" = :sportTeamId THEN COALESCE(away_school.name,gr."awayTeamName")
+                    ELSE COALESCE(home_school.name,gr."homeTeamName")
                 END AS "opponentTeamName",
                 owner_lm.id AS "ownerMemberId",
                 owner_lm."teamName" AS "ownerTeamName",
                 owner_u."displayName" AS "ownerDisplayName"
             FROM "GameResult" gr
+            LEFT JOIN "SportTeam" home_name_team ON home_name_team.id=gr."homeTeamId" AND home_name_team."sportId"=gr.sport
+            LEFT JOIN "School" home_school ON home_school.id=home_name_team."schoolId"
+            LEFT JOIN "SportTeam" away_name_team ON away_name_team.id=gr."awayTeamId" AND away_name_team."sportId"=gr.sport
+            LEFT JOIN "School" away_school ON away_school.id=away_name_team."schoolId"
             JOIN ss ON ss."sportSeasonId" = gr."sportSeasonId"
             LEFT JOIN "LeagueTeamSlot" owner_lts
               ON :leagueId IS NOT NULL
@@ -466,12 +484,15 @@ class ScheduleReadRepository:
         return conn.execute(text(conference_sql("""
             SELECT
                 st.id AS "teamId",
-                st."displayName" AS "teamName",
+                school.name AS "teamName",
+                COALESCE((SELECT json_agg(sa.alias ORDER BY sa."normalizedAlias") FROM "SchoolAlias" sa
+                          WHERE sa."schoolId"=st."schoolId"),'[]'::json) AS "searchAliases",
                 c.name AS "conferenceName",
                 lm.id AS "ownerMemberId",
                 lm."teamName" AS "ownerTeamName",
                 u."displayName" AS "ownerDisplayName"
             FROM "SportTeam" st
+            JOIN "School" school ON school.id=st."schoolId"
             LEFT JOIN "ConferenceMembership" cm
               ON cm."sportTeamId" = st.id
              AND cm."sportId" = st."sportId"
@@ -491,5 +512,5 @@ class ScheduleReadRepository:
             LEFT JOIN "User" u
               ON u.id = lm."userId"
             WHERE st."sportId" = :sport
-            ORDER BY st."displayName"
+            ORDER BY school.name
         """, ':seasonYear')), params)
