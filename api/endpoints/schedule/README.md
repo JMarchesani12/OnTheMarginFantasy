@@ -15,3 +15,9 @@ Schedule HTTP uses read service, retaining input/envelopes/errors and authentica
 Preserve original behavior: football Week0 commits separately; each game upsert commits separately; sport-season ingestion dedupes groups while league ingestion counts differently; team bootstrap marks complete even after per-team fetch failures; checkpoint fingerprint/save/resume/force and file-before-final-metadata ordering remain. No new cross-resource atomicity, replay, publication, score, actor/visibility, retry/timeout or startup policy is implied.
 
 [Current complete schedule evidence](../../../docs/modernization/evidence/mod-038-schedule-complete-postgres-2026-11-02.json) covers all30 queries (7 calendar/10 read/13 ingestion), actual parser with synthetic fetches and owned temporary checkpoints. Earlier slice reports are historical. [Completion ledger](../../../docs/superpowers/plans/2026-10-30-mod-038-schedule-complete-implementation.md).
+
+## League-wide daily scoreboard
+
+`POST /api/schedule/dailyScoreboard` accepts `{ "leagueId": 1, "date": "2027-02-13" }` from an authenticated league reader. It returns every stored game in that league's sport and season on the selected league-local calendar day, plus conference names and each side's owner during the game's scoring week. Games outside configured league weeks explicitly have no ownership period. The query uses a half-open local-day window converted to UTC, including daylight-saving transitions; it does not filter by roster ownership or duplicate cross-conference games.
+
+The Scoreboard hub tab applies conference/team-name filters to these daily games and includes the existing league-wide team search as a separate Find team view. Browse state is kept in URL parameters so returning from a team schedule restores the day and filters. This endpoint uses the existing `GameResult.isCompleted` field and requires no additional migration.

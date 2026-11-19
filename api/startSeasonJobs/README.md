@@ -1,6 +1,6 @@
 # Season setup and basketball tournaments
 
-Basketball setup requires `SeasonPhase.rules` JSONB. The previously referenced `api/migrations/20261023_basketball_tournament_rules.sql` is missing from available repository history; do not treat it as a runnable setup step. The configured backend database has the column as of the read-only 2026-10-29 catalog check. Verify other environments and reconcile the migration provenance before defining an upgrade; see [MOD-005](../../docs/modernization/mod-005-schema-provenance.md). It does not rewrite existing seasons or leagues. No new subdivisions or tournament-specific tables are needed.
+Basketball setup requires `SeasonPhase.rules` JSONB. The previously referenced `api/migrations/20261023_basketball_tournament_rules.sql` is missing from available repository history; do not treat it as a runnable setup step. The configured backend database has the column as of the read-only 2026-10-29 catalog check. It does not rewrite existing seasons or leagues. No new subdivisions or tournament-specific tables are needed.
 
 ## Configuration
 

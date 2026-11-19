@@ -1,5 +1,6 @@
+import LeagueScoreboardBrowser from "../../components/League/LeagueScoreboardBrowser";
 import { safeErrorMessage, READ_ERROR, WRITE_UNCERTAIN } from "../../api/safeError";
-import { useNavigate, useParams, type To, type NavigateOptions } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams, type To, type NavigateOptions } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import type { League } from "../../types/league";
 import type { LeagueMember } from "../../types/leagueMember";
@@ -44,7 +45,9 @@ const LeagueDetailView = ({ initialLeague, currentUserId, isMember, isCurrent }:
     if (scope.isCurrent()) return rawNavigate(to, options);
   };
   const [league] = useState(initialLeague);
-  const [hubView, setHubView] = useState("schedule");
+  const [hubParams, setHubParams] = useSearchParams();
+  const [hubView, setHubView] = useState(() => { const value = hubParams.get("view"); return value && ["schedule", "scoreboard", "scores", "overview"].includes(value) ? value : "schedule"; });
+  const [scoreboardVisited, setScoreboardVisited] = useState(() => hubParams.get("view") === "scoreboard");
   const [members, setMembers] = useState<LeagueMember[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [membersError, setMembersError] = useState<string | null>(null);
@@ -186,16 +189,6 @@ const LeagueDetailView = ({ initialLeague, currentUserId, isMember, isCurrent }:
     navigate(`/leagues/${league.leagueId}/draft`, {
       state: { league, autoJoin },
     });
-  };
-
-  const openConferencePage = () => {
-    if (!league) return;
-    navigate(`/leagues/${league.leagueId}/conference`, { state: { league } });
-  };
-
-  const openTeamLookupPage = () => {
-    if (!league) return;
-    navigate(`/leagues/${league.leagueId}/team-search`, { state: { league } });
   };
 
   const openManageLeague = () => {
@@ -531,9 +524,13 @@ const LeagueDetailView = ({ initialLeague, currentUserId, isMember, isCurrent }:
       </header>
 
       <nav className="league-detail__nav" aria-label="League views">
-        {[["schedule", "Schedule"], ["scores", "Standings"], ["overview", "Team & League"]].map(([value, label]) => (
+        {[["schedule", "Schedule"], ["scoreboard", "Scoreboard"], ["scores", "Standings"], ["overview", "Team & League"]].map(([value, label]) => (
           <button key={value} type="button" aria-current={hubView === value ? "page" : undefined}
-            onClick={() => setHubView(value)}>{label}</button>
+            onClick={() => {
+              setHubView(value);
+              setHubParams(previous => { const next = new URLSearchParams(previous); next.set("view", value); return next; }, { replace: true });
+              if (value === "scoreboard") setScoreboardVisited(true);
+            }}>{label}</button>
         ))}
       </nav>
       <div hidden={hubView !== "overview"} className="league-detail__panel">
@@ -789,34 +786,20 @@ const LeagueDetailView = ({ initialLeague, currentUserId, isMember, isCurrent }:
             </div>
           </div>
         )}
-      <section className="league-detail__card league-detail__tools-card">
-        <h2>League Tools</h2>
+      {isDraftCompleted && <section className="league-detail__card league-detail__tools-card">
+        <h2>League history</h2>
         <div className="league-detail__primary-actions">
-          <button
-            className="league-detail__conference-btn"
-            type="button"
-            onClick={openConferencePage}
-          >
-            View Conference Scores
-          </button>
-          <button
-            className="league-detail__conference-btn"
-            type="button"
-            onClick={openTeamLookupPage}
-          >
-            Find Team
-          </button>
           {isDraftCompleted && (
             <button
               className="league-detail__conference-btn"
               type="button"
               onClick={() => navigate(`/leagues/${league.leagueId}/draft-results`)}
             >
-              View Draft
+              Draft results
             </button>
           )}
         </div>
-      </section>
+      </section>}
 
       </div>
       </div>
@@ -838,6 +821,9 @@ const LeagueDetailView = ({ initialLeague, currentUserId, isMember, isCurrent }:
         />
       )}
 
+      </div>
+      <div hidden={hubView !== "scoreboard"} className="league-detail__panel">
+        {scoreboardVisited && <LeagueScoreboardBrowser league={league} />}
       </div>
       <div hidden={hubView !== "scores"} className="league-detail__panel">
       <div className="league-detail__scoreboard-grid">
