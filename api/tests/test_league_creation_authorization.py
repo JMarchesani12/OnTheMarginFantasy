@@ -68,6 +68,8 @@ class LeagueCreationAuthorizationTests(unittest.TestCase):
                 "teamName" TEXT, "seasonPoints" INTEGER, "draftOrder" INTEGER);
         ''')
         self.weeks = self.enterContext(patch.object(ScheduleReadService, 'ensure_weeks_for_job'))
+        from draft_capacity_fixture import install_capacity_fixture
+        install_capacity_fixture(self.db)
         app = Flask(__name__)
         app.config['TESTING'] = True
         install_auth_middleware(app)
@@ -102,7 +104,7 @@ class LeagueCreationAuthorizationTests(unittest.TestCase):
                 self.assertEqual(set(created), {'id', 'createdAt', 'name', 'sport', 'numPlayers',
                     'status', 'settings', 'updatedAt', 'draftDate', 'commissioner', 'seasonYear',
                     'isDiscoverable', 'sportInfo', 'creatorMemberId'})
-                self.assertEqual(created['sportInfo'], {'id': 1, 'name': 'Basketball'})
+                self.assertEqual(created['sportInfo'], {'id': 1, 'name': 'Basketball', 'maxDraftRounds': 8})
                 self.assertEqual(created['settings']['timezone'], 'UTC')
                 league = self.db.connection.execute('SELECT * FROM "League" WHERE id = ?', (created['id'],)).fetchone()
                 member = self.db.connection.execute('SELECT * FROM "LeagueMember" WHERE id = ?', (created['creatorMemberId'],)).fetchone()

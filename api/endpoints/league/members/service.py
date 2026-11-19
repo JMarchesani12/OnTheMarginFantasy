@@ -58,6 +58,10 @@ class MemberService:
             self.repository.delete_member(conn, league_id, member_id)
             if shift_draft_order:
                 self.repository.shift_after_removal(conn, league_id, removed_order)
-            self.repository.decrement_count(conn, league_id)
+            if league['status'] == 'Pre-Draft':
+                from utils.draft_capacity import refresh_draft_capacity
+                refresh_draft_capacity(conn, league_id)
+            else:
+                self.repository.decrement_count(conn, league_id)
             members = self.repository.remaining_members(conn, league_id)
         return {'removedMemberId': member_id, 'removedDraftOrder': removed_order, 'members': members}

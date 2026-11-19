@@ -89,6 +89,7 @@ const LeagueDraftPage = () => {
   const [draftedTeamsView, setDraftedTeamsView] = useState<"conference" | "round">("conference");
   const [showDraftedTeams, setShowDraftedTeams] = useState(false);
   const [draftSelections, setDraftSelections] = useState<OwnedTeam[]>([]);
+  const [draftRounds, setDraftRounds] = useState<number | null>(null);
   const [draftState, setDraftState] = useState<DraftState | null>(null);
   const [draftMembers, setDraftMembers] = useState<DraftMember[]>([]);
   const [draftActionLoading, setDraftActionLoading] = useState(false);
@@ -188,6 +189,9 @@ const LeagueDraftPage = () => {
       }
 
       const data = snapshot as DraftSnapshot;
+      if (typeof data.draftSettings?.numberOfRounds === "number") {
+        setDraftRounds(data.draftSettings.numberOfRounds);
+      }
       const available = data.availableTeams;
       const recent = data.recentPicks ?? data.draftSelections ?? data.picks;
       const state = data.state;
@@ -279,6 +283,7 @@ const LeagueDraftPage = () => {
 
   const clearDraftView = useCallback(() => {
     setDraftState(null);
+    setDraftRounds(null);
     setDraftMembers([]);
     setDraftSummaryPicks([]);
     setDraftSelections([]);
@@ -642,6 +647,9 @@ const LeagueDraftPage = () => {
           <h1 ref={pageHeadingRef} tabIndex={-1}>{league.leagueName}</h1>
           <p className="draft-page__subhead">
             Browse all available teams for week {draftWeekNumber} and lock in your pick.
+          </p>
+          <p className="draft-page__subhead">
+            {`Up to ${draftRounds ?? league.settings.draft.numberOfRounds} teams per owner. No conference is required; conference caps still apply. If you have no legal picks left, your remaining turns are skipped.`}
           </p>
           <p className="draft-page__status">Draft status: {draftStatusLabel}</p>
           {joinedCountLabel && (

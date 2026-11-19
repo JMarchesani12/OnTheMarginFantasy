@@ -21,6 +21,11 @@ class LivePickDatabase(fixture.DraftStateDatabase):
         sql = str(statement).replace('FOR UPDATE', '').replace(')::int AS cnt', ') AS cnt').replace(
             "now() + (:selectionTime || ' seconds')::interval",
             "datetime(now(), '+' || :selectionTime || ' seconds')")
+        sql = sql.replace('UPDATE "League" l', 'UPDATE "League" AS l')
+        sql = sql.replace('ss."seasonEnd"::date', 'date(ss."seasonEnd")').replace(
+            'ss."seasonStart"::date', 'date(ss."seasonStart")').replace('now()::date', 'date(now())')
+        sql = sql.replace('RETURNING l.id AS "leagueId", l.status AS "leagueStatus"',
+                          'RETURNING id AS "leagueId", status AS "leagueStatus"')
         try:
             result = super().execute(text(sql), params)
         except sqlite3.IntegrityError as exc:
@@ -50,7 +55,6 @@ class LivePickAuthorizationTests(unittest.TestCase):
             UPDATE "League" SET settings = '{"draft":{"draftType":"SNAKE","selectionTime":60,"numberOfRounds":2,"graceSeconds":0}}';
             UPDATE "DraftState" SET "expiresAt" = NULL;
             UPDATE "DraftState" SET status = 'live' WHERE "leagueId" = 20;
-            ALTER TABLE "SportConference" ADD COLUMN "maxTeamsPerOwner" INTEGER DEFAULT 2;
             INSERT INTO "SportTeam" VALUES (102, 1, 'Available Team');
             INSERT INTO "ConferenceMembership" VALUES (102,1,2026,501);
             ALTER TABLE "DraftPick" RENAME TO old_pick;
@@ -60,6 +64,7 @@ class LivePickAuthorizationTests(unittest.TestCase):
                 UNIQUE ("leagueId", "overallPickNumber"), UNIQUE ("leagueId", "sportTeamId"));
             INSERT INTO "DraftPick" SELECT * FROM old_pick;
             DROP TABLE old_pick;
+            DROP TABLE "LeagueTeamSlot";
             CREATE TABLE "LeagueTeamSlot" (id INTEGER PRIMARY KEY AUTOINCREMENT, "leagueId" INTEGER,
                 "memberId" INTEGER, "sportTeamId" INTEGER, "acquiredWeek" INTEGER,
                 "acquiredVia" TEXT, "droppedWeek" INTEGER);

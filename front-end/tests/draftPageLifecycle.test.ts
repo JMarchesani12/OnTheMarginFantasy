@@ -60,3 +60,11 @@ test('page read capability preserves request order, league and identical AbortSi
   assert.equal(h.readCalls[1].week,1);
   assert.equal(result.state,null);assert.deepEqual(Array.from(result.picks),[]);assert.deepEqual(Array.from(result.availableTeams),[]);
 });
+
+test('draft page explains optional conferences and uses current snapshot maximum picks',async()=>{
+  const h=harness();h.render();await h.flush();
+  h.controllers.at(-1).options.apply({draftSettings:{numberOfRounds:3},state:{status:'live',currentMemberId:11},members:[],picks:[],availableTeams:[]});
+  h.render();assert.match(h.text(),/Up to 3 teams per owner/);
+  assert.match(h.text(),/No conference is required/);
+  assert.match(h.text(),/remaining turns are skipped/);
+});

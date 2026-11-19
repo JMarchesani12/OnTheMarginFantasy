@@ -67,7 +67,7 @@ class DraftConferenceCapTests(unittest.TestCase):
             INSERT INTO ConferenceMembership VALUES (103,1,2026,501);''')
         before = self.state()
         with self.assertRaisesRegex(ValueError, 'Conference cap reached'):
-            self.service.pick_live(UserActor(2, 'bob'), 10, 12, 103)
+            self.service.allocate_manual_for_job(10, 12, 103)
         self.assertEqual(self.state(), before)
 
     def test_end_exclusive_and_future_history_do_not_consume_positive_cap(self):
@@ -116,14 +116,14 @@ class DraftConferenceCapTests(unittest.TestCase):
                 self.service.process_timeout_for_job(10)
             self.assertEqual(self.state(), before)
 
-    def test_all_zero_timeout_retains_no_team_no_advance_behavior(self):
+    def test_all_zero_timeout_completes_without_allocations(self):
         self.cap(0)
         before = self.state()
-        self.assertIsNone(self.timeout())
+        self.assertTrue(self.timeout()['draftComplete'])
         after = self.state()
         self.assertEqual(after['DraftPick'], before['DraftPick'])
         self.assertEqual(after['LeagueTeamSlot'], before['LeagueTeamSlot'])
-        self.assertEqual(after['DraftState'][0]['currentOverallPickNumber'], before['DraftState'][0]['currentOverallPickNumber'])
+        self.assertEqual(after['DraftState'][0]['status'], 'complete')
 
 
 class TransactionConferenceCapTests(unittest.TestCase):

@@ -403,6 +403,13 @@ class DraftPickRepository:
     def notify(self, conn, league_id, reason):
         notify_draft_updated(conn, league_id, reason)
 
+    def live_draft_members(self, conn):
+        return conn.execute(text('''
+            SELECT "leagueId", "currentMemberId" FROM "DraftState"
+            WHERE status='live' AND "currentMemberId" IS NOT NULL
+            ORDER BY "leagueId"
+        '''), {}).fetchall()
+
     def next_timeout_deadline(self, conn):
         return conn.execute(text("""
             SELECT

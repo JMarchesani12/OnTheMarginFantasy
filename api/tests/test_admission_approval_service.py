@@ -36,7 +36,7 @@ class AdmissionApprovalServiceTests(unittest.TestCase):
         self.assertEqual((member['teamName'], member['draftOrder'], member['seasonPoints']), ('Applicant Team', 3, 0))
         league = self.state()['League'][0]
         self.assertEqual(league['numPlayers'], 3)
-        self.assertEqual(json.loads(league['settings']), {'draft': {'numberOfRounds': 7}, 'timezone': 'UTC'})
+        self.assertEqual(json.loads(league['settings']), {'draft': {'numberOfRounds': 8}, 'timezone': 'UTC'})
         after = self.state()
         with self.assertRaises(AdmissionRejected): self.service.approve_request(self.actor, 10, 101)
         self.assertEqual(self.state(), after)
@@ -49,7 +49,7 @@ class AdmissionApprovalServiceTests(unittest.TestCase):
             with self.assertRaises(AdmissionRejected): self.service.approve_request(self.actor, league, request)
         self.assertEqual(self.state(), before)
 
-    def test_empty_team_falls_back_and_rounds_floor_at_one(self):
+    def test_empty_team_falls_back_and_sport_maximum_is_respected(self):
         self.assertTrue(hasattr(self.service, 'approve_request'), 'actor approval operation missing')
         self.db.connection.execute('UPDATE "LeagueJoinRequest" SET "teamName"=NULL WHERE id=101')
         self.db.connection.execute('UPDATE "Sport" SET "maxDraftRounds"=1,"maxPlayersToHaveMaxRounds"=1')

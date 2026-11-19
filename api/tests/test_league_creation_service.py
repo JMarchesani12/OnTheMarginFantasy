@@ -40,7 +40,7 @@ class LeagueCreationServiceTests(unittest.TestCase):
         self.assertEqual(payload,before);self.assertEqual(self.engine.begins,1)
         self.assertEqual(result['commissioner'],1)
         self.assertEqual(result['numPlayers'],1)
-        self.assertEqual(result['settings'],{'ruleSetVersion':'v1','timezone':'UTC'})
+        self.assertEqual(result['settings'],{'ruleSetVersion':'v1','timezone':'UTC','draft':{'numberOfRounds':8}})
         self.assertEqual(self.calls,[result['id']])
         member=self.rows('LeagueMember')[0]
         self.assertEqual(member,{'id':result['creatorMemberId'],'leagueId':result['id'],'userId':1,
@@ -52,7 +52,7 @@ class LeagueCreationServiceTests(unittest.TestCase):
             with self.assertRaises(ValueError):self.service.create(self.actor,{**self.payload(),'settings':settings},self.initialized)
         self.assertEqual(self.engine.begins,0)
         result=self.service.create(self.actor,{**self.payload(),'settings':{'schedule':{'timeZone':'America/Chicago'}}},self.initialized)
-        self.assertEqual(result['settings'],{'ruleSetVersion':'v1','schedule':{'timeZone':'America/Chicago'}})
+        self.assertEqual(result['settings'],{'ruleSetVersion':'v1','schedule':{'timeZone':'America/Chicago'},'draft':{'numberOfRounds':8}})
 
     def test_failure_after_member_insert_rolls_back_both_inserts(self):
         self.assertTrue(hasattr(self.service,'create'), 'actor creation operation missing')

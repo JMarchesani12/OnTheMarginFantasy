@@ -1,6 +1,7 @@
 from utils.conference_membership import conference_sql
 """Draft snapshot SQL; caller supplies every connection and transaction."""
 from sqlalchemy import text
+from utils.draft_eligibility import ELIGIBILITY_CTES, legal_pick_predicate
 
 
 class DraftSnapshotRepository:
@@ -86,7 +87,7 @@ class DraftSnapshotRepository:
         return (dict(row._mapping) if hasattr(row, "_mapping") else dict(row)) if row else None
 
     def next_unpicked_turn(self, conn, league_id, start_overall):
-        row = conn.execute(text("""
+        row = conn.execute(text(ELIGIBILITY_CTES + f"""
                 SELECT dt."overallPickNumber" AS "overall",
                     dt."memberId"          AS "memberId"
                 FROM "DraftTurn" dt
@@ -96,7 +97,13 @@ class DraftSnapshotRepository:
                 WHERE dt."leagueId" = :leagueId
                 AND dt."overallPickNumber" >= :startOverall
                 AND dp.id IS NULL
+                AND {legal_pick_predicate('dt."memberId"')}
                 ORDER BY dt."overallPickNumber" ASC
                 LIMIT 1
             """), {'leagueId': league_id , 'startOverall': start_overall}).fetchone()
         return (int(row._mapping["overall"]), int(row._mapping["memberId"])) if row else None
+
+    def member_has_legal_pick(self, conn, league_id, member_id):
+        row = conn.execute(text(ELIGIBILITY_CTES + f"SELECT {legal_pick_predicate(':memberId')} AS eligible"),
+                           {'leagueId': league_id, 'memberId': member_id}).fetchone()
+        return bool(row._mapping['eligible'])

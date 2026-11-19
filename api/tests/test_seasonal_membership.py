@@ -71,6 +71,7 @@ class UnmappedAllocationTests(unittest.TestCase):
         from endpoints.draft.pick_service import DraftPickService
         base=fixture.LivePickAuthorizationTests();base.setUp();self.addCleanup(base.doCleanups)
         service=DraftPickService(base.db)
+        base.db.connection.execute('DELETE FROM ConferenceMembership WHERE sportTeamId IN (90001,90002)')
         with base.db.begin() as conn:self.assertEqual(service._choose_random_team_for_auto_pick(conn,10,12,1),102)
         base.db.connection.executescript('DELETE FROM ConferenceMembership WHERE sportTeamId=102;')
         with base.db.begin() as conn:self.assertIsNone(service._choose_random_team_for_auto_pick(conn,10,12,1))
