@@ -361,3 +361,9 @@ body,
     align-items: flex-start;
   }
 }
+
+.conference-schedule__table { min-width: 0; table-layout: fixed; }
+.conference-schedule__team-col { width: 38%; overflow-wrap: anywhere; }
+.conference-schedule__table th, .conference-schedule__table td { overflow-wrap: anywhere; }
+.conference-schedule__date-picker { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; padding: .75rem; }
+.conference-schedule__date-picker select { max-width: 100%; min-height: 44px; padding: .45rem; border-radius: .5rem; background: #0B0E1A; color: #F4F7FF; border: 1px solid #334277; font: inherit; }

@@ -683,3 +683,36 @@
   font-size: 0.9rem;
   font-weight: 800;
 }
+
+/* League hub */
+.league-detail { width: 100%; max-width: 1280px; padding: 1rem 1.5rem 3rem; box-sizing: border-box; }
+.league-detail__header { align-items: center; margin-bottom: 1rem; }
+.league-detail__nav { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .35rem; padding: .35rem; margin-bottom: 1rem; border: 1px solid #243055; border-radius: .85rem; background: #0B0E1A; }
+.league-detail__nav button { min-width: 0; min-height: 44px; padding: .5rem .25rem; border: 1px solid transparent; border-radius: .55rem; background: transparent; color: #B7C2E6; font: inherit; font-weight: 700; cursor: pointer; }
+.league-detail__nav button[aria-current] { background: #163047; border-color: #22D3EE; color: #F4F7FF; }
+.league-detail__nav button:focus-visible { outline: 2px solid #22D3EE; outline-offset: 2px; }
+.league-detail__panel[hidden] { display: none; }
+.league-detail__panel, .league-detail__panel > *, .league-detail__team-name, .league-detail__header > div { min-width: 0; }
+.league-detail__title, .league-detail__team-name-value, .league-detail__week-totals-team { overflow-wrap: anywhere; }
+.league-detail__scoreboard-grid { margin-top: 0; }
+.league-detail__panel .league-schedule { margin-top: 0; }
+.league-detail__panel .league-detail__card--compact { margin-bottom: 1rem; }
+@media (max-width: 768px) {
+  .league-detail { padding: .75rem .75rem 2rem; }
+  .league-detail__title { font-size: 1.35rem; }
+  .league-detail__header { flex-wrap: wrap; gap: .5rem; }
+  .league-detail__commissioner { font-size: .8rem; }
+  .league-detail__card, .league-detail__overview, .league-detail__week-totals { padding: .85rem; }
+  .league-detail__overview-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .league-detail__primary-actions > button { max-width: 100%; white-space: normal; }
+  .league-detail__scoreboard-grid .league-detail__week-totals { order: initial; }
+}
+.league-detail__draft-notice { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem; padding-bottom: 1rem; }
+.league-detail__draft-notice p { margin: 0; }
+.league-detail__nav { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.league-detail__overview-extras { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-top: 1rem; align-items: start; }
+.league-detail__overview-extras .league-detail__overview { grid-column: 1 / -1; margin-bottom: 0; }
+.league-detail__overview-extras .league-detail__tools-card { margin-bottom: 0; }
+@media (max-width: 768px) { .league-detail__overview-extras { grid-template-columns: minmax(0, 1fr); } }
+
+@media (max-width: 480px) { .league-detail__nav button { font-size: .75rem; } }

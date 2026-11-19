@@ -1,5 +1,6 @@
+import LeagueScoreboardBrowser from "../../components/League/LeagueScoreboardBrowser";
 import { safeErrorMessage, READ_ERROR, WRITE_UNCERTAIN } from "../../api/safeError";
-import { useNavigate, useParams, type To, type NavigateOptions } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams, type To, type NavigateOptions } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import type { League } from "../../types/league";
 import type { LeagueMember } from "../../types/leagueMember";
@@ -44,6 +45,9 @@ const LeagueDetailView = ({ initialLeague, currentUserId, isMember, isCurrent }:
     if (scope.isCurrent()) return rawNavigate(to, options);
   };
   const [league] = useState(initialLeague);
+  const [hubParams, setHubParams] = useSearchParams();
+  const [hubView, setHubView] = useState(() => { const value = hubParams.get("view"); return value && ["schedule", "scoreboard", "scores", "overview"].includes(value) ? value : "schedule"; });
+  const [scoreboardVisited, setScoreboardVisited] = useState(() => hubParams.get("view") === "scoreboard");
   const [members, setMembers] = useState<LeagueMember[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [membersError, setMembersError] = useState<string | null>(null);
@@ -185,16 +189,6 @@ const LeagueDetailView = ({ initialLeague, currentUserId, isMember, isCurrent }:
     navigate(`/leagues/${league.leagueId}/draft`, {
       state: { league, autoJoin },
     });
-  };
-
-  const openConferencePage = () => {
-    if (!league) return;
-    navigate(`/leagues/${league.leagueId}/conference`, { state: { league } });
-  };
-
-  const openTeamLookupPage = () => {
-    if (!league) return;
-    navigate(`/leagues/${league.leagueId}/team-search`, { state: { league } });
   };
 
   const openManageLeague = () => {
@@ -529,82 +523,25 @@ const LeagueDetailView = ({ initialLeague, currentUserId, isMember, isCurrent }:
         <div className={statusClass}>{league.status}</div>
       </header>
 
-      <section className="league-detail__overview">
-        <div className="league-detail__overview-row">
-          <div className="league-detail__overview-item">
-            <span className="label">Sport</span>
-            <span className="value">{league.sport}</span>
-          </div>
-          <div className="league-detail__overview-item">
-            <span className="label">Season</span>
-            <span className="value">{league.seasonYear}</span>
-          </div>
-          <div className="league-detail__overview-item">
-            <span className="label">Number of Teams</span>
-            <span className="value">{league.numPlayers}</span>
-          </div>
-          <div className="league-detail__overview-item">
-            <span className="label">Status: </span>
-            <span className="value">{league.status}</span>
-          </div>
-        </div>
-
-        <div className="league-detail__overview-row">
-          <div className="league-detail__overview-item">
-            <span className="label">Draft Date</span>
-            <span className="value">{formatLeagueDate(league.draftDate)}</span>
-          </div>
-          <div className="league-detail__overview-item">
-            <span className="label">Trade Deadline</span>
-            <span className="value">
-              {formatLeagueDate(league.tradeDeadline)}
-            </span>
-          </div>
-          <div className="league-detail__overview-item">
-            <span className="label">Free Agent Deadline</span>
-            <span className="value">
-              {formatLeagueDate(league.freeAgentDeadline)}
-            </span>
-          </div>
-        </div>
-      </section>
-
-      <section className="league-detail__card league-detail__tools-card">
-        <h2>League Tools</h2>
-        <div className="league-detail__primary-actions">
-          <button
-            className="league-detail__conference-btn"
-            type="button"
-            onClick={openConferencePage}
-          >
-            View Conference Scores
-          </button>
-          <button
-            className="league-detail__conference-btn"
-            type="button"
-            onClick={openTeamLookupPage}
-          >
-            Find Team
-          </button>
-          {isDraftCompleted && (
-            <button
-              className="league-detail__conference-btn"
-              type="button"
-              onClick={() => navigate(`/leagues/${league.leagueId}/draft-results`)}
-            >
-              View Draft
-            </button>
-          )}
-        </div>
-      </section>
-
-      <section
-        className={`league-detail__content ${
-          showAdminActions ? "league-detail__content--admin" : ""
-        }`}
-      >
+      <nav className="league-detail__nav" aria-label="League views">
+        {[["schedule", "Schedule"], ["scoreboard", "Scoreboard"], ["scores", "Standings"], ["overview", "Team & League"]].map(([value, label]) => (
+          <button key={value} type="button" aria-current={hubView === value ? "page" : undefined}
+            onClick={() => {
+              setHubView(value);
+              setHubParams(previous => { const next = new URLSearchParams(previous); next.set("view", value); return next; }, { replace: true });
+              if (value === "scoreboard") setScoreboardVisited(true);
+            }}>{label}</button>
+        ))}
+      </nav>
+      <div hidden={hubView !== "overview"} className="league-detail__panel">
+      <section className="league-detail__content">
         <div className="league-detail__card">
           <h2>Your Team</h2>
+          {canStartDraft && <div className="league-detail__draft-notice">
+            <p>Your league is ready to draft.</p>
+            <button className="league-detail__start-draft-btn" type="button" onClick={handleStartDraft} disabled={startDraftLoading}>Start Draft</button>
+            {startDraftError && <p className="league-detail__error-text">{startDraftError}</p>}
+          </div>}
           <div className="league-detail__team-row">
             <div className="league-detail__team-name">
               <span className="label">Team Name</span>
@@ -780,6 +717,46 @@ const LeagueDetailView = ({ initialLeague, currentUserId, isMember, isCurrent }:
             )}
           </div>
         </div>
+
+      </section>
+
+      <div className="league-detail__overview-extras">
+      <section className="league-detail__overview">
+        <div className="league-detail__overview-row">
+          <div className="league-detail__overview-item">
+            <span className="label">Sport</span>
+            <span className="value">{league.sport}</span>
+          </div>
+          <div className="league-detail__overview-item">
+            <span className="label">Season</span>
+            <span className="value">{league.seasonYear}</span>
+          </div>
+          <div className="league-detail__overview-item">
+            <span className="label">Number of Teams</span>
+            <span className="value">{league.numPlayers}</span>
+          </div>
+        </div>
+
+        <div className="league-detail__overview-row">
+          <div className="league-detail__overview-item">
+            <span className="label">Draft Date</span>
+            <span className="value">{formatLeagueDate(league.draftDate)}</span>
+          </div>
+          <div className="league-detail__overview-item">
+            <span className="label">Trade Deadline</span>
+            <span className="value">
+              {formatLeagueDate(league.tradeDeadline)}
+            </span>
+          </div>
+          <div className="league-detail__overview-item">
+            <span className="label">Free Agent Deadline</span>
+            <span className="value">
+              {formatLeagueDate(league.freeAgentDeadline)}
+            </span>
+          </div>
+        </div>
+      </section>
+
         {showAdminActions && (
           <div className="league-detail__card league-detail__card--compact">
             <h2 className="league-detail__card-title--compact">
@@ -809,8 +786,24 @@ const LeagueDetailView = ({ initialLeague, currentUserId, isMember, isCurrent }:
             </div>
           </div>
         )}
-      </section>
+      {isDraftCompleted && <section className="league-detail__card league-detail__tools-card">
+        <h2>League history</h2>
+        <div className="league-detail__primary-actions">
+          {isDraftCompleted && (
+            <button
+              className="league-detail__conference-btn"
+              type="button"
+              onClick={() => navigate(`/leagues/${league.leagueId}/draft-results`)}
+            >
+              Draft results
+            </button>
+          )}
+        </div>
+      </section>}
 
+      </div>
+      </div>
+      <div hidden={hubView !== "schedule"} className="league-detail__panel">
       {loadingMembers && (
         <p className="league-detail__loading">Loading league members…</p>
       )}
@@ -828,10 +821,16 @@ const LeagueDetailView = ({ initialLeague, currentUserId, isMember, isCurrent }:
         />
       )}
 
+      </div>
+      <div hidden={hubView !== "scoreboard"} className="league-detail__panel">
+        {scoreboardVisited && <LeagueScoreboardBrowser league={league} />}
+      </div>
+      <div hidden={hubView !== "scores"} className="league-detail__panel">
       <div className="league-detail__scoreboard-grid">
         <LeagueScoreboard
           weekNumbers={scoreboardRows.weekNumbers}
           rows={scoreboardRows.rows}
+          currentMemberId={league.memberId}
           currentWeekNumber={effectiveWeekNumber ?? null}
           loading={scoreboardLoading}
           error={scoreboardError}
@@ -884,6 +883,8 @@ const LeagueDetailView = ({ initialLeague, currentUserId, isMember, isCurrent }:
               </div>
             )}
         </section>
+      </div>
+
       </div>
 
     </div>

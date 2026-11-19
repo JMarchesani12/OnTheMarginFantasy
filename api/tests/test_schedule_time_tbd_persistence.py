@@ -23,20 +23,24 @@ class KickoffPersistenceTests(unittest.TestCase):
             CREATE TABLE SportTeam(id INTEGER,sportId INTEGER); INSERT INTO SportTeam VALUES (11,1),(12,1);
             CREATE TABLE GameResult (
             id INTEGER PRIMARY KEY, sport INTEGER, sportSeasonId INTEGER,
-            seasonPhaseId INTEGER, externalGameId TEXT, date TEXT, timeTBD BOOLEAN NOT NULL DEFAULT false,
+            seasonPhaseId INTEGER, externalGameId TEXT, date TEXT, isCompleted BOOLEAN, timeTBD BOOLEAN NOT NULL DEFAULT false,
             homeTeamId INTEGER, awayTeamId INTEGER, homeScore INTEGER, awayScore INTEGER,
             homeTeamExternalId TEXT, awayTeamExternalId TEXT, homeTeamName TEXT, awayTeamName TEXT,
             broadcast TEXT, UNIQUE(sport,sportSeasonId,externalGameId));''')
         params = dict(sport=1,sportSeasonId=2,seasonPhaseId=None,externalGameId='synthetic',
-            date='2026-11-02T17:00:00Z',timeTBD=True,homeTeamId=11,awayTeamId=12,
+            date='2026-11-02T17:00:00Z',timeTBD=True,isCompleted=False,homeTeamId=11,awayTeamId=12,
             homeScore=None,awayScore=None,homeTeamExternalId='11',awayTeamExternalId='12',
             homeTeamName='Home',awayTeamName='Away',broadcast=None)
         repository = ScheduleIngestionRepository()
         first = repository.upsert_game(Connection(raw), params).fetchone()[0]
         self.assertEqual(raw.execute('SELECT timeTBD FROM GameResult').fetchone()[0], 1)
-        params.update(timeTBD=False,date='2026-11-03T02:00:00Z')
+        params.update(timeTBD=False,isCompleted=True,date='2026-11-03T02:00:00Z')
         second = repository.upsert_game(Connection(raw), params).fetchone()[0]
         self.assertEqual(first, second)
+        self.assertEqual(raw.execute('SELECT isCompleted FROM GameResult').fetchone()[0], 1)
+        params['isCompleted'] = None
+        repository.upsert_game(Connection(raw), params)
+        self.assertEqual(raw.execute('SELECT isCompleted FROM GameResult').fetchone()[0], 1)
         self.assertEqual(raw.execute('SELECT timeTBD,date FROM GameResult').fetchall(), [(0,params['date'])])
 
     def test_service_passes_true_and_missing_false_to_repository(self):
@@ -70,7 +74,7 @@ class GameReferenceConsistencyTests(unittest.TestCase):
             CREATE TABLE SeasonPhase(id INTEGER,sportSeasonId INTEGER);INSERT INTO SeasonPhase VALUES (10,1),(20,2);
             CREATE TABLE SportTeam(id INTEGER,sportId INTEGER);INSERT INTO SportTeam VALUES (101,1),(201,2);
         ''')
-        db.connection.executescript('''CREATE TABLE GameResult(id INTEGER PRIMARY KEY,sport INTEGER,sportSeasonId INTEGER,seasonPhaseId INTEGER,externalGameId TEXT,date TEXT,timeTBD BOOLEAN,homeTeamId INTEGER,awayTeamId INTEGER,homeScore INTEGER,awayScore INTEGER,homeTeamExternalId TEXT,awayTeamExternalId TEXT,homeTeamName TEXT,awayTeamName TEXT,broadcast TEXT,UNIQUE(sport,sportSeasonId,externalGameId));''')
+        db.connection.executescript('''CREATE TABLE GameResult(id INTEGER PRIMARY KEY,sport INTEGER,sportSeasonId INTEGER,seasonPhaseId INTEGER,externalGameId TEXT,date TEXT,isCompleted BOOLEAN, timeTBD BOOLEAN,homeTeamId INTEGER,awayTeamId INTEGER,homeScore INTEGER,awayScore INTEGER,homeTeamExternalId TEXT,awayTeamExternalId TEXT,homeTeamName TEXT,awayTeamName TEXT,broadcast TEXT,UNIQUE(sport,sportSeasonId,externalGameId));''')
         repository=ScheduleIngestionRepository()
         for params in (dict(sport=1,sportSeasonId=2,seasonPhaseId=None,homeTeamId=None,awayTeamId=None),
                        dict(sport=1,sportSeasonId=1,seasonPhaseId=20,homeTeamId=101,awayTeamId=None),

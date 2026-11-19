@@ -1,3 +1,5 @@
+import type { TeamPerformance } from "../../types/teamPerformance";
+import { TeamPerformanceStats } from "../TeamPerformance/TeamPerformanceStats";
 import { safeErrorMessage, TRANSACTION_UNCERTAIN, READ_ERROR } from "../../api/safeError";
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useRequestScope } from "../../hooks/useRequestScope";
@@ -16,6 +18,7 @@ import "./TradeRequestsPanel.css";
 
 type TradeRequestsPanelProps = {
   leagueId: number;
+  teamPerformance?: Record<number, TeamPerformance>;
   refreshRevision?: number;
   onMutationSuccess?: () => void;
   isCurrent: () => boolean;
@@ -33,6 +36,7 @@ const actionLabels: Record<TradeTab, string> = {
 
 const TradeRequestsPanel = ({
   leagueId,
+  teamPerformance,
   refreshRevision = 0,
   onMutationSuccess,
   isCurrent,
@@ -292,6 +296,7 @@ const TradeRequestsPanel = ({
                     {(trade.fromTeams ?? []).map((team) => (
                       <li key={`trade-from-${trade.transactionId}-${team.id}`}>
                         {team.displayName}
+                        <TeamPerformanceStats stats={teamPerformance?.[team.id]} />
                       </li>
                     ))}
                   </ul>
@@ -311,6 +316,7 @@ const TradeRequestsPanel = ({
                     {(trade.toTeams ?? []).map((team) => (
                       <li key={`trade-to-${trade.transactionId}-${team.id}`}>
                         {team.displayName}
+                        <TeamPerformanceStats stats={teamPerformance?.[team.id]} />
                       </li>
                     ))}
                   </ul>

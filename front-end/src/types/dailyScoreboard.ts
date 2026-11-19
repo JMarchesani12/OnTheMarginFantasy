@@ -1,0 +1,24 @@
+export type DailyScoreboardGame = {
+  id: number;
+  externalGameId: string;
+  date: string;
+  timeTBD: boolean;
+  isCompleted: boolean | null;
+  broadcast: string | null;
+  ownershipWeekNumber: number | null;
+  homeTeamId: number | null;
+  homeTeamName: string;
+  homeScore: number;
+  homeConferenceName: string | null;
+  homeOwnerMemberId: number | null;
+  homeOwnerTeamName: string | null;
+  homeOwnerDisplayName: string | null;
+  awayTeamId: number | null;
+  awayTeamName: string;
+  awayScore: number;
+  awayConferenceName: string | null;
+  awayOwnerMemberId: number | null;
+  awayOwnerTeamName: string | null;
+  awayOwnerDisplayName: string | null;
+};
+export type DailyScoreboardResponse = { date: string; timezone: string; games: DailyScoreboardGame[] };

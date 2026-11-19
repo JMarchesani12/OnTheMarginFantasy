@@ -5,9 +5,11 @@ import {leagueFixture} from './helpers/leagueFixture.ts';
 function setup(screen:string,seed=true,clock?:()=>number){const h=fixture(),requests:any[]=[],calls:any[]=[],store=new Map<string,string>();let route='10',user:any={userId:1,authUserId:'A',authLoading:false,loading:false,error:null};
  const request=(kind:string,args:any[])=>{const d=deferred();requests.push({...d,kind,args});return d.promise;};
  const api:any={getLeaguesForUser:(...args:any[])=>request('list',args),getLeague:(...args:any[])=>request('single',args),getMembersOfLeague:(...args:any[])=>request('members',args),updateLeagueMember:(...args:any[])=>request('rename',args),removeLeagueMember:(...args:any[])=>request('leave',args)};
- const stubs:any={'react-router-dom':{useParams:()=>({league_id:route}),useLocation:()=>({state:seed?{league:leagueFixture()}:null}),useNavigate:()=>(...args:any[])=>calls.push(['navigate',...args])},
+ const stubs:any={'../api/teamPerformance':{getTeamPerformance:async()=>({weekNumber:1,teams:[]})},
+ 'react-router-dom':{useSearchParams:()=>[new URLSearchParams(),()=>{}],useParams:()=>({league_id:route}),useLocation:()=>({state:seed?{league:leagueFixture()}:null}),useNavigate:()=>(...args:any[])=>calls.push(['navigate',...args])},
  '../api/leagues':api,'../../api/leagues':api,'../context/currentUserContext':{useCurrentUser:()=>user},'../../context/currentUserContext':{useCurrentUser:()=>user},
  '../../components/League/LeagueScheduleTabs':{LeagueScheduleTabs:()=>null},'../../components/League/LeagueScoreboard':{default:()=>null},
+ '../../components/League/LeagueScoreboardBrowser':{default:()=>null},
  '../../api/scoring':{getScoresForWeek:(...args:any[])=>request('scores',args)},
  '../../api/roster':{getMemberTeams:(...args:any[])=>request('teams',args),getAvailableTeams:(...args:any[])=>request('available',args)},
  '../../api/transaction':{getPendingTradesAndAddDrop:(...args:any[])=>request('pending',args),getOpenTradeRequests:(...args:any[])=>request('trades',args),submitFreeAgencyRequest:(...args:any[])=>request('addDrop',args),tradeRequestProposal:(...args:any[])=>request('trade',args),responseToTradeRequest:(...args:any[])=>request('respond',args),cancelTradeRequest:(...args:any[])=>request('cancel',args),vetoTrade:(...args:any[])=>request('veto',args)},

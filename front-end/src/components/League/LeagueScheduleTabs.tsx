@@ -1,3 +1,5 @@
+import { useTeamPerformance } from "../../hooks/useTeamPerformance";
+import { TeamPerformanceStats } from "../TeamPerformance/TeamPerformanceStats";
 import { safeErrorMessage, READ_ERROR } from "../../api/safeError";
 // src/components/League/LeagueScheduleTabs.tsx
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
@@ -12,7 +14,6 @@ import {
   type DateHeader,
 } from "../../utils/scheduleTable";
 import { buildSchedulePages, getSchedulePageIndex, moveSchedulePage } from "../../utils/schedulePagination";
-import { safeLocalStorage } from "../../utils/safeStorage";
 import { MIN_SCHEDULE_WEEK_NUMBER } from "../../utils/weekCutoff";
 import { selectDailyTotals, getTeamGamePointDiff } from "../../utils/leagueScheduleDailyTotals";
 import {
@@ -69,12 +70,12 @@ export const LeagueScheduleTabs = ({
     currentMemberId || (members[0]?.id ?? null)
   );
   const [weekNumber, setWeekNumber] = useState(startingWeekNumber);
+  const performance = useTeamPerformance(leagueId, weekNumber);
   const [weekInputValue, setWeekInputValue] = useState(String(startingWeekNumber));
   const [requestedPageIndex, setRequestedPageIndex] = useState<number | null>(null);
   const scheduleTimeZone = timeZone ?? LEAGUE_TIME_ZONE;
-  const storageKey = `league-schedule-collapsed:${leagueId}:${currentMemberId}`;
-  const [isCollapsed, setIsCollapsed] = useState(false);
-
+  const [viewMode, setViewMode] = useState<"day" | "week">(() =>
+    window.matchMedia("(max-width: 800px)").matches ? "day" : "week");
   const [schedule, setSchedule] = useState<MemberWeekSchedule | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -106,26 +107,6 @@ export const LeagueScheduleTabs = ({
     loadSchedule();
     return () => { cancelled = true; };
   }, [activeMemberId, weekNumber, leagueId]);
-
-  useEffect(() => {
-    if (!currentMemberId) return;
-    try {
-      const stored = safeLocalStorage.getItem(storageKey);
-      if (stored === null) return;
-      setIsCollapsed(stored === "true");
-    } catch {
-      // ignore storage errors
-    }
-  }, [storageKey, currentMemberId]);
-
-  useEffect(() => {
-    if (!currentMemberId) return;
-    try {
-      safeLocalStorage.setItem(storageKey, String(isCollapsed));
-    } catch {
-      // ignore storage errors
-    }
-  }, [storageKey, currentMemberId, isCollapsed]);
 
   // Build headers + rows from schedule
   const { dateHeaders: periodDateHeaders, teamRows } = useMemo(() => {
@@ -286,9 +267,14 @@ export const LeagueScheduleTabs = ({
     return `${year}-${month}-${day}`;
   }, [scheduleTimeZone]);
 
-  const datePages = useMemo(() => buildSchedulePages(periodDateHeaders), [periodDateHeaders]);
+  const datePages = useMemo(() => buildSchedulePages(periodDateHeaders, viewMode === "day"), [periodDateHeaders, viewMode]);
   const pageIndex = getSchedulePageIndex(datePages, requestedPageIndex, todayKey);
-  const dateHeaders = datePages[pageIndex] ?? [];
+  const dateHeaders = useMemo(() => datePages[pageIndex] ?? [], [datePages, pageIndex]);
+  const calendarPages = useMemo(() => buildSchedulePages(periodDateHeaders), [periodDateHeaders]);
+  const calendarIndex = getSchedulePageIndex(calendarPages, null, dateHeaders[0]?.key ?? todayKey);
+  const calendarDates = calendarPages[calendarIndex] ?? [];
+  const visibleDateLabel = viewMode === "day" ? dateHeaders[0]?.label
+    : dateHeaders.length ? `${dateHeaders[0].label} – ${dateHeaders[dateHeaders.length - 1].label}` : undefined;
   const navigationLoading = loading || schedule?.week?.weekNumber !== weekNumber;
 
   const activeMemberDailyTotals = useMemo(() => {
@@ -368,72 +354,66 @@ export const LeagueScheduleTabs = ({
 
 
   return (
-    <div className="league-schedule">
-      <h2 className="league-schedule__title">Weekly Performance</h2>
+    <div className={`league-schedule league-schedule--${viewMode}`}>
+      <div className="league-schedule__toolbar">
+        <div className="league-schedule__toolbar-top">
+          <label className="league-schedule__member-picker">Fantasy team
+            <select value={activeMemberId ?? ""} onChange={event => setActiveMemberId(Number(event.target.value))}>
+              {sortedMembers.map(member => <option key={member.id} value={member.id}>{member.teamName ?? `Team ${member.id}`}</option>)}
+            </select>
+          </label>
+          <label className="league-schedule__period-picker">Scoring week
+            <input type="number" min={minWeekNumber} max={maxWeekNumber ?? undefined}
+              value={weekInputValue} onChange={handleWeekInputChange} />
+          </label>
+          <div className="league-schedule__view-toggle" role="group" aria-label="Schedule view">
+            {(["day", "week"] as const).map(mode => <button key={mode} type="button"
+              aria-pressed={viewMode === mode} onClick={() => {
+                const anchor = dateHeaders.find(date => date.key === todayKey)?.key ?? dateHeaders[0]?.key ?? todayKey;
+                const pages = buildSchedulePages(periodDateHeaders, mode === "day");
+                setRequestedPageIndex(getSchedulePageIndex(pages, null, anchor));
+                setViewMode(mode);
+              }}>{mode === "day" ? "Day" : "Week"}</button>)}
+          </div>
+        </div>
+        <div className="league-schedule__date-nav">
+          <button type="button" className="league-schedule__date-arrow"
+            onClick={() => navigateDates(-1)}
+            aria-label={viewMode === "day" ? "Previous day" : "Previous week"}
+            title={viewMode === "day" ? "Previous day" : "Previous week"}
+            disabled={navigationLoading || (weekNumber <= minWeekNumber && pageIndex === 0)}>‹</button>
+          <div className="league-schedule__date-heading" aria-live="polite">
+            <span>{viewMode === "day" ? "Daily schedule" : "Weekly schedule"}</span>
+            <h2 className="league-schedule__title">{visibleDateLabel ?? "Loading dates…"}</h2>
+          </div>
+          <button type="button" className="league-schedule__date-arrow"
+            onClick={() => navigateDates(1)}
+            aria-label={viewMode === "day" ? "Next day" : "Next week"}
+            title={viewMode === "day" ? "Next day" : "Next week"}
+            disabled={navigationLoading || (maxWeekNumber != null && weekNumber >= maxWeekNumber && pageIndex >= datePages.length - 1)}>›</button>
+          <button type="button" className="league-schedule__today" disabled={navigationLoading}
+            onClick={() => { setWeekNumber(startingWeekNumber); setWeekInputValue(String(startingWeekNumber)); setRequestedPageIndex(null); }}>Current week</button>
+        </div>
+        {viewMode === "day" && calendarDates.length > 0 && <div className="league-schedule__date-strip" role="group" aria-label="Choose a day">
+          {calendarDates.map(date => {
+            const parsed = new Date(`${date.key}T12:00:00Z`);
+            return <button key={date.key} type="button" disabled={navigationLoading}
+              aria-label={date.label} aria-pressed={date.key === dateHeaders[0]?.key}
+              onClick={() => setRequestedPageIndex(getSchedulePageIndex(datePages, null, date.key))}>
+              <span>{parsed.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" })}</span>
+              <strong>{parsed.getUTCDate()}</strong>
+              {date.key === todayKey && <span className="league-schedule__today-dot" aria-label="Today" />}
+            </button>;
+          })}
+        </div>}
+      </div>
       <div className="league-schedule__rules-summary">
         {schedule?.rules && <p>{schedule.rules.summary}</p>}
       </div>
-      {/* Tabs + week controls header */}
-      <div className="league-schedule__header">
-        <div className="league-schedule__tabs">
-          {sortedMembers.map((m) => (
-            <button
-              key={m.id}
-              type="button"
-              className={`league-schedule__tab ${
-                m.id === activeMemberId ? "league-schedule__tab--active" : ""
-              }`}
-              onClick={() => setActiveMemberId(m.id)}
-            >
-              {m.teamName ?? `Team ${m.id}`}
-            </button>
-          ))}
-        </div>
 
-        <div className="league-schedule__week-controls">
-          <button
-            type="button"
-            className="league-schedule__toggle"
-            onClick={() => setIsCollapsed((prev) => !prev)}
-            aria-expanded={!isCollapsed}
-            aria-controls="league-schedule-body"
-          >
-            {isCollapsed ? "Show Schedule" : "Hide Schedule"}
-          </button>
-          <button
-            type="button"
-            onClick={() => navigateDates(-1)}
-            aria-label="Previous calendar week"
-            disabled={navigationLoading || (weekNumber <= minWeekNumber && pageIndex === 0)}
-          >
-            ‹
-          </button>
-
-          <label className="league-schedule__week-label">
-            Week
-            <input
-              type="number"
-              min={minWeekNumber}
-              max={maxWeekNumber ?? undefined}
-              value={weekInputValue}
-              onChange={handleWeekInputChange}
-              className="league-schedule__week-input"
-            />
-          </label>
-
-          <button
-            type="button"
-            onClick={() => navigateDates(1)}
-            aria-label="Next calendar week"
-            disabled={navigationLoading || (maxWeekNumber != null && weekNumber >= maxWeekNumber && pageIndex >= datePages.length - 1)}
-          >
-            ›
-          </button>
-        </div>
-      </div>
-
+      {performance.failed && <p className="league-schedule__rules-summary">Team performance is unavailable. <button type="button" onClick={performance.retry}>Retry team stats</button></p>}
       {/* Body */}
-      {!isCollapsed && (
+      {(
         <div className="league-schedule__body" id="league-schedule-body">
         {loading && <p>Loading schedule…</p>}
         {error && <p className="league-schedule__error">{error}</p>}
@@ -444,6 +424,54 @@ export const LeagueScheduleTabs = ({
 
         {!loading && !error && dateHeaders.length > 0 && (
           <>
+            {hasMultipleTiers && (
+              <section className="league-schedule__tier-card" aria-label="Overall daily totals">
+                <h3 className="league-schedule__tier-title">Overall daily totals</h3>
+                <div className="league-schedule__table-wrapper">
+                  <table className="league-schedule__table" style={{ "--schedule-days": dateHeaders.length } as CSSProperties}>
+              <thead>
+                <tr>
+                  <th className="league-schedule__team-col">Date</th>
+                  {dateHeaders.map((d) => (
+                    <th key={d.key}>{d.label}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="league-schedule__summary-row">
+                  <td className="league-schedule__team-col">
+                    <span className="league-schedule__summary-label">
+                      Daily diff
+                    </span>
+                  </td>
+                  {dateHeaders.map((d) => {
+                    const total = dailyTotals[d.key];
+                    const className =
+                      typeof total !== "number"
+                        ? "is-neutral"
+                        : total > 0
+                        ? "is-positive"
+                        : total < 0
+                        ? "is-negative"
+                        : "is-neutral";
+                    return (
+                      <td data-date={d.label} key={`summary-open-${d.key}`}>
+                        <span
+                          className={`league-schedule__summary-value ${className}`}
+                        >
+                          {typeof total === "number"
+                            ? `${total > 0 ? "+" : ""}${total}`
+                            : "--"}
+                        </span>
+                      </td>
+                    );
+                  })}
+                </tr>
+              </tbody>
+                  </table>
+                </div>
+              </section>
+            )}
             {tierSections.map((section) => (
               <section
                 className={hasMultipleTiers ? "league-schedule__tier-card" : undefined}
@@ -472,13 +500,14 @@ export const LeagueScheduleTabs = ({
                         <div className="league-schedule__team-name">
                           {row.teamName}
                         </div>
+                        <TeamPerformanceStats stats={performance.teams[row.teamId]} />
                       </div>
                     </td>
                     {dateHeaders.map((d) => {
                       const cells = row.cellsByDate[d.key];
                       if (!cells || cells.length === 0) {
                         return (
-                          <td
+                          <td data-date={d.label}
                             key={d.key}
                             className="league-schedule__cell league-schedule__cell--empty"
                           >
@@ -488,7 +517,7 @@ export const LeagueScheduleTabs = ({
                       }
 
                       return (
-                        <td key={d.key} className="league-schedule__cell">
+                        <td data-date={d.label} key={d.key} className="league-schedule__cell">
                           {cells.map((c, idx) => {
                             const showScore =
                               !(c.teamScore === 0 && c.opponentScore === 0);
@@ -564,7 +593,7 @@ export const LeagueScheduleTabs = ({
                         ? "is-negative"
                         : "is-neutral";
                     return (
-                      <td key={`summary-open-${d.key}`}>
+                      <td data-date={d.label} key={`summary-open-${d.key}`}>
                         <span
                           className={`league-schedule__summary-value ${className}`}
                         >
@@ -582,113 +611,12 @@ export const LeagueScheduleTabs = ({
                 </div>
               </section>
             ))}
-            {hasMultipleTiers && (
-              <section className="league-schedule__tier-card" aria-label="Overall daily totals">
-                <h3 className="league-schedule__tier-title">Overall daily totals</h3>
-                <div className="league-schedule__table-wrapper">
-                  <table className="league-schedule__table" style={{ "--schedule-days": dateHeaders.length } as CSSProperties}>
-              <thead>
-                <tr>
-                  <th className="league-schedule__team-col">Date</th>
-                  {dateHeaders.map((d) => (
-                    <th key={d.key}>{d.label}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="league-schedule__summary-row">
-                  <td className="league-schedule__team-col">
-                    <span className="league-schedule__summary-label">
-                      Daily diff
-                    </span>
-                  </td>
-                  {dateHeaders.map((d) => {
-                    const total = dailyTotals[d.key];
-                    const className =
-                      typeof total !== "number"
-                        ? "is-neutral"
-                        : total > 0
-                        ? "is-positive"
-                        : total < 0
-                        ? "is-negative"
-                        : "is-neutral";
-                    return (
-                      <td key={`summary-open-${d.key}`}>
-                        <span
-                          className={`league-schedule__summary-value ${className}`}
-                        >
-                          {typeof total === "number"
-                            ? `${total > 0 ? "+" : ""}${total}`
-                            : "--"}
-                        </span>
-                      </td>
-                    );
-                  })}
-                </tr>
-              </tbody>
-                  </table>
-                </div>
-              </section>
-            )}
+
           </>
         )}
         </div>
       )}
 
-      {isCollapsed && (
-        <div className="league-schedule__body league-schedule__body--collapsed" id="league-schedule-body">
-          {loading && <p>Loading schedule…</p>}
-          {error && <p className="league-schedule__error">{error}</p>}
-          {!loading && !error && dateHeaders.length === 0 && (
-            <p>No games for this week.</p>
-          )}
-          {!loading && !error && dateHeaders.length > 0 && (
-            <div className="league-schedule__table-wrapper">
-              <table className="league-schedule__table" style={{ "--schedule-days": dateHeaders.length } as CSSProperties}>
-                <thead>
-                  <tr>
-                    <th className="league-schedule__team-col">Date</th>
-                    {dateHeaders.map((d) => (
-                      <th key={`collapsed-${d.key}`}>{d.label}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="league-schedule__summary-row">
-                    <td className="league-schedule__team-col">
-                      <span className="league-schedule__summary-label">
-                        Daily diff
-                      </span>
-                    </td>
-                    {dateHeaders.map((d) => {
-                      const total = dailyTotals[d.key];
-                      const className =
-                        typeof total !== "number"
-                          ? "is-neutral"
-                          : total > 0
-                          ? "is-positive"
-                          : total < 0
-                          ? "is-negative"
-                          : "is-neutral";
-                      return (
-                        <td key={`summary-${d.key}`}>
-                          <span
-                            className={`league-schedule__summary-value ${className}`}
-                          >
-                            {typeof total === "number"
-                              ? `${total > 0 ? "+" : ""}${total}`
-                              : "--"}
-                          </span>
-                        </td>
-                      );
-                    })}
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 };
