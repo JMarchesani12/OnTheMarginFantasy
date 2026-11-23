@@ -1,3 +1,4 @@
+import SearchableSelect from "../../components/SearchableSelect";
 import { useTeamSearchCatalog } from "../../hooks/useTeamSearchCatalog";
 import { filterTeamSearch } from "../../utils/teamSearch";
 import { useTeamPerformance } from "../../hooks/useTeamPerformance";
@@ -656,18 +657,12 @@ const LeagueRosterView = ({ league, isCurrent }: RosterContextProps) => {
         </div>
         <div className="roster-page__control">
           <label htmlFor="roster-conference">Conference</label>
-          <select
+          <SearchableSelect
             id="roster-conference"
             value={conferenceFilter}
-            onChange={(evt) => setConferenceFilter(evt.target.value)}
-          >
-            <option value="all">All conferences</option>
-            {uniqueConferences.map((conf) => (
-              <option key={conf} value={conf}>
-                {conf}
-              </option>
-            ))}
-          </select>
+            onChange={setConferenceFilter}
+            options={[{ value: "all", label: "All conferences" }, ...uniqueConferences.map(conf => ({ value: conf, label: conf }))]}
+          />
         </div>
       </section>
 

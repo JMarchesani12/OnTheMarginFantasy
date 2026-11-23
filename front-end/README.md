@@ -80,3 +80,11 @@ Run with: `python3 dev.py` in api folder
 
 Object.keys(localStorage)
 JSON.parse(localStorage.getItem("sb-{thing}-auth-token") || "{}")
+
+## Public legal pages and feedback
+
+`/privacy`, `/terms`, and `/feedback` are public React Router routes. The shared footer links to them on every page; signup also links to both policies. Public email and copyright ownership are centralized in `src/lib/siteInfo.ts`.
+
+The legal pages are visibly labeled drafts. Before final publication, confirm the service operator, complete hosting/provider details, actual retention/deletion practices, intended audience, and any payments/prize arrangements; obtain legal review appropriate to the service. Update the date when revising the policies.
+
+Feedback prepares a `mailto:` draft addressed to the configured support email. Users must send it from their email app; the site does not claim delivery or persist reports. Copy message provides a clipboard/manual-copy fallback. Page context is optional and omits URL queries and fragments; account details, tokens, and logs are not automatically attached.

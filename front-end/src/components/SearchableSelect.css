@@ -1,0 +1,16 @@
+.searchable-select { position: relative; min-width: 0; width: 100%; }
+.searchable-select input { box-sizing: border-box; width: 100%; min-height: 44px; padding: .65rem .75rem; border: 1px solid #334277; border-radius: .5rem; background: #0b0e1a; color: #f4f7ff; font: inherit; }
+.searchable-select input:focus-visible { outline: 2px solid #22d3ee; outline-offset: 2px; }
+.searchable-select__menu { position: absolute; top: calc(100% + .3rem); left: 0; right: 0; z-index: 30; max-height: 18rem; overflow-y: auto; background: #070a14; border: 1px solid #334277; border-radius: .5rem; box-shadow: 0 8px 24px #0009; }
+.searchable-select__menu ul { list-style: none; padding: .25rem; margin: 0; }
+.searchable-select__menu li { padding: .65rem .75rem; min-height: 44px; box-sizing: border-box; cursor: pointer; border-radius: .3rem; }
+.searchable-select__menu li.is-active { background: #163047; }
+.searchable-select__menu li[aria-selected="true"] { color: #22d3ee; font-weight: 700; }
+.searchable-select__menu p { padding: .75rem; margin: 0; }
+
+/* Let the menu extend beyond the filter cards. */
+.draft-page__controls:has(.searchable-select),
+.roster-page__controls:has(.searchable-select) { overflow: visible; }
+.draft-page__control:has(.searchable-select:focus-within),
+.roster-page__control:has(.searchable-select:focus-within) { z-index: 5; }
+.league-browser__filters > div:has(.searchable-select) { display: flex; flex-direction: column; gap: .35rem; min-width: 0; }
