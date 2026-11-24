@@ -6,6 +6,8 @@ export type ScoreboardRow = {
   memberId: number;
   teamName: string;
   totalPoints: number;
+  bonusPoints?: number;
+  seasonTotalAvailable?: boolean;
   weeklyPoints: Record<number, number | null | undefined>;
   weeklyDifferentials: Record<number, number | null | undefined>;
 };
@@ -15,6 +17,7 @@ type LeagueScoreboardProps = {
   rows: ScoreboardRow[];
   currentWeekNumber: number | null;
   currentMemberId?: number | null;
+  showBonuses?: boolean;
   loading: boolean;
   error: string | null;
 };
@@ -25,6 +28,7 @@ const LeagueScoreboard: FC<LeagueScoreboardProps> = ({
   currentMemberId,
   loading,
   error,
+  showBonuses = false,
 }) => {
   const [view, setView] = useState<"latest" | "all">("latest");
   const tableRef = useRef<HTMLDivElement>(null);
@@ -32,7 +36,7 @@ const LeagueScoreboard: FC<LeagueScoreboardProps> = ({
   const sortedWeeks = [...weekNumbers].sort((a, b) => a - b);
   const visibleWeeks = view === "all" ? sortedWeeks : latestWeek == null ? [] : [latestWeek];
   const rankedRows = [...rows].sort((a, b) => b.totalPoints - a.totalPoints);
-  const standings = rankedRows.map(row => ({ memberId: row.memberId, points: row.totalPoints }));
+  const standings = rankedRows.filter(row => row.seasonTotalAvailable !== false).map(row => ({ memberId: row.memberId, points: row.totalPoints }));
   useEffect(() => {
     if (view === "all" && tableRef.current) {
       tableRef.current.scrollLeft = tableRef.current.scrollWidth;
@@ -92,7 +96,7 @@ const LeagueScoreboard: FC<LeagueScoreboardProps> = ({
           {rankedRows.map((row) => (
             <div className={`league-scoreboard__row${row.memberId === currentMemberId ? " league-scoreboard__row--yours" : ""}`} key={`member-${row.memberId}`}>
               <span className="league-scoreboard__team">
-                <span className="league-scoreboard__rank">{getLeagueRank(standings, row.memberId)?.rank}.</span> {row.teamName}
+                <span className="league-scoreboard__rank">{getLeagueRank(standings, row.memberId)?.rank ?? "—"}.</span> {row.teamName}
                 {row.memberId === currentMemberId && <span className="league-scoreboard__you">You</span>}
               </span>
               {visibleWeeks.map((week) => {
@@ -122,7 +126,10 @@ const LeagueScoreboard: FC<LeagueScoreboardProps> = ({
                   </span>
                 );
               })}
-              <span className="league-scoreboard__total">{row.totalPoints}</span>
+              <span className="league-scoreboard__total">
+                {row.seasonTotalAvailable === false ? "—" : row.totalPoints}
+                {showBonuses && !!row.bonusPoints && <small> ({row.bonusPoints > 0 ? "+" : ""}{row.bonusPoints} bonus)</small>}
+              </span>
             </div>
           ))}
         </div>

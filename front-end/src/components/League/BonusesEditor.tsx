@@ -40,7 +40,7 @@ export const BONUS_TEMPLATES: BonusTemplate[] = [
   {
     bonusKey: "conferenceChampion",
     label: "Conference Champs",
-    hint: "Bonus points for every team you draft that is in the top 3 in their conference at the end of the season",
+    hint: "Season points for each team on your current roster that finishes in the top 3 of its regular-season conference standings",
     placements: [
       { key: "first", label: "First", defaultPoints: 1.5 },
       { key: "second", label: "Second", defaultPoints: 1 },
@@ -50,7 +50,7 @@ export const BONUS_TEMPLATES: BonusTemplate[] = [
   {
     bonusKey: "conferenceBottom",
     label: "Conference Losers",
-    hint: "Points lost for every team you draft that is in the bottom 3 in their conference at the end of the season",
+    hint: "Season points deducted for each team on your current roster that finishes in the bottom 3 of its regular-season conference standings",
     placements: [
       { key: "last", label: "Last", defaultPoints: -1.5 },
       { key: "secondLast", label: "Second last", defaultPoints: -1 },
@@ -60,7 +60,7 @@ export const BONUS_TEMPLATES: BonusTemplate[] = [
   {
     bonusKey: "farthestInPlayoffs",
     label: "Team that went farthest in playoffs",
-    hint: "Bonus points awarded if a team you drafted gets the farthers in the playoffs",
+    hint: "Season points for the farthest team on your current roster in March Madness, FCS playoffs, or the FBS College Football Playoff, awarded separately. Every tied manager receives the full award. Conference championships and other tournaments or bowls do not qualify.",
     placements: [
       { key: "farthest", label: "Farthest", defaultPoints: 3 },
     ],

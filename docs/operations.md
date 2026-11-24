@@ -53,3 +53,26 @@ Only an eligible unused Pre-Draft league can be changed with --apply. Draft, ros
 See [db](../db/README.md), [preflights](../db/preflights/README.md) and [snapshot tooling](../scripts/database/README.md). Migrations and reviewed SQL are explicit operator actions; web startup/deploy does not apply them. Retain before/after snapshots and an execution receipt. Do not replay applied SQL because it remains in the repository.
 
 Current application tables/sequences deny browser roles direct privileges; backend APIs enforce principal/resource authorization. Supabase Auth is unaffected. Provider-owned future-object defaults remain a documented [follow-up](follow-ups.md), so inspect grants on newly created public objects.
+
+## Automatic conference standings and season bonuses
+
+The prepared migration `api/migrations/20261124_conference_standings.sql` adds backend-only snapshot/final-result storage and GameResult.bonusTournamentCode. Apply it through the existing reviewed database rollout process **before deploying these readers/jobs**. It expects the existing GameResult.isCompleted column, platform roles and backend authority. The migration does not populate results or repair old classifications. It has been exercised against the owned local PostgreSQL integration fixture, not production.
+
+The existing scoreboard ingestion command also collects standings once per unfinalized sport season with leagues. It uses bounded public ESPN requests, verifies returned provider year/group and imports regular-season conference records; no API key is required. Basketball requests the regular season's ending year (project season 2026–27 → ESPN 2027). FBS uses group=80 and FCS group=81; group is singular. Network work happens outside write transactions. Collection shares the ingestion gate, serializes against finalization, and rechecks season membership before committing immutable snapshots.
+
+Inspect/retry a season from `api`:
+
+```sh
+PYTHONPATH=. python3 scripts/collect_conference_standings.py --sport-season-id 123
+PYTHONPATH=. python3 scripts/collect_conference_standings.py --sport-season-id 123 --apply
+```
+
+The first command previews, the second stores validated snapshots. Reports list ready/pending conference IDs; automatic job logs include sportSeasonId, successful count and pending count. During the regular season, snapshots are provisional and no final conference award is assumed. Missing/ambiguous records, incomplete team mappings, unsupported future playoff formats or incomplete national brackets stay pending and block affected season finalization. Known FBS/FCS independent groups receive zero conference awards because they have no conference placement. A public feed may change; a failed fetch is retriable and does not clear good stored data.
+
+Eligible national game identity and roundOrder are written from verified ESPN tournament labels, independently of overlapping dates. Football conference championships and ordinary bowls are not assigned a national-playoff phase merely because of their date. Old games without verified bonusTournamentCode/roundOrder cannot silently earn playoff awards. Preview their source data and existing classifications before a deliberately scoped refresh/reingestion; do not run a forced full bootstrap as a health check. No historical data was rewritten by this change.
+
+Known format coverage: NCAA ending years 2011–2026 except canceled 2020 (68 teams), 2027 (76 teams/12 opening games); CFP seasons 2014–2023 (4 teams), 2024–2026 (12 teams); FCS seasons 2022–2026 (24 teams). New formats require verified round-count/round-label updates. The scorer validates game counts and winner advancement including byes before awarding completed playoff bonuses.
+
+All bonus application is confined to cronComputeFinalScoreboard: collecting standings or reading the scoreboard never awards points, even after a regular season or tournament ends. Completed totals are stored in SeasonBonusResult in the same transaction as season completion. Provider corrections do not alter those totals. Existing completed leagues that predate this table have no frozen snapshot; any historical repair requires separate review. No new production schedule is created and the existing manual-only season finalizer remains manual.
+
+Future playoff participants and fixtures are dynamic. The existing lookahead refresh and live ingestion jobs collect published matchups/results as they become available; do not fabricate or backfill unknown games. Reingestion is relevant only to games already stored without verified bonus identity/round fields. A season with no such existing playoff games needs no playoff backfill. The final-scoreboard-only timing correction needs no additional schema migration.

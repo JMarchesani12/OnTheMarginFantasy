@@ -8,9 +8,9 @@ function setup(screen:string,seed=true,clock?:()=>number){const h=fixture(),requ
  const stubs:any={'../api/teamPerformance':{getTeamPerformance:async()=>({weekNumber:1,teams:[]})},
  'react-router-dom':{useSearchParams:()=>[new URLSearchParams(),()=>{}],useParams:()=>({league_id:route}),useLocation:()=>({state:seed?{league:leagueFixture()}:null}),useNavigate:()=>(...args:any[])=>calls.push(['navigate',...args])},
  '../api/leagues':api,'../../api/leagues':api,'../context/currentUserContext':{useCurrentUser:()=>user},'../../context/currentUserContext':{useCurrentUser:()=>user},
- '../../components/League/LeagueScheduleTabs':{LeagueScheduleTabs:()=>null},'../../components/League/LeagueScoreboard':{default:()=>null},
+ '../../components/League/LeagueScheduleTabs':{LeagueScheduleTabs:()=>null},'../../components/League/LeagueScoreboard':{default:(props:any)=>{calls.push(['scoreboard',props]);return null;}},
  '../../components/League/LeagueScoreboardBrowser':{default:()=>null},
- '../../api/scoring':{getScoresForWeek:(...args:any[])=>request('scores',args)},
+ '../../api/scoring':{getScoresForWeek:(...args:any[])=>request('scores',args),getSeasonStandings:(...args:any[])=>request('season',args)},
  '../../api/roster':{getMemberTeams:(...args:any[])=>request('teams',args),getAvailableTeams:(...args:any[])=>request('available',args)},
  '../../api/transaction':{getPendingTradesAndAddDrop:(...args:any[])=>request('pending',args),getOpenTradeRequests:(...args:any[])=>request('trades',args),submitFreeAgencyRequest:(...args:any[])=>request('addDrop',args),tradeRequestProposal:(...args:any[])=>request('trade',args),responseToTradeRequest:(...args:any[])=>request('respond',args),cancelTradeRequest:(...args:any[])=>request('cancel',args),vetoTrade:(...args:any[])=>request('veto',args)},
  '../../utils/safeStorage':{safeLocalStorage:{getItem:(key:string)=>store.get(key)??null,setItem:(key:string,value:string)=>{store.set(key,value);calls.push(['storage',key,value]);}}},
@@ -57,7 +57,7 @@ test('paired page retry clears error and revalidates without trusting navigation
  for(const screen of ['Detail','Roster']){const h=setup(screen);h.render();h.requests[0].reject(new Error('Temporary failure'));await h.flush();assert.match(h.text(),/Could not load/);assert.doesNotMatch(h.text(),/Temporary failure/);h.button('Retry').props.onClick();h.render();assert.match(h.text(),/Loading league details/);assert.equal(h.requests.length,2);h.requests[1].resolve([leagueFixture()]);await h.flush();assert.match(h.text(),/League 10/);h.dispose();}
 });
 test('paired seeded/cold request counts stay bounded without duplicate resolution',async()=>{
- for(const screen of ['Detail','Roster'])for(const seed of [true,false]){const h=setup(screen,seed);await h.ready();h.render();h.render();const counts=h.requests.reduce((out:any,r:any)=>({...out,[r.kind]:(out[r.kind]??0)+1}),{});assert.deepEqual(counts,screen==='Detail'?{list:1,members:1,scores:1}:{list:1,teams:1,available:1,members:1,pending:1});h.dispose();}
+ for(const screen of ['Detail','Roster'])for(const seed of [true,false]){const h=setup(screen,seed);await h.ready();h.render();h.render();const counts=h.requests.reduce((out:any,r:any)=>({...out,[r.kind]:(out[r.kind]??0)+1}),{});assert.deepEqual(counts,screen==='Detail'?{list:1,members:1,scores:1,season:1}:{list:1,teams:1,available:1,members:1,pending:1});h.dispose();}
 });
 test('Roster fresh trade uses matching partner/member/week and obsolete completion never reloads',async()=>{
  const h=setup('Roster');await h.ready();h.requests.find(r=>r.kind==='members').resolve([{id:11,teamName:'Me'},{id:12,teamName:'Partner'}]);h.requests.find(r=>r.kind==='teams').resolve([{teamId:1,teamName:'Own offer'}]);h.requests.find(r=>r.kind==='available').resolve([]);await h.flush();h.render();h.requests.find(r=>r.kind==='teams'&&r.args[0]===12).resolve([{teamId:2,teamName:'Receive team'}]);await h.flush();h.button('Trade').props.onClick();h.render();
@@ -78,4 +78,29 @@ test('week change invalidates delayed mutation reload and command guards handle 
 test('fresh next-week success requires reselection and never restores previous-week form input',async()=>{
  let now=Date.parse('2026-11-09T01:00:00Z');const h=setup('Roster',true,()=>now);await h.ready({...leagueFixture(),currentWeekNumber:2,currentWeekStartDate:'2026-11-09T00:00:00Z'});
  h.requests.find(r=>r.kind==='teams').resolve([]);h.requests.find(r=>r.kind==='available').resolve([{teamId:2,teamName:'Old team'}]);await h.flush();h.all().find(n=>n.type==='button'&&text(n).includes('Old team')).props.onClick();h.render();now=Date.parse('2026-11-09T03:00:00Z');h.render();h.requests.filter(r=>r.kind==='teams').at(-1).resolve([]);h.requests.filter(r=>r.kind==='available').at(-1).resolve([{teamId:2,teamName:'Fresh team'}]);await h.flush();assert.equal(h.button('Submit Add / Drop Request').props.disabled,true);h.all().find(n=>n.type==='button'&&text(n).includes('Fresh team')).props.onClick();h.render();const p=h.button('Submit Add / Drop Request').props.onClick();assert.deepEqual(h.requests.find(r=>r.kind==='addDrop').args,[10,2,101,11,2,null]);h.dispose();h.requests.find(r=>r.kind==='addDrop').resolve();await p;
+});
+
+test('Detail applies authorized season totals and discards late previous-league bonuses',async()=>{
+ const h=setup('Detail');await h.ready();
+ h.requests.find(r=>r.kind==='members').resolve([{id:11,teamName:'Me'}]);
+ h.requests.find(r=>r.kind==='scores').resolve({results:[{memberId:11,teamName:'Me',weekNumber:0,pointsAwarded:2,pointDifferential:5}]});
+ h.requests.find(r=>r.kind==='season').resolve({leagueId:10,members:[{memberId:11,teamName:'Me',weeklyPoints:2,bonusPoints:1.5,totalPoints:3.5}]});await h.flush();
+ const props=h.calls.filter(r=>r[0]==='scoreboard').at(-1)[1];
+ assert.equal(props.rows.find((r:any)=>r.memberId===11).totalPoints,3.5);
+ assert.equal(props.rows.find((r:any)=>r.memberId===11).weeklyPoints[0],2);
+ h.render('20');h.requests.filter(r=>r.kind==='list').at(-1).resolve([leagueFixture(20,22)]);await h.flush();
+ const latest=h.calls.filter(r=>r[0]==='scoreboard').at(-1)[1];assert.ok(latest.rows.every((r:any)=>r.memberId!==11));h.dispose();
+});
+test('Detail ignores an unresolved season total after account replacement and aborts its request',async()=>{
+ const h=setup('Detail');await h.ready();const stale=h.requests.find(r=>r.kind==='season');
+ h.render('20',{userId:2,authUserId:'B'});assert.equal(stale.args[1].aborted,true);
+ stale.resolve({leagueId:10,members:[{memberId:11,teamName:'Private old',weeklyPoints:2,bonusPoints:99,totalPoints:101}]});await h.flush();
+ assert.doesNotMatch(h.text(),/Private old|101/);h.dispose();
+});
+test('Detail header uses season awards even when no weekly score rows exist',async()=>{
+ const h=setup('Detail');await h.ready();
+ h.requests.find(r=>r.kind==='members').resolve([{id:11,teamName:'Me',seasonPoints:0}]);
+ h.requests.find(r=>r.kind==='scores').resolve({results:[]});
+ h.requests.find(r=>r.kind==='season').resolve({leagueId:10,members:[{memberId:11,teamName:'Me',weeklyPoints:0,bonusPoints:1.5,totalPoints:1.5}]});await h.flush();
+ assert.match(h.text(),/Season Points1\.5/);h.dispose();
 });

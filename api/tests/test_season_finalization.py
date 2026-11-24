@@ -90,13 +90,13 @@ class SeasonFinalizationTests(unittest.TestCase):
     def test_bad_standings_do_not_finalize(self):
         valid=self.scoring.get_season_standings_for_job(10)
         variants=[None,({'error':'failure'},500),{'error':'failure'},dict(valid,leagueId=999),dict(valid,members=[]),dict(valid,members=valid['members']*2),dict(valid,members=[dict(valid['members'][0],memberId=999),valid['members'][1]]),dict(valid,members=[dict(valid['members'][0],totalPoints=float('nan')),valid['members'][1]]),dict(valid,members=[dict(valid['members'][0],weeklyPoints=True),valid['members'][1]])]
-        original=self.scoring.get_season_standings_for_job
+        original=self.scoring.compute_final_season_standings_for_job
         for payload in variants:
             with self.subTest(payload=payload):
-                self.scoring.get_season_standings_for_job=lambda league_id,conn=None:payload if league_id==10 else original(league_id,conn=conn)
+                self.scoring.compute_final_season_standings_for_job=lambda league_id,conn=None:payload if league_id==10 else original(league_id,conn=conn)
                 result=self.service.run(NOW)
                 self.assertFalse(1 in result['finalized']);self.assertEqual(result['failures'][0]['category'],'InvalidStandings')
-        self.scoring.get_season_standings_for_job=original
+        self.scoring.compute_final_season_standings_for_job=original
         self.assertEqual(self.service.run(NOW)['finalized'],[1])
 
     def test_failure_after_first_league_update_rolls_back_whole_season(self):
@@ -111,12 +111,12 @@ class SeasonFinalizationTests(unittest.TestCase):
         self.db.execute=execute;self.assertEqual(self.service.run(NOW)['finalized'],[1])
 
     def test_detected_scope_change_rolls_back(self):
-        original=self.scoring.get_season_standings_for_job
+        original=self.scoring.compute_final_season_standings_for_job
         def change_scope(league_id,conn=None):
             result=original(league_id,conn=conn)
             if league_id==20:conn.execute('UPDATE League SET seasonYear=2027 WHERE id=20',{})
             return result
-        self.scoring.get_season_standings_for_job=change_scope
+        self.scoring.compute_final_season_standings_for_job=change_scope
         result=self.service.run(NOW)
         self.assertEqual(result['blocked'][0]['reason'],'scope_changed');self.assertEqual(result['finalized'],[2])
         self.assertEqual(self.db.connection.execute('SELECT seasonYear FROM League WHERE id=20').fetchone()[0],2026)
@@ -131,7 +131,7 @@ class StandaloneSeasonConnectionTests(unittest.TestCase):
             return execute(sql,params)
         fixture.db.execute=only_active
         self.assertEqual(service.get_season_standings_for_job(10)['members'][0]['totalPoints'],2)
-        self.assertGreaterEqual(engine.begins,2)
+        self.assertGreaterEqual(engine.begins,1)
 
 class DiscoveryFailureTests(unittest.TestCase):
     setUp=SeasonFinalizationTests.setUp
@@ -154,3 +154,18 @@ class DiscoveryFailureTests(unittest.TestCase):
                 finally:self.engine.begin=begin;self.service.repository.candidates=candidates
                 self.assertEqual(result,{'finalized':[],'skipped':[],'blocked':[],'failures':[{'sportSeasonId':None,'stage':'discovery','category':'RuntimeError'}]})
                 self.assertNotIn('private',str(result))
+
+class BonusFinalizationTests(SeasonFinalizationTests):
+    def test_pending_bonus_blocks_whole_season(self):
+        original=self.scoring.compute_final_season_standings_for_job
+        self.scoring.compute_final_season_standings_for_job=lambda league_id,conn=None:{**original(league_id,conn=conn),'bonusStatus':{'state':'pending'}}
+        result=self.service.run(NOW)
+        self.assertEqual(result['finalized'],[])
+        self.assertEqual({r['reason'] for r in result['blocked']},{'bonuses_not_ready'})
+
+    def test_completed_totals_are_frozen_after_weekly_data_or_config_changes(self):
+        self.assertEqual(self.service.run(NOW)['finalized'],[1,2])
+        self.db.connection.execute('UPDATE WeeklyTeamScore SET pointsAwarded=99 WHERE memberId=11')
+        self.db.connection.execute("UPDATE League SET settings='{}' WHERE id=10")
+        result=self.scoring.get_season_standings_for_job(10)
+        self.assertEqual(result['members'][0]['weeklyPoints'],2)

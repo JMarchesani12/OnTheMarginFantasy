@@ -25,7 +25,7 @@ class CalendarDatabase:
             CREATE TABLE "Week" (id INTEGER PRIMARY KEY AUTOINCREMENT,"leagueId" INTEGER,"weekNumber" INTEGER,
                 "startDate" TEXT,"endDate" TEXT,"isLocked" BOOLEAN,"scoringComplete" BOOLEAN);
             CREATE TABLE "SeasonPhase" (id INTEGER,"sportSeasonId" INTEGER,"tournamentId" INTEGER);
-            CREATE TABLE "TournamentDefinition" (id INTEGER,"sportConferenceId" INTEGER);
+            CREATE TABLE "TournamentDefinition" (id INTEGER,"sportConferenceId" INTEGER,code TEXT);
         ''')
         self.active = False
         self.queries = []

@@ -17,3 +17,5 @@ Run from the repository root using ordinary Python, without -O/PYTHONOPTIMIZE. G
 Results are written to a unique temporary directory outside the checkout and their paths printed. They are not committed benchmark/evidence files. Capture useful failures in ordinary bug reports.
 
 Known harness limits: assertions require ordinary Python; cleanup-path errors may prevent a result file or later cleanup, so inspect owned resources after an interrupted/failed run. Gunicorn's forced failure cleanup also needs inspection if the master crashes while children survive. Normal successful runs verify cleanup. These scripts do not establish hosted provider parity or authorize production operations.
+
+The maintenance suite also applies the prepared bonus migration and exercises actual conference snapshot collection/replay, manager conference and national playoff awards, browser-role denial, and frozen completed totals. Its synthetic FBS bracket contains all 11 games, including bye entrants; a final alone does not establish coverage.

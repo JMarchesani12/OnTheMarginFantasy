@@ -3,6 +3,7 @@ import datetime as dt
 import json
 from typing import Any, Dict, List, Optional
 from rules.tournamentRules import select_phase
+from rules.nationalBonusIdentity import national_game_identity
 from .read_service import ScheduleReadService
 from .ingestion_repository import ScheduleIngestionRepository
 from .helpers.espn.espnClient import ESPNClient
@@ -87,11 +88,16 @@ class ScheduleIngestionService(ScheduleReadService):
         season_phase_id = self._lookup_season_phase_id_for_game(
             sport_season_id,
             event_dt,
-            game=game, home_team_id=home_team_id, away_team_id=away_team_id,
+            game=game, home_team_id=home_team_id, away_team_id=away_team_id, sport_id=sport_id,
         )
 
 
+        bonus_code, round_order = national_game_identity(game)
+        if (sport_id==1 and bonus_code!='NCAA_TOURNEY') or (sport_id==2 and bonus_code=='NCAA_TOURNEY'):
+            bonus_code,round_order = None,None
         params = {
+            "bonusTournamentCode": bonus_code,
+            "roundOrder": round_order,
             "sport": sport_id,
             "sportSeasonId": sport_season_id,
             "seasonPhaseId": season_phase_id,
@@ -381,7 +387,7 @@ class ScheduleIngestionService(ScheduleReadService):
         self,
         sport_season_id: int,
         event_dt: dt.datetime,
-        game=None, home_team_id=None, away_team_id=None,
+        game=None, home_team_id=None, away_team_id=None, sport_id=None,
         ) -> Optional[int]:
         """
         Given a sportSeason + game datetime, find the matching SeasonPhase (if any).
@@ -389,6 +395,24 @@ class ScheduleIngestionService(ScheduleReadService):
         """
 
         phases = self._get_season_phases(sport_season_id)
+        if sport_id==2:
+            # Football dates overlap bowls/conference finals: source identity wins.
+            code,_ = national_game_identity(game or {})
+            eligible = [p for p in phases if code in ('FBS_PLAYOFFS','FCS_PLAYOFFS') and p.get('tournamentCode')==code]
+            if eligible:
+                if len(eligible)!=1:
+                    raise ValueError('Ambiguous national playoff phase')
+                phase=eligible[0]
+                if ((phase.get('startDate') is not None and event_dt<phase['startDate'])
+                    or (phase.get('endDate') is not None and event_dt>=phase['endDate'])):
+                    raise ValueError('Playoff event outside configured phase')
+                return phase['id']
+            if code in ('FBS_PLAYOFFS','FCS_PLAYOFFS'):
+                raise ValueError('National playoff phase missing')
+            regular=[p for p in phases if p['type']=='RegularSeason']
+            if len(regular)!=1:
+                raise ValueError('Expected one regular-season phase')
+            return regular[0]['id']
         if any(p.get('rules') for p in phases):
             conference_ids = set()
             if home_team_id is not None and away_team_id is not None:

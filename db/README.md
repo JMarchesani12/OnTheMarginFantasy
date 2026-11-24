@@ -442,3 +442,7 @@ Deployment was confirmed by the user; public API behavior was independently chec
 See [drop receipt](history/school-name-column-drop-2026-11-19.json)
 and [postflight](history/school-name-column-drop-postflight-2026-11-19.json).
 Frozen baseline and historical snapshot files remain unchanged.
+
+### Prepared season bonus migration
+
+`api/migrations/20261124_conference_standings.sql` is prepared, not applied to production. It adds immutable ConferenceStandingsSnapshot versions, frozen SeasonBonusResult payloads, and GameResult.bonusTournamentCode. New storage denies PUBLIC/anon/authenticated access and grants the existing service_role only the read/insert/sequence rights used by backend operations. Follow the usual target-specific inspection, migration and receipt process before deploying dependent code. The owned PostgreSQL maintenance integration fixture exercises the exact migration, snapshot replay, scoring, browser denial and frozen completion behavior.

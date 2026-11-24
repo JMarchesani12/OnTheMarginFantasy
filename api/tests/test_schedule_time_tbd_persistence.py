@@ -26,7 +26,7 @@ class KickoffPersistenceTests(unittest.TestCase):
             seasonPhaseId INTEGER, externalGameId TEXT, date TEXT, isCompleted BOOLEAN, timeTBD BOOLEAN NOT NULL DEFAULT false,
             homeTeamId INTEGER, awayTeamId INTEGER, homeScore INTEGER, awayScore INTEGER,
             homeTeamExternalId TEXT, awayTeamExternalId TEXT, homeTeamName TEXT, awayTeamName TEXT,
-            broadcast TEXT, UNIQUE(sport,sportSeasonId,externalGameId));''')
+            bonusTournamentCode TEXT, roundOrder INTEGER,broadcast TEXT, UNIQUE(sport,sportSeasonId,externalGameId));''')
         params = dict(sport=1,sportSeasonId=2,seasonPhaseId=None,externalGameId='synthetic',
             date='2026-11-02T17:00:00Z',timeTBD=True,isCompleted=False,homeTeamId=11,awayTeamId=12,
             homeScore=None,awayScore=None,homeTeamExternalId='11',awayTeamExternalId='12',

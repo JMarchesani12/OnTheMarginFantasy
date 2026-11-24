@@ -1,5 +1,6 @@
 """Finalization persistence; all operations use the caller's transaction."""
 from sqlalchemy import text
+import json
 
 
 class SeasonFinalizationRepository:
@@ -52,3 +53,8 @@ class SeasonFinalizationRepository:
     def mark_season(self, conn, season_id):
         conn.execute(text('''UPDATE "SportSeason" SET "seasonFinalized"=true
             WHERE id=:seasonId'''), {'seasonId': season_id})
+
+    def freeze_standings(self,conn,result):
+        conn.execute(text('''INSERT INTO "SeasonBonusResult" ("leagueId",result)
+            VALUES (:league,:result) ON CONFLICT ("leagueId") DO NOTHING'''),
+            {'league':result['leagueId'],'result':json.dumps(result,allow_nan=False)})

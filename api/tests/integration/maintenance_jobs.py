@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parents[3]
 IMAGE = 'sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929'
 MIGRATIONS = ['20261030_game_kickoff_tbd.sql', '20261104_user_identity_unique.sql',
               '20261104_week_score_identity.sql', '20261104_ownership_integrity.sql',
-              '20261117_seasonal_reference_integrity.sql']
+              '20261117_seasonal_reference_integrity.sql','20261124_conference_standings.sql']
 
 
 def docker(*args):
@@ -129,6 +129,15 @@ def main():
                 raise RuntimeError('Owned database identity mismatch')
             execute('DROP SCHEMA public CASCADE; DROP SCHEMA IF EXISTS auth CASCADE; CREATE SCHEMA public; CREATE SCHEMA auth; CREATE TABLE auth.users(id uuid PRIMARY KEY); CREATE EXTENSION pg_trgm WITH SCHEMA public; CREATE EXTENSION btree_gist WITH SCHEMA public')
             execute((ROOT/'db/baselines/20261029/001_schema.sql').read_text())
+            # Synthetic roles/column already present in the hosted platform,
+            # but absent from the preserved 2026-10-29 schema fixture.
+            execute('''DO $$ BEGIN
+                IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='anon') THEN CREATE ROLE anon; END IF;
+                IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='authenticated') THEN CREATE ROLE authenticated; END IF;
+                IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='service_role') THEN CREATE ROLE service_role BYPASSRLS; END IF;
+                END $$;
+                ALTER TABLE "GameResult" ADD COLUMN "isCompleted" boolean;
+                GRANT USAGE ON SCHEMA public TO anon,authenticated;''')
             for migration in MIGRATIONS:
                 execute((ROOT/'api/migrations'/migration).read_text())
             execute('''INSERT INTO "User" (id,email) VALUES (1,'one@fixture.test'),(2,'two@fixture.test');
@@ -217,6 +226,65 @@ def main():
         execute('DROP TRIGGER fixture_commit_failure ON "League"; DROP FUNCTION fixture_commit_failure()')
         assert cli(finalize)['finalized'] == [1]
         report['checks'].append('Finalization: deferred COMMIT failure rolls back whole season, other season continues, retry succeeds; logs sanitized')
+        # Real PostgreSQL collection -> awards -> completion -> frozen reads.
+        final_fixture()
+        execute('''UPDATE "Sport" SET "api-keyword"='basketball/mens-college-basketball' WHERE id=1;
+            INSERT INTO "Conference" (id,name) VALUES(1,'Fixture Conference'),(2,'Football Fixture');
+            INSERT INTO "SportConference" (id,"conferenceId","sportId","maxTeamsPerOwner") VALUES(1,1,1,4),(2,2,2,4);
+            INSERT INTO "SportTeam" (id,"schoolId","sportId","displayName","externalId",tier) VALUES(103,1,1,'Third','103',1),(201,1,2,'Football Home','201',1),(202,1,2,'Football Away','202',1);
+            INSERT INTO "ConferenceMembership" ("sportTeamId","sportConferenceId","sportId","seasonYear") VALUES(101,1,1,2026),(102,1,1,2026),(103,1,1,2026),(201,2,2,2026),(202,2,2,2026);
+            INSERT INTO "SportSeasonSubdivision" ("sportSeasonId",code,name,"regularSeasonStart","regularSeasonEnd") VALUES(1,'D1','Division I',%s,%s);
+            INSERT INTO "LeagueTeamSlot" ("leagueId","memberId","sportTeamId","acquiredWeek","acquiredVia") VALUES(10,11,101,1,'DRAFT'),(30,31,201,1,'DRAFT');
+            UPDATE "League" SET settings='{"bonuses":{"conferenceChampion":{"first":1.5}}}' WHERE id=10;
+            UPDATE "League" SET settings='{"bonuses":{"farthestInPlayoffs":{"farthest":3}}}' WHERE id=30;
+            INSERT INTO "TournamentDefinition" (id,"sportId",code,name,scope) VALUES(1,2,'FBS_PLAYOFFS','CFP','National');
+            INSERT INTO "SeasonPhase" (id,"sportSeasonId","tournamentId",type,name,"endDate") VALUES(1,2,1,'NationalTournament','CFP',%s);
+            INSERT INTO "GameResult" (sport,"sportSeasonId","seasonPhaseId","externalGameId",date,"isCompleted","homeTeamId","awayTeamId","homeScore","awayScore","homeTeamExternalId","awayTeamExternalId","homeTeamName","awayTeamName","roundOrder","bonusTournamentCode")
+            VALUES(2,2,1,'cfp-final',%s,true,201,202,30,20,201,202,'Home','Away',4,'FBS_PLAYOFFS');''',
+            (today-dt.timedelta(days=30),today-dt.timedelta(days=2),today-dt.timedelta(days=1),today-dt.timedelta(days=2)))
+        execute('''INSERT INTO "SportTeam" (id,"schoolId","sportId","displayName","externalId",tier)
+            SELECT team,1,2,'Football fixture',team::text,1 FROM generate_series(203,212) team;''')
+        for index,(rnd,home,away) in enumerate([(1,205,212),(1,206,211),(1,207,210),(1,208,209),
+            (2,201,208),(2,204,205),(2,202,207),(2,203,206),(3,201,204),(3,202,203)]):
+            execute('''INSERT INTO "GameResult" (sport,"sportSeasonId","seasonPhaseId","externalGameId",date,"isCompleted","homeTeamId","awayTeamId","homeScore","awayScore","homeTeamExternalId","awayTeamExternalId","homeTeamName","awayTeamName","roundOrder","bonusTournamentCode")
+                VALUES(2,2,1,%s,%s,true,%s,%s,30,20,%s,%s,'Home','Away',%s,'FBS_PLAYOFFS')''',
+                ('cfp-'+str(index),today-dt.timedelta(days=3),home,away,home,away,rnd))
+        sys.path.insert(0,str(ROOT/'api'))
+        from sqlalchemy import create_engine
+        from endpoints.scoring.standings_service import ConferenceStandingsService
+        from endpoints.scoring.service import ScoringService
+        from endpoints.schedule.read_service import ScheduleReadService
+        class StandingsFixture:
+            def fetch(self,keyword,year,group):
+                return {'id':'50','season':{'year':year},'children':[{'id':'7','name':'Fixture Conference','isConference':True,
+                    'standings':{'season':year,'seasonType':2,'entries':[
+                        {'team':{'id':str(tid)},'stats':[{'type':'vsconf_playoffseed','value':rank},{'type':'vsconf','summary':record}]}
+                        for tid,rank,record in [(101,1,'2-0'),(102,2,'1-1'),(103,3,'0-2')]]}}]}
+        bonus_engine=create_engine(env['SUPABASE_DB_URL'])
+        try:
+            collection=ConferenceStandingsService(bonus_engine,StandingsFixture())
+            assert collection.collect_for_job(1)['ready']==[1]
+            assert execute('SELECT count(*) FROM "ConferenceStandingsSnapshot"')==[(0,)]
+            for _ in range(2): assert collection.collect_for_job(1,apply=True)['ready']==[1]
+            assert execute('SELECT count(*) FROM "ConferenceStandingsSnapshot"')==[(1,)]
+            scoring=ScoringService(bonus_engine,ScheduleReadService(bonus_engine))
+            assert scoring.get_season_standings_for_job(10)['members'][0]['totalPoints']==3
+            assert scoring.get_season_standings_for_job(30)['members'][0]['bonusPoints']==0
+            execute('SET ROLE authenticated')
+            try:
+                try: execute('SELECT * FROM "ConferenceStandingsSnapshot"')
+                except psycopg2.errors.InsufficientPrivilege: pass
+                else: raise AssertionError('Browser role can read backend standings')
+            finally: execute('RESET ROLE')
+            assert cli(finalize)['finalized']==[1,2]
+            assert scoring.get_season_standings_for_job(30)['members'][0]['bonusPoints']==3
+            assert scoring.get_season_standings_for_job(10)['members'][0]['bonusPoints']==1.5
+            execute('UPDATE "WeeklyTeamScore" SET "pointsAwarded"=99 WHERE "memberId"=11')
+            execute("""UPDATE "League" SET settings='{}' WHERE id=10""")
+            assert scoring.get_season_standings_for_job(10)['members'][0]['totalPoints']==4.5
+        finally:
+            bonus_engine.dispose()
+        report['checks'].append('Bonuses: actual PostgreSQL migration, preview, idempotent automatic collection, per-team conference and national awards, browser denial, finalization and stable frozen totals')
         report['result'] = 'PASS'
     except BaseException as error:
         report.update(result='FAILED', error_type=type(error).__name__)

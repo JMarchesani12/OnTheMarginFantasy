@@ -18,7 +18,7 @@ class ScheduleIngestionRepository:
         """), params)
 
     def upsert_game(self, conn, params):
-        params = {"isCompleted": None, **params}
+        params = {"isCompleted": None,"bonusTournamentCode": None,"roundOrder": None, **params}
         # Lock reference rows on this connection so their sport/season cannot
         # change between validation and insertion/update.
         season = conn.execute(text('SELECT id FROM "SportSeason" WHERE id=:sportSeasonId AND "sportId"=:sport FOR SHARE'), params).fetchone()
@@ -42,6 +42,8 @@ class ScheduleIngestionRepository:
                 date,
                 "timeTBD",
                 "isCompleted",
+                "bonusTournamentCode",
+                "roundOrder",
                 "homeTeamId",
                 "awayTeamId",
                 "homeScore",
@@ -60,6 +62,8 @@ class ScheduleIngestionRepository:
                 :date,
                 :timeTBD,
                 :isCompleted,
+                :bonusTournamentCode,
+                :roundOrder,
                 :homeTeamId,
                 :awayTeamId,
                 :homeScore,
@@ -76,6 +80,8 @@ class ScheduleIngestionRepository:
                 date = EXCLUDED.date,
                 "timeTBD" = EXCLUDED."timeTBD",
                 "isCompleted" = COALESCE(EXCLUDED."isCompleted", "GameResult"."isCompleted"),
+                "bonusTournamentCode" = EXCLUDED."bonusTournamentCode",
+                "roundOrder" = EXCLUDED."roundOrder",
                 "homeTeamId" = EXCLUDED."homeTeamId",
                 "awayTeamId" = EXCLUDED."awayTeamId",
                 "homeScore" = EXCLUDED."homeScore",

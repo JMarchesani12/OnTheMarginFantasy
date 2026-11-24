@@ -1,4 +1,4 @@
-"""Atomic season validation/completion; standings and bonuses remain computed reads."""
+"""Atomic final-scoreboard application of season bonuses and completion."""
 from datetime import datetime, timezone
 import math
 from utils.ownership import lock_ownership
@@ -72,8 +72,11 @@ class SeasonFinalizationService:
             members = self.repository.member_ids(conn, league_id)
             if not members:
                 raise SeasonNotReady('empty_membership', league_id)
-            standings = self.scoring.get_season_standings_for_job(league_id, conn=conn)
+            standings = self.scoring.compute_final_season_standings_for_job(league_id, conn=conn)
             self._validate_standings(standings, league_id, members)
+            if standings.get('bonusStatus',{}).get('state') == 'pending':
+                raise SeasonNotReady('bonuses_not_ready',league_id)
+            self.repository.freeze_standings(conn,standings)
         if self.repository.scope_ids(conn, season['sportId'], season['seasonYear']) != league_ids:
             raise SeasonNotReady('scope_changed')
         for league_id in league_ids:

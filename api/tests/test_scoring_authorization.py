@@ -41,6 +41,7 @@ class ScoringAuthorizationTests(unittest.TestCase):
             INSERT INTO "User" (id,uuid) VALUES (3,'nonmember');
             ALTER TABLE Week ADD COLUMN startDate TEXT DEFAULT '2026-10-01';
             ALTER TABLE Week ADD COLUMN endDate TEXT DEFAULT '2026-10-07';
+            CREATE TABLE SeasonBonusResult (leagueId INTEGER PRIMARY KEY,result TEXT);
             CREATE TABLE WeeklyTeamScore (leagueId INTEGER,weekId INTEGER,memberId INTEGER,
                 pointsAwarded INTEGER,pointDifferential INTEGER,rank INTEGER);
             INSERT INTO WeeklyTeamScore VALUES (10,100,11,2,10,1),(10,100,12,1,5,2),(20,200,21,8,99,1);

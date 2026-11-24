@@ -4,6 +4,7 @@ import os
 from operations import job_gate, safe_event, run_id
 from endpoints.schedule.ingestion_service import ScheduleIngestionService
 from endpoints.schedule.shared_ingestion_service import SharedScoreboardIngestionService
+from endpoints.scoring.standings_service import ConferenceStandingsService
 
 
 def get_active_leagues_for_date(engine, target_date: dt.date):
@@ -37,6 +38,12 @@ def main(engine=None):
                     else:
                         report['failures'].append({'leagueId':league,'date':day.isoformat()})
                         safe_event('ingest','failed',identity,leagueId=league,date=day.isoformat(),category=outcome['error'])
+            gate.check()
+            standings = ConferenceStandingsService(engine).collect_active_for_job(now=now)
+            report['failures'].extend(standings['failures'])
+            for outcome in standings['processed']:
+                safe_event('ingest','degraded' if outcome['pending'] else 'unit_completed',identity,
+                           sportSeasonId=outcome['sportSeasonId'],count=len(outcome['ready']),pending=len(outcome['pending']))
             gate.check()
     except Exception as exc:
         report['failures'].append({'leagueId':None})

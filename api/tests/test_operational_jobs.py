@@ -28,7 +28,8 @@ class OperationalJobTests(unittest.TestCase):
 
     def test_live_ingestion_partial_failure_continues_and_is_safe(self):
         module=self.modules()[2];out=io.StringIO()
-        with patch.object(module,'job_gate',fake_gate),patch.object(module,'ScheduleIngestionService') as service,patch.object(module,'SharedScoreboardIngestionService') as shared,redirect_stderr(out):
+        with patch.object(module,'job_gate',fake_gate),patch.object(module,'ConferenceStandingsService') as standings,patch.object(module,'ScheduleIngestionService') as service,patch.object(module,'SharedScoreboardIngestionService') as shared,redirect_stderr(out):
+            standings.return_value.collect_active_for_job.return_value={'processed':[],'failures':[]}
             service.return_value.active_leagues_for_job.return_value=[10,20]
             shared.return_value.iter_league_outcomes.return_value=[dict(leagueId=10,error=RuntimeError('private token SQL'),summary=None),dict(leagueId=20,error=None,summary={'eventsSeen':2})]
             report=module.main(engine=Mock())
@@ -114,7 +115,8 @@ class SharedLiveIngestionTests(unittest.TestCase):
         @contextmanager
         def gate(*args):yield type('Gate',(),{'check':staticmethod(check)})()
         err=io.StringIO()
-        with patch.object(module,'job_gate',gate),patch.object(module,'ScheduleIngestionService',return_value=service),patch.object(module.dt,'datetime',Clock),redirect_stderr(err):
+        with patch.object(module,'job_gate',gate),patch.object(module,'ScheduleIngestionService',return_value=service),patch.object(module.dt,'datetime',Clock),patch.object(module,'ConferenceStandingsService') as standings,redirect_stderr(err):
+            standings.return_value.collect_active_for_job.return_value={'processed':[],'failures':[]}
             report=module.main(engine=object())
         return report,fetches,writes,err.getvalue()
 

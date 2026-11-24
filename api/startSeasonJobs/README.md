@@ -128,3 +128,9 @@ CLI emits safe JSON and exits nonzero for failures, invalid explicit scope, or a
 blocked apply. A useful preview of blocked historical data exits zero. Multiple
 selected leagues are independent transactions, so inspect the complete report for
 partial success.
+
+## Manager season bonuses
+
+Conference bonuses/penalties use published final regular-season conference records, with shared places for tied win percentages. They do not use conference tournament wins, tournament point differential, playoff seeds, or football conference championship outcomes. All bonuses and penalties are applied only in cronComputeFinalScoreboard after the league season is ready to finalize; ordinary reads remain weekly-only until then. The ingestion job collects versioned standings automatically; see [operations](../../docs/operations.md#automatic-conference-standings-and-season-bonuses) for the migration and preview/apply command.
+
+Only NCAA_TOURNEY, FCS_PLAYOFFS and FBS_PLAYOFFS qualify for the farthest bonus, evaluated separately. Full configured points go to every manager tied for farthest using the current roster. Other national tournaments, ordinary bowls and conference finals are ineligible. Bonus game identity/round is verified from source labels; historical games require deliberate reingestion before they can qualify. Complete bracket coverage and final results are required; appearing in a scheduled final does not establish a winner. Bonus eligibility does not change the existing weekly margin multipliers.

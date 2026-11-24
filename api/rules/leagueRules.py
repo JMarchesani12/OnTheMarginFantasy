@@ -107,7 +107,9 @@ def describe_rules(sport_id, settings, teams):
             'Lower tier numbers indicate stronger teams. Halved odd margins round away from zero: +21 becomes +11 and −21 becomes −11. Zero remains zero. Larger tier gaps do not compound the multiplier.',
             'In basketball, an opponent without a stored tier always qualifies for the lower-tier adjustment. A team without a stored tier is treated as one tier below the highest numbered stored tier for that sport. If no tiers are stored, all such teams are treated as Tier 1.']},
         {'heading': 'Season standings and bonuses', 'paragraphs': [
-            'Season standings include weekly points and the configured bonus awards. Bonus settings below are specific to this league.',
+            'Season standings show weekly points during the season. Configured bonus awards and penalties are applied only by the final-scoreboard job at season finalization. Bonus settings below are specific to this league.',
+            'Conference bonuses and penalties sum the final regular-season conference placements of teams on your current roster. Football conference championship games are excluded.',
+            'The farthest playoff award applies separately to March Madness, FCS playoffs, and the FBS College Football Playoff. Every tied manager receives the full configured award. Secondary tournaments, ordinary bowls, and conference championships do not qualify.',
             'Season ties are checked using playoff depth, number of conference/segment championships, playoff head-to-head differential, conference postseason head-to-head differential, and the latest non-tied week, in that order.']},
         {'heading': 'League configuration', 'paragraphs': [
             'New trades are blocked after the configured trade deadline; free-agent requests are blocked after the configured free-agent deadline. An unset deadline imposes no date restriction.',

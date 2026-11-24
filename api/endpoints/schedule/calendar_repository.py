@@ -75,7 +75,7 @@ class ScheduleCalendarRepository:
 
     def season_phases(self, conn, params):
         return conn.execute(text('''
-                SELECT sp.*, td."sportConferenceId"
+                SELECT sp.*, td."sportConferenceId",td.code AS "tournamentCode"
                 FROM "SeasonPhase" sp
                 LEFT JOIN "TournamentDefinition" td ON td.id=sp."tournamentId"
                 WHERE sp."sportSeasonId"=:season

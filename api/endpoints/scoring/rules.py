@@ -88,3 +88,28 @@ def conference_bottom_bonus(pd_totals, member_ids, config) -> Dict[int, float]:
         current_pos += j - i
         i = j
     return results
+
+
+NATIONAL_BONUS_CODES = frozenset({'NCAA_TOURNEY', 'FCS_PLAYOFFS', 'FBS_PLAYOFFS'})
+
+
+def conference_placement_bonus(placements, owned_teams, config, *, bottom=False):
+    """Sum each current team's configured final conference placement award."""
+    keys = {1:'last',2:'secondLast',3:'thirdLast',4:'fourthLast'} if bottom else {1:'first',2:'second',3:'third',4:'fourth'}
+    field = 'bottomRank' if bottom else 'rank'
+    return {mid: sum(float(config.get(keys.get(placements.get(team,{}).get(field)),0))
+                     for team in set(teams)) for mid,teams in owned_teams.items()}
+
+
+def national_playoff_bonus(depths_by_tournament, member_ids, points):
+    """One full farthest award per manager per eligible national competition."""
+    results = {mid:0.0 for mid in member_ids}
+    for code,depths in depths_by_tournament.items():
+        if code not in NATIONAL_BONUS_CODES:
+            continue
+        farthest = max((depths.get(mid,0) for mid in member_ids), default=0)
+        if farthest > 0:
+            for mid in member_ids:
+                if depths.get(mid,0)==farthest:
+                    results[mid] += float(points)
+    return results

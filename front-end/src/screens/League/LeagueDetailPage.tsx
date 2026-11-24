@@ -14,12 +14,13 @@ import { LeagueScheduleTabs } from "../../components/League/LeagueScheduleTabs";
 import LeagueScoreboard, {
   type ScoreboardRow as LeagueScoreboardRow,
 } from "../../components/League/LeagueScoreboard";
-import { getScoresForWeek } from "../../api/scoring";
-import type { ScoreWeek } from "../../types/scoring";
+import { getScoresForWeek, getSeasonStandings } from "../../api/scoring";
+import type { ScoreWeek, SeasonStandings } from "../../types/scoring";
 import { useLeagueContext } from "../../hooks/useLeagueContext";
 import { useRequestScope } from "../../hooks/useRequestScope";
 import { getEffectiveWeekNumber, MIN_SCHEDULE_WEEK_NUMBER } from "../../utils/weekCutoff";
 import { getDisplayedSeasonPoints, getLeagueRank } from "../../utils/leagueDetailCalculations";
+import { applySeasonStandings } from "../../utils/seasonBonuses";
 import "./LeagueDetailPage.css";
 
 type DetailContextProps = { initialLeague: League; currentUserId: number; isMember: boolean; isCurrent: () => boolean };
@@ -52,6 +53,9 @@ const LeagueDetailView = ({ initialLeague, currentUserId, isMember, isCurrent }:
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [membersError, setMembersError] = useState<string | null>(null);
   const [scoreboard, setScoreboard] = useState<Record<number, ScoreWeek[]>>({});
+  const [seasonStandings, setSeasonStandings] = useState<SeasonStandings | null>(null);
+  const [seasonLoading, setSeasonLoading] = useState(false);
+  const [seasonError, setSeasonError] = useState<string | null>(null);
   const [scoreboardLoading, setScoreboardLoading] = useState(false);
   const [scoreboardError, setScoreboardError] = useState<string | null>(null);
   const [teamNameValue, setTeamNameValue] = useState<string>(
@@ -176,6 +180,21 @@ const LeagueDetailView = ({ initialLeague, currentUserId, isMember, isCurrent }:
       current.cancel();
     };
   }, [league?.leagueId, effectiveWeekNumber, scope]);
+
+  useEffect(() => {
+    const current = scope.capture("season-standings");
+    setSeasonLoading(true);
+    setSeasonError(null);
+    setSeasonStandings(null);
+    getSeasonStandings(league.leagueId, current.signal).then(result => {
+      if (current()) setSeasonStandings(result);
+    }).catch(error => {
+      if (current()) setSeasonError(safeErrorMessage(error, READ_ERROR));
+    }).finally(() => {
+      if (current()) setSeasonLoading(false);
+    });
+    return () => current.cancel();
+  }, [league.leagueId, effectiveWeekNumber, scope]);
 
   const openRosterManagement = () => {
     if (!isMember) return;
@@ -347,9 +366,9 @@ const LeagueDetailView = ({ initialLeague, currentUserId, isMember, isCurrent }:
 
     return {
       weekNumbers,
-      rows: Array.from(rows.values()).sort((a, b) => b.totalPoints - a.totalPoints),
+      rows: applySeasonStandings(Array.from(rows.values()), seasonStandings).sort((a, b) => b.totalPoints - a.totalPoints),
     };
-  }, [scoreboard, members, effectiveWeekNumber]);
+  }, [scoreboard, members, effectiveWeekNumber, seasonStandings]);
 
   const currentWeekTotals = useMemo(() => {
     const currentWeek = effectiveWeekNumber ?? null;
@@ -430,14 +449,14 @@ const LeagueDetailView = ({ initialLeague, currentUserId, isMember, isCurrent }:
       return false;
     }
 
-    return Object.values(scoreboard).some((scores) =>
-      scores.some((score) => score.memberId === currentMemberId)
-    );
-  }, [scoreboard, currentMemberId]);
+    return !!seasonStandings?.members.some(member => member.memberId === currentMemberId) ||
+      Object.values(scoreboard).some(scores => scores.some(score => score.memberId === currentMemberId));
+  }, [scoreboard, currentMemberId, seasonStandings]);
 
   const currentLeagueRank = useMemo(() => {
     const rowsByMember = new Map(scoreboardRows.rows.map((row) => [row.memberId, row]));
-    const scoredMembers = new Set(Object.values(scoreboard).flatMap((scores) => scores.map((score) => score.memberId)));
+    const scoredMembers = new Set([...Object.values(scoreboard).flatMap(scores => scores.map(score => score.memberId)),
+      ...(seasonStandings?.members.map(member => member.memberId) ?? [])]);
     return getLeagueRank(members.map((member) => ({
       memberId: member.id,
       points: getDisplayedSeasonPoints({
@@ -447,7 +466,7 @@ const LeagueDetailView = ({ initialLeague, currentUserId, isMember, isCurrent }:
         leagueSeasonPoints: member.id === currentMemberId ? league?.seasonPoints : null,
       }),
     })), currentMemberId);
-  }, [members, scoreboardRows.rows, scoreboard, currentMemberId, league?.seasonPoints]);
+  }, [members, scoreboardRows.rows, scoreboard, currentMemberId, league?.seasonPoints, seasonStandings]);
 
   const currentWeekDifferential = useMemo(() => {
     const currentWeek = effectiveWeekNumber ?? null;
@@ -599,7 +618,7 @@ const LeagueDetailView = ({ initialLeague, currentUserId, isMember, isCurrent }:
               <div className="league-detail__team-stat">
                 <span className="label">League Rank</span>
                 <span className="value">
-                  {!loadingMembers && !scoreboardLoading && currentLeagueRank
+                  {!loadingMembers && !scoreboardLoading && !seasonLoading && !seasonError && currentLeagueRank
                     ? `${currentLeagueRank.tied ? "Tied " : ""}#${currentLeagueRank.rank}`
                     : "—"}
                 </span>
@@ -832,10 +851,11 @@ const LeagueDetailView = ({ initialLeague, currentUserId, isMember, isCurrent }:
         <LeagueScoreboard
           weekNumbers={scoreboardRows.weekNumbers}
           rows={scoreboardRows.rows}
+          showBonuses={league.status === "Completed"}
           currentMemberId={league.memberId}
           currentWeekNumber={effectiveWeekNumber ?? null}
-          loading={scoreboardLoading}
-          error={scoreboardError}
+          loading={scoreboardLoading || seasonLoading}
+          error={scoreboardError ?? seasonError}
         />
         <section className="league-detail__week-totals">
           <header className="league-detail__week-totals-header">
