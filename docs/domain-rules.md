@@ -10,7 +10,7 @@ Responses use safe error messages and request IDs. Browser API helpers suppress 
 
 ## League membership and initialization
 
-numPlayers is the current member count, not a maximum capacity. Admission approves membership atomically under the league/admission locks. A systematic fair draft-round scaling policy remains a separate feature; there is no hard league-size limit.
+numPlayers is the current member count, not a maximum capacity. Admission approves membership atomically under the league/admission locks. There is no hard league-size limit. Pre-draft rounds use actual membership and season-specific conference capacity: `min(sport.maxDraftRounds, floor(sum(min(conference team count, owner count * conference cap)) / owner count))`. Creation and pre-draft membership changes recalculate capacity; live/completed drafts are never resized. Starting requires at least one full round.
 
 League creation and initial weeks/rules/draft state use one transaction. Existing initialized week plans return canonical rows rather than rewriting history. Week numbers are unique within a league; member scores are unique per league/week/member and reference members/weeks in that same league.
 
@@ -24,7 +24,7 @@ Shared ownership reads use the caller's connection and explicit league/week cont
 
 ## Drafts and transactions
 
-Draft controls, ordering, picks and snapshot reads have separate services/repositories. Draft order validates membership/permutation; start/control transitions serialize on league/draft state. Allocation, ownership and state transitions share a transaction. Socket connect/join/delivery recheck session/current membership; removed members or expired credentials must not receive private snapshots. See [draft boundaries](../api/endpoints/draft/README.md).
+Draft controls, ordering, picks and snapshot reads have separate services/repositories. Draft order validates membership/permutation; start/control transitions serialize on league/draft state. Allocation, ownership and state transitions share a transaction. Conferences are optional within their per-owner caps; legal picks are not reserved to protect future roster completion. Owners with no legal picks lose remaining turns and may finish with smaller rosters. Exhaustion skips do not create fake picks or ownership records. The timeout worker also detects stuck live turns without waiting for an expired clock, validates caps before advancing, and polls at a 30-second bound. Socket connect/join/delivery recheck session/current membership; removed members or expired credentials must not receive private snapshots. See [draft boundaries](../api/endpoints/draft/README.md).
 
 A trade proposed while the current week is locked targets the next eligible unlocked week. Proposal/acceptance do not rewrite the locked current-week roster; pending accepted changes are applied by the weekly workflow at their eligible boundary. Deadlines, caps, ownership and future-period availability can still reject a trade. See [transaction boundaries](../api/endpoints/transaction/README.md).
 

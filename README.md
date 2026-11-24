@@ -8,6 +8,7 @@ College-sports fantasy leagues with a React/TypeScript frontend, Flask API, Supa
 | [api](api/README.md) | API, scoring, drafts, scheduled jobs and backend tests |
 | [db](db/README.md) | Schema reference, migrations, snapshots and applied-change records |
 | [scripts/database](scripts/database/README.md) | Read-only database snapshot tooling |
+| [scripts/team-search](scripts/team-search/README.md) | Alias seed maintenance and canonical school-name migration tools |
 | [scripts/basketball-tiers](scripts/basketball-tiers) | Basketball tier analysis CLI |
 
 ## Development
@@ -34,4 +35,6 @@ CI uses Python 3.14 and Node 22.22.2. The backend runner prevents configured dat
 
 See [operations](docs/operations.md) for deployment, jobs and recovery, and [follow-ups](docs/follow-ups.md) for outstanding operating decisions.
 
-Draft Privacy Policy and Terms of Service are in [legal](legal/README.md). They require completion and review before publication.
+Public Privacy Policy and Terms of Service drafts are implemented in [the frontend](front-end/src/screens/Legal/LegalPage.tsx). Earlier drafting references and the publication checklist are in [legal](legal/README.md). They require completion and review before final publication.
+
+Keep maintained behavior and operating instructions in the documentation linked above. Completed agent plans/specs and one-off audit output belong in Git history rather than the working tree; preserve database migration files and execution receipts for traceability.

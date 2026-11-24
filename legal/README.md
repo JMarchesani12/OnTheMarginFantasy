@@ -1,4 +1,6 @@
-# Legal drafts
+# Legal review references
+
+The public draft pages now live in [LegalPage.tsx](../front-end/src/screens/Legal/LegalPage.tsx), with contact and operator details in [siteInfo.ts](../front-end/src/lib/siteInfo.ts). The operator is On The Margin Fantasy LLC; the confirmed contact is jmarchesani.onthemarginfantasy@gmail.com. The Markdown files below preserve the earlier, more detailed drafting references and unresolved review checklist. They are not the source rendered by the website.
 
 Prepared November 18, 2026 for On The Margin Fantasy. These files are **review drafts**, not published policies or a legal-compliance determination:
 
@@ -17,7 +19,7 @@ They reflect the stated operating model: developed in Iowa, free participation, 
 6. Implement affirmative Terms acceptance and store the accepted version/timestamp for new and, where appropriate, existing accounts. A Privacy Policy acknowledgment is not blanket consent to advertising or unrelated processing. Link the published pages from signup and a persistent site location.
 7. Have counsel review the drafts for the operator, intended user locations, minors, privacy-law applicability, sports-data/branding rights and the proposed Iowa governing-law clause. Iowa development alone does not limit obligations to Iowa. No arbitration/class waiver, financial liability cap or broad indemnity was selected in this draft.
 
-Replace bracketed notes with verified text before publishing. No signup behavior, database schema, consent records, public routes or hosting settings were changed by creating these documents. No new agreement is attributed to an existing user. Future advertising, tracking, paid participation or prizes require another review before introduction.
+Replace bracketed notes with verified text before publishing. Creating these reference drafts did not change signup behavior, database schema, consent records or hosting settings. The frontend has since added public policy routes and signup links; those links alone do not implement an age screen or stored Terms acceptance. No new agreement is attributed to an existing user. Future advertising, tracking, paid participation or prizes require another review before introduction.
 
 ## Sources checked
 
