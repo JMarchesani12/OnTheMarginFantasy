@@ -1,0 +1,12 @@
+# Outstanding work and operating decisions
+
+- **Refresh run acceptance:** the new daily refresh cron deployed November 18,2026 on514f115. Verify the first scheduled run on November 19 at 03:00 CST; deployment alone does not validate its provider/environment settings.
+- **Draft acceptance:** production draft/socket checks are deferred while leagues are in season. Verify authorized snapshots, updates, reconnect, expiry/removal and timeout behavior in an approved isolated environment or the next draft window. Do not unlock active leagues to test them.
+- **Timeout worker:** keep the separate Render worker suspended until its operation/cost and timeout acceptance are explicitly approved.
+- **Season finalization:** keep manual. Review all eligible seasons before the first supervised run, then decide whether later automation is warranted. See [operations](operations.md).
+- **Provider-owned future grants:** current application tables/sequences and postgres table/sequence defaults are hardened. The available postgres role cannot change supabase_admin defaults; future public objects created by that provider role can regain browser privileges. Obtain a supported platform-authorized path from Supabase. Until resolved, review new-object grants. Do not elevate the application role or bypass the boundary.
+- **Legal publication:** public `/privacy` and `/terms` pages remain drafts; confirm retention, provider settings, age/eligibility handling and Terms acceptance before final publication. The older [legal review drafts](../legal/README.md) retain the detailed review checklist. Feedback opens email drafts and does not confirm message delivery.
+- **Historical calendar repairs:** remapping existing draft/ownership/score history needs its own input/snapshot/recovery policy; current repair tools deliberately refuse history.
+- **Further database tuning:** game/transaction index alternatives were not rolled out. Measure actual workload and query plans before adding them. The existing member-led ownership index is already installed.
+
+Owner-scoped browser hardening, the identity/week/ownership/seasonal-reference migrations and the ownership index are applied on the observed application target. The maintainer confirmed leagues load after hardening. Their [execution records](../db/history/README.md) are retained for operational traceability; they do not authorize replay on another environment.

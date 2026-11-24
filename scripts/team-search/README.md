@@ -7,8 +7,8 @@ text; adding or changing one does not rename a school or team.
 
 The configured project migration was applied and verified on **2026-11-19**:
 **2,079 aliases, 366 schools, 631 existing teams**. School/team counts were unchanged.
-See the [rollout receipt](../../docs/modernization/evidence/school-alias-rollout-2026-11-19.json)
-and [runtime verification](../../docs/modernization/evidence/school-alias-runtime-2026-11-19.json).
+See the [rollout receipt](../../db/history/school-alias-rollout-2026-11-19.json)
+and [runtime verification](../../db/history/school-alias-runtime-2026-11-19.json).
 The user subsequently confirmed compatible API/job deployment; the two retired
 name columns were then removed and the deployed API verified healthy.
 
@@ -119,7 +119,7 @@ and ordinary ingestion do not overwrite independently maintained School names.
 
 
 The final column-drop commit and fresh postflight are recorded in
-`docs/modernization/evidence/school-name-column-drop-2026-11-19.json` and
+`db/history/school-name-column-drop-2026-11-19.json` and
 `school-name-column-drop-postflight-2026-11-19.json`. Both retired columns are
 absent from the configured target. Canonical reads and public API health/catalog
 checks passed after commit; all 2,079 aliases remain available.

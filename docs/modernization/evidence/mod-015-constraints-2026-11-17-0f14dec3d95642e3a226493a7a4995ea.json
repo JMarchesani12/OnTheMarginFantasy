@@ -1,8 +1,0 @@
-{
-  "result": "FAILED",
-  "scope": "Prepared migration native acceptance only; no configured target",
-  "started_at": "2026-11-18T03:51:32.070716+00:00",
-  "databases": [],
-  "cases": [],
-  "error_type": "FileNotFoundError"
-}

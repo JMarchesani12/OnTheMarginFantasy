@@ -1,12 +1,8 @@
-# Database Schema
+# Database schema
 
-This document describes the application database shape from repository SQL and
-application consumers. `tables.sql` is a descriptive snapshot, not an executable
-blank-database baseline. A read-only catalog check on 2026-10-29 confirmed the
-configured backend database has the same 23 public table names and 180 column
-names; full definition equivalence and migration history remain unverified.
-See [schema provenance](../docs/modernization/mod-005-schema-provenance.md) and
-[access-policy evidence](../docs/modernization/mod-004-access-review.md).
+Application database reference and operating records. The latest captured public schema is [November 18 after browser hardening](snapshots/2026-11-18-after-browser-privileges/schema.sql). The flat tables.sql is an older descriptive reference, not an initialization script or current live export.
+
+[Snapshots](snapshots/README.md) describe observed schemas; [execution records](history/README.md) describe applied changes. SQL upgrades live in api/migrations; use [preflights](preflights/README.md) before any separately approved application to another target. Web startup/deploy never runs migrations automatically.
 
 ## Overview
 
@@ -381,101 +377,22 @@ schema inspection scripts. Do not expose it in frontend code.
 `SeasonPhase.rules` stores per-game margin rules, source matchers, and the shared final scoring period. The previously referenced `api/migrations/20261023_basketball_tournament_rules.sql` is absent from available repository history. The configured database already has `SeasonPhase.rules`; other environments must verify that prerequisite. Recover or reconcile migration provenance before defining an upgrade; do not run a nonexistent migration. See [season setup documentation](../api/startSeasonJobs/README.md) for tournament JSON examples, phase classification, and existing-league rebuild requirements.
 
 
-## Versioned observed baseline
 
-The [2026-10-29 baseline package](baselines/20261029/README.md) provides ordered,
-checksummed schema/access SQL, an expected catalog reference and a transaction-aware
-initialization/adoption ledger runner restricted to synthetic local targets by its
-CLI. It has been tested locally and verified against configured Supabase catalogs
-read-only. It has not been installed/adopted on the deployed database. Historical
-migration files are not replayed after baseline initialization.
+## Schema history and access
 
-The [browser privilege proposal](proposals/README.md) is separate and unapplied;
-baseline installation deliberately preserves observed grants. Full Supabase
-platform setup, runtime role alignment and deployment/recovery approval remain
-explicit prerequisites for operational use.
+The [frozen October 29 baseline](baselines/20261029/README.md) predates later identity, score, ownership and seasonal-reference constraints. It is historical, includes the former broad browser grants, and must not be installed over an upgraded application database. The latest snapshot is the observed reference; baseline checksums remain unchanged.
 
-## Current schema after the main/audit integration
+Applied upgrades preserve nullable legacy profile UUIDs while enforcing linked-profile uniqueness, unique league weeks/member scores, same-league score/ownership references, nonoverlapping half-open ownership intervals and same-sport seasonal/game references. Existing delete behavior is preserved. See the SQL definitions and [applied records](history/README.md), not filenames alone, to determine another target's state.
 
-At the main/audit integration, `db/tables.sql` and
-`api/migrations/20261030_game_kickoff_tbd.sql` matched main at merge parent
-`ae8a103`. The current intended snapshot additionally includes the additive
-MOD-006 `User_uuid_key`, MOD-008 period/score keys and MOD-010 ownership constraints described below. `GameResult.timeTBD` is a boolean,
-NOT NULL, default false. A read-only configured-database catalog check on
-2026-11-02 confirmed that exact column definition; no hosted DDL was executed.
-This column check does not claim a fresh full hosted schema comparison.
+Current public application tables/sequences deny direct anon/authenticated privileges. Profile/API access uses backend authorization; backend/service ACLs and RLS policies are preserved. [Browser privilege change and exact recovery](changes/README.md) are versioned separately. Provider-owned future defaults remain a [platform follow-up](../docs/follow-ups.md); postgres application-owner authority cannot alter them.
 
-The frozen October 29 baseline intentionally predates this October 30 migration.
-For a new supported local database, initialize and verify the frozen baseline
-first, then apply the checked-in kickoff migration. Do not replay older historical
-migrations already incorporated in the baseline. Keep the baseline files and
-checksums unchanged. Its runner verifies only its historical expected state and
-will reject the post-migration extra column; it is not a current-schema deployment
-runner and must not be used to re-adopt an already upgraded database.
+The [member-led ownership index package](indexes/ownership/README.md) is already applied on the observed target. Other game/transaction indexes were not rolled out.
 
-The additive migration preserves existing rows with false as the initial flag;
-replaying it preserves existing true values. It does not reingest provider data.
-The refresh job is a separate explicit operation, and no refresh or automatic
-migration is added to web startup or deployment by this integration. Current
-hosted timeTBD already satisfies this prerequisite.
+## Capture and recovery
 
-Disposable PostgreSQL verification, including baseline-plus-migration, replay,
-read projections and actual parser/upsert transitions, is reproducible with
-`python3 scripts/modernization/verify_main_audit_merge.py` against the documented
-marked synthetic server on port 55439. See [merge evidence](../docs/modernization/evidence/main-audit-merge-2026-11-02.json).
+Use [scripts/database](../scripts/database/README.md) for explicitly read-only snapshots. Catalog and pg_dump share an exported transaction snapshot and checksummed manifests; no app/Auth rows are exported. Source paths in historical manifests refer to the original capture checkout and are not automatically rewritten after repository cleanup. Preserve immutable SQL/state/package hashes and actual execution receipts.
 
-
-## MOD-006 linked-profile uniqueness — prepared 2026-11-04
-
-The intended current snapshot now adds `User_uuid_key UNIQUE(uuid)`, preserving
-nullable legacy UUIDs, email uniqueness and the auth-user FK. Supported fresh
-initialization applies the frozen baseline, the October30 kickoff migration,
-then [November4 identity uniqueness](../api/migrations/20261104_user_identity_unique.sql).
-Existing databases require the [aggregate preflight and rollout/remediation runbook](preflights/README.md)
-before operational application. The migration refuses duplicate linked profiles
-without changing rows; it does not merge or link accounts. Hosted preflight and
-installation were initially pending. On2026-11-04 the maintainer authorized
-both on the configured application database:14 profiles,0 unlinked,0 duplicates,
-counts unchanged after installation, and the valid null-distinct constraint
-verified. [Rollout evidence](../docs/modernization/evidence/mod-006-rollout-2026-11-04.json).
-No backend deployment or account remediation was included. The frozen baseline/checksums remain unchanged;
-its historical expected catalog is not the upgraded schema reference.
-
-
-## MOD-008 week/score identity — 2026-11-04
-
-After the frozen baseline, kickoff migration and User identity migration, apply
-[week/score identity](../api/migrations/20261104_week_score_identity.sql) only after
-its [aggregate preflight and rollout review](preflights/MOD-008.md). Current
-`db/tables.sql` includes the two natural keys, composite parent unique keys and
-same-league score FKs. Existing FK cascade behavior is retained; no historical
-rows are deduplicated or rebuilt. Frozen baseline/checksums remain unchanged.
-
-The configured target was clean (176 weeks,340 scores) and the bounded migration
-was applied/catalog-verified with unchanged counts on2026-11-04. [Rollout evidence](../docs/modernization/evidence/mod-008-rollout-2026-11-04.json).
-Other targets require their own readiness check. Backend application deployment
-is separate and was not performed by the database rollout.
-
-
-## MOD-010 ownership integrity — 2026-11-04
-
-After User and week/score identity migrations, apply
-[ownership integrity](../api/migrations/20261104_ownership_integrity.sql) with its
-[aggregate preflight and rollout/recovery review](preflights/MOD-010.md). It enables
-platform-supplied btree_gist if absent and adds an interval CHECK, same-league
-member FK and nondeferrable half-open overlap exclusion. Empty/adjacent/future
-valid ranges are preserved; no history is cleaned or reassigned.
-
-Configured target applied/catalog-verified with1059 slots and10 empty intervals
-unchanged, no overlap/reversed/member/sport mismatches. [Rollout evidence](../docs/modernization/evidence/mod-010-rollout-2026-11-04.json).
-Current target snapshot includes these constraints and requires the extension;
-the frozen baseline/checksums remain unchanged. Backend deployment is separate.
-
-## Dated hosted observations — November17,2026
-
-Use [db/snapshots](snapshots/README.md) for the current dated schema/catalog records rather than treating the historical flat `tables.sql` as a live export. Before/after captures share a read-only exported snapshot within each run, retain ACL/RLS/index/constraint metadata and carry checksums/source provenance. They contain no application rows and are not initialization/migration/data-backup scripts. Frozen October29baseline/checksums remain unchanged.
-
-The configured target now additionally has the approved valid/ready `mod017_owner_member_team` covering index ([rollout receipt](../docs/modernization/evidence/mod-017-rollout-2026-11-17-3241bd9f036441c69353b3168a731e30.json)). The seasonal composite-reference migration `api/migrations/20261117_seasonal_reference_integrity.sql` was separately approved and **APPLIED_AND_VERIFIED** on the configured target; [receipt](../docs/modernization/evidence/mod-015-rollout-2026-11-17-8b3245fe0fab49d392d62dddc77e6197.json) and [final snapshot](snapshots/2026-11-17-after-mod015/manifest.json). Other environments still require fresh review/approval; don't infer their state from a filename. [Runbook](preflights/MOD-015-rollout.md). No old migrations or baseline adoption were rerun.
+A schema-only snapshot is not a data backup, full provider setup or universal restore script. Use ordinary database backups/PITR and a tested data-recovery process separately. Never execute a snapshot against a populated database.
 
 
 ## School aliases — November 19, 2026
@@ -489,7 +406,7 @@ not modified. Frozen baselines and historical snapshots remain unchanged.
 
 See [migration](../api/migrations/20261119_school_alias.sql),
 [maintenance/runtime notes](../scripts/team-search/README.md), and
-[rollout receipt](../docs/modernization/evidence/school-alias-rollout-2026-11-19.json).
+[rollout receipt](history/school-alias-rollout-2026-11-19.json).
 Runtime search reads this table; the JSON catalog is offline seed data only.
 Browser direct access is revoked and RLS enabled; the backend exposes public
 school-name metadata through `/api/team-search/catalog`. Application deployment
@@ -509,12 +426,12 @@ names and unlinked opponents retain source labels.
 The configured rollback-only check physically removed both columns and verified
 current catalog, rules, ingestion, roster, search, draft, trade and game queries,
 then restored the schema. See [staged rollout/commands](../scripts/team-search/README.md)
-and [dry-run evidence](../docs/modernization/evidence/school-name-dry-run-2026-11-19.json).
+and [dry-run evidence](history/school-name-dry-run-2026-11-19.json).
 
 The configured canonical-name phase is now committed: **336 shorter names**,
 with all 2,079 aliases retained and school/team counts unchanged. A fresh read-only
-postflight plans no additional name changes. The physical column-drop phase is now complete; see [name rollout receipt](../docs/modernization/evidence/school-name-rollout-2026-11-19.json)
-and [postflight](../docs/modernization/evidence/school-name-postflight-2026-11-19.json).
+postflight plans no additional name changes. The physical column-drop phase is now complete; see [name rollout receipt](history/school-name-rollout-2026-11-19.json)
+and [postflight](history/school-name-postflight-2026-11-19.json).
 
 
 Final column removal was **committed and verified** on November 19, 2026.
@@ -522,6 +439,6 @@ A fresh read-only connection confirmed both columns absent, with all 366 schools
 631 sport teams, and 2,079 aliases intact. Updated repository reads passed and the
 deployed `/health` and `/api/team-search/catalog` returned HTTP 200 after removal.
 Deployment was confirmed by the user; public API behavior was independently checked.
-See [drop receipt](../docs/modernization/evidence/school-name-column-drop-2026-11-19.json)
-and [postflight](../docs/modernization/evidence/school-name-column-drop-postflight-2026-11-19.json).
+See [drop receipt](history/school-name-column-drop-2026-11-19.json)
+and [postflight](history/school-name-column-drop-postflight-2026-11-19.json).
 Frozen baseline and historical snapshot files remain unchanged.
