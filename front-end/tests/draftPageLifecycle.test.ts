@@ -80,7 +80,7 @@ test('actual draft search accepts aliases and typos while retaining conference f
   assert.match(h.text(),/Northern Iowa Panthers/);assert.doesNotMatch(h.text(),/Northern Illinois Huskies/);
   change('draft-search','nothern iwoa');
   assert.match(h.text(),/Northern Iowa Panthers/);assert.doesNotMatch(h.text(),/Northern Illinois Huskies/);
-  change('draft-conference','MAC');
+  h.all().find(node=>node.props?.id==='draft-conference').props.onChange('MAC');h.render();
   assert.match(h.text(),/No teams available/);assert.doesNotMatch(h.text(),/Northern Iowa Panthers/);
   h.dispose();
 });
@@ -95,7 +95,7 @@ test('draft typo fallback is chosen after conference filtering',async()=>{
   const change=(id:string,value:string)=>{h.all().find(node=>node.props?.id===id).props.onChange({target:{value}});h.render();};
   change('draft-search','Iowa');
   assert.match(h.text(),/Iowa Hawkeyes/);assert.doesNotMatch(h.text(),/Iona Gaels/);
-  change('draft-conference','MAAC');
+  h.all().find(node=>node.props?.id==='draft-conference').props.onChange('MAAC');h.render();
   assert.match(h.text(),/Iona Gaels/);assert.doesNotMatch(h.text(),/Iowa Hawkeyes/);
   h.dispose();
 });

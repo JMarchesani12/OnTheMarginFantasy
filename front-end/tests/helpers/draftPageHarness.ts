@@ -35,6 +35,7 @@ export function harness() {
   const apiFetch=async()=>new Response('{}');
   const deps:Record<string,any>={
     '../../api/safeError':fixture().load('src/api/safeError.ts'),
+    '../../components/SearchableSelect':fixture().load('src/components/SearchableSelect.tsx'),
     react, 'react/jsx-runtime':{jsx:(type:any,props:any)=>({type,props}),jsxs:(type:any,props:any)=>({type,props})},
     'react-router-dom':{useNavigate:()=>(...args:any[])=>navigations.push(args),useParams:()=>({league_id:route}),useLocation:()=>({state:locationState})},
     'socket.io-client':{io:()=>({})},
