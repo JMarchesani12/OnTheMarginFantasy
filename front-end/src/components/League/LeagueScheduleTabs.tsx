@@ -2,7 +2,7 @@ import { useTeamPerformance } from "../../hooks/useTeamPerformance";
 import { TeamPerformanceStats } from "../TeamPerformance/TeamPerformanceStats";
 import { safeErrorMessage, READ_ERROR } from "../../api/safeError";
 // src/components/League/LeagueScheduleTabs.tsx
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type CSSProperties } from "react";
 import type { LeagueMember } from "../../types/leagueMember";
 import type { MemberWeekSchedule } from "../../types/schedule";
 import { getScheduleForMemberForWeek } from "../../api/schedule";
@@ -22,6 +22,9 @@ import {
   type TierDisplayTone,
 } from "../../utils/scheduleTierDisplay";
 import { groupTeamsByTier } from "../../utils/teamTierGroups";
+import { useTeamSearchCatalog } from "../../hooks/useTeamSearchCatalog";
+import { filterTeamSearch } from "../../utils/teamSearch";
+import SearchableSelect from "../SearchableSelect";
 import "./LeagueScheduleTabs.css";
 
 type LeagueScheduleTabsProps = {
@@ -63,6 +66,16 @@ export const LeagueScheduleTabs = ({
   maxWeekNumber,
   timeZone
 }: LeagueScheduleTabsProps) => {
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchPanelId = useId();
+  const conferenceInputId = useId();
+  const [conferenceFilter, setConferenceFilter] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (searchOpen) searchInputRef.current?.focus();
+  }, [searchOpen]);
+  const [teamQuery, setTeamQuery] = useState("");
+  const teamSearch = useTeamSearchCatalog();
   const sportName = String(sport ?? "").toLowerCase();
   const minWeekNumber = sportName === "1" || sportName.includes("basketball") ? 1 : MIN_SCHEDULE_WEEK_NUMBER;
   const startingWeekNumber = Math.max(minWeekNumber, initialWeekNumber);
@@ -299,11 +312,28 @@ export const LeagueScheduleTabs = ({
     });
   }, [dateHeaders, teamRows, activeMemberDailyTotals, todayKey, weekNumber, initialWeekNumber]);
 
+  const conferenceOptions = useMemo(() => [
+    { value: "", label: "All conferences" },
+    ...[...new Set(teamRows.map(row => row.conferenceName ?? "Conference unavailable"))]
+      .sort((a, b) => a.localeCompare(b))
+      .map(name => ({ value: name, label: name })),
+  ], [teamRows]);
+  const activeConferenceFilter = conferenceOptions.some(option => option.value === conferenceFilter)
+    ? conferenceFilter : "";
+  const filteredTeamRows = useMemo(
+    () => filterTeamSearch(teamRows.filter(row => !activeConferenceFilter ||
+      (row.conferenceName ?? "Conference unavailable") === activeConferenceFilter),
+      teamQuery, row => row, teamSearch.index),
+    [teamRows, teamQuery, teamSearch.index, activeConferenceFilter],
+  );
   const tierSections = useMemo(() => {
     const groups = groupTeamsByTier(teamRows, sport);
-    return groups.length > 1 ? groups : [{ tier: null, label: null, teams: teamRows }];
-  }, [teamRows, sport]);
-  const hasMultipleTiers = tierSections.length > 1;
+    return groups.length > 1
+      ? groups.map(group => ({ ...group, teams: group.teams.filter(row => filteredTeamRows.includes(row)) }))
+          .filter(group => group.teams.length > 0)
+      : [{ tier: null, label: null, teams: filteredTeamRows }];
+  }, [teamRows, filteredTeamRows, sport]);
+  const hasMultipleTiers = groupTeamsByTier(teamRows, sport).length > 1;
 
   const sortedMembers = useMemo(
     () =>
@@ -358,7 +388,7 @@ export const LeagueScheduleTabs = ({
       <div className="league-schedule__toolbar">
         <div className="league-schedule__toolbar-top">
           <label className="league-schedule__member-picker">Fantasy team
-            <select value={activeMemberId ?? ""} onChange={event => setActiveMemberId(Number(event.target.value))}>
+            <select value={activeMemberId ?? ""} onChange={event => { setActiveMemberId(Number(event.target.value)); setConferenceFilter(""); }}>
               {sortedMembers.map(member => <option key={member.id} value={member.id}>{member.teamName ?? `Team ${member.id}`}</option>)}
             </select>
           </label>
@@ -366,6 +396,7 @@ export const LeagueScheduleTabs = ({
             <input type="number" min={minWeekNumber} max={maxWeekNumber ?? undefined}
               value={weekInputValue} onChange={handleWeekInputChange} />
           </label>
+          <div className="league-schedule__toolbar-actions">
           <div className="league-schedule__view-toggle" role="group" aria-label="Schedule view">
             {(["day", "week"] as const).map(mode => <button key={mode} type="button"
               aria-pressed={viewMode === mode} onClick={() => {
@@ -374,6 +405,24 @@ export const LeagueScheduleTabs = ({
                 setRequestedPageIndex(getSchedulePageIndex(pages, null, anchor));
                 setViewMode(mode);
               }}>{mode === "day" ? "Day" : "Week"}</button>)}
+          </div>
+          <div className="league-schedule__conference-picker">
+            <label htmlFor={conferenceInputId}>Conference</label>
+            <SearchableSelect id={conferenceInputId} value={activeConferenceFilter}
+              options={conferenceOptions} onChange={setConferenceFilter} />
+          </div>
+        <button
+          className="league-schedule__search-toggle"
+          type="button"
+          aria-expanded={searchOpen}
+          aria-controls={searchPanelId}
+          onClick={() => {
+            setSearchOpen(open => !open);
+            setTeamQuery("");
+          }}
+        >
+          {searchOpen ? "Close search" : "Search teams"}
+        </button>
           </div>
         </div>
         <div className="league-schedule__date-nav">
@@ -407,11 +456,39 @@ export const LeagueScheduleTabs = ({
           })}
         </div>}
       </div>
+      <div className="league-schedule__team-search" hidden={!searchOpen}>
+        <div id={searchPanelId} className="league-schedule__search-panel" hidden={!searchOpen}>
+        <label>
+          Search teams
+          <input
+            ref={searchInputRef}
+            type="search"
+            placeholder="Team name or abbreviation"
+            maxLength={120}
+            value={teamQuery}
+            onChange={event => setTeamQuery(event.target.value)}
+          />
+        </label>
+        {teamQuery && <button type="button" onClick={() => setTeamQuery("")}>Clear search</button>}
+        {teamSearch.error && <span role="status">Alternate names unavailable. Search by team name or <button type="button" onClick={teamSearch.retry}>retry</button>.</span>}
+        {!loading && !error && teamQuery.trim() && (
+          <span role="status">{filteredTeamRows.length === 0
+            ? "No teams match your search."
+            : `${filteredTeamRows.length} of ${teamRows.length} teams`}</span>
+        )}
+        </div>
+      </div>
       <div className="league-schedule__rules-summary">
         {schedule?.rules && <p>{schedule.rules.summary}</p>}
       </div>
 
       {performance.failed && <p className="league-schedule__rules-summary">Team performance is unavailable. <button type="button" onClick={performance.retry}>Retry team stats</button></p>}
+      {!loading && !error && activeConferenceFilter && (
+        <p role="status" className="league-schedule__rules-summary">
+          {filteredTeamRows.length === 0 ? "No teams match your filters." : `${filteredTeamRows.length} of ${teamRows.length} teams`}
+          {" · Daily totals include all teams."}
+        </p>
+      )}
       {/* Body */}
       {(
         <div className="league-schedule__body" id="league-schedule-body">

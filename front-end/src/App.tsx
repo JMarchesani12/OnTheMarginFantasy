@@ -1,5 +1,9 @@
+import SiteFooter from "./components/SiteFooter";
 import React, { Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+const LegalPage = React.lazy(() => import("./screens/Legal/LegalPage"));
+const FeedbackPage = React.lazy(() => import("./screens/Support/FeedbackPage"));
 
 const LeagueRulesPage = React.lazy(() => import("./screens/League/LeagueRulesPage"));
 
@@ -35,6 +39,9 @@ const App: React.FC = () => {
     <BrowserRouter>
       <Suspense fallback={<div className="app-loading">Loading…</div>}>
         <Routes>
+          <Route path="/privacy" element={<LegalPage policy="privacy" />} />
+          <Route path="/terms" element={<LegalPage policy="terms" />} />
+          <Route path="/feedback" element={<FeedbackPage />} />
           <Route path="/" element={<LandingPage />} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/reset-password" element={<ResetPassword />} />
@@ -72,6 +79,7 @@ const App: React.FC = () => {
           />
         </Routes>
       </Suspense>
+      <SiteFooter />
     </BrowserRouter>
   );
 };

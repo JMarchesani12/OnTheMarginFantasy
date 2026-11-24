@@ -505,6 +505,7 @@ const LeagueDetailView = ({ initialLeague, currentUserId, isMember, isCurrent }:
 
   return (
     <div className="league-detail">
+      <div className="league-detail__sticky-header">
       <button
         className="league-detail__back"
         type="button"
@@ -533,6 +534,7 @@ const LeagueDetailView = ({ initialLeague, currentUserId, isMember, isCurrent }:
             }}>{label}</button>
         ))}
       </nav>
+      </div>
       <div hidden={hubView !== "overview"} className="league-detail__panel">
       <section className="league-detail__content">
         <div className="league-detail__card">

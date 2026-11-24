@@ -1,0 +1,11 @@
+.site-footer { max-width: 1280px; box-sizing: border-box; width: 100%; margin: auto auto 0; padding: 1.5rem; border-top: 1px solid #243055; color: #8ea0d6; text-align: center; }
+.site-footer nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .5rem 1.25rem; margin-bottom: .6rem; }
+.site-footer nav > a, .site-footer summary { display: inline-flex; align-items: center; min-height: 44px; color: #b7c2e6; font-size: .85rem; }
+.site-footer__help { position: relative; }
+.site-footer summary { cursor: pointer; list-style: none; }
+.site-footer summary::-webkit-details-marker { display: none; }
+.site-footer summary::after { content: " ▾"; margin-left: .4rem; }
+.site-footer__menu { position: absolute; bottom: calc(100% + .4rem); right: 0; z-index: 40; width: 190px; padding: .35rem; background: #0b0e1a; border: 1px solid #334277; border-radius: .6rem; box-shadow: 0 8px 24px #0009; text-align: left; }
+.site-footer__menu a { display: block; padding: .7rem; color: #b7c2e6; font-size: .85rem; }
+.site-footer a:hover, .site-footer summary:hover { color: #22d3ee; }
+.site-footer summary:focus-visible, .site-footer a:focus-visible { outline: 2px solid #22d3ee; outline-offset: 2px; }

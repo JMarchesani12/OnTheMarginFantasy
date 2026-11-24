@@ -223,6 +223,7 @@ const SignIn = () => {
               </div>
             </label>
           )}
+          {isSignUp && <p className="sign-in__legal">Before creating an account, review our <Link to="/terms">Terms of Service</Link> and <Link to="/privacy">Privacy Policy</Link>.</p>}
           {error && <p className="sign-in__error">{error}</p>}
           {message && <p className="sign-in__message">{message}</p>}
           <button type="submit" className="sign-in__button" disabled={loading}>

@@ -1,3 +1,4 @@
+import SearchableSelect from "../../components/SearchableSelect";
 import { useTeamSearchCatalog } from "../../hooks/useTeamSearchCatalog";
 import { safeErrorMessage, READ_ERROR, WRITE_UNCERTAIN } from "../../api/safeError";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -816,18 +817,12 @@ const LeagueDraftPage = () => {
         </div>
         <div className="draft-page__control">
           <label htmlFor="draft-conference">Conference</label>
-          <select
+          <SearchableSelect
             id="draft-conference"
             value={activeConferenceFilter}
-            onChange={(evt) => setConferenceFilter(evt.target.value)}
-          >
-            <option value="all">All conferences</option>
-            {uniqueConferences.map((conf) => (
-              <option key={conf} value={conf}>
-                {conf}
-              </option>
-            ))}
-          </select>
+            onChange={setConferenceFilter}
+            options={[{ value: "all", label: "All conferences" }, ...uniqueConferences.map(conf => ({ value: conf, label: conf }))]}
+          />
         </div>
       </section>
 

@@ -1,3 +1,4 @@
+import SearchableSelect from "../SearchableSelect";
 import { useTeamSearchCatalog } from "../../hooks/useTeamSearchCatalog";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -98,11 +99,12 @@ export default function LeagueScoreboardBrowser({ league }: { league: League }) 
           </div>
         </div>
         <div className="league-browser__filters">
-          <label>Conference<select value={conference} onChange={event => { setConference(event.target.value); saveBrowseParam("conference", event.target.value); }}>
-            <option value="">All conferences</option>
-            {conference && !conferences.includes(conference) && <option value={conference}>{conference}</option>}
-            {conferences.map(name => <option key={name} value={name}>{name}</option>)}
-          </select></label>
+          <div><label htmlFor="scoreboard-conference">Conference</label>
+            <SearchableSelect id="scoreboard-conference" value={conference}
+              onChange={value => { setConference(value); saveBrowseParam("conference", value); }}
+              options={[{ value: "", label: "All conferences" },
+                ...[...new Set([...(conference ? [conference] : []), ...conferences])].map(name => ({ value: name, label: name }))]} />
+          </div>
           <label>Find a game<input type="search" aria-describedby="league-game-search-help" value={gameQuery} placeholder="Name or abbreviation (e.g. UNI)" maxLength={120} onChange={event => { setGameQuery(event.target.value); saveBrowseParam("game", event.target.value); }} /></label>
         </div>
       </div>

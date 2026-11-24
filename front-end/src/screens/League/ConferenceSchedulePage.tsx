@@ -1,6 +1,7 @@
+import SearchableSelect from "../../components/SearchableSelect";
 import { useTeamSearchCatalog } from "../../hooks/useTeamSearchCatalog";
 import { safeErrorMessage, READ_ERROR } from "../../api/safeError";
-import { useEffect, useMemo, useState, type ChangeEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import type { League, LeagueConference } from "../../types/league";
 import type { ConferenceSchedule } from "../../types/schedule";
@@ -436,8 +437,7 @@ const ConferenceSchedulePage = () => {
     [conferences, activeConferenceId]
   );
 
-  const handleConferenceChange = (evt: ChangeEvent<HTMLSelectElement>) => {
-    const raw = evt.target.value;
+  const handleConferenceChange = (raw: string) => {
     if (raw === "") {
       setActiveConferenceId(null);
       setSchedule(null);
@@ -527,21 +527,14 @@ const ConferenceSchedulePage = () => {
       <section className="conference-schedule__controls">
         <div className="conference-schedule__form">
           <label htmlFor="conference-select">Conference</label>
-          <select
+          <SearchableSelect
             id="conference-select"
-            className="conference-schedule__select"
-            value={activeConferenceId ?? ""}
+            value={activeConferenceId == null ? "" : String(activeConferenceId)}
             onChange={handleConferenceChange}
             disabled={conferencesLoading || conferences.length === 0}
-          >
-            {conferences.length === 0 && <option value="">No conferences available</option>}
-            {conferences.length > 0 && <option value="">Select conference…</option>}
-            {conferences.map((conf) => (
-              <option key={conf.sportConferenceId} value={conf.sportConferenceId}>
-                {conf.displayName ?? `Conference ${conf.conferenceId}`}
-              </option>
-            ))}
-          </select>
+            options={[{ value: "", label: conferences.length ? "Select conference…" : "No conferences available" },
+              ...conferences.map(conf => ({ value: String(conf.sportConferenceId), label: conf.displayName ?? `Conference ${conf.conferenceId}` }))]}
+          />
         </div>
 
         <div className="conference-schedule__week">

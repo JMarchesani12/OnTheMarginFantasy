@@ -566,3 +566,78 @@
   .league-schedule__date-strip { padding: 0 .5rem .75rem; gap: .2rem; }
   .league-schedule__date-strip button > span:first-child { font-size: .65rem; }
 }
+
+.league-schedule__team-search:not([hidden]) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: .75rem;
+  margin: 1rem 0;
+}
+
+.league-schedule__team-search label {
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+  flex: 1 1 16rem;
+  max-width: 28rem;
+}
+
+.league-schedule__team-search input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: .65rem .8rem;
+  border: 1px solid #334277;
+  border-radius: .5rem;
+  background: #0b0e1a;
+  color: #f4f7ff;
+  font: inherit;
+}
+
+.league-schedule__team-search button {
+  min-height: 44px;
+}
+
+.league-schedule__search-panel:not([hidden]) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: .75rem;
+  flex: 1 1 100%;
+}
+
+.league-schedule__toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+.league-schedule__search-toggle {
+  min-height: 44px;
+  padding: .4rem .65rem;
+  border: 1px solid #334277;
+  border-radius: .6rem;
+  background: #111a33;
+  color: #f4f7ff;
+  font: inherit;
+  font-size: .85rem;
+  cursor: pointer;
+}
+
+@media (max-width: 800px) {
+  .league-schedule__toolbar-actions { grid-column: 1 / -1; }
+  .league-schedule__toolbar-actions .league-schedule__view-toggle { flex: 1; }
+}
+
+.league-schedule__toolbar:has(.league-schedule__conference-picker) { overflow: visible; }
+.league-schedule__toolbar-actions { align-items: end; }
+.league-schedule__conference-picker { width: 12rem; min-width: 0; }
+.league-schedule__conference-picker > label { display: block; margin-bottom: .3rem; color: #b7c2e6; font-size: .85rem; }
+@media (max-width: 800px) {
+  .league-schedule__toolbar-actions { flex-wrap: wrap; }
+  .league-schedule__conference-picker { flex: 1 1 9rem; }
+}
+
+/* Keep the conference menu above subsequent schedule sections. */
+.league-schedule > .league-schedule__toolbar { z-index: 2; }
